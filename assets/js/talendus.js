@@ -259,6 +259,8 @@
     var type = document.getElementById("job-type");
     var shift = document.getElementById("job-shift");
     var sal = document.getElementById("job-sal");
+    var sector = document.getElementById("job-sector");
+    var exp = document.getElementById("job-exp");
     var empty = document.getElementById("job-empty");
 
     function salaryFloor(raw) {
@@ -276,6 +278,8 @@
       var v = (city && city.value) || "";
       var ty = (type && type.value) || "";
       var sh = (shift && shift.value) || "";
+      var sec = (sector && sector.value) || "";
+      var ex = (exp && exp.value) || "";
       var minSal = sal && sal.value ? Number(sal.value) : 0;
       var shown = 0;
       document.querySelectorAll("[data-job]").forEach(function (card) {
@@ -284,7 +288,9 @@
           && (!c || hay.indexOf(c.toLowerCase()) !== -1)
           && (!v || (card.getAttribute("data-city") || "").toLowerCase() === v.toLowerCase() || hay.indexOf(v.toLowerCase()) !== -1)
           && (!ty || (card.getAttribute("data-type") || "").toLowerCase() === ty.toLowerCase() || hay.indexOf(ty.toLowerCase()) !== -1)
-          && (!sh || (card.getAttribute("data-shift") || "").indexOf(sh) !== -1 || hay.indexOf(sh.toLowerCase()) !== -1);
+          && (!sh || (card.getAttribute("data-shift") || "").indexOf(sh) !== -1 || hay.indexOf(sh.toLowerCase()) !== -1)
+          && (!sec || (card.getAttribute("data-sector") || "").toLowerCase() === sec.toLowerCase() || hay.indexOf(sec.toLowerCase()) !== -1)
+          && (!ex || (card.getAttribute("data-exp") || "").toLowerCase() === ex.toLowerCase() || hay.indexOf(ex.toLowerCase()) !== -1);
         if (ok && minSal) {
           var floor = salaryFloor(card.getAttribute("data-salary") || hay);
           if (minSal < 1000) {
@@ -308,7 +314,7 @@
         window.TalendusTrack.search({ search_term: q, content_category: "jobs" });
       }, 600);
     }
-    [search, cat, city, type, shift, sal].forEach(function (el) {
+    [search, cat, city, type, shift, sal, sector, exp].forEach(function (el) {
       if (el) el.addEventListener("input", filterJobsAndTrack);
       if (el) el.addEventListener("change", filterJobsAndTrack);
     });

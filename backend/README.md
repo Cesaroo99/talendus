@@ -1,6 +1,6 @@
 # Talendus API
 
-Back-end FastAPI de la plateforme de recrutement industriel **Talendus**.
+Back-end FastAPI de la plateforme de recrutement **Talendus**, pour toutes les entreprises.
 Le site public (HTML/CSS/JS) continue de vivre à la racine du dépôt ; cette API en est le cerveau.
 
 ## Installation

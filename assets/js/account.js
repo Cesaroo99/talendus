@@ -34,7 +34,7 @@
       welcome: "Your candidate workspace", guest: "Sign in to follow your applications.",
       welcomeEmployer: "Your hiring workspace", guestEmployer: "Sign in to manage jobs and applications.",
       registerEmployer: "Create an employer account",
-      brand: "We hire for Quebec plants.",
+      brand: "We hire better, faster and more intelligently with AI.",
       point1: "A consultant presents the files.",
       point2: "Candidates and employers stay on their own side.",
       loginLead: "Enter your workspace.",
@@ -81,7 +81,7 @@
       forgot: "Forgot password?", alerts: "Job alerts", savedJobs: "Saved jobs", cv: "My resume",
       ats: "ATS", billing: "Billing", duplicate: "Duplicate", deleteJob: "Delete",
       sessions: "Active sessions", loginLog: "Sign-in history", revoke: "Revoke", revokeAll: "Sign out everywhere",
-      onboard: "Fill in your profile so we can match you to the right shifts.", keywords: "Keywords",
+      onboard: "Fill in your profile so we can match you to the right roles.", keywords: "Keywords",
       createAlert: "Create an alert", emptyAlerts: "No job alerts yet.",
       province: "Province", birth: "Date of birth", size: "Company size", social: "Social networks"
     } : {
@@ -98,7 +98,7 @@
       welcome: "Votre espace candidat", guest: "Connectez-vous pour suivre vos candidatures.",
       welcomeEmployer: "Votre espace employeur", guestEmployer: "Connectez-vous pour gérer vos offres et candidatures.",
       registerEmployer: "Créer un compte employeur",
-      brand: "On recrute pour les usines du Québec.",
+      brand: "Nous recrutons mieux, plus vite et plus intelligemment grâce à l'IA.",
       point1: "Un conseiller présente les dossiers.",
       point2: "Candidats et employeurs, chacun de son côté.",
       loginLead: "Entrez dans votre espace.",
@@ -145,7 +145,7 @@
       forgot: "Mot de passe oublié ?", alerts: "Alertes emploi", savedJobs: "Offres sauvegardées", cv: "Mon CV",
       ats: "ATS", billing: "Facturation", duplicate: "Dupliquer", deleteJob: "Supprimer",
       sessions: "Sessions actives", loginLog: "Journal des connexions", revoke: "Révoquer", revokeAll: "Déconnecter partout",
-      onboard: "Complétez votre profil pour qu'on vous propose des quarts qui collent.", keywords: "Mots-clés",
+      onboard: "Complétez votre profil pour qu'on vous propose des postes qui collent.", keywords: "Mots-clés",
       createAlert: "Créer une alerte", emptyAlerts: "Aucune alerte pour le moment.",
       province: "Province", birth: "Date de naissance", size: "Taille de l’entreprise", social: "Réseaux sociaux"
     };

@@ -422,6 +422,102 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/emploi-directeur-usine.html"/>
   </url>
   <url>
+    <loc>https://talendus.ca/emploi-developpeur.html</loc>
+    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/emploi-developpeur.html"/>
+    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/job-developpeur.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/emploi-developpeur.html"/>
+  </url>
+  <url>
+    <loc>https://talendus.ca/en/job-developpeur.html</loc>
+    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/emploi-developpeur.html"/>
+    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/job-developpeur.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/emploi-developpeur.html"/>
+  </url>
+  <url>
+    <loc>https://talendus.ca/emploi-comptable.html</loc>
+    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/emploi-comptable.html"/>
+    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/job-comptable.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/emploi-comptable.html"/>
+  </url>
+  <url>
+    <loc>https://talendus.ca/en/job-comptable.html</loc>
+    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/emploi-comptable.html"/>
+    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/job-comptable.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/emploi-comptable.html"/>
+  </url>
+  <url>
+    <loc>https://talendus.ca/emploi-ingenieur.html</loc>
+    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/emploi-ingenieur.html"/>
+    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/job-ingenieur.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/emploi-ingenieur.html"/>
+  </url>
+  <url>
+    <loc>https://talendus.ca/en/job-ingenieur.html</loc>
+    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/emploi-ingenieur.html"/>
+    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/job-ingenieur.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/emploi-ingenieur.html"/>
+  </url>
+  <url>
+    <loc>https://talendus.ca/emploi-chauffeur.html</loc>
+    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/emploi-chauffeur.html"/>
+    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/job-chauffeur.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/emploi-chauffeur.html"/>
+  </url>
+  <url>
+    <loc>https://talendus.ca/en/job-chauffeur.html</loc>
+    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/emploi-chauffeur.html"/>
+    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/job-chauffeur.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/emploi-chauffeur.html"/>
+  </url>
+  <url>
+    <loc>https://talendus.ca/emploi-infirmier.html</loc>
+    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/emploi-infirmier.html"/>
+    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/job-infirmier.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/emploi-infirmier.html"/>
+  </url>
+  <url>
+    <loc>https://talendus.ca/en/job-infirmier.html</loc>
+    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/emploi-infirmier.html"/>
+    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/job-infirmier.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/emploi-infirmier.html"/>
+  </url>
+  <url>
+    <loc>https://talendus.ca/emploi-vendeur.html</loc>
+    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/emploi-vendeur.html"/>
+    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/job-vendeur.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/emploi-vendeur.html"/>
+  </url>
+  <url>
+    <loc>https://talendus.ca/en/job-vendeur.html</loc>
+    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/emploi-vendeur.html"/>
+    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/job-vendeur.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/emploi-vendeur.html"/>
+  </url>
+  <url>
+    <loc>https://talendus.ca/emploi-responsable-rh.html</loc>
+    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/emploi-responsable-rh.html"/>
+    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/job-responsable-rh.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/emploi-responsable-rh.html"/>
+  </url>
+  <url>
+    <loc>https://talendus.ca/en/job-responsable-rh.html</loc>
+    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/emploi-responsable-rh.html"/>
+    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/job-responsable-rh.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/emploi-responsable-rh.html"/>
+  </url>
+  <url>
+    <loc>https://talendus.ca/emploi-specialiste-marketing.html</loc>
+    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/emploi-specialiste-marketing.html"/>
+    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/job-specialiste-marketing.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/emploi-specialiste-marketing.html"/>
+  </url>
+  <url>
+    <loc>https://talendus.ca/en/job-specialiste-marketing.html</loc>
+    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/emploi-specialiste-marketing.html"/>
+    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/job-specialiste-marketing.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/emploi-specialiste-marketing.html"/>
+  </url>
+  <url>
     <loc>https://talendus.ca/secteur-manufacturier.html</loc>
     <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/secteur-manufacturier.html"/>
     <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/sector-manufacturier.html"/>
