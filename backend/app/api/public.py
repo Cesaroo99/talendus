@@ -41,13 +41,28 @@ def job_board(db: Session = Depends(get_db)):
 
 @router.post("/contact")
 def contact(payload: ContactIn, request: Request, db: Session = Depends(get_db)):
+    details = [
+        payload.message,
+        f"Entreprise : {payload.company}" if payload.company else "",
+        f"Poste : {payload.title}" if payload.title else "",
+        f"Secteur : {payload.sector}" if payload.sector else "",
+        f"Lieu : {payload.location}" if payload.location else "",
+        f"Contrat : {payload.contract_type}" if payload.contract_type else "",
+        f"Postes : {payload.seats}" if payload.seats else "",
+        f"Expérience : {payload.experience_level}" if payload.experience_level else "",
+        f"Compétences : {payload.skills}" if payload.skills else "",
+        f"Fonction : {payload.contact_role}" if payload.contact_role else "",
+        f"Taille : {payload.company_size}" if payload.company_size else "",
+        f"Téléphone : {payload.phone}" if payload.phone else "",
+    ]
+    body = "\n".join(part for part in details if part)
     send_email(
         db,
         "info@talendus.ca",
         EmailType.ADMIN,
         "welcome",
         name=payload.name,
-        link=payload.message[:500],
+        link=body[:1500],
     )
     audit(
         db,
@@ -56,10 +71,16 @@ def contact(payload: ContactIn, request: Request, db: Session = Depends(get_db))
         "contact",
         None,
         client_ip(request),
-        {"email": payload.email, "subject": payload.subject or payload.company},
+        {"email": payload.email, "subject": payload.subject or payload.title or payload.company},
     )
     db.commit()
-    return ok(message="Message reçu. Un conseiller vous rejoint sous peu.")
+    hiring = bool(payload.title or payload.company)
+    message = (
+        "Votre besoin a bien été transmis à Talendus. Notre équipe va analyser les informations communiquées et vous contacter afin de mieux comprendre votre besoin et de définir avec vous le profil recherché."
+        if hiring
+        else "Message reçu. Un conseiller vous rejoint sous peu."
+    )
+    return ok(message=message)
 
 
 emails_router = APIRouter(prefix="/emails", tags=["emails"])

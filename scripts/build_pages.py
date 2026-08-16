@@ -14,7 +14,7 @@ from positioning import (
     why_talendus_section, ai_engine_section, human_section, company_types_section,
     candidate_journey_section, for_companies_section, for_candidates_section,
     placement_process_services_section, technology_section, ai_screening_section,
-    competitive_advantage_section, augmented_recruiting_section,
+    competitive_advantage_section, augmented_recruiting_section, hiring_need_form_section,
 )
 from en_pages import build_en
 from seo_pages import write_fr as write_seo_fr
@@ -49,7 +49,8 @@ def alt_for(slug):
         "espace.html": "en/account.html",
         "espace-employeur.html": "en/account-employer.html",
         "comment-ca-fonctionne.html": "en/how-it-works.html",
-        "publier-une-offre.html": "en/post-a-job.html",
+        "besoin-de-recrutement.html": "en/hiring-need.html",
+        "publier-une-offre.html": "en/hiring-need.html",
         "solutions-rh.html": "en/hr-solutions.html",
         "recrutement-industriel.html": "en/industrial-recruiting.html",
         "recrutement-manufacturier.html": "en/manufacturing-recruiting.html",
@@ -339,7 +340,7 @@ EMPLOYERS_BODY = (
         "Entreprises",
         "Vous recrutez ? Confiez-nous votre besoin.",
         "Talendus recherche, évalue et présélectionne les talents les plus pertinents. Nous utilisons déjà l'intelligence artificielle dans nos outils internes pour accélérer la recherche, l'analyse et la présélection. Vous étudiez une shortlist qualifiée et vous prenez la décision finale.",
-        actions='<a class="tl-btn" href="contact.html">Confier mon recrutement</a><a class="tl-btn tl-btn-ghost" href="publier-une-offre.html">Décrire mon besoin</a>',
+        actions='<a class="tl-btn" href="contact.html">Confier mon recrutement</a><a class="tl-btn tl-btn-ghost" href="besoin-de-recrutement.html">Décrire mon besoin</a>',
         badges='<span class="tl-badge tl-badge-light">Agence de placement</span> <span class="tl-badge tl-badge-light">Tous secteurs</span>'
     )
     + proof_stats("fr")
@@ -625,7 +626,7 @@ write("contact.html", wrap(
           <div class="tl-kicker">Entreprises</div>
           <h2 class="tl-h2">Décrire mon besoin de recrutement</h2>
           <p class="tl-lead">Vous transmettez le poste. Talendus recherche et présélectionne. Appel gratuit, sur rendez-vous.</p>
-          <form class="tl-form" action="#" method="post" data-form="contact">
+          <form class="tl-form" action="#" method="post" data-form="hiring-need">
             <input type="hidden" name="profil" value="Employeur — je recrute">
             <label>Nom</label><input required name="nom">
             <label>Entreprise</label><input required name="entreprise">
@@ -904,28 +905,25 @@ simple_page(
 
 simple_page(
     "Vous recrutez ? Confiez-nous votre besoin | Talendus",
-    "Décrivez le poste. Talendus analyse, recherche, présélectionne, évalue et vous présente les meilleurs profils. Vous prenez la décision finale.",
-    "publier-une-offre.html",
+    "Agence de placement : décrivez votre besoin de recrutement. Talendus analyse, définit le profil, recherche, présélectionne et vous présente les meilleurs candidats. Vous prenez la décision finale.",
+    "besoin-de-recrutement.html",
     "Entreprises",
     "Vous recrutez ? Confiez-nous votre besoin.",
-    "Décrivez le poste, les compétences, l'expérience, le lieu et ce qui compte vraiment. Talendus prend ensuite en charge la recherche et la présélection. Une offre visible n'est pas obligatoire.",
+    "Décrivez-nous le profil que vous recherchez. Notre équipe analyse votre besoin, définit les critères de recherche et prend en charge le processus de recrutement afin de vous présenter les candidats les plus pertinents.",
     process_section("fr")
     + """
     <section class="tl-section"><div class="container">
       <div class="tl-prose">
-        <h2 class="tl-h2">Ce que vous avez à faire — et ce que nous faisons</h2>
-        <p><strong>1. Décrivez votre besoin.</strong> Poste, responsabilités, compétences, expérience, qualifications, conditions, lieu, exigences particulières. Plus le brief est clair, plus la recherche est nette.</p>
-        <p><strong>2. Talendus analyse le poste.</strong> Nous clarifions les critères essentiels et le type de profil recherché avant d'approcher qui que ce soit.</p>
-        <p><strong>3. Nous recherchons les talents.</strong> Réseau, profils connus, outils technologiques et intelligence artificielle déjà utilisés par nos équipes — pas un moteur que vous opérez vous-même.</p>
-        <p><strong>4. Nous présélectionnons.</strong> Compétences, parcours, cohérence avec le mandat. Le bruit n'arrive pas sur votre bureau.</p>
-        <p><strong>5. Nous évaluons les profils.</strong> Échanges et entretiens avec les candidats lorsque c'est nécessaire.</p>
-        <p><strong>6. Nous vous présentons les meilleurs candidats.</strong> Une shortlist qualifiée, pas une liste massive de CV.</p>
-        <p><strong>7. Vous prenez la décision finale.</strong> Vous étudiez, vous rencontrez, vous choisissez. Talendus n'embauche pas à votre place.</p>
+        <h2 class="tl-h2">Un service de recrutement, pas une publication d'offre</h2>
+        <p>Avec Talendus, vous ne vous contentez pas de publier une offre et d'attendre des candidatures. Vous nous confiez votre besoin et nous prenons en charge la recherche et la présélection des talents.</p>
+        <p>Vous n'avez pas besoin de passer des heures à publier, trier et analyser des centaines de candidatures. Talendus prend en charge le processus pour vous. Grâce à nos équipes, nos méthodes et nos outils technologiques intégrant l'intelligence artificielle, nous accélérons la recherche et la qualification des talents.</p>
+        <p>Vous nous confiez la recherche. Nous nous chargeons du travail de sourcing, de présélection et de qualification afin que vous puissiez vous concentrer sur votre décision finale. Nous ne vous transmettons pas simplement des candidatures. Nous vous présentons une sélection de profils que nous avons déjà recherchés et qualifiés en fonction de votre besoin.</p>
       </div>
     </div></section>
     """
+    + hiring_need_form_section("fr")
     + human_hire_band("fr"),
-    actions='<a class="tl-btn" href="contact.html">Décrire mon besoin</a><a class="tl-btn tl-btn-ghost" href="espace-employeur.html" data-auth-open="register">Ouvrir un espace entreprise</a>',
+    actions='<a class="tl-btn" href="#besoin">Décrire mon besoin</a><a class="tl-btn tl-btn-ghost" href="espace-employeur.html" data-auth-open="register">Ouvrir un espace entreprise</a>',
 )
 
 simple_page(
@@ -947,7 +945,7 @@ simple_page(
     actions='<a class="tl-btn" href="contact.html">Confier mon recrutement</a>',
 )
 
-for old, new in [("about.html", "a-propos.html"), ("service.html", "services.html"), ("blog-single.html", "blog.html")]:
+for old, new in [("about.html", "a-propos.html"), ("service.html", "services.html"), ("blog-single.html", "blog.html"), ("publier-une-offre.html", "besoin-de-recrutement.html")]:
     write(old, wrap("Redirection | Talendus", "Redirection.", old,
                     f'<section class="tl-section"><div class="container"><p>Cette page a été déplacée. <a href="{new}">Continuer</a></p><script>location.replace("{new}");</script></div></section>',
                     robots="noindex,nofollow"))
@@ -963,7 +961,7 @@ pairs = [
     ("candidats.html", "en/candidates.html"),
     ("emplois.html", "en/jobs.html"),
     ("comment-ca-fonctionne.html", "en/how-it-works.html"),
-    ("publier-une-offre.html", "en/post-a-job.html"),
+    ("besoin-de-recrutement.html", "en/hiring-need.html"),
     ("solutions-rh.html", "en/hr-solutions.html"),
     ("secteurs.html", "en/sectors.html"),
     ("blog.html", "en/blog.html"),

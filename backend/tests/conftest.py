@@ -53,3 +53,44 @@ def register(client: TestClient, email: str, role: str = "CANDIDATE", **extra) -
 
 def auth_header(tokens: dict) -> dict:
     return {"Authorization": f"Bearer {tokens['access_token']}"}
+
+
+def promote_admin(client, email: str) -> dict:
+    from app.database import SessionLocal
+    from app.models import User
+    from app.models.enums import UserRole
+
+    data = register(client, email, "EMPLOYER", first_name="Sophie", last_name="Admin")
+    db = SessionLocal()
+    user = db.get(User, data["user"]["id"])
+    user.role = UserRole.ADMIN
+    db.commit()
+    db.close()
+    res = client.post("/api/auth/login", json={"email": email, "password": "Password1!"})
+    assert res.status_code == 200
+    return res.json()["data"]
+
+
+def company_id_for(client, emp_tokens: dict) -> str:
+    res = client.get("/api/companies/me", headers=auth_header(emp_tokens))
+    assert res.status_code == 200, res.text
+    return res.json()["data"]["id"]
+
+
+def staff_publish_job(client, emp_tokens: dict, admin_tokens: dict | None = None, **fields):
+    if admin_tokens is None:
+        slug = fields.get("slug", "job")
+        admin_tokens = promote_admin(client, f"staff-{slug}@example.com")
+    payload = {
+        "title": "Cariste",
+        "location": "Laval",
+        "sector": "Entrepôt",
+        "company_id": company_id_for(client, emp_tokens),
+    }
+    payload.update(fields)
+    created = client.post("/api/jobs", headers=auth_header(admin_tokens), json=payload)
+    assert created.status_code == 200, created.text
+    job = created.json()["data"]
+    published = client.post(f"/api/jobs/{job['id']}/publish", headers=auth_header(admin_tokens))
+    assert published.status_code == 200, published.text
+    return published.json()["data"]

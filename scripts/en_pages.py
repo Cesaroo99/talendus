@@ -9,7 +9,7 @@ from positioning import (
     why_talendus_section, ai_engine_section, human_section, company_types_section,
     candidate_journey_section, for_candidates_section,
     placement_process_services_section, technology_section, ai_screening_section,
-    competitive_advantage_section,
+    competitive_advantage_section, hiring_need_form_section,
 )
 
 A = "../assets/"
@@ -225,7 +225,7 @@ def build_en(write, wrap, page_hero):
             "Employers",
             "Hiring? Hand us the need.",
             "Talendus searches, evaluates and shortlists the most relevant talent. We already use artificial intelligence in our internal tools to speed up search, analysis and screening. You review a qualified selection and make the final decision.",
-            actions='<a class="tl-btn" href="contact.html">Hand us the search</a><a class="tl-btn tl-btn-ghost" href="post-a-job.html">Describe my need</a>',
+            actions='<a class="tl-btn" href="contact.html">Hand us the search</a><a class="tl-btn tl-btn-ghost" href="hiring-need.html">Describe my need</a>',
             badges='<span class="tl-badge tl-badge-light">Placement agency</span> <span class="tl-badge tl-badge-light">Every industry</span>',
         )
         + proof_stats("en")
@@ -485,7 +485,7 @@ def build_en(write, wrap, page_hero):
           <div class="tl-kicker">Employers</div>
           <h2 class="tl-h2">Describe my hiring need</h2>
           <p class="tl-lead">Industry, role, headcount, location, contract type. Free call, by appointment.</p>
-          <form class="tl-form" action="#" method="post" data-form="contact">
+          <form class="tl-form" action="#" method="post" data-form="hiring-need">
             <input type="hidden" name="profil" value="Employer — I am hiring">
             <label>Name</label><input required name="nom">
             <label>Company</label><input required name="entreprise">
@@ -786,34 +786,40 @@ def build_en(write, wrap, page_hero):
         lang="en",
         alt="comment-ca-fonctionne.html",
     ))
-    write("en/post-a-job.html", wrap(
+    write("en/hiring-need.html", wrap(
         "Hiring? Hand us the need | Talendus",
-        "Describe the role. Talendus analyses, searches, screens, evaluates and presents the best profiles. You make the final decision.",
-        "en/post-a-job.html",
+        "Placement agency: describe your hiring need. Talendus analyses, defines the profile, searches, screens and presents the best candidates. You make the final decision.",
+        "en/hiring-need.html",
         page_hero(
             "Employers",
             "Hiring? Hand us the need.",
-            "Describe the role, skills, experience, location and what matters most. Talendus then takes on the search and screening. A visible posting is not required.",
-            actions='<a class="tl-btn" href="contact.html">Describe my need</a><a class="tl-btn tl-btn-ghost" href="account-employer.html" data-auth-open="register">Open a company workspace</a>',
+            "Describe the profile you are looking for. Our team analyses your need, defines the search criteria and takes on the recruiting process so we can present the most relevant candidates.",
+            actions='<a class="tl-btn" href="#besoin">Describe my need</a><a class="tl-btn tl-btn-ghost" href="account-employer.html" data-auth-open="register">Open a company workspace</a>',
         )
         + process_section("en")
         + """
     <section class="tl-section"><div class="container">
       <div class="tl-prose">
-        <h2 class="tl-h2">What you do — and what we do</h2>
-        <p><strong>1. Describe your need.</strong> Role, responsibilities, skills, experience, qualifications, conditions, location, particular requirements.</p>
-        <p><strong>2. Talendus analyses the role.</strong> We clarify must-haves and the type of profile before approaching anyone.</p>
-        <p><strong>3. We search for talent.</strong> Network, known profiles, technological tools and artificial intelligence already used by our teams — not an engine you operate yourself.</p>
-        <p><strong>4. We screen.</strong> Skills, path, fit with the mandate. Noise does not reach your desk.</p>
-        <p><strong>5. We evaluate profiles.</strong> Conversations and interviews with candidates when needed.</p>
-        <p><strong>6. We present the best candidates.</strong> A qualified shortlist, not a massive list of resumes.</p>
-        <p><strong>7. You make the final decision.</strong> You review, you meet, you choose. Talendus does not hire in your place.</p>
+        <h2 class="tl-h2">A recruiting service — not a job posting</h2>
+        <p>With Talendus, you do not simply post a job and wait for applications. You hand us the need and we take on the search and screening of talent.</p>
+        <p>You do not need to spend hours posting, sorting and analysing hundreds of applications. Talendus takes the process on for you. With our teams, methods and technological tools that already include AI, we speed up search and qualification.</p>
+        <p>You hand us the search. We take on sourcing, screening and qualification so you can focus on the final decision. We do not simply forward applications. We present a selection of profiles we have already searched and qualified against your need.</p>
       </div>
     </div></section>
     """
+        + hiring_need_form_section("en")
         + human_hire_band("en"),
         lang="en",
-        alt="publier-une-offre.html",
+        alt="besoin-de-recrutement.html",
+    ))
+    write("en/post-a-job.html", wrap(
+        "Redirect | Talendus",
+        "Redirect.",
+        "en/post-a-job.html",
+        '<section class="tl-section"><div class="container"><p>This page has moved. <a href="hiring-need.html">Continue</a></p><script>location.replace("hiring-need.html");</script></div></section>',
+        lang="en",
+        alt="besoin-de-recrutement.html",
+        robots="noindex,nofollow",
     ))
     write("en/hr-solutions.html", wrap(
         "HR solutions | Recruiting support — Talendus",

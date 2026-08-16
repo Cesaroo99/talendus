@@ -348,26 +348,28 @@ def approach_section(lang="fr"):
 
 def process_section(lang="fr"):
     if lang == "en":
-        kicker, heading = "From need to shortlist", "You describe the role. We do the search."
+        kicker, heading = "How our recruiting works", "You hand us the need. We do the search."
         steps = [
-            ("01", "Your need", "You tell Talendus about the role: responsibilities, skills, experience, location, conditions and what matters most. A form, a call or both — we take the brief from there."),
-            ("02", "Analysis", "The team studies the mandate to understand the profile you actually need. We clarify must-haves, nice-to-haves and constraints so the search does not start on a vague title."),
-            ("03", "Search", "Talendus looks for people: our network, known profiles, published opportunities when useful, and the internal tools — including AI — that already help us cover more ground. AI speeds that search. It does not replace it."),
-            ("04", "Screening", "Identified candidates are reviewed against skills, experience, qualifications and the criteria we agreed with you. This is a first filter, not a dump of every resume we collected."),
-            ("05", "Evaluation", "When needed, we speak with candidates: path, motivations, fit with the role. Interviews and checks happen before a file reaches you — so your time is spent on people worth meeting."),
-            ("06", "Shortlist", "We present a qualified selection, not a massive list. Each file is one we are prepared to stand behind. Relevance is the product. Volume is not."),
-            ("07", "Your decision", "You review the profiles, meet people according to your own process, and choose who joins. Talendus does not hire in your place. We make the final choice possible."),
+            ("01", "You hand us the need", "Describe the role and the profile you are looking for."),
+            ("02", "We talk with you", "Our team goes deeper so we understand the context, constraints and the kind of person you actually need."),
+            ("03", "We define the profile", "We set the search criteria: must-haves, nice-to-haves, experience, location and conditions."),
+            ("04", "We start the search", "Our teams use their methods, network, technology and internal AI tools. You do not hunt candidates yourself."),
+            ("05", "We screen", "We analyse and qualify the people we identified. You do not receive a pile of resumes."),
+            ("06", "We meet candidates", "We run the evaluation steps required for the mandate: conversations, checks, availability."),
+            ("07", "We present the best profiles", "You receive a selection of relevant candidates we are prepared to stand behind."),
+            ("08", "You choose", "You review, meet people according to your process, and make the final decision. Talendus does not hire in your place."),
         ]
     else:
-        kicker, heading = "De la demande à la shortlist", "Vous décrivez le poste. Nous faisons la recherche."
+        kicker, heading = "Comment fonctionne notre recrutement ?", "Vous nous confiez votre besoin. Nous faisons la recherche."
         steps = [
-            ("01", "Votre besoin", "Vous décrivez à Talendus le poste à pourvoir : responsabilités, compétences, expérience, lieu, conditions et ce qui compte vraiment. Formulaire, appel ou les deux : nous partons de ce brief."),
-            ("02", "Analyse", "L'équipe étudie le mandat pour comprendre le profil réellement recherché. Nous clarifions l'essentiel, le souhaitable et les contraintes, pour que la recherche ne parte pas d'un titre flou."),
-            ("03", "Recherche", "Talendus identifie les personnes : réseau, profils déjà connus, offres publiées si utile, et les outils internes — dont l'IA — qui élargissent déjà le terrain. L'IA accélère cette recherche. Elle ne la remplace pas."),
-            ("04", "Présélection", "Les candidats identifiés sont analysés : compétences, expérience, qualifications, critères convenus avec vous. C'est un premier filtre, pas un envoi de tous les CV collectés."),
-            ("05", "Évaluation", "Lorsque c'est nécessaire, nous échangeons avec les candidats : parcours, motivations, adéquation avec le poste. Entretiens et vérifications ont lieu avant qu'un dossier vous parvienne — pour que votre temps aille aux personnes à rencontrer."),
-            ("06", "Sélection", "Nous présentons une shortlist qualifiée, pas une liste massive. Chaque dossier est un profil que nous sommes prêts à défendre. La pertinence est le produit. Le volume ne l'est pas."),
-            ("07", "Décision", "Vous étudiez les profils, les rencontrez selon votre processus, et choisissez. Talendus n'embauche pas à votre place. Nous rendons le choix final possible."),
+            ("01", "Vous nous confiez votre besoin", "Décrivez-nous le poste et le profil recherché."),
+            ("02", "Nous échangeons avec vous", "Nos équipes approfondissent votre besoin afin de comprendre précisément vos attentes."),
+            ("03", "Nous définissons le profil", "Nous établissons les critères nécessaires à la recherche."),
+            ("04", "Nous lançons la recherche", "Nos équipes utilisent leurs méthodes, leurs ressources, leur technologie et leurs outils IA."),
+            ("05", "Nous présélectionnons", "Nous analysons et qualifions les profils identifiés."),
+            ("06", "Nous rencontrons les candidats", "Nous réalisons les étapes d'évaluation nécessaires."),
+            ("07", "Nous vous présentons les meilleurs profils", "Vous recevez une sélection de candidats pertinents."),
+            ("08", "Vous choisissez", "Vous prenez la décision finale."),
         ]
     cards = "".join(
         f'<div class="tl-step"><span>{n}</span><h3>{t}</h3><p>{p}</p></div>'
@@ -380,7 +382,7 @@ def process_section(lang="fr"):
       <div class="tl-kicker">{kicker}</div>
       <h2 class="tl-h2">{heading}</h2>
     </div>
-    <div class="tl-steps tl-steps-7">{cards}</div>
+    <div class="tl-steps tl-steps-8">{cards}</div>
   </div>
 </section>
 """
@@ -805,8 +807,63 @@ def candidate_journey_section(lang="fr"):
 
 
 def need_process_section(lang="fr"):
-    """Page « besoin de recrutement » — 7 étapes côté entreprise."""
+    """Page « besoin de recrutement » — 8 étapes côté entreprise."""
     return process_section(lang)
+
+
+def hiring_need_form_section(lang="fr"):
+    fields = employer_need_fields(lang)
+    if lang == "en":
+        return f"""
+<section class="tl-section" id="besoin">
+  <div class="container">
+    <div class="tl-prose" style="max-width:720px;margin:0 auto 28px">
+      <div class="tl-kicker">Hiring request</div>
+      <h2 class="tl-h2">Describe your hiring need</h2>
+      <p>This is not a job-posting form. It helps Talendus understand the mandate so we can contact you, define the profile and take on the search.</p>
+    </div>
+    <form class="tl-form" action="#" method="post" data-form="hiring-need" style="max-width:720px;margin:0 auto">
+      <input type="hidden" name="profil" value="Employer — hiring need">
+      <div class="tl-row-2"><div><label>Company name</label><input required name="entreprise"></div>
+      <div><label>Your name</label><input required name="nom"></div></div>
+      <div class="tl-row-2"><div><label>Role</label><input name="fonction" placeholder="HR, operations, owner…"></div>
+      <div><label>Work email</label><input type="email" required name="courriel"></div></div>
+      <div class="tl-row-2"><div><label>Phone</label><input name="tel"></div>
+      <div><label>Company size</label><input name="taille" placeholder="e.g. 50–200"></div></div>
+      {fields}
+      <label>Experience level</label><input name="experience" placeholder="e.g. 3–5 years, junior, leadership">
+      <label>Key skills</label><input name="competences" placeholder="Must-have skills, languages, qualifications">
+      <button class="tl-btn tl-btn-lg" type="submit">Hand us the search</button>
+      <div class="tl-success"></div>
+    </form>
+  </div>
+</section>
+"""
+    return f"""
+<section class="tl-section" id="besoin">
+  <div class="container">
+    <div class="tl-prose" style="max-width:720px;margin:0 auto 28px">
+      <div class="tl-kicker">Demande de recrutement</div>
+      <h2 class="tl-h2">Décrivez votre besoin de recrutement</h2>
+      <p>Ce n'est pas un formulaire de publication. Il permet à Talendus de comprendre le mandat, de vous recontacter et de définir le profil recherché avant de lancer la recherche.</p>
+    </div>
+    <form class="tl-form" action="#" method="post" data-form="hiring-need" style="max-width:720px;margin:0 auto">
+      <input type="hidden" name="profil" value="Employeur — je recrute">
+      <div class="tl-row-2"><div><label>Nom de l'entreprise</label><input required name="entreprise"></div>
+      <div><label>Nom du contact</label><input required name="nom"></div></div>
+      <div class="tl-row-2"><div><label>Fonction</label><input name="fonction" placeholder="RH, opérations, direction…"></div>
+      <div><label>Courriel professionnel</label><input type="email" required name="courriel"></div></div>
+      <div class="tl-row-2"><div><label>Téléphone</label><input name="tel"></div>
+      <div><label>Taille de l'entreprise</label><input name="taille" placeholder="ex. 50–200"></div></div>
+      {fields}
+      <label>Niveau d'expérience</label><input name="experience" placeholder="ex. 3 à 5 ans, junior, cadre">
+      <label>Compétences et qualifications</label><input name="competences" placeholder="Compétences indispensables, langues, diplômes">
+      <button class="tl-btn tl-btn-lg" type="submit">Confier mon recrutement</button>
+      <div class="tl-success"></div>
+    </form>
+  </div>
+</section>
+"""
 
 
 def human_hire_band(lang="fr"):
@@ -819,7 +876,7 @@ def human_hire_band(lang="fr"):
     <p>Whatever your industry, describe the need. We search, screen and present a qualified shortlist. You keep the final decision.</p>
     <div class="tl-actions">
       <a class="tl-btn tl-btn-lg" href="contact.html">Hand us the search</a>
-      <a class="tl-btn tl-btn-ghost" href="post-a-job.html">Describe my need</a>
+      <a class="tl-btn tl-btn-ghost" href="hiring-need.html">Describe my need</a>
     </div>
   </div>
 </section>
@@ -832,7 +889,7 @@ def human_hire_band(lang="fr"):
     <p>Quel que soit votre secteur, décrivez le poste. Nous recherchons, présélectionnons et vous présentons une shortlist qualifiée. Vous gardez la décision finale.</p>
     <div class="tl-actions">
       <a class="tl-btn tl-btn-lg" href="contact.html">Confier mon recrutement</a>
-      <a class="tl-btn tl-btn-ghost" href="publier-une-offre.html">Décrire mon besoin</a>
+      <a class="tl-btn tl-btn-ghost" href="besoin-de-recrutement.html">Décrire mon besoin</a>
     </div>
   </div>
 </section>

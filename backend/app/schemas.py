@@ -220,6 +220,59 @@ class JobPatchIn(BaseModel):
     expires_at: str | None = None
 
 
+class HiringRequestIn(BaseModel):
+    title: str = Field(min_length=2, max_length=180)
+    seats: int = Field(default=1, ge=1, le=500)
+    location: str | None = None
+    sector: str | None = None
+    contract_type: str | None = None
+    experience_level: str | None = None
+    skills: str | None = None
+    qualifications: str | None = None
+    languages: str | None = None
+    salary_display: str | None = None
+    start_date: str | None = None
+    notes: str | None = Field(default=None, max_length=5000)
+    extra_criteria: str | None = Field(default=None, max_length=5000)
+    contact_name: str | None = None
+    contact_role: str | None = None
+    contact_email: EmailStr | None = None
+    contact_phone: str | None = None
+    company_size: str | None = None
+    company_id: str | None = None
+
+
+class HiringRequestPatchIn(BaseModel):
+    title: str | None = Field(default=None, min_length=2, max_length=180)
+    seats: int | None = Field(default=None, ge=1, le=500)
+    location: str | None = None
+    sector: str | None = None
+    contract_type: str | None = None
+    experience_level: str | None = None
+    skills: str | None = None
+    qualifications: str | None = None
+    languages: str | None = None
+    salary_display: str | None = None
+    start_date: str | None = None
+    notes: str | None = None
+    extra_criteria: str | None = None
+    contact_name: str | None = None
+    contact_role: str | None = None
+    contact_email: EmailStr | None = None
+    contact_phone: str | None = None
+    company_size: str | None = None
+
+
+class HiringRequestStatusIn(BaseModel):
+    status: str
+    comment: str | None = None
+
+
+class HiringRequestFeedbackIn(BaseModel):
+    action: str = Field(min_length=2, max_length=40)
+    comment: str | None = Field(default=None, max_length=4000)
+
+
 class JobOut(ORMModel):
     id: str
     slug: str
@@ -291,6 +344,15 @@ class ContactIn(BaseModel):
     subject: str | None = None
     message: str = Field(min_length=2, max_length=5000)
     company: str | None = None
+    title: str | None = None
+    sector: str | None = None
+    location: str | None = None
+    contract_type: str | None = None
+    seats: int | None = Field(default=None, ge=1, le=500)
+    experience_level: str | None = None
+    skills: str | None = None
+    contact_role: str | None = None
+    company_size: str | None = None
 
 
 class CompanyMemberIn(BaseModel):

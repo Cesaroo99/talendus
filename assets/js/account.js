@@ -25,7 +25,7 @@
       login: "Sign in", register: "Create an account", email: "Email", password: "Password",
       first: "First name", last: "Last name", submitLogin: "Sign in", submitRegister: "Create my account",
       logout: "Sign out", dashboard: "Dashboard", profile: "Profile", apps: "Applications",
-      notifs: "Notifications", documents: "Documents", jobs: "Jobs", messages: "Messages",
+      notifs: "Notifications", documents: "Documents", jobs: "Jobs", hiring: "My hiring", messages: "Messages",
       interviews: "Interviews", settings: "Settings", save: "Save", city: "City", title: "Job title",
       sector: "Sector", skills: "Skills", phone: "Phone", upload: "Upload a PDF, DOC or DOCX",
       emptyApps: "No applications yet.", emptyNotifs: "No notifications.", emptyJobs: "No matching roles yet.",
@@ -47,11 +47,11 @@
       welcomeEmployer: "Your hiring workspace", guestEmployer: "Sign in to follow the profiles Talendus presents.",
       registerEmployer: "Create an employer account", company: "Company", inbox: "Applications",
       candidates: "Presented files", invoices: "Invoices", publish: "Publish", pause: "Pause",
-      archive: "Archive", draft: "Draft", createJob: "Submit a hiring need", edit: "Edit", apply: "Apply",
+      archive: "Archive", draft: "Draft", createJob: "Hand us a hiring need", edit: "Edit", apply: "Apply",
       bookmark: "Save job", unbookmark: "Saved", search: "Search", filters: "Filters",
       completeness: "Profile completeness", quickSearch: "Search jobs", quickProfile: "Complete my profile",
       quickCv: "Download resume", quickApps: "View applications", inProgress: "In progress",
-      upcoming: "Upcoming interviews", accepted: "Accepted", hello: "Hello", activeJobs: "Active jobs",
+      upcoming: "Upcoming interviews", accepted: "Accepted", hello: "Hello", activeJobs: "Active searches",
       shortlisted: "Shortlisted", hired: "Hires", recent: "Recent activity", loading: "Loading…",
       withdraw: "Withdraw", location: "Location", contract: "Contract type", salary: "Salary",
       experience: "Experience", sort: "Sort", bio: "Professional summary", availability: "Availability",
@@ -63,7 +63,12 @@
       permissions: "Role", invite: "Invite", legal: "Legal information", website: "Website",
       address: "Address", country: "Country", description: "Description", openings: "Openings",
       startDate: "Start date", deadline: "Deadline", responsibilities: "Responsibilities",
-      extra: "Additional information", validate: "Talendus reviews the need before any posting goes live.",
+      extra: "Additional information", validate: "Talendus reviews the need, defines the profile and takes on the search. You do not publish a job yourself.",
+      needSent: "Your hiring need has been sent to Talendus. Our team will review the information and contact you to understand the role and define the profile together. Your recruiting starts with Talendus.",
+      emptyHiring: "No hiring request yet. Hand us a need and we take it from there.",
+      hiringLead: "You hand us the need. Talendus searches, screens and presents qualified profiles. You keep the final decision.",
+      validateBrief: "Approve the brief", requestChanges: "Request a change",
+      feedback: "Your comments",
       schedule: "Schedule interview", when: "Date and time", type: "Type", place: "Location or link",
       comments: "Comments", cover: "Cover letter", certs: "Certifications", otherDocs: "Other documents",
       noResults: "No results for these filters.", retry: "Try again", success: "Done.",
@@ -88,7 +93,7 @@
       login: "Connexion", register: "Créer un compte", email: "Courriel", password: "Mot de passe",
       first: "Prénom", last: "Nom", submitLogin: "Me connecter", submitRegister: "Créer mon compte",
       logout: "Déconnexion", dashboard: "Tableau de bord", profile: "Profil", apps: "Candidatures",
-      notifs: "Notifications", documents: "Documents", jobs: "Offres", messages: "Messages",
+      notifs: "Notifications", documents: "Documents", jobs: "Offres", hiring: "Mes recrutements", messages: "Messages",
       interviews: "Entretiens", settings: "Paramètres", save: "Enregistrer", city: "Ville", title: "Titre professionnel",
       sector: "Secteur", skills: "Compétences", phone: "Téléphone", upload: "Téléverser un PDF, DOC ou DOCX",
       emptyApps: "Aucune candidature pour le moment.", emptyNotifs: "Aucune notification.",
@@ -111,11 +116,11 @@
       welcomeEmployer: "Votre espace employeur", guestEmployer: "Connectez-vous pour suivre les profils que Talendus vous présente.",
       registerEmployer: "Créer un compte employeur", company: "Entreprise", inbox: "Candidatures",
       candidates: "Dossiers présentés", invoices: "Factures", publish: "Publier", pause: "Mettre en pause",
-      archive: "Archiver", draft: "Brouillon", createJob: "Soumettre un besoin", edit: "Modifier", apply: "Postuler",
+      archive: "Archiver", draft: "Brouillon", createJob: "Confier un recrutement", edit: "Modifier", apply: "Postuler",
       bookmark: "Sauvegarder", unbookmark: "Sauvegardée", search: "Rechercher", filters: "Filtres",
       completeness: "Complétude du profil", quickSearch: "Rechercher une offre", quickProfile: "Compléter mon profil",
       quickCv: "Télécharger mon CV", quickApps: "Voir mes candidatures", inProgress: "En cours",
-      upcoming: "Entretiens à venir", accepted: "Acceptées", hello: "Bonjour", activeJobs: "Offres actives",
+      upcoming: "Entretiens à venir", accepted: "Acceptées", hello: "Bonjour", activeJobs: "Recrutements actifs",
       shortlisted: "Présélectionnés", hired: "Recrutements", recent: "Activité récente", loading: "Chargement…",
       withdraw: "Retirer", location: "Localisation", contract: "Type de contrat", salary: "Salaire",
       experience: "Expérience", sort: "Trier", bio: "Résumé professionnel", availability: "Disponibilité",
@@ -127,7 +132,12 @@
       members: "Utilisateurs", permissions: "Rôle", invite: "Inviter", legal: "Informations légales",
       website: "Site web", address: "Adresse", country: "Pays", description: "Description", openings: "Nombre de postes",
       startDate: "Date de début", deadline: "Date limite", responsibilities: "Responsabilités",
-      extra: "Informations complémentaires", validate: "Le besoin est enregistré. Talendus ouvre la recherche ; une offre visible n’est pas obligatoire.",
+      extra: "Informations complémentaires", validate: "Talendus étudie le besoin, définit le profil et lance la recherche. Vous ne publiez pas l’offre vous-même.",
+      needSent: "Votre besoin a bien été transmis à Talendus. Notre équipe va analyser les informations communiquées et vous contacter afin de mieux comprendre votre besoin et de définir avec vous le profil recherché. Votre recrutement commence avec Talendus.",
+      emptyHiring: "Aucun recrutement pour le moment. Confiez-nous un besoin : nous prenons le relais.",
+      hiringLead: "Vous nous confiez votre besoin. Talendus recherche, présélectionne et présente des profils qualifiés. Vous gardez la décision finale.",
+      validateBrief: "Valider le brief", requestChanges: "Demander une modification",
+      feedback: "Vos retours",
       schedule: "Planifier un entretien", when: "Date et heure", type: "Type", place: "Lieu ou lien",
       comments: "Commentaires", cover: "Lettre de motivation", certs: "Certifications", otherDocs: "Documents complémentaires",
       noResults: "Aucun résultat pour ces filtres.", retry: "Réessayer", success: "Terminé.",
@@ -186,7 +196,19 @@
         PENDING: isEn ? "Pending" : "En attente",
         PAID: isEn ? "Paid" : "Payée",
         OVERDUE: isEn ? "Overdue" : "En retard",
-        REFUNDED: isEn ? "Refunded" : "Remboursée"
+        REFUNDED: isEn ? "Refunded" : "Remboursée",
+        REQUEST_SUBMITTED: isEn ? "Need submitted" : "Besoin transmis",
+        CLIENT_CONTACTED: isEn ? "Talking with Talendus" : "Échange avec Talendus",
+        NEEDS_CONFIRMED: isEn ? "Profile defined" : "Profil défini",
+        JOB_BEING_PREPARED: isEn ? "Offer being prepared" : "Offre en préparation",
+        CLIENT_VALIDATION: isEn ? "Validation requested" : "Validation demandée",
+        JOB_PUBLISHED: isEn ? "Search launched" : "Recherche lancée",
+        SOURCING: isEn ? "Search in progress" : "Recherche en cours",
+        SCREENING: isEn ? "Screening" : "Présélection en cours",
+        INTERVIEWS: isEn ? "Talendus interviews" : "Entretiens Talendus",
+        SHORTLIST: isEn ? "Shortlist ready" : "Shortlist disponible",
+        CLIENT_REVIEW: isEn ? "Profiles to review" : "Profils à consulter",
+        HIRING: isEn ? "Your decision" : "Décision en cours"
       };
       return map[s] || s;
     }
@@ -243,6 +265,7 @@
         return id ? { name: "application", id: id } : { name: "apps", id: "" };
       }
       if (name === "job" && !id) return { name: "jobs", id: "" };
+      if (isEmployerSpace() && name === "jobs" && id) return { name: "job-edit", id: id };
       if (name === "cv" || name === "resume") return { name: "documents", id: id || "" };
       if (name === "saved" || name === "sauvegardees") return { name: "saved", id: id || "" };
       if (name === "alerts" || name === "alertes") return { name: "alerts", id: id || "" };
@@ -290,7 +313,7 @@
     function navItems(unreadN, unreadM) {
       if (isEmployerSpace()) {
         return [
-          ["dashboard", t.dashboard], ["company", t.company], ["jobs", t.jobs], ["inbox", t.candidates],
+          ["dashboard", t.dashboard], ["company", t.company], ["jobs", t.hiring], ["inbox", t.candidates],
           ["pipeline", t.ats], ["messages", t.messages, unreadM], ["invoices", t.billing],
           ["notifs", t.notifs, unreadN], ["settings", t.settings]
         ];
@@ -822,12 +845,13 @@
     function employerDashboard(user, dash, company) {
       var s = (dash && dash.stats) || {};
       return mediateNote() + "<p class=\"tl-lead\">" + esc(t.hello) + " " + esc((company && company.name) || dash.company_name || "") + "</p>" +
+        "<p>" + esc(t.hiringLead) + "</p>" +
         '<div class="tl-stat-grid">' +
         [["active_jobs", t.activeJobs], ["applications", t.inbox], ["shortlisted", t.shortlisted], ["interviews", t.interviews], ["hired", t.hired]].map(function (row) {
           return '<div class="tl-stat-card"><b>' + esc(s[row[0]] || 0) + "</b><span>" + esc(row[1]) + "</span></div>";
         }).join("") + "</div><div class=\"tl-quick-actions\"><button type=\"button\" class=\"tl-btn\" data-nav=\"job-new\">" +
-        esc(t.createJob) + "</button><button type=\"button\" class=\"tl-btn tl-btn-ghost\" data-nav=\"inbox\">" + esc(t.candidates) +
-        "</button><button type=\"button\" class=\"tl-btn tl-btn-ghost\" data-nav=\"pipeline\">" + esc(t.ats) +
+        esc(t.createJob) + "</button><button type=\"button\" class=\"tl-btn tl-btn-ghost\" data-nav=\"jobs\">" + esc(t.hiring) +
+        "</button><button type=\"button\" class=\"tl-btn tl-btn-ghost\" data-nav=\"inbox\">" + esc(t.candidates) +
         "</button><button type=\"button\" class=\"tl-btn tl-btn-ghost\" data-nav=\"invoices\">" + esc(t.billing) + "</button></div>";
     }
 
@@ -850,38 +874,49 @@
     }
 
     function renderEmployerJobs(jobs) {
-      var list = (!jobs || !jobs.length) ? empty(t.emptyJobs) : '<div class="tl-list-cards">' + jobs.map(function (j) {
-        var actions = "";
-        if (j.status === "DRAFT" || j.status === "PAUSED") actions += '<button type="button" class="tl-btn tl-btn-ghost" data-job-pub="' + esc(j.id) + '">' + esc(t.publish) + "</button> ";
-        if (j.status === "PUBLISHED") actions += '<button type="button" class="tl-btn tl-btn-ghost" data-job-pause="' + esc(j.id) + '">' + esc(t.pause) + "</button> ";
-        actions += '<button type="button" class="tl-btn tl-btn-ghost" data-job-arch="' + esc(j.id) + '">' + esc(t.archive) + "</button> ";
-        actions += '<button type="button" class="tl-btn tl-btn-ghost" data-nav="job-edit" data-id="' + esc(j.id) + '">' + esc(t.edit) + "</button> ";
-        actions += '<button type="button" class="tl-btn tl-btn-ghost" data-job-dup="' + esc(j.id) + '">' + esc(t.duplicate) + "</button>";
-        if (j.status !== "PUBLISHED") actions += ' <button type="button" class="tl-btn tl-btn-ghost" data-job-del="' + esc(j.id) + '">' + esc(t.deleteJob) + "</button>";
-        return '<article class="tl-list-card"><span class="tl-chip orange">' + esc(statusLabel(j.status)) + "</span><h3>" + esc(j.title) +
-          "</h3><p class=\"tl-meta\">" + esc(j.location || "") + "</p>" + actions + "</article>";
+      var list = (!jobs || !jobs.length) ? empty(t.emptyHiring) : '<div class="tl-list-cards">' + jobs.map(function (j) {
+        var label = j.status_label || statusLabel(j.status);
+        return '<article class="tl-list-card"><span class="tl-chip orange">' + esc(label) + "</span><h3>" + esc(j.title) +
+          "</h3><p class=\"tl-meta\">" + esc(j.location || "") + (j.seats ? " · " + esc(j.seats) : "") + "</p>" +
+          (j.status_message ? "<p>" + esc(j.status_message) + "</p>" : "") +
+          '<button type="button" class="tl-btn tl-btn-ghost" data-nav="job-edit" data-id="' + esc(j.id) + '">' +
+          esc(t.edit) + "</button></article>";
       }).join("") + "</div>";
-      return '<p><button type="button" class="tl-btn" data-nav="job-new">' + esc(t.createJob) + "</button></p>" + list;
+      return "<p>" + esc(t.hiringLead) + '</p><p><button type="button" class="tl-btn" data-nav="job-new">' + esc(t.createJob) + "</button></p>" + list;
     }
 
     function jobForm(job) {
       job = job || {};
-      return '<p>' + esc(t.validate) + '</p><form class="tl-form" id="acc-job-form">' +
+      return '<p>' + esc(t.validate) + '</p><form class="tl-form" id="acc-hiring-form">' +
         "<label>" + esc(t.title) + '</label><input name="title" required value="' + esc(job.title || "") + '">' +
-        "<label>" + esc(t.description) + '</label><textarea name="description" rows="5">' + esc(job.description || "") + "</textarea>" +
-        "<label>" + esc(t.responsibilities) + '</label><textarea name="responsibilities" rows="4">' + esc(job.responsibilities || "") + "</textarea>" +
         '<div class="tl-row-2"><div><label>' + esc(t.location) + '</label><input name="location" value="' + esc(job.location || "") + '"></div>' +
         "<div><label>" + esc(t.sector) + '</label><input name="sector" value="' + esc(job.sector || "") + '"></div></div>' +
         '<div class="tl-row-2"><div><label>' + esc(t.contract) + '</label><input name="contract_type" value="' + esc(job.contract_type || "") + '"></div>' +
         "<div><label>" + esc(t.experience) + '</label><input name="experience_level" value="' + esc(job.experience_level || "") + '"></div></div>' +
-        '<div class="tl-row-2"><div><label>' + esc(t.salary) + " min</label><input name=\"salary_min\" type=\"number\" value=\"" + esc(job.salary_min || "") + '"></div>' +
-        "<div><label>" + esc(t.salary) + " max</label><input name=\"salary_max\" type=\"number\" value=\"" + esc(job.salary_max || "") + '"></div></div>' +
-        "<label>" + esc(t.skills) + '</label><input name="skills" value="' + esc(job.skills || "") + '">' +
-        '<div class="tl-row-2"><div><label>' + esc(t.openings) + '</label><input name="openings" type="number" min="1" value="' + esc(job.openings || 1) + '"></div>' +
+        '<div class="tl-row-2"><div><label>' + esc(t.openings) + '</label><input name="seats" type="number" min="1" value="' + esc(job.seats || job.openings || 1) + '"></div>' +
         "<div><label>" + esc(t.startDate) + '</label><input name="start_date" type="date" value="' + esc(job.start_date || "") + '"></div></div>' +
-        "<label>" + esc(t.deadline) + '</label><input name="expires_at" type="date" value="' + esc((job.expires_at || "").slice(0, 10)) + '">' +
-        "<label>" + esc(t.extra) + '</label><textarea name="benefits" rows="3">' + esc(job.benefits || "") + "</textarea>" +
-        '<button class="tl-btn" type="submit">' + esc(t.save) + '</button><div class="tl-success"></div></form>';
+        "<label>" + esc(t.skills) + '</label><input name="skills" value="' + esc(job.skills || "") + '">' +
+        "<label>" + esc(t.languages) + '</label><input name="languages" value="' + esc(job.languages || "") + '">' +
+        "<label>" + esc(t.extra) + '</label><textarea name="notes" rows="5">' + esc(job.notes || job.description || "") + "</textarea>" +
+        '<button class="tl-btn" type="submit">' + esc(job.id ? t.save : t.createJob) + '</button><div class="tl-success"></div></form>';
+    }
+
+    function renderHiringDetail(row) {
+      if (!row) return empty(t.emptyHiring);
+      var canFeedback = row.status === "CLIENT_VALIDATION" || row.status === "SHORTLIST" || row.status === "CLIENT_REVIEW";
+      var feedback = canFeedback
+        ? '<form class="tl-form" id="acc-hiring-feedback"><label>' + esc(t.feedback) + '</label><textarea name="comment" rows="4"></textarea>' +
+          '<p><button class="tl-btn" type="submit" name="action" value="validate">' + esc(t.validateBrief) +
+          '</button> <button class="tl-btn tl-btn-ghost" type="submit" name="action" value="changes">' + esc(t.requestChanges) +
+          "</button></p><div class=\"tl-success\"></div></form>"
+        : "";
+      return mediateNote() + '<span class="tl-chip orange">' + esc(row.status_label || statusLabel(row.status)) + "</span>" +
+        "<h3>" + esc(row.title) + "</h3><p>" + esc(row.status_message || "") + "</p>" +
+        "<p class=\"tl-meta\">" + esc(row.location || "") + (row.sector ? " · " + esc(row.sector) : "") + "</p>" +
+        (row.notes ? "<p>" + esc(row.notes) + "</p>" : "") +
+        '<p><button type="button" class="tl-btn tl-btn-ghost" data-nav="inbox">' + esc(t.candidates) + "</button> " +
+        '<button type="button" class="tl-btn tl-btn-ghost" data-nav="messages">' + esc(t.writeTalendus) + "</button></p>" +
+        feedback;
     }
 
     function renderInbox(apps) {
@@ -1057,17 +1092,29 @@
           .then(function () { flash(company.querySelector(".tl-success"), t.saved, true); })
           .catch(function (err) { flash(company.querySelector(".tl-success"), (err && err.message) || t.err, false); });
       });
-      var jobFormEl = document.getElementById("acc-job-form");
-      if (jobFormEl) jobFormEl.addEventListener("submit", function (e) {
+      var hiringForm = document.getElementById("acc-hiring-form");
+      if (hiringForm) hiringForm.addEventListener("submit", function (e) {
         e.preventDefault();
-        var body = Object.fromEntries(new FormData(jobFormEl).entries());
-        if (body.salary_min) body.salary_min = Number(body.salary_min);
-        if (body.salary_max) body.salary_max = Number(body.salary_max);
-        if (body.openings) body.openings = Number(body.openings);
-        var req = state.editJob
-          ? api.request("/jobs/" + state.editJob.id, { method: "PATCH", body: body })
-          : api.request("/jobs", { method: "POST", body: body });
-        req.then(function () { go("jobs"); }).catch(function (err) { flash(jobFormEl.querySelector(".tl-success"), (err && err.message) || t.err, false); });
+        var body = Object.fromEntries(new FormData(hiringForm).entries());
+        if (body.seats) body.seats = Number(body.seats);
+        var req = state.editHiring
+          ? api.request("/hiring-requests/" + state.editHiring.id, { method: "PATCH", body: body })
+          : api.request("/hiring-requests", { method: "POST", body: body });
+        req.then(function (json) {
+          flash(hiringForm.querySelector(".tl-success"), (json && json.message) || t.needSent, true);
+          window.setTimeout(function () { go("jobs"); }, 1400);
+        }).catch(function (err) { flash(hiringForm.querySelector(".tl-success"), (err && err.message) || t.err, false); });
+      });
+      var hiringFeedback = document.getElementById("acc-hiring-feedback");
+      if (hiringFeedback) hiringFeedback.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var actionBtn = e.submitter && e.submitter.getAttribute("value");
+        var body = Object.fromEntries(new FormData(hiringFeedback).entries());
+        api.request("/hiring-requests/" + (state.editHiring && state.editHiring.id) + "/feedback", {
+          method: "POST",
+          body: { action: actionBtn || "validate", comment: body.comment || "" }
+        }).then(function () { go("jobs"); })
+          .catch(function (err) { flash(hiringFeedback.querySelector(".tl-success"), (err && err.message) || t.err, false); });
       });
       var invite = document.getElementById("acc-invite");
       if (invite) invite.addEventListener("submit", function (e) {
@@ -1141,9 +1188,12 @@
             return employerDashboard(user, r[0], r[1]);
           });
           else if (route.name === "company") p = unwrap(api.request("/companies/me")).then(function (c) { state.company = c; return companyForm(c); });
-          else if (route.name === "jobs") p = unwrap(api.request("/jobs/managed")).then(renderEmployerJobs);
+          else if (route.name === "jobs") p = unwrap(api.request("/hiring-requests")).then(renderEmployerJobs);
           else if (route.name === "job-new") p = Promise.resolve(jobForm({}));
-          else if (route.name === "job-edit") p = unwrap(api.request("/jobs/managed/" + route.id)).then(function (j) { state.editJob = j; return jobForm(j); });
+          else if (route.name === "job-edit") p = unwrap(api.request("/hiring-requests/" + route.id)).then(function (j) {
+            state.editHiring = j;
+            return renderHiringDetail(j);
+          });
           else if (route.name === "inbox" || route.name === "candidates") p = unwrap(api.request("/applications")).then(renderInbox);
           else if (route.name === "pipeline") p = unwrap(api.request("/applications")).then(renderPipeline);
           else if (route.name === "invoices") p = unwrap(api.request("/invoices")).then(renderInvoices);

@@ -23,6 +23,8 @@ REDIRECTS = {
     "/service-single.html": "/services.html",
     "/blog-left.html": "/blog.html",
     "/blog-right.html": "/blog.html",
+    "/publier-une-offre.html": "/besoin-de-recrutement.html",
+    "/en/post-a-job.html": "/en/hiring-need.html",
 }
 
 PRIVATE_PATHS = {
@@ -57,7 +59,7 @@ STATIC_PAIRS = [
     ("recrutement-industriel-longueuil.html", "en/industrial-recruiting-longueuil.html"),
     ("recrutement-industriel-quebec.html", "en/industrial-recruiting-quebec.html"),
     ("comment-ca-fonctionne.html", "en/how-it-works.html"),
-    ("publier-une-offre.html", "en/post-a-job.html"),
+    ("besoin-de-recrutement.html", "en/hiring-need.html"),
     ("solutions-rh.html", "en/hr-solutions.html"),
 ]
 

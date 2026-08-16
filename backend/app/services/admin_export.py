@@ -42,6 +42,20 @@ JOB_STATUS = {
 }
 
 MISSION_STATUS = {
+    MissionStatus.REQUEST_SUBMITTED: "besoin-transmis",
+    MissionStatus.UNDER_REVIEW: "en-analyse",
+    MissionStatus.CLIENT_CONTACTED: "echange",
+    MissionStatus.NEEDS_CONFIRMED: "profil-defini",
+    MissionStatus.JOB_BEING_PREPARED: "offre-preparation",
+    MissionStatus.CLIENT_VALIDATION: "validation-client",
+    MissionStatus.JOB_PUBLISHED: "publiee",
+    MissionStatus.SOURCING: "recherche",
+    MissionStatus.SCREENING: "preselection",
+    MissionStatus.INTERVIEWS: "entretiens",
+    MissionStatus.SHORTLIST: "shortlist",
+    MissionStatus.CLIENT_REVIEW: "revue-client",
+    MissionStatus.HIRING: "decision",
+    MissionStatus.CLOSED: "termine",
     MissionStatus.OPEN: "en-cours",
     MissionStatus.IN_PROGRESS: "en-cours",
     MissionStatus.FILLED: "pourvue",

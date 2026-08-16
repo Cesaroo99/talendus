@@ -86,16 +86,16 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/comment-ca-fonctionne.html"/>
   </url>
   <url>
-    <loc>https://talendus.ca/publier-une-offre.html</loc>
-    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/publier-une-offre.html"/>
-    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/post-a-job.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/publier-une-offre.html"/>
+    <loc>https://talendus.ca/besoin-de-recrutement.html</loc>
+    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/besoin-de-recrutement.html"/>
+    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/hiring-need.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/besoin-de-recrutement.html"/>
   </url>
   <url>
-    <loc>https://talendus.ca/en/post-a-job.html</loc>
-    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/publier-une-offre.html"/>
-    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/post-a-job.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/publier-une-offre.html"/>
+    <loc>https://talendus.ca/en/hiring-need.html</loc>
+    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/besoin-de-recrutement.html"/>
+    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/hiring-need.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/besoin-de-recrutement.html"/>
   </url>
   <url>
     <loc>https://talendus.ca/solutions-rh.html</loc>

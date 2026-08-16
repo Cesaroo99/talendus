@@ -3,7 +3,7 @@ import hmac
 
 import httpx
 
-from conftest import auth_header, register
+from conftest import auth_header, promote_admin, register, staff_publish_job
 from app.config import get_settings
 from app.integrations.http import override_client, redact_headers
 from app.integrations.inbound import ingest
@@ -13,19 +13,7 @@ from app.integrations.messaging.whatsapp import WhatsAppService
 
 
 def _promote_admin(client, email: str) -> dict:
-    from app.database import SessionLocal
-    from app.models import User
-    from app.models.enums import UserRole
-
-    data = register(client, email, "EMPLOYER", first_name="Sophie", last_name="Admin")
-    db = SessionLocal()
-    user = db.get(User, data["user"]["id"])
-    user.role = UserRole.ADMIN
-    db.commit()
-    db.close()
-    res = client.post("/api/auth/login", json={"email": email, "password": "Password1!"})
-    assert res.status_code == 200
-    return res.json()["data"]
+    return promote_admin(client, email)
 
 
 def test_catalog_prepared_without_secrets(client):
@@ -339,14 +327,8 @@ def test_interview_reminders_without_whatsapp(client):
     cand = register(client, "rem-cand@example.com", first_name="Eve")
     cand_h = auth_header(cand)
     emp = register(client, "rem-emp@example.com", "EMPLOYER")
-    job = client.post(
-        "/api/jobs",
-        headers=auth_header(emp),
-        json={"title": "Soudeur rappel", "location": "Tracy", "description": "Poste usine"},
-    )
-    assert job.status_code == 200
-    client.post(f"/api/jobs/{job.json()['data']['id']}/publish", headers=auth_header(emp))
-    applied = client.post("/api/applications", headers=cand_h, json={"job_id": job.json()["data"]["id"]})
+    job = staff_publish_job(client, emp, admin, title="Soudeur rappel", location="Tracy", description="Poste usine", slug="soudeur-rappel")
+    applied = client.post("/api/applications", headers=cand_h, json={"job_id": job["id"]})
     profile = client.get("/api/candidates/me", headers=cand_h).json()["data"]
     when = (datetime.now(timezone.utc) + timedelta(hours=2)).isoformat()
     created = client.post(

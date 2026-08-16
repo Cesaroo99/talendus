@@ -91,6 +91,7 @@ def create_app() -> FastAPI:
         interviews,
         invoices,
         jobs,
+        hiring_requests,
         matching,
         messages,
         notifications,
@@ -111,6 +112,7 @@ def create_app() -> FastAPI:
     application.include_router(companies.router, prefix="/api")
     application.include_router(recruiters.router, prefix="/api")
     application.include_router(jobs.router, prefix="/api")
+    application.include_router(hiring_requests.router, prefix="/api")
     application.include_router(applications.router, prefix="/api")
     application.include_router(notifications.router, prefix="/api")
     application.include_router(messages.router, prefix="/api")
