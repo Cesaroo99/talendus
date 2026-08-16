@@ -1023,5 +1023,5 @@ def sitemap_url(fr, en):
     + "\n</urlset>\n",
     encoding="utf-8",
 )
-(ROOT / "robots.txt").write_text("User-agent: *\nAllow: /\nSitemap: https://talendus.ca/sitemap.xml\n", encoding="utf-8")
+(ROOT / "robots.txt").write_text("User-agent: *\nAllow: /\nDisallow: /admin/\nSitemap: https://talendus.ca/sitemap.xml\n", encoding="utf-8")
 print("done")
