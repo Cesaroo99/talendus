@@ -8,6 +8,8 @@ from positioning import (
     human_hire_band, problems_section, approach_section, process_section,
     why_talendus_section, ai_engine_section, human_section, company_types_section,
     candidate_journey_section, for_candidates_section,
+    placement_process_services_section, technology_section, ai_screening_section,
+    competitive_advantage_section,
 )
 
 A = "../assets/"
@@ -91,7 +93,7 @@ INDEX_EN = rf"""
                 <div class="space16"></div>
                 <h1>The right talent. Faster. Smarter.</h1>
                 <div class="space16"></div>
-                <p>We search, evaluate and shortlist the most relevant people for companies — human expertise, technology and artificial intelligence, in one process.</p>
+                <p>We search, evaluate and shortlist the most relevant people for companies. Our teams already rely on technology and artificial intelligence — you do not have to use the tools yourself.</p>
             </div>
             <div class="tl-persona-cards">
               <a class="tl-persona-card is-talent" href="candidates.html" data-set-persona="talent">
@@ -116,7 +118,7 @@ INDEX_EN = rf"""
 def build_en(write, wrap, page_hero):
     write("en/index.html", wrap(
         "Talendus | Intelligent placement agency",
-        "Talendus is an intelligent placement agency. Hand us the need: we search, screen and present the most relevant talent. Every industry. We hire better, faster and more intelligently with AI.",
+        "Talendus is a placement agency that already uses artificial intelligence in its operations. Hand us the need: we search, screen and present the most relevant talent. Every industry. We hire better, faster and more intelligently with AI.",
         "en/",
         INDEX_EN + homepage_after_hero("en") + f"""
     <section class="tl-section tl-ice"><div class="container">
@@ -134,12 +136,12 @@ def build_en(write, wrap, page_hero):
 
     write("en/about.html", wrap(
         "About Talendus | Intelligent placement agency",
-        "Talendus is a placement agency that combines recruiting, human expertise, technology and artificial intelligence. Every industry, every kind of role.",
+        "Talendus is a placement agency that already combines human expertise, technology and artificial intelligence. Every industry, every kind of role.",
         "en/about.html",
         page_hero(
             "The agency",
-            "Talendus was built to make hiring more effective, more human and more intelligent.",
-            "We do not merely give access to candidates. We do the search for companies. We do not merely put talent in front of ads: we accompany people toward opportunities that fit.",
+            "Talendus was built as a next-generation placement agency: human, technological, and already augmented by AI.",
+            "We do not merely give access to candidates. We do the search for companies. Artificial intelligence is already part of how Talendus works today.",
             actions='<a class="tl-btn" href="candidates.html" data-set-persona="talent">For talent</a><a class="tl-btn tl-btn-ghost" href="employers.html" data-set-persona="entreprise">For employers</a>',
         )
         + f"""
@@ -148,14 +150,14 @@ def build_en(write, wrap, page_hero):
     <div class="tl-prose" style="max-width:none">
     <h2 class="tl-h2">Why we exist</h2>
     <p>Too many companies lose weeks looking for the right people, sorting too many applications, or letting a process drag. Too many talented people send resumes into the void. Hiring deserves better than a job board or software you have to operate alone.</p>
-    <p>Talendus was designed as a next-generation placement agency: generalist, human and technological. When a company has a need, it hands it to us. We take on the search and the screening. Artificial intelligence and our tools speed up that internal work. Consultants stay there to understand, qualify and present. The company keeps the final decision.</p>
+    <p>Talendus was designed as a next-generation placement agency: generalist, human and technological. When a company has a need, it hands it to us. We take on the search and the screening. Artificial intelligence is already at the heart of our internal tools: it speeds up analysis, search and some screening steps. Consultants stay there to understand, qualify and present. The company keeps the final decision.</p>
     <h2 class="tl-h2">What we do</h2>
     <p>We connect companies and talent. Developers, accountants, welders, nurses, drivers, HR managers — and many other roles, in every industry. A consultant presents the files. Candidates and employers stay on their own side. There is no unmediated direct channel.</p>
-    <p>We hire better, faster and more intelligently with AI: “we hire” means Talendus runs the search and screening for the company. “Faster”: our tools and organization speed the work. “More intelligently”: data, technology, AI and human expertise, together.</p>
+    <p>We hire better, faster and more intelligently with AI: “we hire” means Talendus runs the search and screening for the company. “Faster”: our tools and AI already accelerate certain steps. “More intelligently”: data, technology, AI and human expertise, together — today.</p>
     <h2 class="tl-h2">What we are not</h2>
     <p>Not a job board where the company browses a database. Not a marketplace. Not a self-serve ATS. Not software that promises a perfect candidate without a human. Technology stays in service of the Talendus process.</p>
-    <h2 class="tl-h2">Where we're headed</h2>
-    <p>We are progressively integrating analysis and matching capabilities into our process. They are not all live today. We do not simulate scores or rankings. Until a capability is actually in place, a consultant does the work — with the same rule: you hand us the need, we present a qualified selection.</p>
+    <h2 class="tl-h2">AI is already part of how we operate</h2>
+    <p>Talendus already uses artificial intelligence in its recruiting operations. It is not a long-term vision and not a “coming soon” feature. Our teams rely on internal tools to analyse resumes, extract skills, relate a profile to a role, synthesize information and prioritize files for review. You do not have to use those tools: we mobilize them on your behalf. Final qualification stays human.</p>
     </div>
     </div>
     <div class="col-lg-4 offset-lg-1">
@@ -194,7 +196,7 @@ def build_en(write, wrap, page_hero):
     )
     write("en/services.html", wrap(
         "Recruiting services | Talendus",
-        "Permanent recruiting, search, managers and skilled roles for companies in every industry.",
+        "Talent search, screening, qualification, shortlist and placement. Talendus already uses AI internally to speed up analysis. The company decides. Every industry.",
         "en/services.html",
         page_hero(
             "Services",
@@ -207,19 +209,22 @@ def build_en(write, wrap, page_hero):
       <div class="tl-grid-4">{services_cards}</div>
     </div></section>
     '''
-        + ai_coming_soon("en"),
+        + placement_process_services_section("en")
+        + technology_section("en")
+        + ai_coming_soon("en")
+        + competitive_advantage_section("en"),
         lang="en",
         alt="services.html",
     ))
 
     write("en/employers.html", wrap(
         "Employers | Placement agency — Talendus",
-        "Hand a hire to Talendus. We search, screen and present a qualified shortlist. Every industry. You keep the final decision.",
+        "Hand a hire to Talendus. We already use AI internally to speed up search, analysis and screening. You receive a qualified shortlist and keep the final decision.",
         "en/employers.html",
         page_hero(
             "Employers",
             "Hiring? Hand us the need.",
-            "Talendus searches, evaluates and shortlists the most relevant talent. You review a qualified selection and make the final decision. Every industry, every company size.",
+            "Talendus searches, evaluates and shortlists the most relevant talent. We already use artificial intelligence in our internal tools to speed up search, analysis and screening. You review a qualified selection and make the final decision.",
             actions='<a class="tl-btn" href="contact.html">Hand us the search</a><a class="tl-btn tl-btn-ghost" href="post-a-job.html">Describe my need</a>',
             badges='<span class="tl-badge tl-badge-light">Placement agency</span> <span class="tl-badge tl-badge-light">Every industry</span>',
         )
@@ -231,7 +236,7 @@ def build_en(write, wrap, page_hero):
         <div class="tl-kicker">The Talendus solution</div>
         <h2 class="tl-h2">We do the search for you.</h2>
         <p>You have a role to fill. Instead of posting an ad and sorting dozens — sometimes hundreds — of applications, you hand the need to Talendus. We understand the role, search for profiles, analyse careers, screen, speak with candidates when needed, evaluate, then present a qualified selection.</p>
-        <p>You do not access a resume database. You do not “find talent” on Talendus as if it were ATS software. You mandate an agency. Artificial intelligence helps our teams process information faster; it is not an assistant you use to hunt on your own. The hiring decision stays yours.</p>
+        <p>You do not access a resume database. You do not “find talent” on Talendus as if it were ATS software. You mandate an agency. Talendus already uses artificial intelligence in its internal tools to speed up search, analysis and screening. You benefit from that power without using it yourself. The hiring decision stays yours.</p>
       </div>
     </div></section>
     """
@@ -247,6 +252,8 @@ def build_en(write, wrap, page_hero):
     </div></section>
     """
         + ai_engine_section("en")
+        + ai_screening_section("en")
+        + competitive_advantage_section("en")
         + human_section("en")
         + why_talendus_section("en")
         + company_types_section("en")
@@ -676,7 +683,7 @@ def build_en(write, wrap, page_hero):
             <li>Plan 30/60/90-day onboarding: that is where retention is won.</li>
           </ul>
           <h2>How Talendus steps in</h2>
-          <p>We target profiles by role and skills, validate the fit and present a few files — each one we're ready to stand behind. AI will come later: matching and ranking are not simulated today.</p>
+          <p>We target profiles by role and skills, validate the fit and present a few files — each one we're ready to stand behind. Talendus already uses AI internally to analyse information faster and spot correspondences; it does not choose in the company's place. Qualification stays human.</p>
           <p><a href="sectors.html">Every industry</a> · <a href="jobs.html">Job openings</a></p>
           <div class="tl-actions" style="margin-top:28px">
             <a class="tl-btn" href="contact.html">Talk to Talendus</a>
@@ -796,7 +803,7 @@ def build_en(write, wrap, page_hero):
         <h2 class="tl-h2">What you do — and what we do</h2>
         <p><strong>1. Describe your need.</strong> Role, responsibilities, skills, experience, qualifications, conditions, location, particular requirements.</p>
         <p><strong>2. Talendus analyses the role.</strong> We clarify must-haves and the type of profile before approaching anyone.</p>
-        <p><strong>3. We search for talent.</strong> Network, known profiles, tools, and progressively AI in service of our teams — not an engine you operate yourself.</p>
+        <p><strong>3. We search for talent.</strong> Network, known profiles, technological tools and artificial intelligence already used by our teams — not an engine you operate yourself.</p>
         <p><strong>4. We screen.</strong> Skills, path, fit with the mandate. Noise does not reach your desk.</p>
         <p><strong>5. We evaluate profiles.</strong> Conversations and interviews with candidates when needed.</p>
         <p><strong>6. We present the best candidates.</strong> A qualified shortlist, not a massive list of resumes.</p>

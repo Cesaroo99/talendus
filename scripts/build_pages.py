@@ -13,6 +13,8 @@ from positioning import (
     human_hire_band, problems_section, approach_section, process_section,
     why_talendus_section, ai_engine_section, human_section, company_types_section,
     candidate_journey_section, for_companies_section, for_candidates_section,
+    placement_process_services_section, technology_section, ai_screening_section,
+    competitive_advantage_section, augmented_recruiting_section,
 )
 from en_pages import build_en
 from seo_pages import write_fr as write_seo_fr
@@ -178,7 +180,7 @@ INDEX_BODY = r"""
                 <div class="space16"></div>
                 <h1>Les bons talents. Plus rapidement. Plus intelligemment.</h1>
                 <div class="space16"></div>
-                <p>Nous recherchons, évaluons et présélectionnons les talents les plus pertinents pour les entreprises — expertise humaine, technologie et intelligence artificielle, au service d'un seul processus.</p>
+                <p>Nous recherchons, évaluons et présélectionnons les talents les plus pertinents pour les entreprises. Nos équipes s'appuient déjà sur la technologie et l'intelligence artificielle — vous n'avez pas à les utiliser vous-même.</p>
             </div>
             <div class="tl-persona-cards">
               <a class="tl-persona-card is-talent" href="candidats.html" data-set-persona="talent">
@@ -201,7 +203,7 @@ INDEX_BODY = r"""
 
 write("index.html", wrap(
     "Talendus | Agence de placement intelligente",
-    "Talendus est une agence de placement intelligente. Confiez votre besoin : nous recherchons, présélectionnons et présentons les talents les plus pertinents. Tous secteurs. Nous recrutons mieux, plus vite et plus intelligemment grâce à l'IA.",
+    "Talendus est une agence de placement qui utilise déjà l'intelligence artificielle dans ses opérations. Confiez votre besoin : nous recherchons, présélectionnons et présentons les talents les plus pertinents. Tous secteurs. Nous recrutons mieux, plus vite et plus intelligemment grâce à l'IA.",
     "",
     INDEX_BODY + homepage_after_hero("fr") + """
     <section class="tl-section tl-ice"><div class="container">
@@ -224,23 +226,23 @@ def simple_page(title, desc, slug, kicker, h1, lead, inner, actions=""):
 # À propos
 simple_page(
     "À propos de Talendus | Agence de placement intelligente",
-    "Talendus est une agence de placement qui combine recrutement, expertise humaine, technologie et intelligence artificielle. Tous secteurs, tous métiers.",
-    "a-propos.html", "L'agence", "Talendus est né pour rendre le recrutement plus efficace, plus humain et plus intelligent.",
-    "Nous ne donnons pas simplement accès à des candidats. Nous faisons le travail de recherche pour les entreprises. Nous n'alignons pas simplement les talents devant des offres : nous les accompagnons vers les opportunités qui leur correspondent.",
+    "Talendus est une agence de placement qui combine déjà expertise humaine, technologie et intelligence artificielle. Tous secteurs, tous métiers.",
+    "a-propos.html", "L'agence", "Talendus construit une nouvelle génération de recrutement : humain, technologique et déjà augmenté par l'IA.",
+    "Nous ne donnons pas simplement accès à des candidats. Nous faisons le travail de recherche pour les entreprises. L'intelligence artificielle fait déjà partie de la manière dont Talendus travaille aujourd'hui.",
     """
     <section class="tl-section"><div class="container">
     <div class="row g-4"><div class="col-lg-7">
     <div class="tl-prose" style="max-width:none">
     <h2 class="tl-h2">Pourquoi nous existons</h2>
     <p>Trop d'entreprises perdent des semaines à chercher les bonnes personnes, à trier trop de candidatures, ou à laisser un processus s'éterniser. Trop de talents envoient des CV dans le vide. Le recrutement mérite mieux qu'un tableau d'affichage ou qu'un logiciel que l'on doit apprendre à utiliser seul.</p>
-    <p>Talendus a été conçu comme une agence de placement nouvelle génération : généraliste, humaine et technologique. Lorsqu'une entreprise a un besoin, elle nous le transmet. Nous prenons en charge la recherche et la présélection. L'intelligence artificielle et nos outils accélèrent ce travail interne. Les conseillers restent là pour comprendre, qualifier et présenter. L'entreprise garde la décision finale.</p>
+    <p>Talendus a été conçu comme une agence de placement nouvelle génération : généraliste, humaine et technologique. Lorsqu'une entreprise a un besoin, elle nous le transmet. Nous prenons en charge la recherche et la présélection. L'intelligence artificielle est déjà au cœur de nos outils internes : elle accélère l'analyse, la recherche et certaines étapes de présélection. Les conseillers restent là pour comprendre, qualifier et présenter. L'entreprise garde la décision finale.</p>
     <h2 class="tl-h2">Ce que nous faisons</h2>
     <p>Nous rapprochons les entreprises et les talents. Développeurs, comptables, soudeurs, infirmiers, chauffeurs, responsables RH, gestionnaires — et bien d'autres métiers, dans tous les secteurs. Un conseiller présente les dossiers. Candidats et employeurs restent chacun de leur côté. Il n'y a pas de canal direct non médié.</p>
-    <p>Nous recrutons mieux, plus vite et plus intelligemment grâce à l'IA : « nous recrutons » signifie que Talendus mène la recherche et la présélection pour le compte de l'entreprise. « Plus vite » : nos outils et notre organisation accélèrent le travail. « Plus intelligemment » : données, technologie, IA et expertise humaine, ensemble.</p>
+    <p>Nous recrutons mieux, plus vite et plus intelligemment grâce à l'IA : « nous recrutons » signifie que Talendus mène la recherche et la présélection pour le compte de l'entreprise. « Plus vite » : nos outils et l'IA accélèrent déjà certaines étapes. « Plus intelligemment » : données, technologie, IA et expertise humaine, ensemble — dès aujourd'hui.</p>
     <h2 class="tl-h2">Ce que nous ne sommes pas</h2>
     <p>Pas un job board où l'entreprise parcourt une base. Pas une marketplace. Pas un ATS en libre-service. Pas un logiciel qui promet un candidat parfait sans humain. La technologie reste au service du processus Talendus.</p>
-    <h2 class="tl-h2">Où nous allons</h2>
-    <p>Nous intégrons progressivement des capacités d'analyse et de rapprochement au cœur de notre processus. Elles ne sont pas toutes opérationnelles aujourd'hui. Nous ne simulons pas de scores ni de classements. Tant qu'une capacité n'est pas réellement en place, un conseiller fait le travail — avec la même règle : vous confiez le besoin, nous présentons une sélection qualifiée.</p>
+    <h2 class="tl-h2">L'IA, déjà dans notre identité opérationnelle</h2>
+    <p>Talendus utilise déjà l'intelligence artificielle dans ses opérations de recrutement. Elle n'est pas une vision à long terme ni une fonctionnalité « bientôt disponible ». Nos équipes s'appuient sur des outils internes pour analyser les CV, extraire les compétences, rapprocher un profil d'un poste, synthétiser l'information et prioriser les dossiers à examiner. Vous n'avez pas à utiliser ces outils : nous les mobilisons pour votre compte. La qualification finale reste humaine.</p>
     </div>
     </div>
     <div class="col-lg-4 offset-lg-1">
@@ -266,7 +268,7 @@ simple_page(
           <li>Transparence sur les délais et la rareté du profil.</li>
           <li>Suivi d'intégration 30/60/90 jours.</li>
           <li>Garantie de remplacement sur les mandats permanents.</li>
-          <li>Pas de fausse fonctionnalité IA : ce qui n'est pas intégré n'est pas simulé.</li>
+          <li>L'IA accélère notre travail interne ; la qualification reste humaine.</li>
           <li>Aucun contact direct employeur–candidat hors de Talendus.</li>
         </ul>
       </div>
@@ -302,7 +304,7 @@ services_cards = "".join(
 )
 simple_page(
     "Services de recrutement | Agence de placement Talendus",
-    "Recrutement permanent, chasse de têtes, cadres et métiers spécialisés. Talendus recherche et présélectionne ; l'entreprise décide. Tous secteurs.",
+    "Recherche de talents, présélection, qualification, shortlist et placement. Talendus utilise déjà l'IA en interne pour accélérer l'analyse. L'entreprise décide. Tous secteurs.",
     "services.html", "Services", "Du besoin à la shortlist : un seul interlocuteur.",
     "Permanent, temporaire, chasse de têtes, cadres et métiers. Vous confiez le mandat. Nous faisons la recherche. Vous gardez le choix final.",
     f'''
@@ -317,7 +319,7 @@ simple_page(
           <ul>
             <li>Une shortlist qualifiée, pas un portail d'emplois déguisé.</li>
             <li>Un délai annoncé dès le brief, selon la rareté réelle du profil.</li>
-            <li>Un conseiller qui comprend le poste — l'IA soutient nos équipes, elle ne vous est pas remise comme un moteur de recherche.</li>
+            <li>Un conseiller qui comprend le poste — l'IA est déjà utilisée par Talendus, elle ne vous est pas remise comme un moteur de recherche.</li>
           </ul>
         </div>
         <div class="col-lg-6">
@@ -327,7 +329,7 @@ simple_page(
         </div>
       </div>
     </div></section>
-    ''' + ai_coming_soon("fr"),
+    ''' + placement_process_services_section("fr") + technology_section("fr") + ai_coming_soon("fr") + competitive_advantage_section("fr"),
     actions='<a class="tl-btn" href="contact.html">Confier mon recrutement</a>'
 )
 
@@ -336,7 +338,7 @@ EMPLOYERS_BODY = (
     page_hero(
         "Entreprises",
         "Vous recrutez ? Confiez-nous votre besoin.",
-        "Talendus recherche, évalue et présélectionne les talents les plus pertinents. Vous étudiez une shortlist qualifiée et vous prenez la décision finale. Tous secteurs, toutes tailles d'entreprise.",
+        "Talendus recherche, évalue et présélectionne les talents les plus pertinents. Nous utilisons déjà l'intelligence artificielle dans nos outils internes pour accélérer la recherche, l'analyse et la présélection. Vous étudiez une shortlist qualifiée et vous prenez la décision finale.",
         actions='<a class="tl-btn" href="contact.html">Confier mon recrutement</a><a class="tl-btn tl-btn-ghost" href="publier-une-offre.html">Décrire mon besoin</a>',
         badges='<span class="tl-badge tl-badge-light">Agence de placement</span> <span class="tl-badge tl-badge-light">Tous secteurs</span>'
     )
@@ -348,7 +350,7 @@ EMPLOYERS_BODY = (
         <div class="tl-kicker">La solution Talendus</div>
         <h2 class="tl-h2">Nous faisons le travail de recherche pour vous.</h2>
         <p>Vous avez un poste à pourvoir. Au lieu de publier une annonce et de trier des dizaines — parfois des centaines — de candidatures, vous transmettez le besoin à Talendus. Nous comprenons le poste, nous recherchons les profils, nous analysons les parcours, nous présélectionnons, nous échangeons avec les candidats lorsque c'est nécessaire, nous évaluons, puis nous vous présentons une sélection qualifiée.</p>
-        <p>Vous n'accédez pas à une base de CV. Vous ne « cherchez pas des talents » sur Talendus comme sur un logiciel ATS. Vous mandattez une agence. L'intelligence artificielle aide nos équipes à traiter plus vite l'information ; elle n'est pas un assistant que vous utilisez pour chasser vous-même. La décision d'embauche reste la vôtre.</p>
+        <p>Vous n'accédez pas à une base de CV. Vous ne « cherchez pas des talents » sur Talendus comme sur un logiciel ATS. Vous mandattez une agence. Talendus utilise déjà l'intelligence artificielle dans ses outils internes pour accélérer la recherche, l'analyse et la présélection des talents. Vous bénéficiez de cette puissance sans avoir à l'utiliser vous-même. La décision d'embauche reste la vôtre.</p>
       </div>
     </div></section>
     """
@@ -376,6 +378,8 @@ EMPLOYERS_BODY = (
     </div></section>
     """
     + ai_engine_section("fr")
+    + ai_screening_section("fr")
+    + competitive_advantage_section("fr")
     + human_section("fr")
     + why_talendus_section("fr")
     + company_types_section("fr")
@@ -433,7 +437,7 @@ EMPLOYERS_BODY = (
 )
 write("entreprises.html", wrap(
     "Entreprises | Agence de placement — Talendus",
-    "Confiez un recrutement à Talendus. Nous recherchons, présélectionnons et présentons une shortlist qualifiée. Tous secteurs. Vous gardez la décision finale.",
+    "Confiez un recrutement à Talendus. Nous utilisons déjà l'IA en interne pour accélérer la recherche, l'analyse et la présélection. Vous recevez une shortlist qualifiée et gardez la décision finale.",
     "entreprises.html",
     EMPLOYERS_BODY,
 ))
@@ -818,7 +822,7 @@ for slug, title, cat, img, lead in ARTICLES:
             <li>Prévoir l'accueil 30/60/90 jours : c'est là que se joue la rétention.</li>
           </ul>
           <h2>Comment Talendus intervient</h2>
-          <p>Nous ciblons des profils selon le métier et les compétences, nous validons le fit et nous présentons peu de dossiers — chacun que nous sommes prêts à défendre. L'IA aide Talendus à traiter l'information plus vite, au cœur de notre processus ; elle ne choisit pas à la place de l'entreprise, et plusieurs capacités sont encore en cours d'intégration.</p>
+          <p>Nous ciblons des profils selon le métier et les compétences, nous validons le fit et nous présentons peu de dossiers — chacun que nous sommes prêts à défendre. Talendus utilise déjà l'IA en interne pour analyser plus vite les informations et identifier des correspondances ; elle ne choisit pas à la place de l'entreprise. La qualification reste humaine.</p>
           <p><a href="secteurs.html">Tous les secteurs</a> · <a href="emplois.html">Offres d'emploi</a> · <a href="entreprises.html">Solutions entreprises</a></p>
           <div class="tl-actions" style="margin-top:28px">
             <a class="tl-btn" href="contact.html">Confier mon recrutement</a>
@@ -912,7 +916,7 @@ simple_page(
         <h2 class="tl-h2">Ce que vous avez à faire — et ce que nous faisons</h2>
         <p><strong>1. Décrivez votre besoin.</strong> Poste, responsabilités, compétences, expérience, qualifications, conditions, lieu, exigences particulières. Plus le brief est clair, plus la recherche est nette.</p>
         <p><strong>2. Talendus analyse le poste.</strong> Nous clarifions les critères essentiels et le type de profil recherché avant d'approcher qui que ce soit.</p>
-        <p><strong>3. Nous recherchons les talents.</strong> Réseau, profils connus, outils, et progressivement l'IA au service de nos équipes — pas un moteur que vous utilisez vous-même.</p>
+        <p><strong>3. Nous recherchons les talents.</strong> Réseau, profils connus, outils technologiques et intelligence artificielle déjà utilisés par nos équipes — pas un moteur que vous opérez vous-même.</p>
         <p><strong>4. Nous présélectionnons.</strong> Compétences, parcours, cohérence avec le mandat. Le bruit n'arrive pas sur votre bureau.</p>
         <p><strong>5. Nous évaluons les profils.</strong> Échanges et entretiens avec les candidats lorsque c'est nécessaire.</p>
         <p><strong>6. Nous vous présentons les meilleurs candidats.</strong> Une shortlist qualifiée, pas une liste massive de CV.</p>
