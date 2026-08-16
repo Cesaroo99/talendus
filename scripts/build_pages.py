@@ -172,11 +172,11 @@ INDEX_BODY = r"""
         <div class="img1"><img src="assets/img/all-images/industry/usine-equipe.jpg" alt="Équipe au travail" fetchpriority="high" decoding="async"></div>
         <div class="container">
             <div class="hero2-heading tl-hero-lock">
-                <h5>Talendus — La plateforme de recrutement intelligente pour toutes les entreprises.</h5>
+                <h5>Talendus. La plateforme de recrutement intelligente pour toutes les entreprises.</h5>
                 <div class="space16"></div>
                 <h1>Recrutez mieux, plus vite et plus intelligemment.</h1>
                 <div class="space16"></div>
-                <p>Talendus est la plateforme de recrutement qui aide les entreprises de tous secteurs à trouver les talents dont elles ont besoin.</p>
+                <p>Vous cherchez un emploi, ou vous recrutez ? Talendus accompagne les candidats et les entreprises de toutes tailles, des PME aux plus grandes organisations, dans tous les secteurs.</p>
                 <p>Du premier besoin de recrutement à l'identification des meilleurs candidats, Talendus simplifie votre processus de recrutement.</p>
             </div>
             <div class="tl-persona-cards">
@@ -189,7 +189,7 @@ INDEX_BODY = r"""
               <a class="tl-persona-card is-hire" href="entreprises.html" data-set-persona="entreprise">
                 <span class="tl-kicker">Entreprises</span>
                 <h2>Je recrute</h2>
-                <p>Publiez une offre, trouvez des talents ou parlez à un recruteur. Quel que soit votre secteur.</p>
+                <p>On vous présente les bons talents, dans les meilleurs délais. Une shortlist claire, pas une pile de CV à trier.</p>
                 <span class="tl-persona-go">Trouver des talents <i class="fa-solid fa-arrow-right"></i></span>
               </a>
             </div>
@@ -200,7 +200,7 @@ INDEX_BODY = r"""
 
 write("index.html", wrap(
     "Talendus | Plateforme de recrutement pour toutes les entreprises",
-    "Talendus est la plateforme de recrutement intelligente pour toutes les entreprises. Recrutez mieux, plus vite et plus intelligemment. Tous secteurs.",
+    "Talendus est la plateforme de recrutement intelligente pour toutes les entreprises, des PME aux plus grandes organisations. Recrutez mieux, plus vite et plus intelligemment. Tous secteurs.",
     "",
     INDEX_BODY + homepage_after_hero("fr"),
     solid=False,
@@ -519,7 +519,7 @@ write("contact.html", wrap(
     page_hero(
         "Contact",
         "Écrivez-nous. On vous rappelle.",
-        "Cherchez-vous un emploi, ou avez-vous un poste à pourvoir ? Choisissez votre porte — le formulaire s'ajuste.",
+        "Cherchez-vous un emploi, ou avez-vous un poste à pourvoir ? Choisissez votre porte. Le formulaire s'ajuste.",
         actions='',
         badges='<span class="tl-badge tl-badge-light">Sur rendez-vous</span> <span class="tl-badge tl-badge-light">Lun–Ven, 8 h à 17 h</span>'
     )
