@@ -21,7 +21,6 @@ services:
     dockerContext: .
     healthCheckPath: /api/health
     autoDeployTrigger: checksPass
-    maxShutdownDelaySeconds: 30
     disk:
       name: talendus-files
       mountPath: /var/data
