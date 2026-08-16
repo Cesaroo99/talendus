@@ -85,11 +85,11 @@ INDEX_EN = rf"""
         <div class="img1"><img src="{img('usine-equipe.jpg')}" alt="Team at work" fetchpriority="high" decoding="async"></div>
         <div class="container">
             <div class="hero2-heading tl-hero-lock">
-                <h5>Talendus — The intelligent recruiting platform for every company.</h5>
+                <h5>Talendus. The intelligent recruiting platform for every company.</h5>
                 <div class="space16"></div>
                 <h1>Hire better, faster and more intelligently.</h1>
                 <div class="space16"></div>
-                <p>Talendus is the recruiting platform that helps companies in every industry find the talent they need.</p>
+                <p>Looking for a job, or hiring? Talendus supports candidates and companies of every size, from SMEs to larger organizations, in every industry.</p>
                 <p>From the first hiring need to identifying the best candidates, Talendus simplifies your recruiting process.</p>
             </div>
             <div class="tl-persona-cards">
@@ -102,7 +102,7 @@ INDEX_EN = rf"""
               <a class="tl-persona-card is-hire" href="employers.html" data-set-persona="entreprise">
                 <span class="tl-kicker">Employers</span>
                 <h2>I'm hiring</h2>
-                <p>Post a job, find talent or talk to a recruiter. Whatever your industry.</p>
+                <p>We send you the right talent, fast. A clear shortlist, not a stack of resumes to sort.</p>
                 <span class="tl-persona-go">Find talent <i class="fa-solid fa-arrow-right"></i></span>
               </a>
             </div>
@@ -115,7 +115,7 @@ INDEX_EN = rf"""
 def build_en(write, wrap, page_hero):
     write("en/index.html", wrap(
         "Talendus | Recruiting platform for every company",
-        "Talendus is the intelligent recruiting platform for every company. Hire better, faster and more intelligently. Every industry.",
+        "Talendus is the intelligent recruiting platform for every company, from SMEs to larger organizations. Hire better, faster and more intelligently. Every industry.",
         "en/",
         INDEX_EN + homepage_after_hero("en"),
         solid=False,
@@ -378,7 +378,7 @@ def build_en(write, wrap, page_hero):
         page_hero(
             "Contact",
             "Write to us. We'll call you back.",
-            "Looking for a job, or filling a seat? Pick your door — the form follows.",
+            "Looking for a job, or filling a seat? Pick your door. The form follows.",
             actions='',
             badges='<span class="tl-badge tl-badge-light">By appointment</span> <span class="tl-badge tl-badge-light">Mon–Fri, 8 a.m. to 5 p.m.</span>',
         )
