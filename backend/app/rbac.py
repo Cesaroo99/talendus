@@ -11,8 +11,11 @@ def is_admin(user_or_role) -> bool:
 
 PERMISSIONS: dict[str, set[UserRole]] = {
     "jobs:read_public": set(UserRole),
-    "jobs:manage": {UserRole.EMPLOYER, UserRole.RECRUITER, UserRole.ADMIN, UserRole.SUPER_ADMIN},
-    "jobs:publish": {UserRole.EMPLOYER, UserRole.RECRUITER, UserRole.ADMIN, UserRole.SUPER_ADMIN},
+    "jobs:manage": {UserRole.RECRUITER, UserRole.ADMIN, UserRole.SUPER_ADMIN},
+    "jobs:publish": {UserRole.RECRUITER, UserRole.ADMIN, UserRole.SUPER_ADMIN},
+    "hiring:create": {UserRole.EMPLOYER, UserRole.RECRUITER, UserRole.ADMIN, UserRole.SUPER_ADMIN},
+    "hiring:read": {UserRole.EMPLOYER, UserRole.RECRUITER, UserRole.ADMIN, UserRole.SUPER_ADMIN},
+    "hiring:manage": {UserRole.RECRUITER, UserRole.ADMIN, UserRole.SUPER_ADMIN},
     "applications:create": {UserRole.CANDIDATE},
     "applications:own_read": {UserRole.CANDIDATE},
     "applications:manage": {UserRole.RECRUITER, UserRole.ADMIN, UserRole.SUPER_ADMIN},

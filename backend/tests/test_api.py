@@ -1,4 +1,4 @@
-from conftest import auth_header, register
+from conftest import auth_header, company_id_for, promote_admin, register, staff_publish_job
 
 PDF = b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n" + b"x" * 40
 
@@ -53,7 +53,8 @@ def test_candidate_cannot_create_job(client):
 
 def test_job_draft_not_public_then_publish(client):
     emp = register(client, "boss@example.com", "EMPLOYER", first_name="Jean", last_name="Rivest")
-    headers = auth_header(emp)
+    admin = promote_admin(client, "draft-admin@example.com")
+    headers = auth_header(admin)
     created = client.post(
         "/api/jobs",
         headers=headers,
@@ -66,6 +67,7 @@ def test_job_draft_not_public_then_publish(client):
             "skills": "MIG, TIG",
             "salary_min": 28,
             "salary_max": 34,
+            "company_id": company_id_for(client, emp),
         },
     )
     assert created.status_code == 200
@@ -79,18 +81,14 @@ def test_job_draft_not_public_then_publish(client):
     assert published.json()["data"]["status"] == "PUBLISHED"
     listed = client.get("/api/jobs", params={"q": "Soudeur"})
     assert any(item["id"] == job["id"] for item in listed.json()["data"])
+    assert any(item["id"] == job["id"] for item in listed.json()["data"])
 
 
 def test_apply_and_duplicate_and_status_and_notifications(client):
-    admin = _promote_admin(client, "apply-admin@example.com")
+    admin = promote_admin(client, "apply-admin@example.com")
     emp = register(client, "usine@example.com", "EMPLOYER")
     emp_headers = auth_header(emp)
-    job = client.post(
-        "/api/jobs",
-        headers=emp_headers,
-        json={"title": "Cariste", "location": "Laval", "sector": "Entrepôt", "slug": "cariste-test"},
-    ).json()["data"]
-    client.post(f"/api/jobs/{job['id']}/publish", headers=emp_headers)
+    job = staff_publish_job(client, emp, admin, title="Cariste", location="Laval", sector="Entrepôt", slug="cariste-test")
 
     cand = register(client, "karine@example.com", first_name="Karine", last_name="Lavoie")
     cand_headers = auth_header(cand)
@@ -143,8 +141,7 @@ def test_apply_and_duplicate_and_status_and_notifications(client):
 def test_idor_application_and_candidate_profile(client):
     emp = register(client, "client@example.com", "EMPLOYER")
     emp_headers = auth_header(emp)
-    job = client.post("/api/jobs", headers=emp_headers, json={"title": "Opérateur", "slug": "operateur-idor"}).json()["data"]
-    client.post(f"/api/jobs/{job['id']}/publish", headers=emp_headers)
+    job = staff_publish_job(client, emp, slug="operateur-idor", title="Opérateur")
 
     owner = register(client, "owner@example.com", first_name="Nadia")
     other = register(client, "other@example.com", first_name="Hugo")
@@ -163,10 +160,9 @@ def test_idor_application_and_candidate_profile(client):
 
 def test_closed_job_rejects_application(client):
     emp = register(client, "close@example.com", "EMPLOYER")
-    headers = auth_header(emp)
-    job = client.post("/api/jobs", headers=headers, json={"title": "Journalier", "slug": "journalier-close"}).json()["data"]
-    client.post(f"/api/jobs/{job['id']}/publish", headers=headers)
-    client.post(f"/api/jobs/{job['id']}/close", headers=headers)
+    admin = promote_admin(client, "close-admin@example.com")
+    job = staff_publish_job(client, emp, admin, title="Journalier", slug="journalier-close")
+    client.post(f"/api/jobs/{job['id']}/close", headers=auth_header(admin))
     cand = register(client, "apply-closed@example.com")
     res = client.post("/api/applications", headers=auth_header(cand), json={"job_id": job["id"]})
     assert res.status_code == 409
@@ -175,22 +171,18 @@ def test_closed_job_rejects_application(client):
 
 def test_public_apply_and_search_filters(client):
     emp = register(client, "searchco@example.com", "EMPLOYER")
-    headers = auth_header(emp)
-    job = client.post(
-        "/api/jobs",
-        headers=headers,
-        json={
-            "title": "Machiniste CNC",
-            "location": "Saint-Jérôme",
-            "sector": "Manufacturier",
-            "contract_type": "Permanent",
-            "skills": "Fanuc",
-            "salary_min": 30,
-            "salary_max": 38,
-            "slug": "machiniste-cnc-test",
-        },
-    ).json()["data"]
-    client.post(f"/api/jobs/{job['id']}/publish", headers=headers)
+    job = staff_publish_job(
+        client,
+        emp,
+        title="Machiniste CNC",
+        location="Saint-Jérôme",
+        sector="Manufacturier",
+        contract_type="Permanent",
+        skills="Fanuc",
+        salary_min=30,
+        salary_max=38,
+        slug="machiniste-cnc-test",
+    )
     found = client.get("/api/jobs", params={"q": "CNC", "location": "Saint-Jérôme", "sector": "Manufacturier"})
     assert any(item["slug"] == "machiniste-cnc-test" for item in found.json()["data"])
     applied = client.post(
@@ -214,22 +206,6 @@ def test_validation_error_format(client):
     assert body["code"] == "VALIDATION_ERROR"
 
 
-def _promote_admin(client, email: str) -> dict:
-    from app.database import SessionLocal
-    from app.models import User
-    from app.models.enums import UserRole
-
-    data = register(client, email, "EMPLOYER", first_name="Sophie", last_name="Admin")
-    db = SessionLocal()
-    user = db.get(User, data["user"]["id"])
-    user.role = UserRole.ADMIN
-    db.commit()
-    db.close()
-    res = client.post("/api/auth/login", json={"email": email, "password": "Password1!"})
-    assert res.status_code == 200
-    return res.json()["data"]
-
-
 def test_admin_bootstrap_forbidden_for_candidate(client):
     tokens = register(client, "noadmin@example.com")
     res = client.get("/api/admin/bootstrap", headers=auth_header(tokens))
@@ -237,7 +213,7 @@ def test_admin_bootstrap_forbidden_for_candidate(client):
 
 
 def test_admin_bootstrap_and_staff_candidate(client):
-    admin = _promote_admin(client, "boss-admin@example.com")
+    admin = promote_admin(client, "boss-admin@example.com")
     headers = auth_header(admin)
     boot = client.get("/api/admin/bootstrap", headers=headers)
     assert boot.status_code == 200
@@ -257,18 +233,10 @@ def test_admin_bootstrap_and_staff_candidate(client):
     assert denied.status_code == 403
 
 
-def _publish_job(client, emp_headers, **fields):
-    payload = {"title": "Cariste", "location": "Laval", "sector": "Entrepôt", "skills": "WMS, chariot", "slug": "match-cariste"}
-    payload.update(fields)
-    job = client.post("/api/jobs", headers=emp_headers, json=payload).json()["data"]
-    client.post(f"/api/jobs/{job['id']}/publish", headers=emp_headers)
-    return job
-
-
 def test_matching_scores_and_job_board(client):
     emp = register(client, "matchco@example.com", "EMPLOYER")
     emp_h = auth_header(emp)
-    job = _publish_job(client, emp_h)
+    job = staff_publish_job(client, emp, skills="WMS, chariot", slug="match-cariste")
     cand = register(client, "forklift@example.com", first_name="Karine")
     cand_h = auth_header(cand)
     client.patch(
@@ -285,7 +253,7 @@ def test_matching_scores_and_job_board(client):
     other = register(client, "office@example.com")
     denied = client.get(f"/api/matching/jobs/{job['id']}/candidates", headers=auth_header(other))
     assert denied.status_code == 403
-    staff = _promote_admin(client, "match-admin@example.com")
+    staff = promote_admin(client, "match-admin@example.com")
     matches = client.get(f"/api/matching/jobs/{job['id']}/candidates", headers=auth_header(staff))
     assert matches.status_code == 200
     board = client.get("/api/job-board")
@@ -301,7 +269,7 @@ def test_matching_scores_and_job_board(client):
 
 
 def test_messaging_idor_and_staff_thread(client):
-    admin = _promote_admin(client, "msg-admin@example.com")
+    admin = promote_admin(client, "msg-admin@example.com")
     admin_h = auth_header(admin)
     a = register(client, "msg-a@example.com", first_name="Aline")
     b = register(client, "msg-b@example.com", first_name="Bruno")
@@ -333,11 +301,11 @@ def test_messaging_idor_and_staff_thread(client):
 
 
 def test_interview_invoice_contract_and_email_body(client):
-    admin = _promote_admin(client, "ops-admin@example.com")
+    admin = promote_admin(client, "ops-admin@example.com")
     admin_h = auth_header(admin)
     emp = register(client, "ops-emp@example.com", "EMPLOYER", first_name="Jean")
     emp_h = auth_header(emp)
-    job = _publish_job(client, emp_h, slug="ops-cariste", title="Cariste")
+    job = staff_publish_job(client, emp, slug="ops-cariste", title="Cariste")
     cand = register(client, "ops-cand@example.com", first_name="Hugo")
     cand_h = auth_header(cand)
     applied = client.post("/api/applications", headers=cand_h, json={"job_id": job["id"]}).json()["data"]
@@ -449,11 +417,11 @@ def test_schema_tables_and_constraints(client):
 
 
 def test_staff_notes_hidden_from_candidate(client):
-    admin = _promote_admin(client, "notes-admin@example.com")
+    admin = promote_admin(client, "notes-admin@example.com")
     admin_h = auth_header(admin)
     emp = register(client, "notes-emp@example.com", "EMPLOYER")
     emp_h = auth_header(emp)
-    job = _publish_job(client, emp_h, slug="notes-cariste", title="Cariste")
+    job = staff_publish_job(client, emp, slug="notes-cariste", title="Cariste")
     cand = register(client, "notes-cand@example.com", first_name="Karine")
     cand_h = auth_header(cand)
     applied = client.post("/api/applications", headers=cand_h, json={"job_id": job["id"]}).json()["data"]
@@ -495,7 +463,7 @@ def test_suspended_account_cannot_login(client):
 
 
 def test_super_admin_preferences_settings_and_conversation(client):
-    admin = _promote_admin(client, "schema-admin@example.com")
+    admin = promote_admin(client, "schema-admin@example.com")
     from app.database import SessionLocal
     from app.models import User
     from app.models.enums import UserRole
@@ -561,31 +529,26 @@ def test_job_match_notification_on_publish(client):
         json={"city": "Laval", "sector": "Entrepôt", "skills": "WMS, chariot", "years_experience": 5},
     )
     emp = register(client, "match-pub@example.com", "EMPLOYER")
-    emp_h = auth_header(emp)
-    job = client.post(
-        "/api/jobs",
-        headers=emp_h,
-        json={
-            "title": "Cariste",
-            "location": "Laval",
-            "sector": "Entrepôt",
-            "skills": "WMS, chariot",
-            "slug": "cariste-notify",
-        },
-    ).json()["data"]
-    published = client.post(f"/api/jobs/{job['id']}/publish", headers=emp_h)
-    assert published.status_code == 200
+    staff_publish_job(
+        client,
+        emp,
+        title="Cariste",
+        location="Laval",
+        sector="Entrepôt",
+        skills="WMS, chariot",
+        slug="cariste-notify",
+    )
     notifs = client.get("/api/notifications", headers=cand_h).json()["data"]
     assert any(n["type"] == "JOB_MATCH" for n in notifs)
 
 
 def test_pipeline_bootstrap_and_status_api(client):
-    admin = _promote_admin(client, "pipe-admin@example.com")
+    admin = promote_admin(client, "pipe-admin@example.com")
     admin_h = auth_header(admin)
     emp = register(client, "pipe-emp@example.com", "EMPLOYER")
     emp_h = auth_header(emp)
     company = client.get("/api/companies/me", headers=emp_h).json()["data"]
-    job = _publish_job(client, emp_h, slug="pipe-cariste", title="Cariste")
+    job = staff_publish_job(client, emp, slug="pipe-cariste", title="Cariste")
     cand = register(client, "pipe-cand@example.com", first_name="Karine")
     cand_h = auth_header(cand)
     applied = client.post("/api/applications", headers=cand_h, json={"job_id": job["id"]}).json()["data"]
@@ -614,7 +577,7 @@ def test_pipeline_bootstrap_and_status_api(client):
 
 
 def test_stripe_checkout_and_webhook_without_keys(client):
-    admin = _promote_admin(client, "stripe-admin@example.com")
+    admin = promote_admin(client, "stripe-admin@example.com")
     admin_h = auth_header(admin)
     emp = register(client, "stripe-emp@example.com", "EMPLOYER")
     emp_h = auth_header(emp)

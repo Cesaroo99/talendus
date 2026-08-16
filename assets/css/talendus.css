@@ -683,7 +683,9 @@ a.tl-card:hover, .tl-job-card:hover, .tl-case:hover {
 .tl-chip.orange { background: rgba(255,107,0,.12); color: var(--tl-orange); }
 
 /* ----- Process ----- */
-.tl-steps { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+.tl-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.tl-steps-7,
+.tl-steps-8 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .tl-step {
   background: var(--tl-navy);
   color: #fff;
@@ -1209,6 +1211,8 @@ a.tl-card:hover, .tl-job-card:hover, .tl-case:hover {
   }
   .tl-grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .tl-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .tl-steps-7,
+  .tl-steps-8 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .vl-footer2-section-area .footer-widget-area.foot-padding1,
   .vl-footer2-section-area .footer-widget-area.foot-padding2 {
     padding-left: 0;
@@ -2483,8 +2487,19 @@ body.tl-persona-gateway #formulaire {
   color: var(--tl-orange);
   border-color: transparent;
 }
-.tl-ai-soon .tl-chip {
+.tl-ai-soon .tl-chip,
+.tl-ai-cap .tl-chip {
   margin-bottom: 8px;
+}
+.tl-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+@media (min-width: 800px) {
+  .tl-grid-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 .tl-ai-hint {
   margin: 0 0 22px;
@@ -2514,6 +2529,26 @@ body.tl-persona-gateway #formulaire {
 .tl-gateway-hero .hero2-heading p + p {
   margin-top: 8px;
 }
+
+.tl-prose {
+  max-width: 760px;
+}
+.tl-prose p {
+  margin-bottom: 1.05em;
+  line-height: 1.7;
+}
+.tl-why-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+@media (max-width: 991px) {
+  .tl-why-grid { grid-template-columns: 1fr; }
+  .tl-steps-7,
+  .tl-steps-8 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tl-step { min-height: 0; }
+}
+
 
 
 

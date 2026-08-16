@@ -1,6 +1,10 @@
 # Talendus
 
-Site et plateforme de **Talendus**, cabinet de recrutement industriel au Québec.
+Site et espace de **Talendus**, agence de placement intelligente.
+
+Devise : *Nous recrutons mieux, plus vite et plus intelligemment grâce à l'IA.*
+
+Talendus n'est pas un job board ni un logiciel ATS en libre-service. L'entreprise confie un besoin ; Talendus recherche, présélectionne et présente une shortlist. L'entreprise garde la décision finale. L'intelligence artificielle est déjà utilisée dans les outils internes de Talendus ; elle n'est pas un produit que le client opère lui-même.
 
 ## Comment le site se met à jour
 

@@ -56,7 +56,7 @@ def create_app() -> FastAPI:
     public_docs = settings.app_env != "production"
     application = FastAPI(
         title="Talendus API",
-        description="Back-end de la plateforme de recrutement Talendus, pour toutes les entreprises.",
+        description="Back-end de l'agence de placement Talendus.",
         version="1.0.0",
         docs_url="/api/docs" if public_docs else None,
         redoc_url="/api/redoc" if public_docs else None,
@@ -91,6 +91,7 @@ def create_app() -> FastAPI:
         interviews,
         invoices,
         jobs,
+        hiring_requests,
         matching,
         messages,
         notifications,
@@ -111,6 +112,7 @@ def create_app() -> FastAPI:
     application.include_router(companies.router, prefix="/api")
     application.include_router(recruiters.router, prefix="/api")
     application.include_router(jobs.router, prefix="/api")
+    application.include_router(hiring_requests.router, prefix="/api")
     application.include_router(applications.router, prefix="/api")
     application.include_router(notifications.router, prefix="/api")
     application.include_router(messages.router, prefix="/api")

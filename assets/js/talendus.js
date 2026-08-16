@@ -30,7 +30,7 @@
       file === "how-it-works.html"
     ) return "candidats";
     if (file === "emplois.html" || file === "jobs.html" || file.indexOf("emploi-") === 0 || file.indexOf("job-") === 0) return "jobs";
-    if (file === "services.html" || file === "service.html" || file === "publier-une-offre.html" || file === "post-a-job.html" || file === "solutions-rh.html" || file === "hr-solutions.html" || file.indexOf("recrutement-") === 0 || file.indexOf("industrial-recruiting") === 0 || file.indexOf("manufacturing-recruiting") === 0 || file.indexOf("technical-recruiting") === 0 || file.indexOf("permanent-recruiting") === 0 || file.indexOf("temporary-recruiting") === 0 || file.indexOf("executive-search") === 0 || file.indexOf("leadership-recruiting") === 0) return "employeurs";
+    if (file === "services.html" || file === "service.html" || file === "besoin-de-recrutement.html" || file === "hiring-need.html" || file === "publier-une-offre.html" || file === "post-a-job.html" || file === "solutions-rh.html" || file === "hr-solutions.html" || file.indexOf("recrutement-") === 0 || file.indexOf("industrial-recruiting") === 0 || file.indexOf("manufacturing-recruiting") === 0 || file.indexOf("technical-recruiting") === 0 || file.indexOf("permanent-recruiting") === 0 || file.indexOf("temporary-recruiting") === 0 || file.indexOf("executive-search") === 0 || file.indexOf("leadership-recruiting") === 0) return "employeurs";
     if (file === "a-propos.html" || file === "about.html") return "about";
     if (file === "blog.html" || file.indexOf("article-") === 0 || file === "blog-single.html" || (window.location.pathname || "").indexOf("/blog/") === 0) return "blog";
     if (file === "contact.html") return "contact";
@@ -172,12 +172,15 @@
       form.addEventListener("submit", function (e) {
         e.preventDefault();
         var kind = form.getAttribute("data-form") || (form.closest("#postuler") ? "apply" : "contact");
+        var hiringOk = isEn
+          ? "Your hiring need has been sent to Talendus. Our team will review the information and contact you to understand the role and define the profile together. Your recruiting starts with Talendus."
+          : "Votre besoin a bien été transmis à Talendus. Notre équipe va analyser les informations communiquées et vous contacter afin de mieux comprendre votre besoin et de définir avec vous le profil recherché. Votre recrutement commence avec Talendus.";
         var fallback = isEn
           ? "Thanks. On weekdays we usually reply within 30 minutes. A consultant will follow up."
           : "Merci. En semaine, on répond en général en moins de 30 minutes. Un conseiller vous rappelle.";
         var api = window.TalendusAPI;
         if (!api) {
-          showFormMessage(form, fallback, false);
+          showFormMessage(form, kind === "hiring-need" ? hiringOk : fallback, false);
           form.reset();
           return;
         }
@@ -212,22 +215,62 @@
           }).then(done);
           return;
         }
+        var user = api.currentUser && api.currentUser();
+        var isHiring = kind === "hiring-need" || !!formValue(form, ["poste", "entreprise"]);
+        if (isHiring && user && user.role === "EMPLOYER") {
+          var seats = parseInt(formValue(form, ["volume", "seats"]) || "1", 10);
+          api.request("/hiring-requests", {
+            method: "POST",
+            body: {
+              title: formValue(form, ["poste", "title"]) || formValue(form, ["objet"]) || "Besoin de recrutement",
+              seats: seats > 0 ? seats : 1,
+              location: formValue(form, ["localisation", "location"]) || null,
+              sector: formValue(form, ["secteur", "sector"]) || null,
+              contract_type: formValue(form, ["contrat", "contract"]) || null,
+              experience_level: formValue(form, ["experience"]) || null,
+              skills: formValue(form, ["competences", "skills"]) || null,
+              notes: formValue(form, ["message", "msg"]) || null,
+              contact_name: formValue(form, ["nom", "name"]) || null,
+              contact_role: formValue(form, ["fonction", "role"]) || null,
+              contact_email: formValue(form, ["courriel", "email"]) || null,
+              contact_phone: formValue(form, ["tel", "telephone", "phone"]) || null,
+              company_size: formValue(form, ["taille", "size"]) || null
+            }
+          }).then(function () {
+            showFormMessage(form, hiringOk, false);
+            form.reset();
+            if (window.TalendusTrack) window.TalendusTrack.lead({ content_name: "hiring-need" });
+          }).catch(function (err) {
+            showFormMessage(form, (err && err.message) || hiringOk, true);
+          }).then(done);
+          return;
+        }
         api.contact({
           name: formValue(form, ["nom", "name"]) || "Visiteur",
           email: formValue(form, ["courriel", "email"]) || "info@talendus.ca",
           phone: formValue(form, ["tel", "telephone", "phone"]) || null,
           company: formValue(form, ["entreprise", "company"]) || null,
           subject: formValue(form, ["objet", "profil", "metier", "subject"]) || null,
-          message: formValue(form, ["message", "msg"]) || formValue(form, ["cv", "region"]) || "Message site Talendus"
+          message: formValue(form, ["message", "msg"]) || formValue(form, ["cv", "region"]) || "Message site Talendus",
+          title: formValue(form, ["poste", "title"]) || null,
+          sector: formValue(form, ["secteur", "sector"]) || null,
+          location: formValue(form, ["localisation", "location"]) || null,
+          contract_type: formValue(form, ["contrat", "contract"]) || null,
+          seats: parseInt(formValue(form, ["volume", "seats"]) || "", 10) || null,
+          experience_level: formValue(form, ["experience"]) || null,
+          skills: formValue(form, ["competences", "skills"]) || null,
+          contact_role: formValue(form, ["fonction", "role"]) || null,
+          company_size: formValue(form, ["taille", "size"]) || null
         }).then(function () {
-          showFormMessage(form, fallback, false);
+          showFormMessage(form, isHiring ? hiringOk : fallback, false);
           form.reset();
           if (window.TalendusTrack) {
-            if (kind === "contact" || (form.getAttribute("data-form") === "contact")) window.TalendusTrack.contact({ content_name: "contact" });
+            if (isHiring) window.TalendusTrack.lead({ content_name: "hiring-need" });
+            else if (kind === "contact" || (form.getAttribute("data-form") === "contact")) window.TalendusTrack.contact({ content_name: "contact" });
             else window.TalendusTrack.lead({ content_name: kind || "form" });
           }
         }).catch(function () {
-          showFormMessage(form, fallback, false);
+          showFormMessage(form, isHiring ? hiringOk : fallback, false);
           form.reset();
         }).then(done);
       });

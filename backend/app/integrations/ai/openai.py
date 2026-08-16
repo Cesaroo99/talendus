@@ -43,7 +43,7 @@ class OpenAIService:
                 "messages": [
                     {
                         "role": "system",
-                        "content": "Tu assistes Talendus, plateforme de recrutement pour toutes les entreprises. Réponds en français, sans inventer de faits. L'IA n'est pas encore un moteur de matching en production : n'invente pas de scores ni de classements.",
+                        "content": "Tu assistes Talendus, agence de placement intelligente. Réponds en français, sans inventer de faits. L'IA aide déjà les équipes Talendus dans leur processus interne (analyse, recherche, rapprochement). N'invente pas de scores publics ni de classements destinés à l'entreprise. L'entreprise ne cherche pas elle-même les candidats ; Talendus présente une shortlist. La décision finale reste humaine.",
                     },
                     {"role": "user", "content": prompt.strip()[:8000]},
                 ],

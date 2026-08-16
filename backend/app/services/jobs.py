@@ -248,6 +248,12 @@ def _company_for_user(db: Session, user: User, company_id: str | None) -> Compan
 
 
 def create_job(db: Session, user: User, data: JobIn, ip: str | None = None) -> JobOffer:
+    if user.role == UserRole.EMPLOYER:
+        raise AppError(
+            403,
+            "Vous transmettez un besoin de recrutement ; Talendus crée et publie l'offre.",
+            "JOB_STAFF_ONLY",
+        )
     company = _company_for_user(db, user, data.company_id)
     job = JobOffer(
         company_id=company.id,
@@ -290,7 +296,7 @@ def update_job(db: Session, user: User, job_id: str, data: JobIn | JobPatchIn) -
     job = db.get(JobOffer, job_id)
     if not job:
         raise AppError(404, "Offre introuvable.", "JOB_NOT_FOUND")
-    _assert_can_manage(db, user, job)
+    _assert_can_write(db, user, job)
     payload = data.model_dump(exclude_unset=True, exclude={"company_id", "slug"})
     if "expires_at" in payload:
         payload["expires_at"] = _parse_expires(payload.get("expires_at"))
@@ -312,7 +318,7 @@ def set_job_status(db: Session, user: User, job_id: str, status: JobStatus) -> J
     job = db.get(JobOffer, job_id)
     if not job:
         raise AppError(404, "Offre introuvable.", "JOB_NOT_FOUND")
-    _assert_can_manage(db, user, job)
+    _assert_can_write(db, user, job)
     job.status = status
     if status == JobStatus.PUBLISHED:
         job.published_at = job.published_at or utcnow()
@@ -345,6 +351,7 @@ def get_managed_job(db: Session, user: User, job_id: str) -> JobOffer:
 
 def duplicate_job(db: Session, user: User, job_id: str) -> JobOffer:
     source = get_managed_job(db, user, job_id)
+    _assert_can_write(db, user, source)
     copy = JobOffer(
         company_id=source.company_id,
         recruiter_id=source.recruiter_id,
@@ -383,6 +390,7 @@ def duplicate_job(db: Session, user: User, job_id: str) -> JobOffer:
 
 def delete_job(db: Session, user: User, job_id: str) -> None:
     job = get_managed_job(db, user, job_id)
+    _assert_can_write(db, user, job)
     if job.status == JobStatus.PUBLISHED:
         raise AppError(400, "Archivez l'offre publiée avant de la supprimer.", "JOB_PUBLISHED")
     db.delete(job)
@@ -396,4 +404,14 @@ def _assert_can_manage(db: Session, user: User, job: JobOffer) -> None:
     if user.role == UserRole.EMPLOYER:
         if user_belongs_to_company(db, user, job.company_id):
             return
-    raise AppError(403, "Vous ne pouvez pas modifier cette offre.", "FORBIDDEN")
+    raise AppError(403, "Vous ne pouvez pas consulter cette offre.", "FORBIDDEN")
+
+
+def _assert_can_write(db: Session, user: User, job: JobOffer) -> None:
+    if user.role in {UserRole.RECRUITER} | ADMINS:
+        return
+    raise AppError(
+        403,
+        "Talendus crée, publie et gère les offres. L'entreprise transmet un besoin de recrutement.",
+        "JOB_STAFF_ONLY",
+    )

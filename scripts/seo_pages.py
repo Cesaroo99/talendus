@@ -13,8 +13,8 @@ def write_fr(write, wrap, page_hero, cta):
             "Cabinet de recrutement au Québec. Page exemple : production, maintenance, logistique. Talendus recrute pour toutes les entreprises, tous secteurs. Shortlist filtrée, consultation sur rendez-vous.",
             "Services",
             "Recrutement industriel : un exemple parmi d'autres.",
-            "Talendus est une plateforme de recrutement pour toutes les entreprises. Cette page illustre un secteur — pas une limite. On ouvre un mandat, on filtre, on présente des dossiers que vous pouvez recevoir.",
-            "Parler à un recruteur",
+            "Talendus est une agence de placement pour toutes les entreprises. Cette page illustre un secteur — pas une limite. Vous confiez un mandat ; nous recherchons, filtrons et présentons des dossiers.",
+            "Confier mon recrutement",
             """
             <section class="tl-section"><div class="container">
               <div class="row g-4">
@@ -247,10 +247,10 @@ def write_en(write, wrap, page_hero, cta):
         (
             "en/industrial-recruiting.html",
             "Industrial recruiting in Quebec | Talendus",
-            "Recruiting platform in Quebec: production, maintenance, logistics — and every other industry. Screened shortlist, call by appointment.",
+            "Placement agency in Quebec: production, maintenance, logistics — and every other industry. Screened shortlist, call by appointment.",
             "Services",
             "Industrial recruiting: one example among others.",
-            "Talendus is a recruiting platform for every company. This page illustrates one industry — not a limit. We open a mandate, screen, and present files you can actually meet.",
+            "Talendus is a placement agency for every company. This page illustrates one industry — not a limit. You hand us a mandate; we search, screen and present files.",
             "Request a hire",
             "industrial recruiting Montreal",
             """

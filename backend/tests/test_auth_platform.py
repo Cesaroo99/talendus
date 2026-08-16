@@ -1,4 +1,4 @@
-from conftest import auth_header, register
+from conftest import auth_header, promote_admin, register, staff_publish_job
 
 
 def test_auth_providers(client):
@@ -111,11 +111,19 @@ def test_login_lockout_and_journal(client):
 
 def test_job_alerts_and_duplicate_job(client):
     emp = register(client, "alert-emp@example.com", "EMPLOYER")
+    admin = promote_admin(client, "alert-admin@example.com")
     emp_h = auth_header(emp)
+    admin_h = auth_header(admin)
     job = client.post(
         "/api/jobs",
-        headers=emp_h,
-        json={"title": "Machiniste CNC", "location": "Laval", "sector": "Usinage", "slug": "machiniste-alerte"},
+        headers=admin_h,
+        json={
+            "title": "Machiniste CNC",
+            "location": "Laval",
+            "sector": "Usinage",
+            "slug": "machiniste-alerte",
+            "company_id": client.get("/api/companies/me", headers=emp_h).json()["data"]["id"],
+        },
     ).json()["data"]
     cand = register(client, "alert-cand@example.com")
     cand_h = auth_header(cand)
@@ -124,17 +132,21 @@ def test_job_alerts_and_duplicate_job(client):
     listed = client.get("/api/alerts", headers=cand_h)
     assert listed.status_code == 200
     assert len(listed.json()["data"]) == 1
-    pub = client.post(f"/api/jobs/{job['id']}/publish", headers=emp_h)
+    blocked_pub = client.post(f"/api/jobs/{job['id']}/publish", headers=emp_h)
+    assert blocked_pub.status_code == 403
+    pub = client.post(f"/api/jobs/{job['id']}/publish", headers=admin_h)
     assert pub.status_code == 200
     notifs = client.get("/api/notifications", headers=cand_h)
     assert any(n["type"] == "JOB_MATCH" for n in notifs.json()["data"])
-    copy = client.post(f"/api/jobs/{job['id']}/duplicate", headers=emp_h)
+    copy_blocked = client.post(f"/api/jobs/{job['id']}/duplicate", headers=emp_h)
+    assert copy_blocked.status_code == 403
+    copy = client.post(f"/api/jobs/{job['id']}/duplicate", headers=admin_h)
     assert copy.status_code == 200
     assert copy.json()["data"]["status"] == "DRAFT"
     assert "copie" in copy.json()["data"]["title"].lower() or "copie" in copy.json()["data"]["slug"]
-    deleted = client.delete(f"/api/jobs/{copy.json()['data']['id']}", headers=emp_h)
+    deleted = client.delete(f"/api/jobs/{copy.json()['data']['id']}", headers=admin_h)
     assert deleted.status_code == 200
-    blocked = client.delete(f"/api/jobs/{job['id']}", headers=emp_h)
+    blocked = client.delete(f"/api/jobs/{job['id']}", headers=admin_h)
     assert blocked.status_code == 400
 
 

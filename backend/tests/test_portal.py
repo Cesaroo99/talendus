@@ -1,33 +1,11 @@
-from conftest import auth_header, register
+from conftest import auth_header, promote_admin, register, staff_publish_job
 
 PDF = b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n" + b"x" * 40
 
 
-def _promote_admin(client, email: str) -> dict:
-    from app.database import SessionLocal
-    from app.models import User
-    from app.models.enums import UserRole
-
-    data = register(client, email, "EMPLOYER", first_name="Sophie", last_name="Admin")
-    db = SessionLocal()
-    user = db.get(User, data["user"]["id"])
-    user.role = UserRole.ADMIN
-    db.commit()
-    db.close()
-    res = client.post("/api/auth/login", json={"email": email, "password": "Password1!"})
-    assert res.status_code == 200
-    return res.json()["data"]
-
-
-def _publish_job(client, headers, title="Soudeur", slug="soudeur-portal"):
-    job = client.post("/api/jobs", headers=headers, json={"title": title, "location": "Laval", "sector": "Métallurgie", "slug": slug}).json()["data"]
-    client.post(f"/api/jobs/{job['id']}/publish", headers=headers)
-    return job
-
-
 def test_candidate_dashboard_and_saved_job(client):
     emp = register(client, "usine-portal@example.com", "EMPLOYER")
-    job = _publish_job(client, auth_header(emp), slug="soudeur-save")
+    job = staff_publish_job(client, emp, title="Soudeur", slug="soudeur-save", sector="Métallurgie")
     cand = register(client, "jean-portal@example.com", first_name="Jean")
     headers = auth_header(cand)
 
@@ -55,16 +33,16 @@ def test_candidate_dashboard_and_saved_job(client):
 
 def test_employer_cannot_save_job(client):
     emp = register(client, "boss-save@example.com", "EMPLOYER")
-    job = _publish_job(client, auth_header(emp), slug="no-save")
+    job = staff_publish_job(client, emp, slug="no-save")
     res = client.post(f"/api/jobs/{job['id']}/save", headers=auth_header(emp))
     assert res.status_code == 403
 
 
 def test_application_timeline_hides_staff_comment(client):
-    admin = _promote_admin(client, "tl-admin@example.com")
+    admin = promote_admin(client, "tl-admin@example.com")
     emp = register(client, "client-tl@example.com", "EMPLOYER")
     emp_h = auth_header(emp)
-    job = _publish_job(client, emp_h, slug="operateur-tl")
+    job = staff_publish_job(client, emp, admin, slug="operateur-tl")
     cand = register(client, "nadia-tl@example.com", first_name="Nadia")
     cand_h = auth_header(cand)
     app_row = client.post("/api/applications", headers=cand_h, json={"job_slug": "operateur-tl"}).json()["data"]
@@ -112,7 +90,7 @@ def test_employer_dashboard_and_members(client):
 def test_employer_cannot_see_other_company_candidate(client):
     a = register(client, "co-a@example.com", "EMPLOYER")
     b = register(client, "co-b@example.com", "EMPLOYER")
-    job = _publish_job(client, auth_header(a), slug="job-a-only")
+    job = staff_publish_job(client, a, slug="job-a-only")
     cand = register(client, "solo@example.com")
     client.post("/api/applications", headers=auth_header(cand), json={"job_slug": "job-a-only"})
     profile = client.get("/api/candidates/me", headers=auth_header(cand)).json()["data"]
@@ -158,7 +136,7 @@ def test_profile_experience_and_resume_delete(client):
 
 def test_notification_mark_read(client):
     emp = register(client, "notif-emp@example.com", "EMPLOYER")
-    job = _publish_job(client, auth_header(emp), slug="notif-job")
+    job = staff_publish_job(client, emp, slug="notif-job")
     cand = register(client, "notif-cand@example.com")
     headers = auth_header(cand)
     client.post("/api/applications", headers=headers, json={"job_slug": "notif-job"})
@@ -179,7 +157,7 @@ def test_portal_routes_exist(client):
 
 def test_job_detail_includes_saved_flag(client):
     emp = register(client, "save-detail@example.com", "EMPLOYER")
-    job = _publish_job(client, auth_header(emp), slug="soudeur-detail")
+    job = staff_publish_job(client, emp, slug="soudeur-detail")
     cand = register(client, "save-detail-cand@example.com")
     headers = auth_header(cand)
     client.post(f"/api/jobs/{job['id']}/save", headers=headers)
@@ -193,7 +171,7 @@ def test_job_detail_includes_saved_flag(client):
 
 def test_application_notifies_employer_inbox_and_candidate_apps(client):
     emp = register(client, "notify-boss@example.com", "EMPLOYER")
-    _publish_job(client, auth_header(emp), slug="notify-inbox")
+    staff_publish_job(client, emp, slug="notify-inbox")
     cand = register(client, "notify-worker@example.com")
     applied = client.post("/api/applications", headers=auth_header(cand), json={"job_slug": "notify-inbox"})
     assert applied.status_code == 200
@@ -211,10 +189,10 @@ def test_application_notifies_employer_inbox_and_candidate_apps(client):
 
 
 def test_no_direct_link_between_employer_and_candidate(client):
-    admin = _promote_admin(client, "mediate-admin@example.com")
+    admin = promote_admin(client, "mediate-admin@example.com")
     emp = register(client, "mediate-emp@example.com", "EMPLOYER")
     emp_h = auth_header(emp)
-    job = _publish_job(client, emp_h, slug="mediate-job")
+    job = staff_publish_job(client, emp, admin, slug="mediate-job")
     cand = register(client, "mediate-cand@example.com", first_name="Hugo")
     cand_h = auth_header(cand)
     applied = client.post("/api/applications", headers=cand_h, json={"job_slug": "mediate-job"}).json()["data"]
