@@ -2485,8 +2485,19 @@ body.tl-persona-gateway #formulaire {
   color: var(--tl-orange);
   border-color: transparent;
 }
-.tl-ai-soon .tl-chip {
+.tl-ai-soon .tl-chip,
+.tl-ai-cap .tl-chip {
   margin-bottom: 8px;
+}
+.tl-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+@media (min-width: 800px) {
+  .tl-grid-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 .tl-ai-hint {
   margin: 0 0 22px;
