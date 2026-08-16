@@ -88,26 +88,26 @@ TRADE_EXAMPLES = {
 
 AI_FEATURES = {
     "fr": [
-        ("Analyse intelligente des CV", "Nos outils extraient les informations pertinentes, structurent le parcours et aident les équipes à traiter davantage de dossiers en moins de temps."),
-        ("Identification des compétences", "L'IA repère les compétences, les qualifications et ce qu'un parcours démontre réellement, au-delà du titre de poste."),
-        ("Matching profil et poste", "Nous rapprochons les exigences d'un mandat des caractéristiques d'un candidat : compétences, expérience, métier, niveau, localisation et critères spécifiques."),
-        ("Recherche intelligente de talents", "Les outils internes accélèrent le sourcing : traiter de grands volumes d'informations, identifier des correspondances et prioriser les profils à examiner."),
-        ("Présélection assistée", "L'IA aide à une première analyse et à prioriser les dossiers. Un conseiller Talendus vérifie, contacte, interviewe et sélectionne ensuite."),
-        ("Synthèse des profils", "Nous synthétisons rapidement parcours, compétences, expériences et éléments pertinents pour le poste, afin de gagner du temps dans l'analyse."),
-        ("Comparaison des profils", "Plusieurs dossiers peuvent être mis en regard des critères du mandat. L'objectif est une vision structurée, pas une décision automatique."),
-        ("Aide à la rédaction des offres", "Lorsque le besoin doit être clarifié, nos outils aident les équipes à structurer un descriptif à partir du mandat — sans inventer d'exigences."),
-        ("Classification des parcours", "Métier, niveau, secteur : structurer l'information permet à Talendus d'orienter plus vite la recherche et le tri interne."),
+        ("Matching intelligent", "Nos équipes relient déjà un besoin de recrutement aux profils les plus pertinents."),
+        ("Recommandation de candidats", "Les outils internes suggèrent les dossiers à examiner en priorité."),
+        ("Analyse des CV", "L'IA aide à repérer l'expérience, les métiers et les compétences clés."),
+        ("Analyse des compétences", "Nous comparons les compétences demandées et celles du profil."),
+        ("Classement des candidats", "Une shortlist peut être ordonnée selon le besoin du poste, avant la qualification humaine."),
+        ("Suggestions de profils", "Nous proposons des talents proches, y compris hors recherche active."),
+        ("Aide à la rédaction des offres", "Les équipes structurent un descriptif à partir du besoin, sans inventer d'exigences."),
+        ("Identification des compétences", "Nous extrayons ce qu'un poste exige vraiment, au-delà du titre."),
+        ("Recommandations aux recruteurs", "L'IA guide l'équipe Talendus dans le tri des dossiers. Elle ne remplace pas le conseiller."),
     ],
     "en": [
-        ("Intelligent resume analysis", "Our tools extract relevant information, structure a career path and help teams process more files in less time."),
-        ("Skills identification", "AI spots skills, qualifications and what a career actually demonstrates, beyond the job title."),
-        ("Profile-to-role matching", "We relate a mandate's requirements to a candidate's traits: skills, experience, occupation, level, location and specific criteria."),
-        ("Intelligent talent search", "Internal tools speed up sourcing: process large volumes of information, spot correspondences and prioritize files for review."),
-        ("AI-assisted screening", "AI helps with a first analysis and with prioritizing files. A Talendus consultant then verifies, contacts, interviews and selects."),
-        ("Profile synthesis", "We quickly synthesize path, skills, experience and what matters for the role, so analysis takes less time."),
-        ("Profile comparison", "Several files can be set against the mandate's criteria. The aim is a structured view, not an automatic decision."),
-        ("Job-description support", "When a need must be clarified, our tools help teams structure a posting from the mandate — without inventing requirements."),
-        ("Career classification", "Occupation, level, industry: structuring information helps Talendus steer search and internal sorting faster."),
+        ("Intelligent matching", "Our teams already connect a hiring need to the most relevant profiles."),
+        ("Candidate recommendations", "Internal tools suggest which files to review first."),
+        ("Resume analysis", "AI helps spot experience, occupations and key skills."),
+        ("Skills analysis", "We compare the skills a role requires with those on the profile."),
+        ("Candidate ranking", "A shortlist can be ordered against the role, before human qualification."),
+        ("Profile suggestions", "We propose nearby talent, including people not actively looking."),
+        ("Job-description support", "Teams structure a posting from the need, without inventing requirements."),
+        ("Skills identification", "We extract what a role actually requires, beyond the title."),
+        ("Recruiter recommendations", "AI guides the Talendus team through screening. It does not replace the consultant."),
     ],
 }
 
@@ -440,30 +440,20 @@ def ai_engine_section(lang="fr"):
         for title, text in AI_FEATURES[lang]
     )
     if lang == "en":
-        kicker = "Inside Talendus"
-        heading = "Artificial intelligence is already at the heart of Talendus's internal tools."
-        prose = """
-      <p>Talendus already uses artificial intelligence in its recruiting operations. It is not a future feature, not a project, not a promise, and not software we sell you to operate on your own. It is the internal technological infrastructure that helps our teams analyse, search, compare and process information faster — so we can present the most relevant talent for each hiring need.</p>
-      <p>In practice, our teams use these tools to read many resumes quickly, extract skills and experience, relate a profile to the criteria of a role, spot useful correspondences, prioritize files for human review, synthesize what matters, and shorten some screening steps. Technology structures what we collect. It helps us work a mandate more quickly. It does not take the final decision, and it does not invent a “perfect candidate”.</p>
-      <p>You benefit from that power without using the tools yourself. You hand us the need. Talendus mobilizes its people, its technology and its AI. You receive a qualified shortlist. You keep the final decision.</p>
-      <p><strong>We hire better, faster and more intelligently with AI — today.</strong> Better: more relevant analysis of identified profiles. Faster: some search and analysis steps are accelerated. More intelligently: AI, data, technology and human expertise, together.</p>
-        """
+        kicker = "Technology direction"
+        heading = "AI is already in use. Recruiting is already smarter."
+        lead = "We hire better, faster and more intelligently with AI — today, inside Talendus's internal tools. Matching, resume analysis, skills identification and screening support are already used by our teams. You do not operate these tools yourself. Consultants qualify. You keep the final decision."
     else:
-        kicker = "Au cœur de Talendus"
-        heading = "L'intelligence artificielle est déjà au cœur des outils internes de Talendus."
-        prose = """
-      <p>Talendus utilise déjà l'intelligence artificielle dans ses opérations de recrutement. Ce n'est ni une fonctionnalité future, ni un projet, ni une promesse, ni un logiciel que nous vous vendons pour l'opérer vous-même. C'est l'infrastructure technologique interne qui permet à nos équipes d'analyser, rechercher, comparer et traiter les informations plus rapidement — afin de vous présenter les talents les plus pertinents pour chaque besoin de recrutement.</p>
-      <p>Concrètement, nos équipes s'appuient sur ces outils pour lire de nombreux CV plus vite, extraire les compétences et les expériences, relier un profil aux exigences d'un poste, détecter des correspondances utiles, prioriser des dossiers pour une revue humaine, synthétiser ce qui compte et raccourcir certaines étapes de présélection. La technologie structure ce que nous recueillons. Elle aide à traiter un mandat plus rapidement. Elle ne prend pas la décision finale, et elle n'invente pas de « candidat parfait ».</p>
-      <p>Vous bénéficiez de cette puissance sans avoir à utiliser les outils vous-même. Vous nous confiez le besoin. Talendus mobilise ses équipes, sa technologie et son IA. Vous recevez une shortlist qualifiée. Vous gardez la décision finale.</p>
-      <p><strong>Nous recrutons mieux, plus vite et plus intelligemment grâce à l'IA — dès aujourd'hui.</strong> Mieux : une analyse plus pertinente des profils identifiés. Plus vite : certaines étapes de recherche et d'analyse sont accélérées. Plus intelligemment : IA, données, technologie et expertise humaine, ensemble.</p>
-        """
+        kicker = "Direction technologique"
+        heading = "L'IA est déjà en service. Le recrutement, déjà plus intelligent."
+        lead = "Nous recrutons mieux, plus vite et plus intelligemment grâce à l'IA — dès aujourd'hui, dans les outils internes de Talendus. Matching, analyse des CV, identification des compétences et aide à la présélection sont déjà utilisés par nos équipes. Vous n'opérez pas ces outils vous-même. Les conseillers qualifient. Vous gardez la décision finale."
     return f"""
 <section class="tl-section" id="ia">
   <div class="container">
-    <div class="tl-prose" style="margin-bottom:36px">
+    <div class="tl-center" style="max-width:760px;margin:0 auto 36px">
       <div class="tl-kicker">{kicker}</div>
       <h2 class="tl-h2">{heading}</h2>
-      {prose}
+      <p class="tl-lead">{lead}</p>
     </div>
     <div class="tl-grid-3">{cards}</div>
   </div>
