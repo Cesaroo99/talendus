@@ -27,21 +27,41 @@ COPY = {
         "preloader_tag": "Recrutement industriel · Québec",
         "preloader_aria": "Chargement Talendus",
         "nav_home": "Accueil",
-        "nav_employers": "Entreprises",
-        "nav_why": "Pourquoi Talendus",
+        "nav_employers": "Pour les Entreprises",
+        "nav_why": "Recruter avec Talendus",
         "nav_services": "Services de recrutement",
         "nav_sectors": "Secteurs desservis",
         "nav_calc": "Calculateur d'embauche",
-        "nav_candidates": "Candidats",
+        "nav_candidates": "Pour les Talents",
         "nav_jobs": "Offres d'emploi",
-        "nav_cv": "Dépôt de CV",
-        "nav_process": "Processus",
+        "nav_cv": "Déposer son CV",
+        "nav_process": "Comment ça fonctionne",
         "nav_services_top": "Services",
         "nav_about": "À propos",
         "nav_blog": "Blog",
         "nav_contact": "Contact",
         "nav_account": "Connexion",
+        "nav_register": "Inscription",
         "nav_employer_account": "Espace employeur",
+        "nav_publish": "Publier une offre",
+        "nav_hr": "Solutions RH",
+        "nav_talent_faq": "FAQ talents",
+        "cta_talent_primary": "Consulter les offres",
+        "cta_talent_secondary": "Déposer mon CV",
+        "cta_talent_profile": "Créer mon profil",
+        "cta_talent_apply": "Postuler maintenant",
+        "cta_hire_primary": "Demander un recrutement",
+        "cta_hire_secondary": "Publier une offre",
+        "cta_hire_demo": "Réserver une démonstration",
+        "cta_hire_find": "Trouver des talents",
+        "cta_gateway_talent": "Trouver un emploi",
+        "cta_gateway_hire": "Je recrute",
+        "cta_gateway_kicker": "Deux parcours",
+        "cta_gateway_h2": "Vous êtes au bon endroit.",
+        "cta_gateway_p": "Emploi industriel ou recrutement d’usine : choisissez votre univers. Vous ne verrez que ce qui vous concerne.",
+        "speed_kicker_talent": "Sans frais pour vous",
+        "speed_h2_talent": "Un poste d’usine, présenté aux bons employeurs.",
+        "speed_p_talent": "Nous qualifions votre métier, vos quarts et votre mobilité — puis nous vous présentons uniquement aux usines qui correspondent.",
         "nav_svc_industrial": "Recrutement industriel",
         "nav_svc_mfg": "Recrutement manufacturier",
         "nav_svc_tech": "Recrutement technique",
@@ -50,7 +70,7 @@ COPY = {
         "nav_svc_search": "Chasse de têtes",
         "nav_svc_lead": "Recrutement de cadres",
         "footer_places": "Régions",
-        "cta_primary": "Confier un recrutement",
+        "cta_primary": "Demander un recrutement",
         "cta_secondary": "Déposer mon CV",
         "menu_open": "Ouvrir le menu",
         "menu_close": "Fermer le menu",
@@ -74,7 +94,10 @@ COPY = {
         "speed_p": "Une shortlist industrielle, pas une pile de CV. On ouvre le mandat, on filtre comme un contremaître, on vous présente des dossiers défendables.",
         "cta_kicker": "Cabinet industriel",
         "cta_h2": "Votre usine n’a pas besoin d’une agence généraliste.",
-        "cta_p": "Un interlocuteur qui parle production, quarts et SST. Consultation gratuite, sur rendez-vous. Réponse moyenne sous 30 minutes durant les heures d’ouverture.",
+        "cta_p": "Un interlocuteur qui parle production, quarts et SST. Consultation gratuite, sur rendez-vous.",
+        "cta_talent_kicker": "Talents",
+        "cta_talent_h2": "Un poste d’usine, présenté clairement.",
+        "cta_talent_p": "Sans frais pour vous. Nous vous présentons aux employeurs industriels du Québec — pas à des mandats fourre-tout.",
         "keywords": "recrutement industriel Québec, recrutement manufacturier Québec, recrutement production Québec, recrutement électromécanicien, recrutement soudeur, recrutement cariste, recrutement maintenance industrielle",
     },
     "en": {
@@ -84,12 +107,12 @@ COPY = {
         "preloader_tag": "Industrial recruiting · Quebec",
         "preloader_aria": "Loading Talendus",
         "nav_home": "Home",
-        "nav_employers": "Employers",
-        "nav_why": "Why Talendus",
+        "nav_employers": "For employers",
+        "nav_why": "Hire with Talendus",
         "nav_services": "Recruiting services",
         "nav_sectors": "Industries we serve",
         "nav_calc": "Hiring calculator",
-        "nav_candidates": "Candidates",
+        "nav_candidates": "For talent",
         "nav_jobs": "Job openings",
         "nav_cv": "Submit a resume",
         "nav_process": "How it works",
@@ -98,7 +121,27 @@ COPY = {
         "nav_blog": "Blog",
         "nav_contact": "Contact",
         "nav_account": "Sign in",
+        "nav_register": "Sign up",
         "nav_employer_account": "Employer portal",
+        "nav_publish": "Post a job",
+        "nav_hr": "HR solutions",
+        "nav_talent_faq": "Talent FAQ",
+        "cta_talent_primary": "Browse jobs",
+        "cta_talent_secondary": "Submit my resume",
+        "cta_talent_profile": "Create my profile",
+        "cta_talent_apply": "Apply now",
+        "cta_hire_primary": "Start a hire",
+        "cta_hire_secondary": "Post a job",
+        "cta_hire_demo": "Book a demo",
+        "cta_hire_find": "Find talent",
+        "cta_gateway_talent": "Find a job",
+        "cta_gateway_hire": "I hire",
+        "cta_gateway_kicker": "Two paths",
+        "cta_gateway_h2": "You are in the right place.",
+        "cta_gateway_p": "Plant work or plant hiring: choose your universe. You only see what concerns you.",
+        "speed_kicker_talent": "Free for you",
+        "speed_h2_talent": "A plant role, presented to the right employers.",
+        "speed_p_talent": "We qualify your trade, shifts and mobility — then introduce you only to operations that match.",
         "nav_svc_industrial": "Industrial recruiting",
         "nav_svc_mfg": "Manufacturing recruiting",
         "nav_svc_tech": "Technical recruiting",
@@ -131,7 +174,10 @@ COPY = {
         "speed_p": "An industrial shortlist, not a stack of resumes. We open the mandate, screen like a floor supervisor, and send files you can defend.",
         "cta_kicker": "Industrial firm",
         "cta_h2": "Your plant does not need a generalist agency.",
-        "cta_p": "One contact who speaks production, shifts and health & safety. Free consultation, by appointment. Average response under 30 minutes during business hours.",
+        "cta_p": "One contact who speaks production, shifts and health & safety. Free consultation, by appointment.",
+        "cta_talent_kicker": "Talent",
+        "cta_talent_h2": "A plant role, presented clearly.",
+        "cta_talent_p": "Free for you. We introduce you to Quebec operations that are actually hiring — not scattershot mandates.",
         "keywords": "industrial recruitment Quebec, manufacturing recruitment Quebec, production recruitment Quebec, electromechanical technician recruitment, welder recruitment, forklift operator recruitment, industrial maintenance recruitment",
     },
 }
@@ -156,6 +202,9 @@ HREFS = {
         "urgent": "contact.html",
         "account": "espace.html",
         "employer_account": "espace-employeur.html",
+        "process_page": "comment-ca-fonctionne.html",
+        "publish": "publier-une-offre.html",
+        "hr": "solutions-rh.html",
         "svc_industrial": "recrutement-industriel.html",
         "svc_mfg": "recrutement-manufacturier.html",
         "svc_tech": "recrutement-technique.html",
@@ -187,6 +236,9 @@ HREFS = {
         "urgent": "contact.html",
         "account": "account.html",
         "employer_account": "account-employer.html",
+        "process_page": "how-it-works.html",
+        "publish": "post-a-job.html",
+        "hr": "hr-solutions.html",
         "svc_industrial": "industrial-recruiting.html",
         "svc_mfg": "manufacturing-recruiting.html",
         "svc_tech": "technical-recruiting.html",
@@ -202,43 +254,70 @@ HREFS = {
 }
 
 
+def infer_persona(slug: str) -> str:
+    raw = (slug or "").strip().lower()
+    name = raw.split("/")[-1]
+    if not name or name in {"index.html", "en"}:
+        return "gateway"
+    talent = name in {
+        "candidats.html",
+        "candidates.html",
+        "emplois.html",
+        "jobs.html",
+        "comment-ca-fonctionne.html",
+        "how-it-works.html",
+        "espace.html",
+        "account.html",
+    } or name.startswith("emploi-") or name.startswith("job-")
+    hire = name in {
+        "entreprises.html",
+        "employers.html",
+        "employeurs.html",
+        "services.html",
+        "service.html",
+        "secteurs.html",
+        "sectors.html",
+        "publier-une-offre.html",
+        "post-a-job.html",
+        "solutions-rh.html",
+        "hr-solutions.html",
+        "espace-employeur.html",
+        "account-employer.html",
+        "chasse-de-tetes.html",
+        "executive-search.html",
+    } or name.startswith("secteur-") or name.startswith("sector-") or name.startswith("recrutement-") or "recruiting" in name
+    if talent:
+        return "talent"
+    if hire:
+        return "entreprise"
+    return "gateway"
+
+
 def nav_html(lang):
     t, h = COPY[lang], HREFS[lang]
     return f"""
                               <li data-nav="home"><a href="{h['home']}">{t['nav_home']}</a></li>
-                              <li class="has-dropdown" data-nav="employeurs">
-                                <a href="{h['employers']}">{t['nav_employers']} <span class="tl-nav-caret" aria-hidden="true"><i class="fa-solid fa-angle-down"></i></span></a>
-                                  <ul class="sub-menu">
-                                      <li><a href="{h['employers']}">{t['nav_why']}</a></li>
-                                      <li><a href="{h['services']}">{t['nav_services']}</a></li>
-                                      <li><a href="{h['sectors']}">{t['nav_sectors']}</a></li>
-                                      <li><a href="{h['calc']}">{t['nav_calc']}</a></li>
-                                      <li><a href="{h['employer_account']}">{t['nav_employer_account']}</a></li>
-                                  </ul>
-                              </li>
                               <li class="has-dropdown" data-nav="candidats">
-                                <a href="{h['candidates']}">{t['nav_candidates']} <span class="tl-nav-caret" aria-hidden="true"><i class="fa-solid fa-angle-down"></i></span></a>
+                                <a href="{h['candidates']}" data-set-persona="talent">{t['nav_candidates']} <span class="tl-nav-caret" aria-hidden="true"><i class="fa-solid fa-angle-down"></i></span></a>
                                   <ul class="sub-menu">
-                                      <li><a href="{h['jobs']}">{t['nav_jobs']}</a></li>
-                                      <li><a href="{h['cv']}">{t['nav_cv']}</a></li>
-                                      <li><a href="{h['process']}">{t['nav_process']}</a></li>
-                                      <li><a href="{h['account']}">{t['nav_account']}</a></li>
+                                      <li><a href="{h['jobs']}" data-set-persona="talent">{t['nav_jobs']}</a></li>
+                                      <li><a href="{h['cv']}" data-set-persona="talent">{t['nav_cv']}</a></li>
+                                      <li><a href="{h['process_page']}" data-set-persona="talent">{t['nav_process']}</a></li>
+                                      <li><a href="{h['candidates']}#faq" data-set-persona="talent">{t['nav_talent_faq']}</a></li>
                                   </ul>
                               </li>
-                              <li class="has-dropdown" data-nav="services">
-                                <a href="{h['services']}">{t['nav_services_top']} <span class="tl-nav-caret" aria-hidden="true"><i class="fa-solid fa-angle-down"></i></span></a>
+                              <li class="has-dropdown" data-nav="employeurs">
+                                <a href="{h['employers']}" data-set-persona="entreprise">{t['nav_employers']} <span class="tl-nav-caret" aria-hidden="true"><i class="fa-solid fa-angle-down"></i></span></a>
                                   <ul class="sub-menu">
-                                      <li><a href="{h['svc_industrial']}">{t['nav_svc_industrial']}</a></li>
-                                      <li><a href="{h['svc_mfg']}">{t['nav_svc_mfg']}</a></li>
-                                      <li><a href="{h['svc_tech']}">{t['nav_svc_tech']}</a></li>
-                                      <li><a href="{h['svc_perm']}">{t['nav_svc_perm']}</a></li>
-                                      <li><a href="{h['svc_temp']}">{t['nav_svc_temp']}</a></li>
-                                      <li><a href="{h['svc_search']}">{t['nav_svc_search']}</a></li>
-                                      <li><a href="{h['svc_lead']}">{t['nav_svc_lead']}</a></li>
+                                      <li><a href="{h['employers']}" data-set-persona="entreprise">{t['nav_why']}</a></li>
+                                      <li><a href="{h['publish']}" data-set-persona="entreprise">{t['nav_publish']}</a></li>
+                                      <li><a href="{h['svc_search']}" data-set-persona="entreprise">{t['nav_svc_search']}</a></li>
+                                      <li><a href="{h['hr']}" data-set-persona="entreprise">{t['nav_hr']}</a></li>
+                                      <li><a href="{h['services']}" data-set-persona="entreprise">{t['nav_services']}</a></li>
                                   </ul>
                               </li>
+                              <li data-nav="jobs"><a href="{h['jobs']}" data-set-persona="talent">{t['nav_jobs']}</a></li>
                               <li data-nav="about"><a href="{h['about']}">{t['nav_about']}</a></li>
-                              <li data-nav="blog"><a href="{h['blog']}">{t['nav_blog']}</a></li>
                               <li data-nav="contact"><a href="{h['contact']}">{t['nav_contact']}</a></li>
 """
 
@@ -395,11 +474,15 @@ gtag('consent', 'default', {
 """
 
 
-def header(solid=True, lang="fr", alt_url=""):
+def header(solid=True, lang="fr", alt_url="", persona="gateway"):
     t, h, a = COPY[lang], HREFS[lang], pfx(lang)
-    cls = "tl-solid-header" if solid else ""
+    classes = []
+    if solid:
+        classes.append("tl-solid-header")
+    classes.append(f"tl-persona-{persona}")
+    cls = " ".join(classes)
     switch = lang_switcher(lang, alt_url)
-    return f"""<body class="{cls}">
+    return f"""<body class="{cls}" data-persona="{persona}">
 {preloader(lang, a)}
 <header class="homepage2-body">
   <div id="vl-header-sticky" class="vl-header-area vl-transparent-header">
@@ -418,8 +501,10 @@ def header(solid=True, lang="fr", alt_url=""):
               <div class="tl-header-tools">
                 {switch}
                 <a href="{h['account']}" class="tl-account-link" data-account-link data-auth-open="login">{t['nav_account']}</a>
+                <a href="{h['account']}" class="tl-account-link tl-register-link" data-auth-open="register">{t['nav_register']}</a>
                 <div class="hero-btn1">
-                  <a href="{h['contact']}" class="vl-btn2 tl-header-cta">{t['cta_primary']} <span><i class="fa-solid fa-arrow-right"></i></span></a>
+                  <a href="{h['jobs']}" class="vl-btn2 tl-header-cta" data-persona-cta="talent">{t['cta_talent_primary']} <span><i class="fa-solid fa-arrow-right"></i></span></a>
+                  <a href="{h['contact']}" class="vl-btn2 tl-header-cta" data-persona-cta="entreprise">{t['cta_hire_primary']} <span><i class="fa-solid fa-arrow-right"></i></span></a>
                 </div>
               </div>
               <div class="tl-mobile-tools">
@@ -455,8 +540,13 @@ def header(solid=True, lang="fr", alt_url=""):
             <p class="tl-offcanvas-note">{t['offcanvas_note']}</p>
             <div class="vl-offcanvas-cta">
               <a href="{h['account']}" class="tl-btn tl-btn-ghost" data-account-link data-auth-open="login">{t['nav_account']}</a>
-              <a href="{h['contact']}" class="tl-btn">{t['cta_primary']}</a>
-              <a href="{h['cv']}" class="tl-btn tl-btn-electric">{t['cta_secondary']}</a>
+              <a href="{h['account']}" class="tl-btn tl-btn-ghost" data-auth-open="register">{t['nav_register']}</a>
+              <a href="{h['candidates']}" class="tl-btn" data-persona-cta="gateway" data-set-persona="talent">{t['cta_gateway_talent']}</a>
+              <a href="{h['employers']}" class="tl-btn tl-btn-electric" data-persona-cta="gateway" data-set-persona="entreprise">{t['cta_gateway_hire']}</a>
+              <a href="{h['jobs']}" class="tl-btn" data-persona-cta="talent">{t['cta_talent_primary']}</a>
+              <a href="{h['cv']}" class="tl-btn tl-btn-electric" data-persona-cta="talent">{t['cta_talent_secondary']}</a>
+              <a href="{h['publish']}" class="tl-btn" data-persona-cta="entreprise">{t['cta_hire_secondary']}</a>
+              <a href="{h['contact']}" class="tl-btn tl-btn-electric" data-persona-cta="entreprise">{t['cta_hire_demo']}</a>
             </div>
         </div>
     </div>
@@ -466,20 +556,31 @@ def header(solid=True, lang="fr", alt_url=""):
 """
 
 
-def speed_strip(lang="fr"):
+def speed_strip(lang="fr", persona="entreprise"):
     t, h = COPY[lang], HREFS[lang]
+    if persona == "talent":
+        kicker, heading, copy = t["speed_kicker_talent"], t["speed_h2_talent"], t["speed_p_talent"]
+        actions = (
+            f'<a class="tl-btn tl-btn-lg" href="{h["jobs"]}">{t["cta_talent_primary"]}</a>'
+            f'<a class="tl-btn tl-btn-ghost" href="{h["cv"]}">{t["cta_talent_secondary"]}</a>'
+        )
+    else:
+        kicker, heading, copy = t["speed_kicker"], t["speed_h2"], t["speed_p"]
+        actions = (
+            f'<a class="tl-btn tl-btn-lg" href="{h["contact"]}">{t["cta_hire_primary"]}</a>'
+            f'<a class="tl-btn tl-btn-ghost" href="{h["contact"]}">{t["cta_hire_demo"]}</a>'
+        )
     return f"""
 <section class="tl-speed">
   <div class="container">
     <div class="tl-speed-inner">
       <div>
-        <span class="tl-badge tl-badge-light">{t['speed_kicker']}</span>
-        <h2>{t['speed_h2']}</h2>
-        <p>{t['speed_p']}</p>
+        <span class="tl-badge tl-badge-light">{kicker}</span>
+        <h2>{heading}</h2>
+        <p>{copy}</p>
       </div>
       <div class="tl-speed-actions">
-        <a class="tl-btn tl-btn-lg" href="{h['contact']}">{t['cta_primary']}</a>
-        <a class="tl-btn tl-btn-ghost" href="{h['contact']}">{t['consult']}</a>
+        {actions}
       </div>
     </div>
   </div>
@@ -487,17 +588,34 @@ def speed_strip(lang="fr"):
 """
 
 
-def cta_band(lang="fr"):
+def cta_band(lang="fr", persona="gateway"):
     t, h = COPY[lang], HREFS[lang]
+    if persona == "talent":
+        kicker, heading, copy = t["cta_talent_kicker"], t["cta_talent_h2"], t["cta_talent_p"]
+        actions = (
+            f'<a class="tl-btn tl-btn-lg" href="{h["account"]}" data-auth-open="register">{t["cta_talent_profile"]}</a>'
+            f'<a class="tl-btn tl-btn-ghost" href="{h["jobs"]}">{t["cta_talent_primary"]}</a>'
+        )
+    elif persona == "entreprise":
+        kicker, heading, copy = t["cta_kicker"], t["cta_h2"], t["cta_p"]
+        actions = (
+            f'<a class="tl-btn tl-btn-lg" href="{h["publish"]}">{t["cta_hire_secondary"]}</a>'
+            f'<a class="tl-btn tl-btn-ghost" href="{h["contact"]}">{t["cta_hire_demo"]}</a>'
+        )
+    else:
+        kicker, heading, copy = t["cta_gateway_kicker"], t["cta_gateway_h2"], t["cta_gateway_p"]
+        actions = (
+            f'<a class="tl-btn tl-btn-lg" href="{h["candidates"]}" data-set-persona="talent">{t["cta_gateway_talent"]}</a>'
+            f'<a class="tl-btn tl-btn-ghost" href="{h["employers"]}" data-set-persona="entreprise">{t["cta_gateway_hire"]}</a>'
+        )
     return f"""
 <section class="tl-cta-band">
   <div class="container">
-    <span class="tl-badge tl-badge-light">{t['cta_kicker']}</span>
-    <h2 class="tl-h2">{t['cta_h2']}</h2>
-    <p>{t['cta_p']}</p>
+    <span class="tl-badge tl-badge-light">{kicker}</span>
+    <h2 class="tl-h2">{heading}</h2>
+    <p>{copy}</p>
     <div class="tl-actions">
-      <a class="tl-btn tl-btn-lg" href="{h['contact']}">{t['cta_primary']}</a>
-      <a class="tl-btn tl-btn-ghost" href="{h['cv']}">{t['cta_secondary']}</a>
+      {actions}
     </div>
   </div>
 </section>
@@ -509,8 +627,18 @@ def footer(lang="fr"):
     return f"""
 {whatsapp_fab(lang)}
 <div class="tl-sticky">
-  <a href="{h['contact']}">{t['cta_primary']}</a>
-  <a class="alt" href="{h['cv']}">{t['cta_secondary']}</a>
+  <div class="tl-sticky-persona" data-persona-bar="gateway">
+    <a href="{h['candidates']}" data-set-persona="talent">{t['cta_gateway_talent']}</a>
+    <a class="alt" href="{h['employers']}" data-set-persona="entreprise">{t['cta_gateway_hire']}</a>
+  </div>
+  <div class="tl-sticky-persona" data-persona-bar="talent">
+    <a href="{h['jobs']}">{t['cta_talent_primary']}</a>
+    <a class="alt" href="{h['cv']}">{t['cta_talent_secondary']}</a>
+  </div>
+  <div class="tl-sticky-persona" data-persona-bar="entreprise">
+    <a href="{h['publish']}">{t['cta_hire_secondary']}</a>
+    <a class="alt" href="{h['contact']}">{t['cta_hire_demo']}</a>
+  </div>
 </div>
 <div class="vl-footer2-section-area">
   <div class="container">
@@ -593,6 +721,7 @@ def footer(lang="fr"):
 <script src="{a}assets/js/main.js" defer></script>
 <script src="{a}assets/js/api.js" defer></script>
 <script src="{a}assets/js/talendus.js" defer></script>
+<script src="{a}assets/js/persona.js" defer></script>
 <script src="{a}assets/js/auth-gate.js" defer></script>
 <script src="{a}assets/js/account.js" defer></script>
 <script src="{a}assets/js/consent.js" defer></script>
@@ -732,13 +861,14 @@ FAQ_CANDIDATES_EN = [
      "Mainly Greater Montreal, Laval, the South Shore, Montérégie, the Eastern Townships, Centre-du-Québec and Quebec City. Tell us your mobility and we target accordingly."),
 ]
 
-def wrap(title, desc, slug, body, solid=True, lang="fr", alt="", robots="index,follow", extra_json_ld=None, og_type="website", og_image=""):
+def wrap(title, desc, slug, body, solid=True, lang="fr", alt="", robots="index,follow", extra_json_ld=None, og_type="website", og_image="", persona=None):
     if lang == "fr":
         switch = alt or "en/index.html"
     elif not alt or alt in ("", "index.html"):
         switch = "../index.html"
     else:
         switch = "../" + alt.lstrip("/")
+    persona = persona or infer_persona(slug)
     return (
         head(
             title,
@@ -751,7 +881,7 @@ def wrap(title, desc, slug, body, solid=True, lang="fr", alt="", robots="index,f
             og_type=og_type,
             og_image=og_image,
         )
-        + header(solid, lang=lang, alt_url=switch)
+        + header(solid, lang=lang, alt_url=switch, persona=persona)
         + body
         + footer(lang)
     )

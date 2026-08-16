@@ -26,12 +26,11 @@
     if (
       file === "candidats.html" ||
       file === "candidates.html" ||
-      file === "emplois.html" ||
-      file === "jobs.html" ||
-      file.indexOf("emploi-") === 0 ||
-      file.indexOf("job-") === 0
+      file === "comment-ca-fonctionne.html" ||
+      file === "how-it-works.html"
     ) return "candidats";
-    if (file === "services.html" || file === "service.html" || file.indexOf("recrutement-") === 0 || file.indexOf("industrial-recruiting") === 0 || file.indexOf("manufacturing-recruiting") === 0 || file.indexOf("technical-recruiting") === 0 || file.indexOf("permanent-recruiting") === 0 || file.indexOf("temporary-recruiting") === 0 || file.indexOf("executive-search") === 0 || file.indexOf("leadership-recruiting") === 0) return "services";
+    if (file === "emplois.html" || file === "jobs.html" || file.indexOf("emploi-") === 0 || file.indexOf("job-") === 0) return "jobs";
+    if (file === "services.html" || file === "service.html" || file === "publier-une-offre.html" || file === "post-a-job.html" || file === "solutions-rh.html" || file === "hr-solutions.html" || file.indexOf("recrutement-") === 0 || file.indexOf("industrial-recruiting") === 0 || file.indexOf("manufacturing-recruiting") === 0 || file.indexOf("technical-recruiting") === 0 || file.indexOf("permanent-recruiting") === 0 || file.indexOf("temporary-recruiting") === 0 || file.indexOf("executive-search") === 0 || file.indexOf("leadership-recruiting") === 0) return "employeurs";
     if (file === "a-propos.html" || file === "about.html") return "about";
     if (file === "blog.html" || file.indexOf("article-") === 0 || file === "blog-single.html" || (window.location.pathname || "").indexOf("/blog/") === 0) return "blog";
     if (file === "contact.html") return "contact";
@@ -60,6 +59,10 @@
       document.querySelectorAll("[data-account-link]").forEach(function (el) {
         el.textContent = apiUser.first_name;
         el.setAttribute("href", href);
+        el.removeAttribute("data-auth-open");
+      });
+      document.querySelectorAll("[data-auth-open='register']").forEach(function (el) {
+        el.hidden = true;
       });
     }
 

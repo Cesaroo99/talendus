@@ -1,11 +1,14 @@
 """English pages for Talendus — native copy, not machine-translated chrome."""
 
-from parts import speed_strip, cta_band, faq_html, FAQ_HOME_EN, FAQ_EMPLOYERS_EN, FAQ_CANDIDATES_EN
+from parts import speed_strip, cta_band, faq_html, FAQ_EMPLOYERS_EN, FAQ_CANDIDATES_EN
 from seo_pages import write_en as write_seo_en
 
 A = "../assets/"
-SPEED = speed_strip("en")
-CTA = cta_band("en")
+SPEED = speed_strip("en", "entreprise")
+SPEED_TALENT = speed_strip("en", "talent")
+CTA = cta_band("en", "entreprise")
+CTA_TALENT = cta_band("en", "talent")
+CTA_GATE = cta_band("en", "gateway")
 WA = "https://wa.me/15145550199?text=Hello%20Talendus%2C%20I%20would%20like%20to%20talk%20about%20a%20hiring%20need."
 
 
@@ -64,291 +67,40 @@ TOPICS_EN = [
 
 
 INDEX_EN = rf"""
-<div class="hero2-arrow-hero">
-    <div class="hero-main-slider">
-      <div class="hero2-slider-area">
+<div class="hero2-arrow-hero tl-gateway-hero">
+  <div class="hero2-slider-area">
         <div class="img1"><img src="{img('usine-equipe.jpg')}" alt="Production team on a Quebec plant floor" fetchpriority="high" decoding="async"></div>
         <div class="container">
-            <div class="row">
-                <div class="col-lg-8">
-                    <div class="hero2-heading tl-hero-lock">
-                        <h5>The talent that keeps industry moving.</h5>
-                        <div class="space16"></div>
-                        <h1>Qualified candidates from day 7.</h1>
-                        <div class="space16"></div>
-                        <p>A recruiting partner for Quebec operations — production, maintenance, logistics, supervision and business continuity.</p>
-                        <div class="space32"></div>
-                        <div class="btn-area1">
-                            <a href="contact.html" class="vl-btn2">Start a hire <span><i class="fa-solid fa-arrow-right"></i></span></a>
-                            <a href="candidates.html#cv" class="vl-btn2 btn2">Submit my resume <span><i class="fa-solid fa-arrow-right"></i></span></a>
-                        </div>
-                        <div class="tl-hero-badges">
-                          <span class="tl-badge tl-badge-light">Operations · Quebec</span>
-                          <span class="tl-badge tl-badge-light">Consultation by appointment</span>
-                        </div>
-                    </div>
-                </div>
+            <div class="hero2-heading tl-hero-lock">
+                <h5>The talent that keeps industry moving.</h5>
+                <div class="space16"></div>
+                <h1>You are in the right place.</h1>
+                <div class="space16"></div>
+                <p>Choose your path. Each universe shows only what concerns you — a job search or a hire, never both at once.</p>
+            </div>
+            <div class="tl-persona-cards">
+              <a class="tl-persona-card is-talent" href="candidates.html" data-set-persona="talent">
+                <span class="tl-kicker">I am looking for a job</span>
+                <h2>Find my next role</h2>
+                <p>Plant openings, resume upload and application tracking — free for you, presented to Quebec industrial employers.</p>
+                <span class="tl-persona-go">Find my next role <i class="fa-solid fa-arrow-right"></i></span>
+              </a>
+              <a class="tl-persona-card is-hire" href="employers.html" data-set-persona="entreprise">
+                <span class="tl-kicker">I hire</span>
+                <h2>Find the right talent</h2>
+                <p>Post a job, review presented profiles and mandate Talendus — a firm built around your shifts.</p>
+                <span class="tl-persona-go">Find the right talent <i class="fa-solid fa-arrow-right"></i></span>
+              </a>
             </div>
         </div>
-    </div>
-    <div class="hero2-slider-area">
-        <div class="img1"><img src="{img('entrepot-logistique.jpg')}" alt="Logistics warehouse and forklift operators in Quebec" loading="lazy" decoding="async"></div>
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-8">
-                    <div class="hero2-heading tl-hero-lock">
-                        <h5>Industrial jobs · Quebec</h5>
-                        <div class="space16"></div>
-                        <h1>Find plant work in Quebec, presented to the right employers.</h1>
-                        <div class="space16"></div>
-                        <p>Operator, forklift, welder, CNC, maintenance, supervision: we introduce you to operations that are actually hiring.</p>
-                        <div class="space32"></div>
-                        <div class="btn-area1">
-                            <a href="jobs.html" class="vl-btn2">Browse jobs <span><i class="fa-solid fa-arrow-right"></i></span></a>
-                            <a href="candidates.html#cv" class="vl-btn2 btn2">Submit my resume <span><i class="fa-solid fa-arrow-right"></i></span></a>
-                        </div>
-                        <div class="tl-hero-badges">
-                          <span class="tl-badge tl-badge-light">Free for candidates</span>
-                          <span class="tl-badge tl-badge-light">Real plant mandates</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    </div>
-    <div class="testimonial-arrow">
-     <div class="prev-arrow-hero">
-        <button type="button" aria-label="Next slide"><i class="fa-solid fa-arrow-right"></i></button>
-        </div>
-        <div class="next-arrow-hero">
-        <button type="button" aria-label="Previous slide"><i class="fa-solid fa-arrow-left"></i></button>
-        </div>
-    </div>
+  </div>
 </div>
 <section class="tl-section-sm">
   <div class="container">
-    <div class="tl-split">
-      <a class="employeurs" href="employers.html">
-        <div class="tl-kicker" style="color:#ffb37a">Employers</div>
-        <h3>Need talent who can hold production, logistics or maintenance?</h3>
-        <p>Free consultation, by appointment. Screening built around your shift — not 80 resumes to sort at the end of the day.</p>
-        <span class="tl-split-cta">Start a hire →</span>
-      </a>
-      <a class="candidats" href="candidates.html">
-        <div class="tl-kicker" style="color:#cfe0ff">Candidates</div>
-        <h3>A role in production, logistics or maintenance?</h3>
-        <p>Submit your resume. We introduce you to operational employers in Quebec — not catch-all mandates.</p>
-        <span class="tl-split-cta">Submit my resume →</span>
-      </a>
-    </div>
-  </div>
-</section>
-<section class="tl-section tl-ice">
-  <div class="container">
-    <div class="tl-center" style="max-width:720px;margin:0 auto 36px">
-      <div class="tl-kicker">Key figures</div>
-      <h2 class="tl-h2">A firm built for the reality of Quebec operations</h2>
-    </div>
-    <div class="tl-stats">
-      <div class="tl-stat"><b>7 d</b><p>Qualified candidates from day 7 on operations mandates</p></div>
+    <div class="tl-stats tl-stats-compact">
+      <div class="tl-stat"><b>7 d</b><p>Qualified candidates on operations mandates</p></div>
       <div class="tl-stat"><b>92 %</b><p>Of placements still in post after the probation period</p></div>
       <div class="tl-stat"><b>100 %</b><p>Of our mandates in industry, logistics or operations</p></div>
-      <div class="tl-stat"><b>1,200+</b><p>Industrial talents active in our Quebec network</p></div>
-    </div>
-  </div>
-</section>
-<section class="tl-section">
-  <div class="container">
-    <div class="row align-items-center g-4">
-      <div class="col-lg-6">
-        <div class="tl-kicker">Why Talendus</div>
-        <h2 class="tl-h2">The talent-acquisition partner for Quebec industry</h2>
-        <p class="tl-lead">When a line, a dock or a shift stops, the cost is not a vacant seat: it is lost production. We speak operations, maintenance, logistics and supervision — not generic HR language.</p>
-        <div class="space24"></div>
-        <ul class="tl-muted">
-          <li>Focus: production, manufacturing, logistics, maintenance, transportation and supervision.</li>
-          <li>Floor-level assessment: skills, shift, operational culture.</li>
-          <li>Replacement guarantee on permanent mandates.</li>
-        </ul>
-        <div class="space32"></div>
-        <div class="tl-actions">
-          <a href="contact.html" class="tl-btn">Start a hire</a>
-          <a href="about.html" class="tl-btn tl-btn-ghost-dark">Our approach</a>
-        </div>
-      </div>
-      <div class="col-lg-6">
-        <div class="tl-hero-media" style="height:420px;border-radius:18px;overflow:hidden">
-          <img src="{img('cnc-machiniste.jpg')}" alt="CNC machinist in a Quebec plant">
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-<section class="tl-section tl-ice">
-  <div class="container">
-    <div class="tl-center" style="max-width:760px;margin:0 auto 36px">
-      <div class="tl-kicker">Industries we serve</div>
-      <h2 class="tl-h2">We recruit where Quebec produces, processes, ships and maintains</h2>
-    </div>
-    <div class="tl-grid-4">
-      <a class="tl-card" href="sector-manufacturier.html"><div class="body"><h3>Manufacturing</h3><p>Fabrication, assembly and industrial subcontracting plants.</p></div></a>
-      <a class="tl-card" href="sector-production.html"><div class="body"><h3>Production</h3><p>Operations, methods, quality and line supervision.</p></div></a>
-      <a class="tl-card" href="sector-entrepot.html"><div class="body"><h3>Warehousing</h3><p>Material handling, forklift operators, order picking and WMS.</p></div></a>
-      <a class="tl-card" href="sector-logistique.html"><div class="body"><h3>Logistics</h3><p>Distribution, internal transport and the supply chain.</p></div></a>
-      <a class="tl-card" href="sector-transformation-alimentaire.html"><div class="body"><h3>Food</h3><p>Processing, packaging and plant hygiene standards.</p></div></a>
-      <a class="tl-card" href="sector-metallurgie.html"><div class="body"><h3>Metals</h3><p>Welding, machining, metal fabrication and boilermaking.</p></div></a>
-      <a class="tl-card" href="sector-plasturgie.html"><div class="body"><h3>Plastics</h3><p>Injection, extrusion and press operation.</p></div></a>
-      <a class="tl-card" href="sector-maintenance.html"><div class="body"><h3>Maintenance</h3><p>Electromechanics, industrial mechanics and reliability.</p></div></a>
-    </div>
-  </div>
-</section>
-<section class="tl-section">
-  <div class="container">
-    <div class="tl-center" style="max-width:760px;margin:0 auto 36px">
-      <div class="tl-kicker">Roles we fill</div>
-      <h2 class="tl-h2">From plant labourer to plant manager</h2>
-    </div>
-    <div class="tl-grid-3">
-      <div class="tl-card"><div class="body"><span class="tl-chip orange">Production</span><h3>Plant roles</h3><p>Labourer, operator, assembler, packer, line attendant.</p></div></div>
-      <div class="tl-card"><div class="body"><span class="tl-chip orange">Skilled</span><h3>Technical trades</h3><p>Welder, CNC machinist, electromechanical technician, industrial mechanic.</p></div></div>
-      <div class="tl-card"><div class="body"><span class="tl-chip orange">Logistics</span><h3>Warehouse &amp; distribution</h3><p>Forklift operator, clerk, logistics coordinator, warehouse supervisor.</p></div></div>
-      <div class="tl-card"><div class="body"><span class="tl-chip orange">Supervision</span><h3>Front-line leadership</h3><p>Production supervisor, foreperson, shift team lead.</p></div></div>
-      <div class="tl-card"><div class="body"><span class="tl-chip orange">Managers</span><h3>Plant leadership</h3><p>Plant manager, production director, maintenance manager.</p></div></div>
-      <div class="tl-card"><div class="body"><span class="tl-chip orange">Urgent</span><h3>Shift coverage</h3><p>Accelerated mandates when a critical shift must be filled — without diluting the technical filter.</p></div></div>
-    </div>
-    <div class="tl-center" style="margin-top:28px"><a class="tl-btn" href="jobs.html">Browse jobs</a></div>
-  </div>
-</section>
-<section class="tl-section tl-dark">
-  <div class="container">
-    <div class="tl-center" style="max-width:760px;margin:0 auto 36px">
-      <div class="tl-kicker">Method</div>
-      <h2 class="tl-h2">A five-step process aligned with your production clock</h2>
-    </div>
-    <div class="tl-steps">
-      <div class="tl-step"><span>01</span><h3>Operations diagnostic</h3><p>Shift, skills, health &amp; safety, culture and the real urgency of the mandate.</p></div>
-      <div class="tl-step"><span>02</span><h3>Industrial targeting</h3><p>Passive network, plant references and direct approach.</p></div>
-      <div class="tl-step"><span>03</span><h3>Floor-level assessment</h3><p>Technical interviews, checks and skills tests.</p></div>
-      <div class="tl-step"><span>04</span><h3>Presentation</h3><p>Comparable files, a clear recommendation. Qualified candidates from day 7.</p></div>
-      <div class="tl-step"><span>05</span><h3>Onboarding</h3><p>30/60/90-day follow-up and replacement guarantee.</p></div>
-    </div>
-  </div>
-</section>
-<section class="tl-section">
-  <div class="container">
-    <div class="tl-center" style="max-width:760px;margin:0 auto 36px">
-      <div class="tl-kicker">Case work</div>
-      <h2 class="tl-h2">Industrial mandates taken through to start date</h2>
-    </div>
-    <div class="tl-grid-3">
-      <article class="tl-case">
-        <div class="tl-hero-media" style="height:200px"><img src="{img('soudeur-atelier.jpg')}" alt="Welder recruiting mandate"></div>
-        <div class="body">
-          <span class="tl-chip">Metals · Drummondville</span>
-          <h3>3 welder-fitters for a second shift</h3>
-          <p>A growing SME had to open a shift without stopping the line. Technical screening, a controlled start.</p>
-        </div>
-      </article>
-      <article class="tl-case">
-        <div class="tl-hero-media" style="height:200px"><img src="{img('entrepot-logistique.jpg')}" alt="Distribution centre recruiting"></div>
-        <div class="body">
-          <span class="tl-chip">Warehouse · Laval</span>
-          <h3>Shift supervisor + 8 forklift operators</h3>
-          <p>Seasonal peak absorbed in 4 weeks, with retention above the site average.</p>
-        </div>
-      </article>
-      <article class="tl-case">
-        <div class="tl-hero-media" style="height:200px"><img src="{img('maintenance-tech.jpg')}" alt="Plant manager recruiting"></div>
-        <div class="body">
-          <span class="tl-chip">Leadership · Montérégie</span>
-          <h3>Confidential plant manager</h3>
-          <p>Discreet search. Start date in 9 weeks, without internal disruption.</p>
-        </div>
-      </article>
-    </div>
-  </div>
-</section>
-<section class="tl-section tl-ice">
-  <div class="container">
-    <div class="tl-center" style="max-width:720px;margin:0 auto 36px">
-      <div class="tl-kicker">Testimonials</div>
-      <h2 class="tl-h2">What plants and candidates say</h2>
-      <p class="tl-lead">Feedback from manufacturing employers and professionals placed in Quebec — not generic quotes.</p>
-    </div>
-    <div class="tl-grid-3 tl-quotes">
-      <blockquote class="tl-quote">
-        <div class="tl-quote-mark" aria-hidden="true">“</div>
-        <p>They understood our rotating shifts on the first call. The supervisor they presented already knew a comparable Lean environment.</p>
-        <footer><strong>M.L.</strong><span>Director of operations · food plant, South Shore</span></footer>
-      </blockquote>
-      <blockquote class="tl-quote">
-        <div class="tl-quote-mark" aria-hidden="true">“</div>
-        <p>Not an agency that sends 40 resumes. Three solid files, an electromechanical technician in post, and follow-up after the hire.</p>
-        <footer><strong>J.R.</strong><span>Maintenance director · metals, Mauricie</span></footer>
-      </blockquote>
-      <blockquote class="tl-quote">
-        <div class="tl-quote-mark" aria-hidden="true">“</div>
-        <p>I was a night forklift operator. Talendus introduced me to a logistics coordinator role in Laval. Clear interview, clean terms.</p>
-        <footer><strong>A.D.</strong><span>Candidate placed · Laval</span></footer>
-      </blockquote>
-    </div>
-  </div>
-</section>
-<section class="tl-section">
-  <div class="container">
-    <div class="tl-center" style="max-width:720px;margin:0 auto 36px">
-      <div class="tl-kicker">FAQ</div>
-      <h2 class="tl-h2">Before you open a mandate or submit a resume</h2>
-      <p class="tl-lead">Questions from HR, operations directors and candidates — straight answers.</p>
-    </div>
-    {faq_html(FAQ_HOME_EN)}
-  </div>
-</section>
-<section class="tl-section tl-ice" id="contact-rapide">
-  <div class="container">
-    <div class="row align-items-center g-4">
-      <div class="col-lg-5">
-        <div class="tl-kicker">Contact</div>
-        <h2 class="tl-h2">Tell us about your mandate or your resume</h2>
-        <p class="tl-lead">Consultations by appointment only. Average response under 30 minutes during business hours.</p>
-        <div class="tl-notice">Mon–Fri, 8 a.m. to 5 p.m. · Meetings scheduled around your availability.</div>
-        <p><a href="tel:+15145550199">514 555-0199</a><br><a href="mailto:info@talendus.ca">info@talendus.ca</a><br><a href="{WA}" target="_blank" rel="noopener noreferrer">WhatsApp</a></p>
-        <div class="tl-actions" style="margin-top:18px">
-          <a class="tl-btn" href="contact.html">Start a hire</a>
-        </div>
-      </div>
-      <div class="col-lg-6 offset-lg-1">
-        <form class="tl-form" action="#" method="post" data-form="contact">
-          <label for="nom">Name</label>
-          <input id="nom" name="nom" required placeholder="Your name">
-          <label for="courriel">Email</label>
-          <input id="courriel" type="email" name="courriel" required placeholder="name@company.ca">
-          <label for="profil">You are</label>
-          <select id="profil" name="profil">
-            <option>Employer — I am hiring</option>
-            <option>Candidate — I am looking for a role</option>
-          </select>
-          <label for="msg">Message</label>
-          <textarea id="msg" name="message" placeholder="Role, city, urgency or trade"></textarea>
-          <button class="tl-btn tl-btn-lg" type="submit">Start a hire</button>
-          <div class="tl-success" role="status"></div>
-        </form>
-      </div>
-    </div>
-  </div>
-</section>
-{CTA}
-<section class="tl-section">
-  <div class="container">
-    <div class="tl-center" style="max-width:760px;margin:0 auto 36px">
-      <div class="tl-kicker">Blog</div>
-      <h2 class="tl-h2">Recruiting, HR and industry resources in Quebec</h2>
-    </div>
-    <div class="tl-grid-3">
-      <a class="tl-card" href="article-mauvaise-embauche.html"><div class="tl-hero-media" style="height:180px"><img src="{img('usine-equipe.jpg')}" alt="Plant team in Quebec" loading="lazy" decoding="async"></div><div class="body"><span class="tl-chip">HR</span><h3>What a bad plant hire really costs</h3></div></a>
-      <a class="tl-card" href="article-machiniste-cnc.html"><div class="tl-hero-media" style="height:180px"><img src="{img('cnc-machiniste.jpg')}" alt="CNC machinist" loading="lazy" decoding="async"></div><div class="body"><span class="tl-chip">Manufacturing</span><h3>Hiring a CNC machinist in Quebec</h3></div></a>
-      <a class="tl-card" href="article-caristes-entrepot.html"><div class="tl-hero-media" style="height:180px"><img src="{img('entrepot-logistique.jpg')}" alt="Warehouse forklift operators" loading="lazy" decoding="async"></div><div class="body"><span class="tl-chip">Logistics</span><h3>Forklift shortage: warehouse tactics</h3></div></a>
     </div>
   </div>
 </section>
@@ -374,7 +126,7 @@ def build_en(write, wrap, page_hero):
             "The firm",
             "Talendus exists so Quebec operations keep moving.",
             "We recruit the people who keep production, maintenance, logistics and supervision running.",
-            actions='<a class="tl-btn" href="contact.html">Start a hire</a><a class="tl-btn tl-btn-ghost" href="services.html">See services</a>',
+            actions='<a class="tl-btn" href="candidates.html" data-set-persona="talent">For talent</a><a class="tl-btn tl-btn-ghost" href="employers.html" data-set-persona="entreprise">For employers</a>',
         )
         + f"""
     <section class="tl-section"><div class="container">
@@ -390,7 +142,7 @@ def build_en(write, wrap, page_hero):
       <div class="tl-hero-media" style="height:360px;border-radius:16px;overflow:hidden;margin-bottom:18px">
         <img src="{img('usine-equipe.jpg')}" alt="Talendus team on the plant floor">
       </div>
-      <a class="tl-btn tl-btn-lg" href="contact.html">Start a hire</a>
+      <a class="tl-btn tl-btn-lg" href="employers.html" data-set-persona="entreprise">For employers</a>
     </div></div>
     </div></section>
     <section class="tl-section tl-ice"><div class="container">
@@ -401,7 +153,7 @@ def build_en(write, wrap, page_hero):
       <div class="tl-card"><div class="body"><h3>Word kept</h3><p>Timelines, files, guarantee: what is said is delivered. One contact through to start date.</p></div></div>
     </div>
     </div></section>
-    """ + CTA,
+    """ + CTA_GATE,
         lang="en",
         alt="a-propos.html",
     ))
@@ -446,7 +198,7 @@ def build_en(write, wrap, page_hero):
             "Employers",
             "Your operation does not need 80 resumes. It needs the right talent, on the right shift.",
             "Free consultation, by appointment. Industrial screening. Replacement guarantee.",
-            actions='<a class="tl-btn" href="contact.html">Start a hire</a><a class="tl-btn tl-btn-ghost" href="contact.html">Book a consultation</a>',
+            actions='<a class="tl-btn" href="contact.html">Start a hire</a><a class="tl-btn tl-btn-ghost" href="post-a-job.html">Post a job</a>',
             badges='<span class="tl-badge tl-badge-light">By appointment</span> <span class="tl-badge tl-badge-light">Operations partner</span>',
         )
         + SPEED
@@ -487,9 +239,44 @@ def build_en(write, wrap, page_hero):
         </div>
       </div>
     </div></section>
+    <section class="tl-section"><div class="container">
+      <div class="tl-center" style="max-width:720px;margin:0 auto 36px">
+        <div class="tl-kicker">Employer universe</div>
+        <h2 class="tl-h2">Hire, post, search, support</h2>
+      </div>
+      <div class="tl-grid-4">
+        <a class="tl-card" href="employers.html"><div class="body"><span class="tl-chip orange">Services</span><h3>Hire with Talendus</h3><p>Industrial screening, a short shortlist, replacement guarantee.</p></div></a>
+        <a class="tl-card" href="post-a-job.html"><div class="body"><span class="tl-chip orange">Mandate</span><h3>Post a job</h3><p>Describe the shift, real pay and urgency. We open sourcing.</p></div></a>
+        <a class="tl-card" href="executive-search.html"><div class="body"><span class="tl-chip orange">Passive</span><h3>Talent search</h3><p>Discreet approach of people already in post: CNC, electromechanics, leaders.</p></div></a>
+        <a class="tl-card" href="hr-solutions.html"><div class="body"><span class="tl-chip orange">Premium</span><h3>HR solutions</h3><p>Job descriptions, salary grids, joint interviews and 30/60/90 onboarding.</p></div></a>
+      </div>
+    </div></section>
+    <section class="tl-section tl-ice" id="temoignages"><div class="container">
+      <div class="tl-center" style="max-width:720px;margin:0 auto 36px">
+        <div class="tl-kicker">Employer testimonials</div>
+        <h2 class="tl-h2">What plants say</h2>
+      </div>
+      <div class="tl-grid-3 tl-quotes">
+        <blockquote class="tl-quote">
+          <div class="tl-quote-mark" aria-hidden="true">“</div>
+          <p>They understood our rotating shifts on the first call. The supervisor they presented already knew a comparable Lean environment.</p>
+          <footer><strong>M.L.</strong><span>Director of operations · food plant, South Shore</span></footer>
+        </blockquote>
+        <blockquote class="tl-quote">
+          <div class="tl-quote-mark" aria-hidden="true">“</div>
+          <p>Not an agency that sends 40 resumes. Three solid files, an electromechanical technician in post, and follow-up after the hire.</p>
+          <footer><strong>J.R.</strong><span>Maintenance director · metals, Mauricie</span></footer>
+        </blockquote>
+        <blockquote class="tl-quote">
+          <div class="tl-quote-mark" aria-hidden="true">“</div>
+          <p>A confidential plant-manager mandate run without internal noise. Start date aligned with our production calendar.</p>
+          <footer><strong>S.B.</strong><span>VP operations · manufacturer, Montérégie</span></footer>
+        </blockquote>
+      </div>
+    </div></section>
     <section class="tl-section tl-ice"><div class="container">
       <div class="tl-center" style="max-width:720px;margin:0 auto 28px">
-        <div class="tl-kicker">Employer FAQ</div>
+        <div class="tl-kicker" id="faq">Employer FAQ</div>
         <h2 class="tl-h2">What HR and operations directors ask</h2>
       </div>
       {faq_html(FAQ_EMPLOYERS_EN)}
@@ -523,13 +310,13 @@ def build_en(write, wrap, page_hero):
           <p id="process"></p>
           <h3>Our candidate process</h3>
           <ol>
-            <li>We receive and qualify your profile.</li>
-            <li>Talendus interview (skills, shifts, mobility).</li>
-            <li>Introduction to relevant industrial employers.</li>
-            <li>Plant interview preparation.</li>
-            <li>Follow-up through to start date.</li>
+            <li>Create your profile.</li>
+            <li>Apply to openings or submit your resume.</li>
+            <li>Track applications with a Talendus consultant.</li>
+            <li>Be contacted when the shift and pay match.</li>
           </ol>
           <div class="tl-actions" style="margin-top:8px">
+            <a class="tl-btn" href="account.html" data-auth-open="register">Create my profile</a>
             <a class="tl-btn tl-btn-electric" href="jobs.html">Browse jobs</a>
           </div>
         </div>
@@ -552,14 +339,37 @@ def build_en(write, wrap, page_hero):
         </div>
       </div>
     </div></section>
-    <section class="tl-section"><div class="container">
+    <section class="tl-section" id="temoignages"><div class="container">
+      <div class="tl-center" style="max-width:720px;margin:0 auto 36px">
+        <div class="tl-kicker">Talent testimonials</div>
+        <h2 class="tl-h2">What placed candidates say</h2>
+      </div>
+      <div class="tl-grid-3 tl-quotes">
+        <blockquote class="tl-quote">
+          <div class="tl-quote-mark" aria-hidden="true">“</div>
+          <p>I was a night forklift operator. Talendus introduced me to a logistics coordinator role in Laval. Clear interview, clean terms.</p>
+          <footer><strong>A.D.</strong><span>Candidate placed · Laval</span></footer>
+        </blockquote>
+        <blockquote class="tl-quote">
+          <div class="tl-quote-mark" aria-hidden="true">“</div>
+          <p>Not fifteen useless interviews. A consultant understood my shifts, then introduced me to a plant actually hiring a welder-fitter.</p>
+          <footer><strong>K.T.</strong><span>Welder placed · Drummondville</span></footer>
+        </blockquote>
+        <blockquote class="tl-quote">
+          <div class="tl-quote-mark" aria-hidden="true">“</div>
+          <p>I submitted my resume on a Tuesday. Friday I had an electromechanical interview in Montreal. Free, no pressure.</p>
+          <footer><strong>R.M.</strong><span>Electromechanical technician · Montreal</span></footer>
+        </blockquote>
+      </div>
+    </div></section>
+    <section class="tl-section" id="faq"><div class="container">
       <div class="tl-center" style="max-width:720px;margin:0 auto 28px">
         <div class="tl-kicker">Candidate FAQ</div>
         <h2 class="tl-h2">Before you submit your resume</h2>
       </div>
       {faq_html(FAQ_CANDIDATES_EN)}
     </div></section>
-    """ + CTA,
+    """ + CTA_TALENT,
         lang="en",
         alt="candidats.html",
     ))
@@ -570,9 +380,9 @@ def build_en(write, wrap, page_hero):
         "en/contact.html",
         page_hero(
             "Contact",
-            "A free consultation for your next industrial mandate.",
+            "Tell us who you are. We open the right path.",
             "Consultations by appointment only. Average response under 30 minutes during business hours.",
-            actions=f'<a class="tl-btn" href="tel:+15145550199">Call a specialist</a><a class="tl-btn tl-btn-ghost" href="{WA}" target="_blank" rel="noopener noreferrer">WhatsApp</a>',
+            actions='<a class="tl-btn" href="tel:+15145550199">Call a specialist</a><a class="tl-btn tl-btn-ghost" href="#parcours">Choose my path</a>',
             badges='<span class="tl-badge tl-badge-light">By appointment</span> <span class="tl-badge tl-badge-light">Mon–Fri, 8 a.m. to 5 p.m.</span>',
         )
         + f"""
@@ -599,7 +409,7 @@ def build_en(write, wrap, page_hero):
           <div>
             <h3>WhatsApp</h3>
             <p><a href="{WA}" target="_blank" rel="noopener noreferrer">Open a conversation</a></p>
-            <p>Employers and candidates · replies during business hours.</p>
+            <p>Replies during business hours.</p>
           </div>
         </div>
         <div class="tl-info-card">
@@ -612,29 +422,70 @@ def build_en(write, wrap, page_hero):
         </div>
       </div>
     </div></section>
-    <section class="tl-section" id="formulaire"><div class="container">
-      <div class="tl-contact-grid">
-        <div>
-          <div class="tl-kicker">Form</div>
-          <h2 class="tl-h2">Describe the role or your profile</h2>
-          <p class="tl-lead">Employer: open a mandate. Candidate: submit your resume. An industrial consultant comes back — on average under 30 minutes during business hours.</p>
+    <section class="tl-section" id="parcours"><div class="container">
+      <div data-persona-only="gateway">
+        <div class="tl-center" style="max-width:640px;margin:0 auto 28px">
+          <div class="tl-kicker">Path</div>
+          <h2 class="tl-h2">You are:</h2>
+        </div>
+        <div class="tl-persona-doors">
+          <a class="tl-persona-door" href="#formulaire" data-set-persona="talent">
+            <span class="tl-kicker">Talent</span>
+            <h2>I am looking for a job</h2>
+            <p>Submit your resume or ask about a plant role. Free for you.</p>
+            <span class="tl-split-cta">Continue →</span>
+          </a>
+          <a class="tl-persona-door" href="#formulaire" data-set-persona="entreprise">
+            <span class="tl-kicker">Employers</span>
+            <h2>I hire</h2>
+            <p>Open a mandate, post a job or book a demo.</p>
+            <span class="tl-split-cta">Continue →</span>
+          </a>
+        </div>
+      </div>
+      <div class="tl-contact-grid" id="formulaire" style="margin-top:36px">
+        <div data-persona-only="talent">
+          <div class="tl-kicker">Talent</div>
+          <h2 class="tl-h2">Submit my resume or ask a question</h2>
+          <p class="tl-lead">Free for you. A consultant reaches out if a plant mandate matches.</p>
           <form class="tl-form" action="#" method="post" data-form="contact">
+            <input type="hidden" name="profil" value="Candidate — I am looking for a role">
             <label>Name</label><input required name="nom">
-            <label>Company (optional)</label><input name="entreprise">
+            <label>Email</label><input type="email" required name="courriel">
+            <label>Phone</label><input name="tel">
+            <label>Subject</label>
+            <select name="objet">
+              <option>Submit my resume</option>
+              <option>Join the talent pool</option>
+              <option>Question about a job</option>
+            </select>
+            <label>Message</label><textarea required name="message" placeholder="Trade, city, possible shifts"></textarea>
+            <button class="tl-btn tl-btn-lg" type="submit">Submit my resume</button>
+            <div class="tl-success"></div>
+          </form>
+        </div>
+        <div data-persona-only="entreprise">
+          <div class="tl-kicker">Employers</div>
+          <h2 class="tl-h2">Start a hire</h2>
+          <p class="tl-lead">Describe the role, shift and urgency. Free consultation, by appointment.</p>
+          <form class="tl-form" action="#" method="post" data-form="contact">
+            <input type="hidden" name="profil" value="Employer — I am hiring">
+            <label>Name</label><input required name="nom">
+            <label>Company</label><input required name="entreprise">
             <label>Email</label><input type="email" required name="courriel">
             <label>Phone</label><input name="tel">
             <label>Subject</label>
             <select name="objet">
               <option>Start a hire</option>
-              <option>Book a consultation</option>
-              <option>Submit my resume</option>
-              <option>Join the talent pool</option>
+              <option>Post a job</option>
+              <option>Book a demo</option>
             </select>
-            <label>Message</label><textarea required name="message" placeholder="Role, city, shift, urgency or target trade"></textarea>
+            <label>Message</label><textarea required name="message" placeholder="Role, city, shift, urgency"></textarea>
             <button class="tl-btn tl-btn-lg" type="submit">Start a hire</button>
             <div class="tl-success"></div>
           </form>
         </div>
+        <div data-persona-only="gateway"></div>
         <div>
           <div class="tl-map">
             <iframe title="Montreal map" src="https://maps.google.com/maps?q=Montreal%20Quebec&t=&z=11&ie=UTF8&iwloc=&output=embed" loading="lazy"></iframe>
@@ -665,7 +516,7 @@ def build_en(write, wrap, page_hero):
         page_hero(
             "Job openings", "Industrial roles open in Quebec",
             "Search by trade, city, salary, job type and shift. Apply in one form.",
-            actions='<a class="tl-btn" href="candidates.html#cv">Submit my resume</a><a class="tl-btn tl-btn-ghost" href="contact.html">Start a hire</a>',
+            actions='<a class="tl-btn" href="candidates.html#cv">Submit my resume</a><a class="tl-btn tl-btn-ghost" href="account.html" data-auth-open="register">Create my profile</a>',
             badges='<span class="tl-badge tl-badge-light">Talent pool</span>',
         )
         + f"""
@@ -723,7 +574,7 @@ def build_en(write, wrap, page_hero):
             f"en/job-{slug}.html",
             page_hero(
                 f"{city} · {typ}", title, f"{sal} · {shift} · Talendus industrial recruiting",
-                actions='<a class="tl-btn" href="#postuler">Submit my resume</a><a class="tl-btn tl-btn-ghost" href="jobs.html">Browse jobs</a>',
+                actions='<a class="tl-btn" href="#postuler">Apply now</a><a class="tl-btn tl-btn-ghost" href="jobs.html">Browse jobs</a>',
                 badges='<span class="tl-badge tl-badge-light">Industrial role</span>',
             )
             + f"""
@@ -736,7 +587,7 @@ def build_en(write, wrap, page_hero):
               <p>{req}</p>
               <h3>What we offer</h3>
               <ul><li>{typ} role</li><li>Pay: {sal}</li><li>Schedule: {shift}</li><li>Talendus support through to hire</li></ul>
-              <p><a href="jobs.html">← All openings</a> · <a href="industrial-recruiting.html">Industrial recruiting</a></p>
+              <p><a href="jobs.html">← All openings</a> · <a href="candidates.html">Talent space</a></p>
             </div>
             <div class="col-lg-4 offset-lg-1" id="postuler">
               <h3>Apply</h3>
@@ -744,7 +595,7 @@ def build_en(write, wrap, page_hero):
               <label>Email</label><input type="email" name="email" required>
               <label>Phone</label><input name="phone">
               <label>Resume link</label><input name="resume" placeholder="https://">
-              <button class="tl-btn tl-btn-lg" type="submit">Submit my resume</button>
+              <button class="tl-btn tl-btn-lg" type="submit">Apply now</button>
               <div class="tl-success"></div></form>
             </div>
           </div>
@@ -939,5 +790,85 @@ def build_en(write, wrap, page_hero):
         + """<section class="tl-section"><div class="container" style="max-width:800px"><p>Content is provided for information. Mandates are subject to a written agreement. Sample openings and demonstration statistics may be adjusted to the firm’s live data.</p><p>Using the site implies acceptance of these terms. Questions: info@talendus.ca.</p></div></section>""",
         lang="en",
         alt="conditions.html",
+    ))
+    write("en/how-it-works.html", wrap(
+        "How it works | Talent path — Talendus",
+        "Create your profile, apply, track applications and get contacted by Talendus — free for talent.",
+        "en/how-it-works.html",
+        page_hero(
+            "Talent",
+            "Four steps, one goal: the right plant role.",
+            "No mix with employer recruiting. Here, you are looking for a job.",
+            actions='<a class="tl-btn" href="account.html" data-auth-open="register">Create my profile</a><a class="tl-btn tl-btn-ghost" href="candidates.html#cv">Submit my resume</a>',
+        )
+        + """
+    <section class="tl-section"><div class="container">
+      <div class="tl-steps">
+        <div class="tl-step"><span>01</span><h3>Create your profile</h3><p>Trade, shifts, region, resume. Five minutes to join the industrial pool.</p></div>
+        <div class="tl-step"><span>02</span><h3>Apply</h3><p>Open roles or a confidential mandate. We filter before we introduce you.</p></div>
+        <div class="tl-step"><span>03</span><h3>Track applications</h3><p>A Talendus consultant is the bridge. No direct employer–candidate messages.</p></div>
+        <div class="tl-step"><span>04</span><h3>Get contacted</h3><p>When the shift, pay and plant match, we call you.</p></div>
+      </div>
+      <div class="tl-actions" style="margin-top:36px">
+        <a class="tl-btn" href="account.html" data-auth-open="register">Create my profile</a>
+        <a class="tl-btn tl-btn-ghost-dark" href="jobs.html">Browse jobs</a>
+      </div>
+    </div></section>
+    """ + CTA_TALENT,
+        lang="en",
+        alt="comment-ca-fonctionne.html",
+    ))
+    write("en/post-a-job.html", wrap(
+        "Post a job | Industrial recruiting — Talendus",
+        "Post a plant or warehouse job in Quebec. Talendus sources, screens and presents defensible files.",
+        "en/post-a-job.html",
+        page_hero(
+            "Employers",
+            "Post a job without receiving 80 resumes.",
+            "Describe the shift, real pay and urgency. We open industrial sourcing.",
+            actions='<a class="tl-btn" href="account-employer.html" data-auth-open="register">Post a job</a><a class="tl-btn tl-btn-ghost" href="contact.html">Book a demo</a>',
+        )
+        + """
+    <section class="tl-section"><div class="container">
+      <div class="tl-steps">
+        <div class="tl-step"><span>01</span><h3>Brief</h3><p>30 minutes: role, shift, health &amp; safety, real pay.</p></div>
+        <div class="tl-step"><span>02</span><h3>Framed posting</h3><p>Visible opening or confidential mandate, as you need.</p></div>
+        <div class="tl-step"><span>03</span><h3>Talendus filter</h3><p>Applications go through our team. You see presented files.</p></div>
+        <div class="tl-step"><span>04</span><h3>Shortlist</h3><p>Qualified candidates from day 7 on operations roles.</p></div>
+      </div>
+      <div class="tl-actions" style="margin-top:36px">
+        <a class="tl-btn" href="account-employer.html" data-auth-open="register">Post a job</a>
+        <a class="tl-btn tl-btn-ghost-dark" href="contact.html">Start a hire</a>
+      </div>
+    </div></section>
+    """ + CTA,
+        lang="en",
+        alt="publier-une-offre.html",
+    ))
+    write("en/hr-solutions.html", wrap(
+        "HR solutions | Industrial recruiting support — Talendus",
+        "Premium HR support for Quebec plants: job descriptions, salary grids, joint interviews and 30/60/90 onboarding.",
+        "en/hr-solutions.html",
+        page_hero(
+            "Employers",
+            "Beyond the posting: a plant HR partner.",
+            "Job descriptions, industrial salary grids, joint interviews and onboarding follow-up.",
+            actions='<a class="tl-btn" href="contact.html">Book a demo</a><a class="tl-btn tl-btn-ghost" href="employers.html">Find talent</a>',
+        )
+        + """
+    <section class="tl-section"><div class="container">
+      <div class="tl-grid-3">
+        <div class="tl-card"><div class="body"><h3>Industrial descriptions</h3><p>A role written as a shift is lived: machines, health &amp; safety, pace, supervision.</p></div></div>
+        <div class="tl-card"><div class="body"><h3>Salary grids</h3><p>Align the offer with Quebec plant pay, without underpaying a scarce trade.</p></div></div>
+        <div class="tl-card"><div class="body"><h3>30/60/90 onboarding</h3><p>Follow-up after start date. Replacement guarantee on permanent mandates.</p></div></div>
+      </div>
+      <div class="tl-actions" style="margin-top:36px">
+        <a class="tl-btn" href="contact.html">Start a hire</a>
+        <a class="tl-btn tl-btn-ghost-dark" href="employers.html">Hire with Talendus</a>
+      </div>
+    </div></section>
+    """ + CTA,
+        lang="en",
+        alt="solutions-rh.html",
     ))
     write_seo_en(write, wrap, page_hero, CTA)

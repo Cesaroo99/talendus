@@ -48,7 +48,7 @@ gtag('consent', 'default', {
     <script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebSite", "name": "Talendus", "url": "https://talendus.ca", "inLanguage": ["fr-CA", "en-CA"], "publisher": {"@type": "Organization", "name": "Talendus", "url": "https://talendus.ca"}}</script>
     
 </head>
-<body class="tl-solid-header">
+<body class="tl-solid-header tl-persona-entreprise" data-persona="entreprise">
 
 <div class="preloader tl-preloader" role="status" aria-label="Chargement Talendus">
   <div class="tl-preloader-stage">
@@ -80,39 +80,27 @@ gtag('consent', 'default', {
                       <ul>
 
                               <li data-nav="home"><a href="index.html">Accueil</a></li>
-                              <li class="has-dropdown" data-nav="employeurs">
-                                <a href="entreprises.html">Entreprises <span class="tl-nav-caret" aria-hidden="true"><i class="fa-solid fa-angle-down"></i></span></a>
-                                  <ul class="sub-menu">
-                                      <li><a href="entreprises.html">Pourquoi Talendus</a></li>
-                                      <li><a href="services.html">Services de recrutement</a></li>
-                                      <li><a href="secteurs.html">Secteurs desservis</a></li>
-                                      <li><a href="entreprises.html#calculateur">Calculateur d'embauche</a></li>
-                                      <li><a href="espace-employeur.html">Espace employeur</a></li>
-                                  </ul>
-                              </li>
                               <li class="has-dropdown" data-nav="candidats">
-                                <a href="candidats.html">Candidats <span class="tl-nav-caret" aria-hidden="true"><i class="fa-solid fa-angle-down"></i></span></a>
+                                <a href="candidats.html" data-set-persona="talent">Pour les Talents <span class="tl-nav-caret" aria-hidden="true"><i class="fa-solid fa-angle-down"></i></span></a>
                                   <ul class="sub-menu">
-                                      <li><a href="emplois.html">Offres d'emploi</a></li>
-                                      <li><a href="candidats.html#cv">Dépôt de CV</a></li>
-                                      <li><a href="candidats.html#processus">Processus</a></li>
-                                      <li><a href="espace.html">Connexion</a></li>
+                                      <li><a href="emplois.html" data-set-persona="talent">Offres d'emploi</a></li>
+                                      <li><a href="candidats.html#cv" data-set-persona="talent">Déposer son CV</a></li>
+                                      <li><a href="comment-ca-fonctionne.html" data-set-persona="talent">Comment ça fonctionne</a></li>
+                                      <li><a href="candidats.html#faq" data-set-persona="talent">FAQ talents</a></li>
                                   </ul>
                               </li>
-                              <li class="has-dropdown" data-nav="services">
-                                <a href="services.html">Services <span class="tl-nav-caret" aria-hidden="true"><i class="fa-solid fa-angle-down"></i></span></a>
+                              <li class="has-dropdown" data-nav="employeurs">
+                                <a href="entreprises.html" data-set-persona="entreprise">Pour les Entreprises <span class="tl-nav-caret" aria-hidden="true"><i class="fa-solid fa-angle-down"></i></span></a>
                                   <ul class="sub-menu">
-                                      <li><a href="recrutement-industriel.html">Recrutement industriel</a></li>
-                                      <li><a href="recrutement-manufacturier.html">Recrutement manufacturier</a></li>
-                                      <li><a href="recrutement-technique.html">Recrutement technique</a></li>
-                                      <li><a href="recrutement-permanent.html">Recrutement permanent</a></li>
-                                      <li><a href="recrutement-temporaire.html">Recrutement temporaire</a></li>
-                                      <li><a href="chasse-de-tetes.html">Chasse de têtes</a></li>
-                                      <li><a href="recrutement-cadres.html">Recrutement de cadres</a></li>
+                                      <li><a href="entreprises.html" data-set-persona="entreprise">Recruter avec Talendus</a></li>
+                                      <li><a href="publier-une-offre.html" data-set-persona="entreprise">Publier une offre</a></li>
+                                      <li><a href="chasse-de-tetes.html" data-set-persona="entreprise">Chasse de têtes</a></li>
+                                      <li><a href="solutions-rh.html" data-set-persona="entreprise">Solutions RH</a></li>
+                                      <li><a href="services.html" data-set-persona="entreprise">Services de recrutement</a></li>
                                   </ul>
                               </li>
+                              <li data-nav="jobs"><a href="emplois.html" data-set-persona="talent">Offres d'emploi</a></li>
                               <li data-nav="about"><a href="a-propos.html">À propos</a></li>
-                              <li data-nav="blog"><a href="blog.html">Blog</a></li>
                               <li data-nav="contact"><a href="contact.html">Contact</a></li>
 
                       </ul>
@@ -124,8 +112,10 @@ gtag('consent', 'default', {
                     <a class="" href="en/employers.html" lang="en" hreflang="en-CA">EN</a>
                   </nav>
                 <a href="espace.html" class="tl-account-link" data-account-link data-auth-open="login">Connexion</a>
+                <a href="espace.html" class="tl-account-link tl-register-link" data-auth-open="register">Inscription</a>
                 <div class="hero-btn1">
-                  <a href="contact.html" class="vl-btn2 tl-header-cta">Confier un recrutement <span><i class="fa-solid fa-arrow-right"></i></span></a>
+                  <a href="emplois.html" class="vl-btn2 tl-header-cta" data-persona-cta="talent">Consulter les offres <span><i class="fa-solid fa-arrow-right"></i></span></a>
+                  <a href="contact.html" class="vl-btn2 tl-header-cta" data-persona-cta="entreprise">Demander un recrutement <span><i class="fa-solid fa-arrow-right"></i></span></a>
                 </div>
               </div>
               <div class="tl-mobile-tools">
@@ -164,8 +154,13 @@ gtag('consent', 'default', {
             <p class="tl-offcanvas-note">Réponse moyenne sous 30 minutes durant les heures d’ouverture.</p>
             <div class="vl-offcanvas-cta">
               <a href="espace.html" class="tl-btn tl-btn-ghost" data-account-link data-auth-open="login">Connexion</a>
-              <a href="contact.html" class="tl-btn">Confier un recrutement</a>
-              <a href="candidats.html#cv" class="tl-btn tl-btn-electric">Déposer mon CV</a>
+              <a href="espace.html" class="tl-btn tl-btn-ghost" data-auth-open="register">Inscription</a>
+              <a href="candidats.html" class="tl-btn" data-persona-cta="gateway" data-set-persona="talent">Trouver un emploi</a>
+              <a href="entreprises.html" class="tl-btn tl-btn-electric" data-persona-cta="gateway" data-set-persona="entreprise">Je recrute</a>
+              <a href="emplois.html" class="tl-btn" data-persona-cta="talent">Consulter les offres</a>
+              <a href="candidats.html#cv" class="tl-btn tl-btn-electric" data-persona-cta="talent">Déposer mon CV</a>
+              <a href="publier-une-offre.html" class="tl-btn" data-persona-cta="entreprise">Publier une offre</a>
+              <a href="contact.html" class="tl-btn tl-btn-electric" data-persona-cta="entreprise">Réserver une démonstration</a>
             </div>
         </div>
     </div>
@@ -179,7 +174,7 @@ gtag('consent', 'default', {
     <div class="tl-kicker">Entreprises</div>
     <h1 class="tl-h1">Votre opération n'a pas besoin de 80 CV. Elle a besoin du bon talent, au bon quart.</h1>
     <p class="tl-lead">Consultation gratuite, sur rendez-vous. Présélection industrielle. Garantie de remplacement.</p>
-    <div class="tl-actions"><a class="tl-btn" href="contact.html">Confier un recrutement</a><a class="tl-btn tl-btn-ghost" href="contact.html">Réserver une consultation</a></div>
+    <div class="tl-actions"><a class="tl-btn" href="contact.html">Demander un recrutement</a><a class="tl-btn tl-btn-ghost" href="publier-une-offre.html">Publier une offre</a></div>
   </div>
 </section>
 
@@ -192,8 +187,7 @@ gtag('consent', 'default', {
         <p>Une shortlist industrielle, pas une pile de CV. On ouvre le mandat, on filtre comme un contremaître, on vous présente des dossiers défendables.</p>
       </div>
       <div class="tl-speed-actions">
-        <a class="tl-btn tl-btn-lg" href="contact.html">Confier un recrutement</a>
-        <a class="tl-btn tl-btn-ghost" href="contact.html">Réserver une consultation</a>
+        <a class="tl-btn tl-btn-lg" href="contact.html">Demander un recrutement</a><a class="tl-btn tl-btn-ghost" href="contact.html">Réserver une démonstration</a>
       </div>
     </div>
   </div>
@@ -223,7 +217,7 @@ gtag('consent', 'default', {
       <div class="row align-items-center g-4">
         <div class="col-lg-5"><h2 class="tl-h2">Calculateur : coût d'une mauvaise embauche</h2>
         <p class="tl-lead">Estimez l'impact d'un mauvais fit (salaire, formation, heures sup. et perte de productivité). Un mandat Talendus coûte presque toujours moins cher qu'un quart instable.</p>
-        <a class="tl-btn" href="contact.html">Confier un recrutement</a></div>
+        <a class="tl-btn" href="contact.html">Demander un recrutement</a></div>
         <div class="col-lg-6 offset-lg-1">
           <div class="tl-calc">
             <label for="tl-salary">Salaire annuel du poste ($)</label>
@@ -235,14 +229,49 @@ gtag('consent', 'default', {
         </div>
       </div>
     </div></section>
+    <section class="tl-section"><div class="container">
+      <div class="tl-center" style="max-width:720px;margin:0 auto 36px">
+        <div class="tl-kicker">Univers entreprises</div>
+        <h2 class="tl-h2">Recruter, publier, chasser, accompagner</h2>
+      </div>
+      <div class="tl-grid-4">
+        <a class="tl-card" href="entreprises.html"><div class="body"><span class="tl-chip orange">Services</span><h3>Recruter avec Talendus</h3><p>Présélection industrielle, shortlist courte, garantie de remplacement.</p></div></a>
+        <a class="tl-card" href="publier-une-offre.html"><div class="body"><span class="tl-chip orange">Mandat</span><h3>Publier une offre</h3><p>Décrivez le quart, le salaire réel et l’urgence. Nous ouvrons le sourcing.</p></div></a>
+        <a class="tl-card" href="chasse-de-tetes.html"><div class="body"><span class="tl-chip orange">Passif</span><h3>Chasse de talents</h3><p>Approche discrète des profils déjà en poste : CNC, électromécanique, cadres.</p></div></a>
+        <a class="tl-card" href="solutions-rh.html"><div class="body"><span class="tl-chip orange">Premium</span><h3>Solutions RH</h3><p>Descriptifs, grilles salariales, entrevues conjointes et intégration 30/60/90.</p></div></a>
+      </div>
+    </div></section>
+    <section class="tl-section tl-ice" id="temoignages"><div class="container">
+      <div class="tl-center" style="max-width:720px;margin:0 auto 36px">
+        <div class="tl-kicker">Témoignages entreprises</div>
+        <h2 class="tl-h2">Ce que disent les usines</h2>
+      </div>
+      <div class="tl-grid-3 tl-quotes">
+        <blockquote class="tl-quote">
+          <div class="tl-quote-mark" aria-hidden="true">“</div>
+          <p>Ils ont compris nos quarts rotatifs dès le premier appel. Le superviseur présenté connaissait déjà un environnement Lean comparable.</p>
+          <footer><strong>M.L.</strong><span>Directrice des opérations · usine alimentaire, Rive-Sud</span></footer>
+        </blockquote>
+        <blockquote class="tl-quote">
+          <div class="tl-quote-mark" aria-hidden="true">“</div>
+          <p>Pas une agence qui envoie 40 CV. Trois dossiers solides, un électromécanicien en poste, et un suivi après l’embauche.</p>
+          <footer><strong>J.R.</strong><span>Directeur maintenance · métallurgie, Mauricie</span></footer>
+        </blockquote>
+        <blockquote class="tl-quote">
+          <div class="tl-quote-mark" aria-hidden="true">“</div>
+          <p>Mandat confidentiel de directeur d’usine mené sans bruit interne. Prise de poste calée sur notre calendrier de production.</p>
+          <footer><strong>S.B.</strong><span>VP opérations · manufacturier, Montérégie</span></footer>
+        </blockquote>
+      </div>
+    </div></section>
     <section class="tl-section tl-ice"><div class="container">
       <div class="tl-center" style="max-width:720px;margin:0 auto 28px">
-        <div class="tl-kicker">FAQ entreprises</div>
+        <div class="tl-kicker" id="faq">FAQ entreprises</div>
         <h2 class="tl-h2">Ce que demandent les RH et les directeurs d’opérations</h2>
       </div>
       <div class="tl-faq"><details open><summary>Combien de temps avant les premiers dossiers ?</summary><p>Premiers candidats qualifiés à partir de 7 jours sur les métiers d’opération et plusieurs postes d’usine. Superviseurs, métiers rares et cadres : 3 à 8 semaines, annoncé dès la consultation — sans promesse cosmétique.</p></details><details><summary>Que se passe-t-il pendant la consultation ?</summary><p>Sur rendez-vous. Nous parlons quart, compétences, SST, salaire réel et ce qui a déjà échoué. Vous repartez avec un plan de recherche, pas un discours RH générique.</p></details><details><summary>Présentez-vous beaucoup de CV ?</summary><p>Non. L’objectif est que votre contremaître ne perde pas une heure. Nous filtrons, nous rencontrons, nous présentons peu de dossiers — chacun défendable.</p></details><details><summary>Intervenez-vous en région ?</summary><p>Oui. Outre le Grand Montréal, nous menons des mandats en Montérégie, Estrie, Centre-du-Québec, Mauricie et région de Québec.</p></details><details><summary>Comment sont calculés les honoraires ?</summary><p>Au succès, sur le salaire annuel du candidat placé. Pas de frais si le mandat n’aboutit pas, selon l’entente. La consultation est gratuite.</p></details><details><summary>Quelle garantie offrez-vous ?</summary><p>Remplacement inclus sur les mandats permanents. Durée confirmée à l’ouverture. Suivi d’intégration 30/60/90 jours.</p></details><details><summary>Pouvez-vous mener un mandat confidentiel ?</summary><p>Oui. Remplacement de cadre, réorganisation ou poste sensible : approche discrète, sans bruit interne, jusqu’à ce que vous choisissiez le moment de communiquer.</p></details><details><summary>Recrutez-vous aussi du personnel de bureau ?</summary><p>Non. Si le poste n’est pas lié à la production, aux opérations, à la maintenance, à la logistique ou à la supervision industrielle, nous déclinons. C’est ce qui protège la qualité du vivier.</p></details></div>
       <div class="tl-center" style="margin-top:32px">
-        <a class="tl-btn tl-btn-lg" href="contact.html">Confier un recrutement</a>
+        <a class="tl-btn tl-btn-lg" href="contact.html">Demander un recrutement</a>
       </div>
     </div></section>
     
@@ -250,10 +279,9 @@ gtag('consent', 'default', {
   <div class="container">
     <span class="tl-badge tl-badge-light">Cabinet industriel</span>
     <h2 class="tl-h2">Votre usine n’a pas besoin d’une agence généraliste.</h2>
-    <p>Un interlocuteur qui parle production, quarts et SST. Consultation gratuite, sur rendez-vous. Réponse moyenne sous 30 minutes durant les heures d’ouverture.</p>
+    <p>Un interlocuteur qui parle production, quarts et SST. Consultation gratuite, sur rendez-vous.</p>
     <div class="tl-actions">
-      <a class="tl-btn tl-btn-lg" href="contact.html">Confier un recrutement</a>
-      <a class="tl-btn tl-btn-ghost" href="candidats.html#cv">Déposer mon CV</a>
+      <a class="tl-btn tl-btn-lg" href="publier-une-offre.html">Publier une offre</a><a class="tl-btn tl-btn-ghost" href="contact.html">Réserver une démonstration</a>
     </div>
   </div>
 </section>
@@ -262,8 +290,18 @@ gtag('consent', 'default', {
   <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M19.11 17.47c-.29-.15-1.73-.85-2-.95-.27-.1-.46-.15-.66.15s-.76.95-.93 1.15c-.17.2-.34.22-.63.07-.29-.15-1.22-.45-2.33-1.43-.86-.77-1.44-1.72-1.61-2.01-.17-.29-.02-.45.13-.6.13-.13.29-.34.43-.51.15-.17.2-.29.29-.48.1-.2.05-.36-.02-.51-.07-.15-.66-1.59-.9-2.18-.24-.57-.48-.49-.66-.5h-.56c-.2 0-.51.07-.78.36-.27.29-1.02.99-1.02 2.42s1.05 2.81 1.19 3 .07.15 2.06 3.15c1.64 1.41 2.96 1.85 3.58 2.06.54.17 1.04.15 1.43.09.44-.06 1.73-.71 1.97-1.39.24-.68.24-1.27.17-1.39-.07-.12-.26-.2-.55-.35zM16.03 4.05C9.41 4.05 4.05 9.4 4.05 16.03c0 2.11.55 4.17 1.6 5.99L4 28l6.12-1.6a11.94 11.94 0 0 0 5.91 1.51h.01c6.62 0 11.98-5.36 11.98-11.98 0-3.2-1.25-6.21-3.51-8.47a11.9 11.9 0 0 0-8.48-3.51zm0 21.86h-.01a9.94 9.94 0 0 1-5.06-1.38l-.36-.22-3.63.95.97-3.54-.23-.37a9.93 9.93 0 0 1-1.52-5.32c0-5.48 4.46-9.94 9.95-9.94 2.66 0 5.15 1.04 7.03 2.92a9.87 9.87 0 0 1 2.91 7.02c0 5.49-4.47 9.95-9.95 9.95z"/></svg>
 </a>
 <div class="tl-sticky">
-  <a href="contact.html">Confier un recrutement</a>
-  <a class="alt" href="candidats.html#cv">Déposer mon CV</a>
+  <div class="tl-sticky-persona" data-persona-bar="gateway">
+    <a href="candidats.html" data-set-persona="talent">Trouver un emploi</a>
+    <a class="alt" href="entreprises.html" data-set-persona="entreprise">Je recrute</a>
+  </div>
+  <div class="tl-sticky-persona" data-persona-bar="talent">
+    <a href="emplois.html">Consulter les offres</a>
+    <a class="alt" href="candidats.html#cv">Déposer mon CV</a>
+  </div>
+  <div class="tl-sticky-persona" data-persona-bar="entreprise">
+    <a href="publier-une-offre.html">Publier une offre</a>
+    <a class="alt" href="contact.html">Réserver une démonstration</a>
+  </div>
 </div>
 <div class="vl-footer2-section-area">
   <div class="container">
@@ -294,8 +332,8 @@ gtag('consent', 'default', {
         <div class="footer-widget-area foot-padding2">
           <h3>Recrutement</h3>
           <ul>
-            <li><a href="entreprises.html">Entreprises</a></li>
-            <li><a href="candidats.html">Candidats</a></li>
+            <li><a href="entreprises.html">Pour les Entreprises</a></li>
+            <li><a href="candidats.html">Pour les Talents</a></li>
             <li><a href="emplois.html">Offres d'emploi</a></li>
             <li><a href="recrutement-permanent.html">Recrutement permanent</a></li>
             <li><a href="chasse-de-tetes.html">Chasse de têtes</a></li>
@@ -346,6 +384,7 @@ gtag('consent', 'default', {
 <script src="assets/js/main.js" defer></script>
 <script src="assets/js/api.js" defer></script>
 <script src="assets/js/talendus.js" defer></script>
+<script src="assets/js/persona.js" defer></script>
 <script src="assets/js/auth-gate.js" defer></script>
 <script src="assets/js/account.js" defer></script>
 <script src="assets/js/consent.js" defer></script>
