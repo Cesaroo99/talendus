@@ -944,7 +944,7 @@ a.tl-card:hover, .tl-job-card:hover, .tl-case:hover {
 /* =========================================================
    Hero slider — dimensions, cadrage, CTA verrouillés
    ========================================================= */
-:root { --tl-hero-h: clamp(480px, 62vh, 580px); }
+:root { --tl-hero-h: clamp(560px, 78vh, 720px); }
 .hero2-arrow-hero { overflow: hidden; }
 .hero2-arrow-hero .hero-main-slider .slick-list {
   overflow: hidden;
@@ -962,9 +962,10 @@ a.tl-card:hover, .tl-job-card:hover, .tl-case:hover {
   height: var(--tl-hero-h) !important;
 }
 .hero2-arrow-hero .hero-main-slider .hero2-slider-area {
-  padding: 96px 0 72px !important;
+  /* Sous le header flottant : le titre ne doit pas se coller au logo / menu. */
+  padding: clamp(128px, 18vh, 200px) 0 64px !important;
   display: flex !important;
-  align-items: flex-end;
+  align-items: center;
   min-height: var(--tl-hero-h);
   overflow: hidden;
 }
@@ -984,7 +985,7 @@ a.tl-card:hover, .tl-job-card:hover, .tl-case:hover {
   transform: none !important;
 }
 .hero2-arrow-hero .hero-main-slider .hero2-slider-area::after {
-  background: linear-gradient(180deg, rgba(11, 31, 58, 0.18) 0%, rgba(11, 31, 58, 0.55) 48%, rgba(11, 31, 58, 0.88) 100%);
+  background: linear-gradient(90deg, rgba(11, 31, 58, 0.88) 8%, rgba(11, 31, 58, 0.55) 46%, rgba(11, 31, 58, 0.18) 100%);
   z-index: 0;
 }
 .hero2-arrow-hero .hero-main-slider .hero2-slider-area .container {
@@ -993,16 +994,37 @@ a.tl-card:hover, .tl-job-card:hover, .tl-case:hover {
   width: 100%;
 }
 .hero2-heading.tl-hero-lock {
-  min-height: 132px;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  gap: 16px;
+  justify-content: center;
   overflow: visible;
-  max-width: 720px;
+  max-width: 760px;
+}
+.hero2-arrow-hero .hero-main-slider .hero2-slider-area .hero2-heading h5 {
+  min-height: 0;
+  transform: none !important;
+  opacity: 1 !important;
+  max-width: 100%;
+}
+.hero2-arrow-hero .hero-main-slider .hero2-slider-area .hero2-heading h1 {
+  min-height: 0;
+  max-width: 760px;
+  font-size: clamp(28px, 4.2vw, 48px) !important;
+  line-height: 1.14 !important;
+  transform: none !important;
+  opacity: 1 !important;
+  margin: 0;
+}
+.hero2-arrow-hero .hero-main-slider .hero2-slider-area .hero2-heading p {
+  min-height: 0;
+  max-width: 560px;
+  margin: 0;
+  transform: none !important;
+  opacity: 1 !important;
 }
 .hero2-arrow-hero .hero-main-slider .hero2-slider-area .hero2-heading .btn-area1 {
-  min-height: 52px;
+  min-height: 0;
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
@@ -1013,35 +1035,19 @@ a.tl-card:hover, .tl-job-card:hover, .tl-case:hover {
 }
 .hero2-arrow-hero .hero-main-slider .hero2-slider-area .hero2-heading .btn-area1 .vl-btn2 {
   min-height: 52px;
-  min-width: 220px;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
 }
 .hero2-arrow-hero .hero-main-slider .hero2-slider-area .hero2-heading .btn-area1 .vl-btn2.btn2 {
   margin-left: 0 !important;
   margin-top: 0 !important;
 }
-.tl-hero-note,
-.hero2-arrow-hero .hero-main-slider .hero2-slider-area .hero2-heading h1.tl-hero-note,
-.hero2-arrow-hero .hero-main-slider .hero2-slider-area .hero2-heading p.tl-hero-note {
-  margin: 0;
-  max-width: 640px;
-  min-height: 44px;
-  font-size: 16px !important;
-  font-weight: 500 !important;
-  line-height: 1.45 !important;
-  letter-spacing: 0;
-  text-transform: none;
-  color: rgba(255, 255, 255, 0.9) !important;
-  background: none;
-  border: 0;
-  padding: 0;
-  transform: none !important;
-  opacity: 1 !important;
-}
 .tl-hero-badges {
-  display: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 36px;
+  margin-top: 22px;
 }
 .hero2-arrow-hero .testimonial-arrow {
   z-index: 5;
@@ -1188,13 +1194,12 @@ a.tl-card:hover, .tl-job-card:hover, .tl-case:hover {
    ========================================================= */
 @media (min-width: 1200px) {
   .hero2-arrow-hero .hero-main-slider .hero2-slider-area {
-    padding: 96px 0 80px !important;
-    align-items: flex-end;
+    padding: 188px 0 80px !important;
   }
 }
 
 @media (max-width: 1199px) {
-  :root { --tl-hero-h: clamp(440px, 70svh, 520px); }
+  :root { --tl-hero-h: clamp(520px, 86svh, 640px); }
   .homepage2-body .vl-transparent-header {
     background: var(--tl-navy);
   }
@@ -1241,9 +1246,9 @@ a.tl-card:hover, .tl-job-card:hover, .tl-case:hover {
     min-height: 0;
   }
   .hero2-arrow-hero .hero-main-slider .hero2-slider-area {
-    padding: 92px 0 56px !important;
+    padding: 92px 0 48px !important;
     align-items: flex-end;
-    min-height: 440px;
+    min-height: 520px;
   }
   .hero2-arrow-hero .hero-main-slider .hero2-slider-area .img1,
   .hero2-arrow-hero .hero-main-slider .hero2-slider-area .img1 img {
@@ -1281,15 +1286,10 @@ a.tl-card:hover, .tl-job-card:hover, .tl-case:hover {
   .copyright-area { flex-wrap: wrap; gap: 12px; }
   .tl-hero-media { height: min(240px, 58vw) !important; }
   .tl-badge { white-space: normal; }
-  .hero2-heading.tl-hero-lock { max-width: 100%; min-height: 148px; }
-  .hero2-arrow-hero .hero-main-slider .hero2-slider-area .hero2-heading .btn-area1 .vl-btn2 {
-    min-width: 0;
-    width: 100%;
+  .hero2-heading.tl-hero-lock { max-width: 100%; }
+  .hero2-arrow-hero .hero-main-slider .hero2-slider-area .hero2-heading h1 {
     max-width: 100%;
-  }
-  .tl-hero-note,
-  .hero2-arrow-hero .hero-main-slider .hero2-slider-area .hero2-heading h1.tl-hero-note {
-    font-size: 15px !important;
+    font-size: clamp(26px, 8vw, 34px) !important;
   }
   .tl-faq summary { min-height: 44px; }
 }
