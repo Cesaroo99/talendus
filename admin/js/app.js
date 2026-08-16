@@ -799,8 +799,61 @@
       body: body,
       footer: '<button class="btn btn-ghost" data-close>Annuler</button><button class="btn btn-orange" id="save">Enregistrer</button>',
       onMount: function (box, close) {
-        box.querySelector("#save").onclick = function () {
+        box.querySelector("#save").onclick = async function () {
           var d = U.formData(box.querySelector("#cf"));
+          try {
+            if (type === "candidate" && window.TalendusAPI) {
+              await window.TalendusAPI.createCandidate({
+                email: d.email,
+                first_name: d.firstName,
+                last_name: d.lastName,
+                phone: d.phone,
+                city: d.city,
+                title: d.title,
+                sector: d.sector
+              });
+              await TLStore.hydrateFromApi();
+              close();
+              U.toast("Candidat créé dans l’API.", "ok");
+              render();
+              return;
+            }
+            if (type === "job" && window.TalendusAPI && d.clientId) {
+              await window.TalendusAPI.request("/jobs", {
+                method: "POST",
+                body: { title: d.title, company_id: d.clientId, location: d.city, salary_display: d.salary, description: d.description }
+              });
+              await TLStore.hydrateFromApi();
+              close();
+              U.toast("Offre créée (brouillon).", "ok");
+              render();
+              return;
+            }
+            if (type === "client" && window.TalendusAPI) {
+              await window.TalendusAPI.request("/companies", {
+                method: "POST",
+                body: { name: d.name, sector: d.sector, city: d.city, contact_name: d.contact, email: d.email, phone: d.phone }
+              });
+              await TLStore.hydrateFromApi();
+              close();
+              U.toast("Entreprise créée.", "ok");
+              render();
+              return;
+            }
+            if (type === "mission" && window.TalendusAPI) {
+              await window.TalendusAPI.request("/recruiters/missions", {
+                method: "POST",
+                body: { title: d.title, company_id: d.clientId, job_id: d.jobId, seats: Number(d.seats) || 1 }
+              });
+              await TLStore.hydrateFromApi();
+              close();
+              U.toast("Mission créée.", "ok");
+              render();
+              return;
+            }
+          } catch (err) {
+            U.toast((err && err.message) || "Enregistrement API impossible, repli local.", "err");
+          }
           TLStore.update(function (st) {
             if (type === "candidate") {
               st.candidates.unshift({ id: TLStore.nid("c"), firstName: d.firstName, lastName: d.lastName, email: d.email, phone: d.phone, city: d.city, title: d.title, sector: d.sector, experience: 0, level: "Junior", availability: "Immédiat", status: d.status || "nouveau", languages: ["Français"], recruiterId: me.id, createdAt: "2026-08-16", lastActivity: "2026-08-16", skills: [], salaryMin: 20, salaryMax: 24, shift: "Jour", education: [], experiences: [], bio: "", jobId: "", clientId: "" });
@@ -1126,5 +1179,10 @@
     page = 1; selected = new Set(); detailTab = "profil"; filters = {};
     render();
   });
-  render();
+  (async function boot() {
+    if (TLStore.me() && window.TalendusAPI && TLStore.hydrateFromApi) {
+      await TLStore.hydrateFromApi();
+    }
+    render();
+  })();
 })();

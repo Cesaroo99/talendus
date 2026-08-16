@@ -12,6 +12,7 @@ from app.database import init_db
 from app.errors import AppError, app_error_handler, http_error_handler, unhandled_handler, validation_handler
 from app.middleware import RateLimitMiddleware, SecurityHeadersMiddleware
 from app.seed import seed_if_empty
+from app.services.email import start_worker
 
 settings = get_settings()
 logger = logging.getLogger("talendus")
@@ -25,6 +26,7 @@ async def lifespan(_app: FastAPI):
     init_db()
     if settings.app_env != "test":
         seed_if_empty()
+        start_worker()
     logger.info("Talendus API ready env=%s", settings.app_env)
     yield
 

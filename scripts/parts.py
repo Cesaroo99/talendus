@@ -35,6 +35,7 @@ COPY = {
         "nav_about": "À propos",
         "nav_blog": "Blog",
         "nav_contact": "Contact",
+        "nav_account": "Mon espace",
         "cta_primary": "Confier un recrutement",
         "cta_secondary": "Déposer mon CV",
         "menu_open": "Ouvrir le menu",
@@ -82,6 +83,7 @@ COPY = {
         "nav_about": "About",
         "nav_blog": "Blog",
         "nav_contact": "Contact",
+        "nav_account": "My account",
         "cta_primary": "Start a hire",
         "cta_secondary": "Submit my resume",
         "menu_open": "Open menu",
@@ -129,6 +131,7 @@ HREFS = {
         "terms": "conditions.html",
         "headhunt": "services.html",
         "urgent": "contact.html",
+        "account": "espace.html",
     },
     "en": {
         "home": "index.html",
@@ -147,6 +150,7 @@ HREFS = {
         "terms": "terms.html",
         "headhunt": "services.html",
         "urgent": "contact.html",
+        "account": "account.html",
     },
 }
 
@@ -170,6 +174,7 @@ def nav_html(lang):
                                       <li><a href="{h['jobs']}">{t['nav_jobs']}</a></li>
                                       <li><a href="{h['cv']}">{t['nav_cv']}</a></li>
                                       <li><a href="{h['process']}">{t['nav_process']}</a></li>
+                                      <li><a href="{h['account']}">{t['nav_account']}</a></li>
                                   </ul>
                               </li>
                               <li data-nav="services"><a href="{h['services']}">{t['nav_services_top']}</a></li>
@@ -295,6 +300,7 @@ def header(solid=True, lang="fr", alt_url=""):
               </div>
               <div class="tl-header-tools">
                 {switch}
+                <a href="{h['account']}" class="tl-account-link" data-account-link>{t['nav_account']}</a>
                 <div class="hero-btn1">
                   <a href="{h['contact']}" class="vl-btn2 tl-header-cta">{t['cta_primary']} <span><i class="fa-solid fa-arrow-right"></i></span></a>
                 </div>
@@ -419,6 +425,7 @@ def footer(lang="fr"):
             <li><a href="{h['employers']}">{t['nav_employers']}</a></li>
             <li><a href="{h['candidates']}">{t['nav_candidates']}</a></li>
             <li><a href="{h['jobs']}">{t['nav_jobs']}</a></li>
+            <li><a href="{h['account']}">{t['nav_account']}</a></li>
             <li><a href="{h['headhunt']}">{'Chasse de têtes' if lang == 'fr' else 'Search mandates'}</a></li>
             <li><a href="{h['urgent']}">{'Mandat urgent' if lang == 'fr' else 'Urgent mandate'}</a></li>
           </ul>
@@ -462,6 +469,7 @@ def footer(lang="fr"):
 <script src="{a}assets/js/main.js"></script>
 <script src="{a}assets/js/api.js"></script>
 <script src="{a}assets/js/talendus.js"></script>
+<script src="{a}assets/js/account.js"></script>
 </body>
 </html>
 """

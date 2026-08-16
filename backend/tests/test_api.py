@@ -199,3 +199,46 @@ def test_validation_error_format(client):
     body = res.json()
     assert body["success"] is False
     assert body["code"] == "VALIDATION_ERROR"
+
+
+def _promote_admin(client, email: str) -> dict:
+    from app.database import SessionLocal
+    from app.models import User
+    from app.models.enums import UserRole
+
+    data = register(client, email, "EMPLOYER", first_name="Sophie", last_name="Admin")
+    db = SessionLocal()
+    user = db.get(User, data["user"]["id"])
+    user.role = UserRole.ADMIN
+    db.commit()
+    db.close()
+    res = client.post("/api/auth/login", json={"email": email, "password": "Password1!"})
+    assert res.status_code == 200
+    return res.json()["data"]
+
+
+def test_admin_bootstrap_forbidden_for_candidate(client):
+    tokens = register(client, "noadmin@example.com")
+    res = client.get("/api/admin/bootstrap", headers=auth_header(tokens))
+    assert res.status_code == 403
+
+
+def test_admin_bootstrap_and_staff_candidate(client):
+    admin = _promote_admin(client, "boss-admin@example.com")
+    headers = auth_header(admin)
+    boot = client.get("/api/admin/bootstrap", headers=headers)
+    assert boot.status_code == 200
+    assert "candidates" in boot.json()["data"]
+    created = client.post(
+        "/api/admin/candidates",
+        headers=headers,
+        json={"email": "nouveau@example.com", "first_name": "Léa", "last_name": "Roy", "title": "Cariste", "city": "Laval"},
+    )
+    assert created.status_code == 200
+    listed = client.get("/api/candidates", headers=headers)
+    assert listed.status_code == 200
+    emails = [c.get("email") for c in listed.json()["data"]]
+    assert "nouveau@example.com" in emails
+    cand = register(client, "peek@example.com")
+    denied = client.get("/api/candidates", headers=auth_header(cand))
+    assert denied.status_code == 403

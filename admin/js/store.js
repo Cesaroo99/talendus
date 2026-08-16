@@ -197,6 +197,38 @@
       state = clone(SEED);
       persist();
     },
+    hydrateFromApi: async function () {
+      if (!window.TalendusAPI || !window.TalendusAPI.bootstrap) return false;
+      try {
+        var json = await window.TalendusAPI.bootstrap();
+        var d = json && json.data;
+        if (!d) return false;
+        ["candidates", "clients", "jobs", "missions", "contracts", "notes", "notifications", "activities"].forEach(function (key) {
+          if (Array.isArray(d[key])) state[key] = d[key];
+        });
+        if (Array.isArray(d.users) && d.users.length) {
+          var mapped = d.users.filter(function (u) { return ["admin", "recruiter", "finance", "editor"].indexOf(u.role) !== -1; });
+          if (mapped.length) {
+            var byEmail = {};
+            state.users.forEach(function (u) { byEmail[u.email] = u; });
+            mapped.forEach(function (u) {
+              if (byEmail[u.email]) {
+                byEmail[u.email].id = u.id;
+                byEmail[u.email].firstName = u.firstName;
+                byEmail[u.email].lastName = u.lastName;
+                byEmail[u.email].title = u.title;
+              } else {
+                state.users.push(u);
+              }
+            });
+          }
+        }
+        persist();
+        return true;
+      } catch (e) {
+        return false;
+      }
+    },
     subscribe: function (fn) { listeners.push(fn); },
     login: async function (email, password) {
       if (window.TalendusAPI) {
@@ -210,6 +242,12 @@
             var local = state.users.find(function (x) { return x.email === email; });
             if (local) {
               sessionStorage.setItem(SESSION, JSON.stringify({ id: local.id, role: local.role, access_token: json.data.access_token }));
+              await this.hydrateFromApi();
+              var again = state.users.find(function (x) { return x.email === email; });
+              if (again) {
+                sessionStorage.setItem(SESSION, JSON.stringify({ id: again.id, role: again.role, access_token: json.data.access_token }));
+                return again;
+              }
               return local;
             }
             var created = {
@@ -223,6 +261,7 @@
             };
             state.users.push(created);
             sessionStorage.setItem(SESSION, JSON.stringify({ id: created.id, role: created.role, access_token: json.data.access_token }));
+            await this.hydrateFromApi();
             return created;
           }
         } catch (e) {}
@@ -233,7 +272,10 @@
       sessionStorage.setItem(SESSION, JSON.stringify(session));
       return u;
     },
-    logout: function () { sessionStorage.removeItem(SESSION); },
+    logout: function () {
+      sessionStorage.removeItem(SESSION);
+      if (window.TalendusAPI) window.TalendusAPI.clearSession();
+    },
     session: function () {
       try { return JSON.parse(sessionStorage.getItem(SESSION) || "null"); } catch (e) { return null; }
     },

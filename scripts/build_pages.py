@@ -33,6 +33,7 @@ def alt_for(slug):
         "confidentialite.html": "en/privacy.html",
         "conditions.html": "en/terms.html",
         "404.html": "en/404.html",
+        "espace.html": "en/account.html",
     }
     if slug in special:
         return special[slug]
@@ -960,6 +961,17 @@ write("404.html", wrap(
               badges="")
     + '<section class="tl-section"><div class="container"><p class="tl-lead">Vérifiez l\'URL ou reprenez depuis l\'accueil, les offres ou le formulaire de consultation.</p></div></section>'
 ))
+write("espace.html", wrap(
+    "Mon espace candidat | Talendus",
+    "Connectez-vous pour gérer votre profil, votre CV, vos candidatures et vos notifications Talendus.",
+    "espace.html",
+    page_hero(
+        "Candidats", "Votre dossier Talendus.",
+        "Profil, CV, candidatures et notifications — le suivi de votre recherche d'emploi industriel.",
+        badges='<span class="tl-badge tl-badge-light">Espace privé</span>'
+    )
+    + """<section class="tl-section"><div class="container"><div id="tl-account"></div></div></section>"""
+))
 write("confidentialite.html", wrap(
     "Politique de confidentialité | Talendus",
     "Politique de confidentialité de Talendus, talendus.ca.",
@@ -991,6 +1003,7 @@ pairs = [
     ("secteurs.html", "en/sectors.html"),
     ("blog.html", "en/blog.html"),
     ("contact.html", "en/contact.html"),
+    ("espace.html", "en/account.html"),
     ("confidentialite.html", "en/privacy.html"),
     ("conditions.html", "en/terms.html"),
 ]
@@ -1023,5 +1036,8 @@ def sitemap_url(fr, en):
     + "\n</urlset>\n",
     encoding="utf-8",
 )
-(ROOT / "robots.txt").write_text("User-agent: *\nAllow: /\nDisallow: /admin/\nSitemap: https://talendus.ca/sitemap.xml\n", encoding="utf-8")
+(ROOT / "robots.txt").write_text(
+    "User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /espace.html\nDisallow: /en/account.html\nSitemap: https://talendus.ca/sitemap.xml\n",
+    encoding="utf-8",
+)
 print("done")

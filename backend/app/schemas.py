@@ -257,3 +257,14 @@ class MissionIn(BaseModel):
 
 class JobStatusIn(BaseModel):
     status: JobStatus
+
+
+class AdminCandidateIn(BaseModel):
+    email: EmailStr
+    first_name: str = Field(min_length=1, max_length=80)
+    last_name: str = Field(min_length=1, max_length=80)
+    phone: str | None = None
+    city: str | None = None
+    title: str | None = None
+    sector: str | None = None
+    password: str | None = Field(default=None, min_length=8, max_length=128)

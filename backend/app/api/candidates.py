@@ -68,6 +68,15 @@ async def upload_resume(
     return ok({"id": row.id, "original_name": row.original_name})
 
 
+@router.get("")
+def list_candidates(
+    user: User = Depends(require_roles(UserRole.RECRUITER, UserRole.ADMIN)),
+    db: Session = Depends(get_db),
+):
+    private = user.role in {UserRole.RECRUITER, UserRole.ADMIN}
+    return ok([cand_svc.serialize_candidate(c, include_private=private) for c in cand_svc.list_for_staff(db)])
+
+
 @router.get("/resumes/{resume_id}/file")
 def download_resume(resume_id: str, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     resume = cand_svc.get_resume_for_user(db, user, resume_id)

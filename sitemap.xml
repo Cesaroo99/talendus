@@ -110,6 +110,18 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/contact.html"/>
   </url>
   <url>
+    <loc>https://talendus.ca/espace.html</loc>
+    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/espace.html"/>
+    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/account.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/espace.html"/>
+  </url>
+  <url>
+    <loc>https://talendus.ca/en/account.html</loc>
+    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/espace.html"/>
+    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/account.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/espace.html"/>
+  </url>
+  <url>
     <loc>https://talendus.ca/confidentialite.html</loc>
     <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/confidentialite.html"/>
     <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/privacy.html"/>

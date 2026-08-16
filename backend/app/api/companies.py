@@ -16,7 +16,7 @@ router = APIRouter(prefix="/companies", tags=["companies"])
 def create_company(
     payload: CompanyIn,
     db: Session = Depends(get_db),
-    user: User = Depends(require_roles(UserRole.EMPLOYER, UserRole.ADMIN)),
+    user: User = Depends(require_roles(UserRole.EMPLOYER, UserRole.RECRUITER, UserRole.ADMIN)),
 ):
     company = companies_service.create_company(db, user, payload)
     return ok(companies_service.serialize_company(company))

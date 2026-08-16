@@ -19,7 +19,8 @@ from app.models import (
 )
 from app.models.enums import UserRole
 from app.rbac import PERMISSIONS
-from app.schemas import UserUpdateIn
+from app.schemas import AdminCandidateIn, UserUpdateIn
+from app.services import admin_export, candidates as cand_svc
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -28,8 +29,27 @@ class RoleIn(BaseModel):
     role: UserRole
 
 
+def _staff(user: User = Depends(require_roles(UserRole.RECRUITER, UserRole.ADMIN, UserRole.FINANCE, UserRole.EDITOR))) -> User:
+    return user
+
+
 def _admin_user(user: User = Depends(require_roles(UserRole.ADMIN))) -> User:
     return user
+
+
+@router.get("/bootstrap")
+def bootstrap(db: Session = Depends(get_db), _: User = Depends(_staff)):
+    return ok(admin_export.bootstrap(db))
+
+
+@router.post("/candidates")
+def create_candidate(
+    payload: AdminCandidateIn,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_roles(UserRole.RECRUITER, UserRole.ADMIN)),
+):
+    profile = cand_svc.create_staff_candidate(db, user, payload)
+    return ok({"id": profile.id, "email": payload.email})
 
 
 @router.get("/stats")

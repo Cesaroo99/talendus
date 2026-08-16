@@ -1576,3 +1576,58 @@ a.tl-card:hover, .tl-job-card:hover, .tl-case:hover {
 }
 table, .tl-job-card p, .tl-card .body p { color: var(--tl-navy); }
 .tl-dark table, .tl-dark .tl-card .body p { color: inherit; }
+
+.tl-account-link {
+  color: var(--tl-navy);
+  font-weight: 700;
+  font-size: 14px;
+  white-space: nowrap;
+  margin-right: 4px;
+}
+.tl-solid-header .tl-account-link { color: var(--tl-navy); }
+.tl-account-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+.tl-account-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.tl-account-tabs button {
+  border: 1px solid var(--tl-line);
+  background: #fff;
+  color: var(--tl-navy);
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.tl-account-tabs button.is-active {
+  background: var(--tl-navy);
+  color: #fff;
+  border-color: var(--tl-navy);
+}
+.tl-account-cards {
+  display: grid;
+  gap: 20px;
+}
+@media (min-width: 900px) {
+  .tl-account-grid, .tl-account-cards { grid-template-columns: 1fr 1fr; }
+  .tl-account-grid { display: grid; gap: 32px; align-items: start; }
+}
+.tl-account-notif {
+  border: 1px solid var(--tl-line);
+  border-radius: var(--tl-radius-sm);
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  background: #fff;
+}
+.tl-account-notif.is-unread { border-color: var(--tl-orange); }
+@media (max-width: 1199px) {
+  .tl-header-tools .tl-account-link { display: none; }
+}

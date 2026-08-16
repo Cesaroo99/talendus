@@ -64,6 +64,11 @@
     setSession: setSession,
     clearSession: clearSession,
     currentUser: currentUser,
+    bootstrap: function () { return request("/admin/bootstrap"); },
+    createCandidate: function (body) { return request("/admin/candidates", { method: "POST", body: body }); },
+    profile: function () { return request("/candidates/me"); },
+    updateProfile: function (body) { return request("/candidates/me", { method: "PATCH", body: body }); },
+    uploadResume: function (formData) { return request("/candidates/me/resume", { method: "POST", body: formData }); },
     register: function (body) {
       return request("/auth/register", { method: "POST", body: body }).then(function (json) {
         setSession(json.data);

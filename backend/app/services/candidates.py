@@ -1,5 +1,5 @@
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.errors import AppError
 from app.models import (
@@ -16,6 +16,59 @@ from app.services.audit import audit
 from app.services.auth import ensure_candidate
 from app.services.notifications import notify
 from app.services.storage import save_resume
+
+
+def create_staff_candidate(db: Session, actor: User, data) -> Candidate:
+    from app.models.enums import EmailType, NotificationType, UserRole
+    from app.security import hash_password, random_password
+    from app.services.email import send_email
+    from app.services.notifications import notify
+
+    existing = db.scalar(select(User).where(User.email == str(data.email).lower()))
+    if existing:
+        raise AppError(409, "Un compte existe déjà avec ce courriel.", "EMAIL_TAKEN")
+    password = data.password or random_password()
+    user = User(
+        email=str(data.email).lower(),
+        password_hash=hash_password(password),
+        first_name=data.first_name.strip(),
+        last_name=data.last_name.strip(),
+        phone=data.phone,
+        role=UserRole.CANDIDATE,
+    )
+    db.add(user)
+    db.flush()
+    profile = Candidate(
+        user_id=user.id,
+        city=data.city,
+        title=data.title,
+        sector=data.sector,
+        assigned_recruiter_id=actor.id,
+    )
+    db.add(profile)
+    db.flush()
+    send_email(db, user.email, EmailType.WELCOME, "welcome", name=user.first_name, link="espace.html")
+    notify(db, user, NotificationType.ACCOUNT_CREATED, "Compte créé", "Votre dossier a été ouvert chez Talendus.")
+    audit(db, "candidate.staff_create", actor, "candidate", profile.id)
+    db.commit()
+    db.refresh(profile)
+    return profile
+
+
+def list_for_staff(db: Session) -> list[Candidate]:
+    return list(
+        db.scalars(
+            select(Candidate)
+            .options(
+                joinedload(Candidate.user),
+                selectinload(Candidate.experiences),
+                selectinload(Candidate.education),
+                selectinload(Candidate.certifications),
+                selectinload(Candidate.resumes),
+            )
+            .order_by(Candidate.updated_at.desc())
+        ).unique().all()
+    )
 
 
 def update_profile(db: Session, user: User, data: CandidateProfileIn) -> Candidate:

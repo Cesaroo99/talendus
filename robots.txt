@@ -1,4 +1,6 @@
 User-agent: *
 Allow: /
 Disallow: /admin/
+Disallow: /espace.html
+Disallow: /en/account.html
 Sitemap: https://talendus.ca/sitemap.xml

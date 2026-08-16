@@ -32,6 +32,7 @@
     if (file === "a-propos.html" || file === "about.html") return "about";
     if (file === "blog.html" || file.indexOf("article-") === 0 || file === "blog-single.html") return "blog";
     if (file === "contact.html") return "contact";
+    if (file === "espace.html" || file === "account.html") return "candidats";
     return "";
   }
 
@@ -45,6 +46,12 @@
   ready(function () {
     markActiveNav();
     setTimeout(markActiveNav, 250);
+    var apiUser = window.TalendusAPI && window.TalendusAPI.currentUser && window.TalendusAPI.currentUser();
+    if (apiUser && apiUser.first_name) {
+      document.querySelectorAll("[data-account-link]").forEach(function (el) {
+        el.textContent = apiUser.first_name;
+      });
+    }
 
     if (window.jQuery) {
       var $ = window.jQuery;
@@ -148,14 +155,19 @@
         var done = function () { if (btn) btn.disabled = false; };
         if (kind === "apply") {
           var person = splitName(formValue(form, ["nom", "name"]));
-          api.applyPublic({
-            job_slug: form.getAttribute("data-job-slug") || jobSlugFromPage(),
-            first_name: person.first,
-            last_name: person.last,
-            email: formValue(form, ["courriel", "email"]),
-            phone: formValue(form, ["tel", "telephone", "phone"]) || null,
-            cv_url: formValue(form, ["cv", "resume"]) || null
-          }).then(function () {
+          var slug = form.getAttribute("data-job-slug") || jobSlugFromPage();
+          var user = api.currentUser && api.currentUser();
+          var send = (user && user.role === "CANDIDATE")
+            ? api.apply({ job_slug: slug, cover_note: formValue(form, ["cv", "resume"]) || null })
+            : api.applyPublic({
+                job_slug: slug,
+                first_name: person.first,
+                last_name: person.last,
+                email: formValue(form, ["courriel", "email"]),
+                phone: formValue(form, ["tel", "telephone", "phone"]) || null,
+                cv_url: formValue(form, ["cv", "resume"]) || null
+              });
+          send.then(function () {
             showFormMessage(form, fallback, false);
             form.reset();
           }).catch(function (err) {

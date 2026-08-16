@@ -52,6 +52,14 @@ L’API est préfixée par `/api`. Le site statique du dépôt est aussi servi �
 
 Au démarrage, l’application crée les tables (`create_all`) puis insère un jeu de données s’il n’existe aucun utilisateur.
 
+Migrations Alembic (recommandé hors SQLite de démo) :
+
+```bash
+cd backend
+alembic upgrade head
+python -m app.seed
+```
+
 ```bash
 python -m app.seed
 ```
@@ -67,7 +75,7 @@ Comptes de démonstration (mot de passe `talendus` sauf si `SEED_PASSWORD` est m
 
 Les slugs d’offres (`cariste`, `soudeur`, …) correspondent aux pages HTML publiques.
 
-Pour PostgreSQL, créez la base puis pointez `DATABASE_URL`. Alembic pourra être ajouté plus tard ; le schéma actuel est porté par les modèles SQLAlchemy.
+Pour PostgreSQL, créez la base puis pointez `DATABASE_URL`. Appliquez `alembic upgrade head`. Le schéma est porté par les modèles SQLAlchemy ; `create_all` reste un filet de sécurité au démarrage.
 
 ## Architecture
 
@@ -134,14 +142,17 @@ Erreur :
 | GET | `/applications/me` | candidat |
 | POST | `/applications/{id}/status` | staff |
 | GET | `/notifications` `/notifications/unread` | oui |
-| GET | `/admin/users` `/admin/audit` `/admin/stats` `/emails` | admin |
+| GET | `/admin/bootstrap` `/admin/users` `/admin/audit` `/admin/stats` `/emails` | staff / admin |
+| POST | `/admin/candidates` | recruteur / admin |
 | POST | `/contact` | public |
 
 La documentation interactive liste tous les schémas.
 
 ## Notifications et e-mails
 
-Les événements (compte créé, candidature, changement de statut, CV, entretien) créent une notification en base. Les templates texte sont dans `app/emails/templates/`. Chaque envoi est journalisé (`email_logs`) : destinataire, type, statut, erreur.
+Les événements (compte créé, candidature, changement de statut, CV, entretien) créent une notification en base. Les templates texte sont dans `app/emails/templates/`. Chaque envoi est d’abord journalisé (`QUEUED`) puis traité par un worker en arrière-plan lorsque SMTP est activé. Un échec d’envoi n’annule pas la candidature.
+
+Espace candidat public : `/espace.html` (EN : `/en/account.html`). Le back-office `/admin/` hydrate candidats, clients, offres, missions et notifications depuis `GET /api/admin/bootstrap`.
 
 ## Sécurité
 
