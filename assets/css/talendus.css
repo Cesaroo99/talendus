@@ -1900,6 +1900,14 @@ table, .tl-job-card p, .tl-card .body p { color: var(--tl-navy); }
 .tl-disabled, .tl-btn:disabled { opacity: .55; cursor: not-allowed; }
 .tl-account-notif.is-clickable { cursor: pointer; }
 .tl-account-notif.is-clickable:hover { border-color: var(--tl-orange); }
+.tl-mediate {
+  background: var(--tl-ice);
+  border: 1px solid var(--tl-line);
+  border-radius: var(--tl-radius);
+  padding: 12px 14px;
+  margin: 0 0 16px;
+  font-size: 14px;
+}
 .tl-pipeline {
   display: grid;
   gap: 12px;

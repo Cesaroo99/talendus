@@ -2,10 +2,9 @@ from sqlalchemy import or_, select
 from sqlalchemy.orm import Session, joinedload
 
 from app.errors import AppError
-from app.models import Application, Candidate, Company, Conversation, ConversationParticipant, JobOffer, Message, User
+from app.models import Application, Conversation, ConversationParticipant, Message, User
 from app.models.enums import NotificationType, UserRole, utcnow
 from app.rbac import ADMINS
-from app.services.access import company_ids_for_employer
 from app.services.audit import audit
 from app.services.notifications import notify, portal_href
 
@@ -25,21 +24,6 @@ def _can_converse(db: Session, sender: User, recipient: User) -> bool:
         return True
     if sender.role == UserRole.EMPLOYER and _is_staff(recipient):
         return True
-    if sender.role == UserRole.EMPLOYER and recipient.role == UserRole.CANDIDATE:
-        ids = company_ids_for_employer(db, sender)
-        if not ids:
-            return False
-        return (
-            db.scalar(
-                select(Application.id)
-                .join(JobOffer, Application.job_id == JobOffer.id)
-                .join(Candidate, Application.candidate_id == Candidate.id)
-                .where(JobOffer.company_id.in_(ids), Candidate.user_id == recipient.id)
-            )
-            is not None
-        )
-    if sender.role == UserRole.CANDIDATE and recipient.role == UserRole.EMPLOYER:
-        return _can_converse(db, recipient, sender)
     return False
 
 
@@ -117,11 +101,13 @@ def list_threads(db: Session, user: User) -> list[dict]:
                 threads[other_id]["unread"] += 1
             continue
         other = row.recipient if row.sender_id == user.id else row.sender
+        if other and not _can_converse(db, user, other) and not _is_staff(user):
+            continue
         threads[other_id] = {
             "user_id": other_id,
             "first_name": other.first_name if other else "",
             "last_name": other.last_name if other else "",
-            "email": other.email if other else "",
+            "email": other.email if other and _is_staff(user) else None,
             "role": other.role.value if other else "",
             "last_message": row.body,
             "last_at": row.created_at.isoformat() if row.created_at else None,
@@ -134,7 +120,7 @@ def list_conversation(db: Session, user: User, other_id: str) -> list[Message]:
     other = db.get(User, other_id)
     if not other:
         raise AppError(404, "Destinataire introuvable.", "USER_NOT_FOUND")
-    if not _can_converse(db, user, other) and not _has_history(db, user.id, other_id):
+    if not _can_converse(db, user, other):
         raise AppError(403, "Vous n'avez pas accès à cette conversation.", "FORBIDDEN")
     rows = list(
         db.scalars(
@@ -160,20 +146,6 @@ def list_conversation(db: Session, user: User, other_id: str) -> list[Message]:
     return rows
 
 
-def _has_history(db: Session, a: str, b: str) -> bool:
-    return (
-        db.scalar(
-            select(Message.id).where(
-                or_(
-                    (Message.sender_id == a) & (Message.recipient_id == b),
-                    (Message.sender_id == b) & (Message.recipient_id == a),
-                )
-            )
-        )
-        is not None
-    )
-
-
 def serialize_message(row: Message) -> dict:
     return {
         "id": row.id,
@@ -190,35 +162,17 @@ def serialize_message(row: Message) -> dict:
 
 
 def directory(db: Session, user: User) -> list[dict]:
-    """Personnes auxquelles l'utilisateur peut écrire."""
+    """Personnes auxquelles l'utilisateur peut écrire — uniquement via Talendus."""
     people: list[User] = []
-    if user.role == UserRole.CANDIDATE:
-        people = list(db.scalars(select(User).where(User.role.in_([UserRole.RECRUITER, UserRole.ADMIN, UserRole.SUPER_ADMIN]), User.is_active.is_(True))).all())
-        applied_owners = list(
+    if user.role in {UserRole.CANDIDATE, UserRole.EMPLOYER}:
+        people = list(
             db.scalars(
-                select(User)
-                .join(Company, Company.owner_user_id == User.id)
-                .join(JobOffer, JobOffer.company_id == Company.id)
-                .join(Application, Application.job_id == JobOffer.id)
-                .join(Candidate, Application.candidate_id == Candidate.id)
-                .where(Candidate.user_id == user.id, User.is_active.is_(True))
-            ).unique().all()
+                select(User).where(
+                    User.role.in_([UserRole.RECRUITER, UserRole.ADMIN, UserRole.SUPER_ADMIN]),
+                    User.is_active.is_(True),
+                )
+            ).all()
         )
-        people = people + [p for p in applied_owners if p.id not in {x.id for x in people}]
-    elif user.role == UserRole.EMPLOYER:
-        people = list(db.scalars(select(User).where(User.role.in_([UserRole.RECRUITER, UserRole.ADMIN, UserRole.SUPER_ADMIN]), User.is_active.is_(True))).all())
-        ids = company_ids_for_employer(db, user)
-        if ids:
-            applicants = list(
-                db.scalars(
-                    select(User)
-                    .join(Candidate, Candidate.user_id == User.id)
-                    .join(Application, Application.candidate_id == Candidate.id)
-                    .join(JobOffer, Application.job_id == JobOffer.id)
-                    .where(JobOffer.company_id.in_(ids), User.is_active.is_(True))
-                ).unique().all()
-            )
-            people = people + [p for p in applicants if p.id not in {x.id for x in people}]
     elif _is_staff(user):
         people = list(
             db.scalars(

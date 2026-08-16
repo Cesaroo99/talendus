@@ -219,16 +219,21 @@ def get_resume_for_user(db: Session, user: User, resume_id: str) -> Resume:
         return resume
     if user.role.value == "EMPLOYER":
         from app.models import Application, JobOffer
-        from app.services.access import company_ids_for_employer
+        from app.services.access import company_ids_for_employer, is_presented_to_employer
 
         ids = company_ids_for_employer(db, user)
         if ids:
-            linked = db.scalar(
-                select(Application)
-                .join(JobOffer, Application.job_id == JobOffer.id)
-                .where(Application.resume_id == resume.id, JobOffer.company_id.in_(ids))
+            apps = list(
+                db.scalars(
+                    select(Application)
+                    .options(joinedload(Application.history))
+                    .join(JobOffer, Application.job_id == JobOffer.id)
+                    .where(Application.candidate_id == resume.candidate_id, JobOffer.company_id.in_(ids))
+                )
+                .unique()
+                .all()
             )
-            if linked:
+            if any(is_presented_to_employer(row) for row in apps):
                 return resume
         raise AppError(403, "Vous n'avez pas accès à ce fichier.", "FORBIDDEN")
     if user.role.value == "CANDIDATE":

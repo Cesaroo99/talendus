@@ -11,7 +11,6 @@ from app.errors import AppError
 from app.models import Candidate, JobOffer, User
 from app.models.enums import OPEN_JOB_STATUSES, UserRole
 from app.rbac import ADMINS
-from app.services.access import user_belongs_to_company
 from app.services.auth import ensure_candidate
 from app.services.jobs import serialize_job
 
@@ -170,13 +169,11 @@ def my_job_matches(db: Session, user: User, limit: int = 20) -> list[dict]:
 
 
 def staff_job_candidates(db: Session, user: User, job_id: str, limit: int = 20) -> list[dict]:
-    if user.role not in {UserRole.RECRUITER, UserRole.EMPLOYER} | ADMINS:
+    if user.role not in {UserRole.RECRUITER} | ADMINS:
         raise AppError(403, "Vous n'avez pas accès au matching.", "FORBIDDEN")
     job = db.get(JobOffer, job_id)
     if not job:
         raise AppError(404, "Offre introuvable.", "JOB_NOT_FOUND")
-    if user.role == UserRole.EMPLOYER and not user_belongs_to_company(db, user, job.company_id):
-        raise AppError(403, "Vous n'avez pas accès à cette offre.", "FORBIDDEN")
     return candidates_for_job(db, job, limit)
 
 

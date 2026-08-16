@@ -2,7 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
 from app.errors import AppError
-from app.models import Application, ApplicationStatusHistory, Candidate, CompanyMembership, JobOffer, Resume, User
+from app.models import Application, ApplicationStatusHistory, Candidate, JobOffer, Resume, User
 from app.rbac import ADMINS
 from app.models.enums import (
     ApplicationStatus,
@@ -12,6 +12,7 @@ from app.models.enums import (
 )
 from app.schemas import ApplicationCreateIn, PublicApplyIn
 from app.security import hash_password, random_password
+from app.services.access import company_ids_for_employer, is_presented_to_employer
 from app.services.audit import audit
 from app.services.auth import ensure_candidate
 from app.services.email import send_email
@@ -20,41 +21,27 @@ from app.services.notifications import notify, portal_href
 from app.services.pipeline import stage_for
 
 
-def _company_recipients(db: Session, job: JobOffer) -> list[User]:
-    if not job.company_id:
-        return []
-    members = list(
+def _talendus_staff(db: Session) -> list[User]:
+    return list(
         db.scalars(
-            select(CompanyMembership)
-            .options(joinedload(CompanyMembership.user))
-            .where(CompanyMembership.company_id == job.company_id)
+            select(User).where(
+                User.is_active.is_(True),
+                User.role.in_([UserRole.RECRUITER, UserRole.ADMIN, UserRole.SUPER_ADMIN]),
+            )
         ).all()
     )
-    people = [m.user for m in members if m.user]
-    company = job.company
-    owner_id = company.owner_user_id if company else None
-    if owner_id and owner_id not in {p.id for p in people}:
-        owner = db.get(User, owner_id)
-        if owner:
-            people.append(owner)
-    return people
 
 
 def _notify_new_application(db: Session, job: JobOffer, applicant: User) -> None:
     seen: set[str] = set()
     staff = db.get(User, job.recruiter_id) if job.recruiter_id else None
-    if staff:
-        notify(
-            db,
-            staff,
-            NotificationType.APPLICATION_NEW,
-            "Nouvelle candidature",
-            f"{applicant.full_name} a postulé pour {job.title}.",
-            href=portal_href(staff, "jobs", job.id),
-        )
-        seen.add(staff.id)
-    for person in _company_recipients(db, job):
-        if person.id in seen or person.role != UserRole.EMPLOYER:
+    recipients: list[User] = []
+    if staff and staff.role in {UserRole.RECRUITER, UserRole.ADMIN, UserRole.SUPER_ADMIN}:
+        recipients.append(staff)
+    else:
+        recipients = _talendus_staff(db)
+    for person in recipients:
+        if not person or person.id in seen:
             continue
         notify(
             db,
@@ -62,7 +49,7 @@ def _notify_new_application(db: Session, job: JobOffer, applicant: User) -> None
             NotificationType.APPLICATION_NEW,
             "Nouvelle candidature",
             f"{applicant.full_name} a postulé pour {job.title}.",
-            href=portal_href(person, "inbox"),
+            href=portal_href(person, "jobs", job.id),
         )
         seen.add(person.id)
 
@@ -225,12 +212,16 @@ def get_application(db: Session, user: User, application_id: str) -> Application
 
         if not user_belongs_to_company(db, user, app_row.job.company_id):
             raise AppError(403, "Vous n'avez pas accès à cette candidature.", "FORBIDDEN")
+        if not is_presented_to_employer(app_row):
+            raise AppError(403, "Ce dossier n'a pas encore été transmis par Talendus.", "FORBIDDEN")
     elif user.role not in {UserRole.RECRUITER} | ADMINS:
         raise AppError(403, "Vous n'avez pas accès à cette candidature.", "FORBIDDEN")
     return app_row
 
 
 def change_status(db: Session, user: User, application_id: str, status: ApplicationStatus, comment: str | None) -> Application:
+    if user.role == UserRole.EMPLOYER:
+        raise AppError(403, "Le suivi des candidatures est assuré par Talendus.", "FORBIDDEN")
     application = get_application(db, user, application_id)
     if user.role == UserRole.CANDIDATE:
         if status != ApplicationStatus.WITHDRAWN:
@@ -293,8 +284,6 @@ def list_inbox(db: Session, user: User, job_id: str | None = None) -> list[Appli
         .join(JobOffer)
     )
     if user.role == UserRole.EMPLOYER:
-        from app.services.access import company_ids_for_employer
-
         ids = company_ids_for_employer(db, user)
         if not ids:
             return []
@@ -303,12 +292,15 @@ def list_inbox(db: Session, user: User, job_id: str | None = None) -> list[Appli
         raise AppError(403, "Vous n'avez pas accès aux candidatures.", "FORBIDDEN")
     if job_id:
         stmt = stmt.where(Application.job_id == job_id)
-    return list(db.scalars(stmt.order_by(Application.created_at.desc())).unique().all())
+    rows = list(db.scalars(stmt.order_by(Application.created_at.desc())).unique().all())
+    if user.role == UserRole.EMPLOYER:
+        rows = [row for row in rows if is_presented_to_employer(row)]
+    return rows
 
 
 def serialize_application(row: Application, viewer: User | None = None) -> dict:
-    include_staff = viewer is not None and viewer.role != UserRole.CANDIDATE
-    hide_internal = viewer is None or viewer.role == UserRole.CANDIDATE
+    staff_viewer = viewer is not None and viewer.role in {UserRole.RECRUITER} | ADMINS
+    hide_internal = viewer is None or viewer.role in {UserRole.CANDIDATE, UserRole.EMPLOYER}
     payload = {
         "id": row.id,
         "status": row.status.value,
@@ -339,17 +331,28 @@ def serialize_application(row: Application, viewer: User | None = None) -> dict:
             for h in (row.history or [])
         ],
     }
-    if include_staff:
+    if staff_viewer:
         payload["staff_notes"] = row.staff_notes
         if row.candidate and row.candidate.user:
             payload["candidate"] = {
                 "id": row.candidate.id,
                 "first_name": row.candidate.user.first_name,
                 "last_name": row.candidate.user.last_name,
-                "email": row.candidate.user.email if viewer and viewer.role != UserRole.EMPLOYER else None,
+                "email": row.candidate.user.email,
                 "title": row.candidate.title,
                 "city": row.candidate.city,
                 "skills": row.candidate.skills,
                 "years_experience": row.candidate.years_experience,
             }
+    elif viewer and viewer.role == UserRole.EMPLOYER and row.candidate and row.candidate.user:
+        payload["candidate"] = {
+            "id": row.candidate.id,
+            "first_name": row.candidate.user.first_name,
+            "last_name": row.candidate.user.last_name,
+            "email": None,
+            "title": row.candidate.title,
+            "city": row.candidate.city,
+            "skills": row.candidate.skills,
+            "years_experience": row.candidate.years_experience,
+        }
     return payload

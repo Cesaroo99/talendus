@@ -2,7 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models import Company, CompanyMembership, User
-from app.models.enums import CompanyMemberRole, UserRole
+from app.models.enums import ApplicationStatus, CompanyMemberRole, InterviewType, UserRole
 from app.rbac import ADMINS, company_can, is_admin
 
 
@@ -10,6 +10,35 @@ RECRUITER_STAFF = {UserRole.RECRUITER} | ADMINS
 FINANCE_STAFF = {UserRole.FINANCE} | ADMINS
 CONTRACT_STAFF = {UserRole.RECRUITER, UserRole.FINANCE} | ADMINS
 MESSAGE_STAFF = {UserRole.RECRUITER, UserRole.FINANCE} | ADMINS
+PRESENTED_STATUSES = {
+    ApplicationStatus.SHORTLISTED,
+    ApplicationStatus.INTERVIEW,
+    ApplicationStatus.SECOND_INTERVIEW,
+    ApplicationStatus.OFFER_SENT,
+    ApplicationStatus.HIRED,
+}
+CLIENT_INTERVIEW_TYPES = {
+    InterviewType.CLIENT,
+    InterviewType.ONSITE,
+    InterviewType.VIDEO,
+    InterviewType.PHONE,
+    InterviewType.OFFER,
+}
+
+
+def is_presented_to_employer(application) -> bool:
+    """Dossier transmis au client par Talendus — pas les candidatures brutes."""
+    if application is None:
+        return False
+    status = application.status
+    if status in PRESENTED_STATUSES:
+        return True
+    if status in {ApplicationStatus.REJECTED, ApplicationStatus.WITHDRAWN}:
+        presented = {item.value for item in PRESENTED_STATUSES}
+        for row in application.history or []:
+            if row.new_status in presented:
+                return True
+    return False
 
 
 def company_ids_for_employer(db: Session, user: User) -> list[str]:

@@ -19,7 +19,15 @@ from app.models import (
 from app.models.enums import ApplicationStatus, InterviewStatus, JobStatus, NotificationType, UserRole, utcnow
 from app.rbac import is_admin
 from app.schemas import CompanyMemberIn, CompanyMemberPatchIn
-from app.services.access import company_ids_for_employer, first_employer_company, member_role_for, require_company_perm
+from app.services.access import (
+    CLIENT_INTERVIEW_TYPES,
+    PRESENTED_STATUSES,
+    company_ids_for_employer,
+    first_employer_company,
+    is_presented_to_employer,
+    member_role_for,
+    require_company_perm,
+)
 from app.services.audit import audit
 from app.services.auth import ensure_candidate
 from app.services.jobs import serialize_job
@@ -123,12 +131,14 @@ def employer_dashboard(db: Session, user: User) -> dict:
     apps = []
     if job_ids:
         apps = list(db.scalars(select(Application).where(Application.job_id.in_(job_ids))).all())
+        apps = [a for a in apps if a.status in PRESENTED_STATUSES]
     interviews = []
     if ids:
         interviews = list(
             db.scalars(
                 select(Interview).where(
                     Interview.company_id.in_(ids),
+                    Interview.type.in_(CLIENT_INTERVIEW_TYPES),
                     Interview.status.in_([InterviewStatus.SCHEDULED, InterviewStatus.CONFIRMED]),
                 )
             ).all()
@@ -291,13 +301,18 @@ def get_document_for_user(db: Session, user: User, document_id: str) -> PortalDo
         if user.role == UserRole.EMPLOYER:
             ids = company_ids_for_employer(db, user)
             if ids:
-                linked = db.scalar(
-                    select(Application.id)
-                    .join(Candidate, Application.candidate_id == Candidate.id)
-                    .join(JobOffer, Application.job_id == JobOffer.id)
-                    .where(Candidate.id == row.owner_id, JobOffer.company_id.in_(ids))
+                linked = list(
+                    db.scalars(
+                        select(Application)
+                        .options(joinedload(Application.history))
+                        .join(Candidate, Application.candidate_id == Candidate.id)
+                        .join(JobOffer, Application.job_id == JobOffer.id)
+                        .where(Candidate.id == row.owner_id, JobOffer.company_id.in_(ids))
+                    )
+                    .unique()
+                    .all()
                 )
-                if linked:
+                if any(is_presented_to_employer(item) for item in linked):
                     return row
         raise AppError(403, "Vous n'avez pas accès à ce fichier.", "FORBIDDEN")
     if row.owner_type == "company":

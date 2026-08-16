@@ -12,7 +12,7 @@ from app.rbac import is_admin
 from app.integrations.schemas import AiPurposeIn
 from app.schemas import CandidateProfileIn, CertificationIn, EducationIn, ExperienceIn
 from app.services import candidates as cand_svc
-from app.services.access import company_ids_for_employer
+from app.services.access import company_ids_for_employer, is_presented_to_employer
 from app.services.auth import ensure_candidate
 from app.services.portal import candidate_dashboard
 from app.services.storage import open_resume
@@ -161,13 +161,18 @@ def get_candidate(
         ids = company_ids_for_employer(db, user)
         if not ids:
             raise AppError(403, "Vous n'avez pas accès à ce candidat.", "FORBIDDEN")
-        linked = db.scalar(
-            select(Application.id)
-            .join(JobOffer, Application.job_id == JobOffer.id)
-            .where(Application.candidate_id == profile.id, JobOffer.company_id.in_(ids))
+        linked = list(
+            db.scalars(
+                select(Application)
+                .options(joinedload(Application.history))
+                .join(JobOffer, Application.job_id == JobOffer.id)
+                .where(Application.candidate_id == profile.id, JobOffer.company_id.in_(ids))
+            )
+            .unique()
+            .all()
         )
-        if not linked:
-            raise AppError(403, "Vous n'avez pas accès à ce candidat.", "FORBIDDEN")
+        if not any(is_presented_to_employer(row) for row in linked):
+            raise AppError(403, "Ce dossier n'a pas encore été transmis par Talendus.", "FORBIDDEN")
         private = False
     payload = cand_svc.serialize_candidate(profile, include_private=private)
     if user.role == UserRole.EMPLOYER and profile.user:

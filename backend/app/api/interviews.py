@@ -22,7 +22,7 @@ def create_interview(
     payload: InterviewIn,
     request: Request,
     db: Session = Depends(get_db),
-    user: User = Depends(require_roles(UserRole.RECRUITER, UserRole.ADMIN, UserRole.EMPLOYER)),
+    user: User = Depends(require_roles(UserRole.RECRUITER, UserRole.ADMIN)),
 ):
     row = interviews_service.create_interview(db, user, payload, client_ip(request))
     return ok(interviews_service.serialize_interview(row, user), message="Entretien planifié.")
@@ -47,7 +47,7 @@ def patch_interview(
     interview_id: str,
     payload: InterviewPatchIn,
     db: Session = Depends(get_db),
-    user: User = Depends(require_roles(UserRole.RECRUITER, UserRole.ADMIN, UserRole.EMPLOYER)),
+    user: User = Depends(require_roles(UserRole.RECRUITER, UserRole.ADMIN)),
 ):
     row = interviews_service.patch_interview(db, user, interview_id, payload)
     return ok(interviews_service.serialize_interview(row, user))

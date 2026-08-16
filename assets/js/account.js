@@ -53,8 +53,11 @@
       notifyPrefs: "Notification preferences", emailNotif: "Email", inApp: "In-app",
       sms: "SMS (coming soon)", wa: "WhatsApp (coming soon)", push: "Push (coming soon)",
       profilePublic: "Allow a public professional summary", changeEmail: "Email address is used to sign in.",
-      emptyInbox: "No applications received.", emptyInvoices: "No invoices.",
-      pay: "Pay by card", pipeline: "Pipeline"
+      emptyInbox: "No profiles presented yet. Talendus will share qualified shortlists.", emptyInvoices: "No invoices.",
+      pay: "Pay by card", pipeline: "Pipeline",
+      mediate: "All contact with candidates goes through Talendus. You cannot write to them or schedule interviews directly.",
+      mediateCandidate: "Talendus is your only contact. Employers never receive your email or phone number.",
+      writeTalendus: "Write to your Talendus consultant"
     } : {
       login: "Connexion", register: "Créer un compte", email: "Courriel", password: "Mot de passe",
       first: "Prénom", last: "Nom", submitLogin: "Me connecter", submitRegister: "Créer mon compte",
@@ -98,8 +101,11 @@
       notifyPrefs: "Préférences de notification", emailNotif: "Courriel", inApp: "Dans l’application",
       sms: "SMS (prochainement)", wa: "WhatsApp (prochainement)", push: "Push (prochainement)",
       profilePublic: "Autoriser un résumé professionnel visible", changeEmail: "Le courriel sert à vous connecter.",
-      emptyInbox: "Aucune candidature reçue.", emptyInvoices: "Aucune facture.",
-      pay: "Payer par carte", pipeline: "Pipeline"
+      emptyInbox: "Aucun dossier présenté pour le moment. Talendus vous transmet les profils qualifiés.", emptyInvoices: "Aucune facture.",
+      pay: "Payer par carte", pipeline: "Pipeline",
+      mediate: "Tout contact avec les candidats passe par Talendus. Vous ne pouvez pas leur écrire ni planifier d’entretien directement.",
+      mediateCandidate: "Talendus est votre seul interlocuteur. Les employeurs ne reçoivent jamais votre courriel ni votre téléphone.",
+      writeTalendus: "Écrire à votre conseiller Talendus"
     };
 
     function esc(v) {
@@ -228,6 +234,9 @@
       el.className = ok === false ? "tl-success tl-error" : "tl-success";
     }
     function empty(msg) { return '<div class="tl-empty"><p>' + esc(msg) + "</p></div>"; }
+    function mediateNote() {
+      return '<p class="tl-mediate">' + esc(isEmployerSpace() ? t.mediate : t.mediateCandidate) + "</p>";
+    }
     function errBox(msg) { return '<div class="tl-error"><p>' + esc(msg || t.err) + '</p><p><button type="button" class="tl-btn tl-btn-ghost" data-retry>' + esc(t.retry) + "</button></p></div>"; }
     function skeleton() { return '<div class="tl-skeleton"></div><div class="tl-skeleton"></div><div class="tl-skeleton"></div>'; }
     function unwrap(p) { return p.then(function (j) { return j.data; }); }
@@ -551,7 +560,8 @@
         return '<div class="tl-msg-bubble' + (mine ? " is-mine" : "") + '"><b>' + esc(m.sender_name || "") + "</b><p>" + esc(m.body) +
           '</p><p class="tl-meta">' + esc(fmtDate(m.created_at)) + (m.is_read ? "" : " · " + (isEn ? "Unread" : "Non lu")) + "</p></div>";
       }).join("");
-      return '<div class="tl-msg-layout"><div>' + list + "</div><form class=\"tl-form\" id=\"acc-msg\"><label>" + esc(t.to) +
+      return (isEmployerSpace() || (state.user && state.user.role === "CANDIDATE") ? mediateNote() : "") +
+        '<div class="tl-msg-layout"><div>' + list + "</div><form class=\"tl-form\" id=\"acc-msg\"><label>" + esc(t.writeTalendus) +
         '</label><select name="recipient_id" required>' + opts + "</select><label>" + esc(t.write) +
         '</label><textarea name="body" rows="4" required maxlength="4000"></textarea><button class="tl-btn" type="submit">' +
         esc(t.send) + '</button><div class="tl-success"></div><div id="acc-thread">' + msgs + "</div></form></div>";
@@ -672,7 +682,7 @@
 
     function employerDashboard(user, dash, company) {
       var s = (dash && dash.stats) || {};
-      return "<p class=\"tl-lead\">" + esc(t.hello) + " " + esc((company && company.name) || dash.company_name || "") + "</p>" +
+      return mediateNote() + "<p class=\"tl-lead\">" + esc(t.hello) + " " + esc((company && company.name) || dash.company_name || "") + "</p>" +
         '<div class="tl-stat-grid">' +
         [["active_jobs", t.activeJobs], ["applications", t.inbox], ["shortlisted", t.shortlisted], ["interviews", t.interviews], ["hired", t.hired]].map(function (row) {
           return '<div class="tl-stat-card"><b>' + esc(s[row[0]] || 0) + "</b><span>" + esc(row[1]) + "</span></div>";
@@ -731,17 +741,15 @@
     }
 
     function renderInbox(apps) {
-      if (!apps || !apps.length) return empty(t.emptyInbox);
-      var opts = ["SUBMITTED", "UNDER_REVIEW", "SHORTLISTED", "INTERVIEW", "SECOND_INTERVIEW", "OFFER_SENT", "HIRED", "REJECTED"];
-      return '<div class="tl-table-wrap"><table class="tl-portal-table"><thead><tr><th>' + esc(t.first) + "</th><th>" + esc(t.title) +
+      if (!apps || !apps.length) return mediateNote() + empty(t.emptyInbox);
+      return mediateNote() + '<div class="tl-table-wrap"><table class="tl-portal-table"><thead><tr><th>' + esc(t.first) + "</th><th>" + esc(t.title) +
         "</th><th>" + esc(t.apps) + "</th><th>" + esc(t.experience) + "</th><th></th></tr></thead><tbody>" + apps.map(function (a) {
         var c = a.candidate || {};
         var job = a.job || {};
         return "<tr><td data-label=\"" + esc(t.first) + "\">" + esc((c.first_name || "") + " " + (c.last_name || "")) +
           "</td><td data-label=\"" + esc(t.title) + "\">" + esc(c.title || job.title || "") + "</td><td data-label=\"" + esc(t.apps) + "\">" +
-          '<select data-app-status="' + esc(a.id) + '">' + opts.map(function (s) {
-            return '<option value="' + s + '"' + (a.status === s ? " selected" : "") + ">" + esc(statusLabel(s)) + "</option>";
-          }).join("") + "</select></td><td data-label=\"" + esc(t.experience) + "\">" + esc(c.years_experience || "—") +
+          '<span class="tl-chip orange">' + esc(statusLabel(a.status)) + "</span></td><td data-label=\"" + esc(t.experience) + "\">" +
+          esc(c.years_experience || "—") +
           '</td><td><button type="button" class="tl-btn tl-btn-ghost" data-nav="candidate" data-id="' + esc(c.id || "") + '">' +
           esc(t.candidates) + "</button></td></tr>";
       }).join("") + "</tbody></table></div>";
@@ -774,7 +782,6 @@
         ["entretien-talendus", t.interview], ["entretien-client", isEn ? "Client interview" : "Entretien client"],
         ["offre", isEn ? "Offer" : "Offre"], ["placement", t.hired]
       ];
-      var opts = ["SUBMITTED", "UNDER_REVIEW", "SHORTLISTED", "INTERVIEW", "SECOND_INTERVIEW", "OFFER_SENT", "HIRED", "REJECTED"];
       var grouped = {};
       stages.forEach(function (st) { grouped[st[0]] = []; });
       (apps || []).forEach(function (a) {
@@ -782,15 +789,13 @@
         if (!grouped[key]) grouped[key] = [];
         grouped[key].push(a);
       });
-      return '<div class="tl-pipeline">' + stages.map(function (st) {
+      return mediateNote() + '<div class="tl-pipeline">' + stages.map(function (st) {
         var cards = (grouped[st[0]] || []).map(function (a) {
           var c = a.candidate || {};
           var job = a.job || {};
           return '<article class="tl-pipe-card"><b>' + esc((c.first_name || "") + " " + (c.last_name || "")) +
             "</b><p class=\"tl-meta\">" + esc(job.title || "") + "</p>" +
-            '<select data-app-status="' + esc(a.id) + '">' + opts.map(function (s) {
-              return '<option value="' + s + '"' + (a.status === s ? " selected" : "") + ">" + esc(statusLabel(s)) + "</option>";
-            }).join("") + "</select>" +
+            '<span class="tl-chip orange">' + esc(statusLabel(a.status)) + "</span>" +
             (c.id ? '<p><button type="button" class="tl-btn tl-btn-ghost" data-nav="candidate" data-id="' + esc(c.id) + '">' + esc(t.candidates) + "</button></p>" : "") +
             "</article>";
         }).join("");
@@ -939,27 +944,15 @@
     function renderInterviews(items, apps) {
       var list = (!items || !items.length) ? empty(t.emptyInts) : items.map(function (i) {
         var actions = "";
-        if (i.status === "SCHEDULED") {
+        if (i.status === "SCHEDULED" && !isEmployerSpace()) {
           actions = '<p><button type="button" class="tl-btn tl-btn-ghost" data-int-status="CONFIRMED" data-int-id="' + esc(i.id) + '">' + esc(t.confirm) +
             '</button> <button type="button" class="tl-btn tl-btn-ghost" data-int-status="CANCELLED" data-int-id="' + esc(i.id) + '">' + esc(t.cancel) + "</button></p>";
         }
         return '<div class="tl-account-notif"><b>' + esc(i.type_label || i.type) + " · " + esc(statusLabel(i.status)) + "</b><p>" +
-          esc(fmtDate(i.scheduled_at)) + " · " + esc(i.location || i.meeting_url || "") + (i.job_title ? " · " + esc(i.job_title) : "") +
+          esc(fmtDate(i.scheduled_at)) + " · " + esc(i.location || "") + (i.job_title ? " · " + esc(i.job_title) : "") +
           (i.candidate_name ? " · " + esc(i.candidate_name) : "") + "</p>" + actions + "</div>";
       }).join("");
-      var form = "";
-      if (isEmployerSpace() && apps && apps.length) {
-        form = '<form class="tl-form" id="acc-int"><h3>' + esc(t.schedule) + "</h3><label>" + esc(t.candidates) +
-          '</label><select name="candidate_id" required>' + apps.map(function (a) {
-            var c = a.candidate || {};
-            return '<option value="' + esc(c.id || "") + '" data-app="' + esc(a.id) + '">' + esc((c.first_name || "") + " " + (c.last_name || "") + " — " + ((a.job || {}).title || "")) + "</option>";
-          }).join("") + '</select><input type="hidden" name="application_id"><label>' + esc(t.when) +
-          '</label><input name="scheduled_at" type="datetime-local" required><label>' + esc(t.place) +
-          '</label><input name="location"><label>' + esc(t.type) + '</label><select name="type"><option value="CLIENT">Client</option><option value="VIDEO">Visio</option><option value="PHONE">Téléphone</option><option value="ONSITE">Sur place</option></select>' +
-          "<label>" + (isEn ? "Meeting link (optional)" : "Lien visio (optionnel)") + '</label><input name="meeting_url" placeholder="https://">' +
-          '<button class="tl-btn" type="submit">' + esc(t.schedule) + '</button><div class="tl-success"></div></form>';
-      }
-      return list + form;
+      return (isEmployerSpace() ? mediateNote() : "") + list;
     }
 
     function countsThen(cb) {
@@ -993,7 +986,7 @@
           else if (route.name === "pipeline") p = unwrap(api.request("/applications")).then(renderPipeline);
           else if (route.name === "invoices") p = unwrap(api.request("/invoices")).then(renderInvoices);
           else if (route.name === "candidate") p = unwrap(api.request("/candidates/" + route.id)).then(function (c) {
-            return "<h3>" + esc((c.first_name || "") + " " + (c.last_name || "")) + "</h3><p>" + esc(c.title || "") + " · " + esc(c.city || "") +
+            return mediateNote() + "<h3>" + esc((c.first_name || "") + " " + (c.last_name || "")) + "</h3><p>" + esc(c.title || "") + " · " + esc(c.city || "") +
               "</p><p>" + esc(c.skills || "") + "</p>" + ((c.resumes || []).map(function (r) {
                 return '<p><button type="button" class="tl-btn tl-btn-ghost" data-dl="' + esc(r.download_path) + '" data-dl-name="' + esc(r.original_name || "cv.pdf") + '">' + esc(t.download) + " CV</button></p>";
               }).join("") || "");

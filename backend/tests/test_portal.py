@@ -3,6 +3,22 @@ from conftest import auth_header, register
 PDF = b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n" + b"x" * 40
 
 
+def _promote_admin(client, email: str) -> dict:
+    from app.database import SessionLocal
+    from app.models import User
+    from app.models.enums import UserRole
+
+    data = register(client, email, "EMPLOYER", first_name="Sophie", last_name="Admin")
+    db = SessionLocal()
+    user = db.get(User, data["user"]["id"])
+    user.role = UserRole.ADMIN
+    db.commit()
+    db.close()
+    res = client.post("/api/auth/login", json={"email": email, "password": "Password1!"})
+    assert res.status_code == 200
+    return res.json()["data"]
+
+
 def _publish_job(client, headers, title="Soudeur", slug="soudeur-portal"):
     job = client.post("/api/jobs", headers=headers, json={"title": title, "location": "Laval", "sector": "Métallurgie", "slug": slug}).json()["data"]
     client.post(f"/api/jobs/{job['id']}/publish", headers=headers)
@@ -45,6 +61,7 @@ def test_employer_cannot_save_job(client):
 
 
 def test_application_timeline_hides_staff_comment(client):
+    admin = _promote_admin(client, "tl-admin@example.com")
     emp = register(client, "client-tl@example.com", "EMPLOYER")
     emp_h = auth_header(emp)
     job = _publish_job(client, emp_h, slug="operateur-tl")
@@ -53,7 +70,7 @@ def test_application_timeline_hides_staff_comment(client):
     app_row = client.post("/api/applications", headers=cand_h, json={"job_slug": "operateur-tl"}).json()["data"]
     client.post(
         f"/api/applications/{app_row['id']}/status",
-        headers=emp_h,
+        headers=auth_header(admin),
         json={"status": "SHORTLISTED", "comment": "Note interne confidentielle"},
     )
     viewed = client.get(f"/api/applications/{app_row['id']}", headers=cand_h).json()["data"]
@@ -61,7 +78,9 @@ def test_application_timeline_hides_staff_comment(client):
     assert "staff_notes" not in viewed
     assert all(h.get("comment") is None for h in viewed["history"])
     emp_view = client.get(f"/api/applications/{app_row['id']}", headers=emp_h).json()["data"]
-    assert any(h.get("comment") == "Note interne confidentielle" for h in emp_view["history"])
+    assert all(h.get("comment") is None for h in emp_view["history"])
+    staff_view = client.get(f"/api/applications/{app_row['id']}", headers=auth_header(admin)).json()["data"]
+    assert any(h.get("comment") == "Note interne confidentielle" for h in staff_view["history"])
 
 
 def test_candidate_cannot_access_employer_dashboard(client):
@@ -182,12 +201,51 @@ def test_application_notifies_employer_inbox_and_candidate_apps(client):
     cand_notes = client.get("/api/notifications", headers=auth_header(cand)).json()["data"]
     assert any((n.get("href") or "").endswith("#/apps") for n in cand_notes)
     emp_notes = client.get("/api/notifications", headers=auth_header(emp)).json()["data"]
-    assert any("/espace-employeur.html#/inbox" in (n.get("href") or "") for n in emp_notes)
-    changed = client.post(
+    assert not any("/espace-employeur.html#/inbox" in (n.get("href") or "") for n in emp_notes)
+    denied = client.post(
         f"/api/applications/{app_id}/status",
         headers=auth_header(emp),
         json={"status": "SHORTLISTED"},
     )
-    assert changed.status_code == 200
-    after = client.get("/api/notifications", headers=auth_header(cand)).json()["data"]
-    assert any(f"#/application/{app_id}" in (n.get("href") or "") for n in after)
+    assert denied.status_code == 403
+
+
+def test_no_direct_link_between_employer_and_candidate(client):
+    admin = _promote_admin(client, "mediate-admin@example.com")
+    emp = register(client, "mediate-emp@example.com", "EMPLOYER")
+    emp_h = auth_header(emp)
+    job = _publish_job(client, emp_h, slug="mediate-job")
+    cand = register(client, "mediate-cand@example.com", first_name="Hugo")
+    cand_h = auth_header(cand)
+    applied = client.post("/api/applications", headers=cand_h, json={"job_slug": "mediate-job"}).json()["data"]
+    profile = client.get("/api/candidates/me", headers=cand_h).json()["data"]
+
+    assert client.post(
+        "/api/messages",
+        headers=emp_h,
+        json={"recipient_id": cand["user"]["id"], "body": "On se voit demain ?"},
+    ).status_code == 403
+    assert client.post(
+        "/api/messages",
+        headers=cand_h,
+        json={"recipient_id": emp["user"]["id"], "body": "Voici mon cellulaire"},
+    ).status_code == 403
+    emp_dir = client.get("/api/messages/directory", headers=emp_h).json()["data"]
+    assert all(p["role"] != "CANDIDATE" for p in emp_dir)
+    cand_dir = client.get("/api/messages/directory", headers=cand_h).json()["data"]
+    assert all(p["role"] != "EMPLOYER" for p in cand_dir)
+
+    assert client.post(
+        "/api/interviews",
+        headers=emp_h,
+        json={"candidate_id": profile["id"], "application_id": applied["id"], "scheduled_at": "2026-09-01T10:00:00+00:00"},
+    ).status_code == 403
+    assert client.get(f"/api/applications/{applied['id']}", headers=emp_h).status_code == 403
+    assert client.get(f"/api/candidates/{profile['id']}", headers=emp_h).status_code == 403
+    assert client.get(f"/api/matching/jobs/{job['id']}/candidates", headers=emp_h).status_code == 403
+
+    client.post(f"/api/applications/{applied['id']}/status", headers=auth_header(admin), json={"status": "SHORTLISTED"})
+    presented = client.get(f"/api/applications/{applied['id']}", headers=emp_h)
+    assert presented.status_code == 200
+    assert presented.json()["data"]["candidate"]["email"] is None
+    assert "staff_notes" not in presented.json()["data"]

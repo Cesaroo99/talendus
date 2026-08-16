@@ -76,6 +76,7 @@ def test_job_draft_not_public_then_publish(client):
 
 
 def test_apply_and_duplicate_and_status_and_notifications(client):
+    admin = _promote_admin(client, "apply-admin@example.com")
     emp = register(client, "usine@example.com", "EMPLOYER")
     emp_headers = auth_header(emp)
     job = client.post(
@@ -112,9 +113,15 @@ def test_apply_and_duplicate_and_status_and_notifications(client):
     assert notifs.status_code == 200
     assert len(notifs.json()["data"]) >= 1
 
-    changed = client.post(
+    denied = client.post(
         f"/api/applications/{application_id}/status",
         headers=emp_headers,
+        json={"status": "SHORTLISTED", "comment": "Profil solide."},
+    )
+    assert denied.status_code == 403
+    changed = client.post(
+        f"/api/applications/{application_id}/status",
+        headers=auth_header(admin),
         json={"status": "SHORTLISTED", "comment": "Profil solide."},
     )
     assert changed.status_code == 200
@@ -436,6 +443,8 @@ def test_schema_tables_and_constraints(client):
 
 
 def test_staff_notes_hidden_from_candidate(client):
+    admin = _promote_admin(client, "notes-admin@example.com")
+    admin_h = auth_header(admin)
     emp = register(client, "notes-emp@example.com", "EMPLOYER")
     emp_h = auth_header(emp)
     job = _publish_job(client, emp_h, slug="notes-cariste", title="Cariste")
@@ -452,8 +461,15 @@ def test_staff_notes_hidden_from_candidate(client):
     db.close()
     mine = client.get(f"/api/applications/{applied['id']}", headers=cand_h).json()["data"]
     assert "staff_notes" not in mine
+    raw_inbox = client.get("/api/applications", headers=emp_h).json()["data"]
+    assert raw_inbox == []
+    client.post(f"/api/applications/{applied['id']}/status", headers=admin_h, json={"status": "SHORTLISTED"})
     inbox = client.get("/api/applications", headers=emp_h).json()["data"]
-    assert any(item["id"] == applied["id"] and item.get("staff_notes") == "Salaire négocié — interne seulement." for item in inbox)
+    shown = next(item for item in inbox if item["id"] == applied["id"])
+    assert "staff_notes" not in shown
+    assert shown["candidate"]["email"] is None
+    staff_inbox = client.get("/api/applications", headers=admin_h).json()["data"]
+    assert any(item["id"] == applied["id"] and item.get("staff_notes") == "Salaire négocié — interne seulement." for item in staff_inbox)
 
 
 def test_suspended_account_cannot_login(client):
@@ -581,7 +597,7 @@ def test_pipeline_bootstrap_and_status_api(client):
     assert any(p["applicationId"] == applied["id"] and p["stage"] == "nouveaux" for p in found["pipeline"])
     changed = client.post(
         f"/api/applications/{applied['id']}/status",
-        headers=emp_h,
+        headers=admin_h,
         json={"status": "INTERVIEW"},
     )
     assert changed.status_code == 200

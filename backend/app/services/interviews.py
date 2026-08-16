@@ -40,7 +40,7 @@ def _parse_when(value: str) -> datetime:
 def serialize_interview(row: Interview, viewer: User | None = None) -> dict:
     candidate = row.candidate
     user = candidate.user if candidate else None
-    hide_notes = viewer is not None and viewer.role == UserRole.CANDIDATE
+    hide_notes = viewer is not None and viewer.role in {UserRole.CANDIDATE, UserRole.EMPLOYER}
     return {
         "id": row.id,
         "candidate_id": row.candidate_id,
@@ -51,7 +51,7 @@ def serialize_interview(row: Interview, viewer: User | None = None) -> dict:
         "scheduled_at": row.scheduled_at.isoformat() if row.scheduled_at else None,
         "duration_minutes": row.duration_minutes,
         "location": row.location,
-        "meeting_url": row.meeting_url,
+        "meeting_url": None if (viewer and viewer.role == UserRole.EMPLOYER) else row.meeting_url,
         "meeting_provider": row.meeting_provider,
         "type": row.type.value,
         "type_label": TYPE_LABEL.get(row.type, row.type.value),
@@ -71,7 +71,13 @@ def _visible(db: Session, user: User, row: Interview) -> bool:
         cand = ensure_candidate(db, user)
         return row.candidate_id == cand.id
     if user.role == UserRole.EMPLOYER:
-        return bool(row.company_id and row.company_id in company_ids_for_employer(db, user))
+        from app.services.access import CLIENT_INTERVIEW_TYPES
+
+        return bool(
+            row.company_id
+            and row.company_id in company_ids_for_employer(db, user)
+            and row.type in CLIENT_INTERVIEW_TYPES
+        )
     return False
 
 
@@ -88,7 +94,9 @@ def list_interviews(db: Session, user: User) -> list[Interview]:
         ids = company_ids_for_employer(db, user)
         if not ids:
             return []
-        stmt = stmt.where(Interview.company_id.in_(ids))
+        from app.services.access import CLIENT_INTERVIEW_TYPES
+
+        stmt = stmt.where(Interview.company_id.in_(ids), Interview.type.in_(CLIENT_INTERVIEW_TYPES))
     elif user.role not in {UserRole.RECRUITER} | ADMINS:
         raise AppError(403, "Vous n'avez pas accès aux entretiens.", "FORBIDDEN")
     return list(db.scalars(stmt.order_by(Interview.scheduled_at.asc())).unique().all())
@@ -112,8 +120,8 @@ def get_interview(db: Session, user: User, interview_id: str) -> Interview:
 
 
 def create_interview(db: Session, user: User, data: InterviewIn, ip: str | None) -> Interview:
-    if user.role not in {UserRole.RECRUITER, UserRole.EMPLOYER} | ADMINS:
-        raise AppError(403, "Seuls les recruteurs et employeurs peuvent planifier un entretien.", "FORBIDDEN")
+    if user.role not in {UserRole.RECRUITER} | ADMINS:
+        raise AppError(403, "Seuls les conseillers Talendus peuvent planifier un entretien.", "FORBIDDEN")
     candidate = db.get(Candidate, data.candidate_id)
     if not candidate:
         raise AppError(404, "Candidat introuvable.", "CANDIDATE_NOT_FOUND")
@@ -133,10 +141,6 @@ def create_interview(db: Session, user: User, data: InterviewIn, ip: str | None)
         job = db.get(JobOffer, job_id)
         if job:
             company_id = company_id or job.company_id
-    if user.role == UserRole.EMPLOYER:
-        ids = company_ids_for_employer(db, user)
-        if not company_id or company_id not in ids:
-            raise AppError(403, "Vous ne pouvez planifier un entretien que pour vos offres.", "FORBIDDEN")
     when = _parse_when(data.scheduled_at)
     row = Interview(
         candidate_id=candidate.id,
@@ -149,7 +153,7 @@ def create_interview(db: Session, user: User, data: InterviewIn, ip: str | None)
         location=data.location or "Visio",
         meeting_url=data.meeting_url,
         meeting_provider=data.meeting_provider,
-        type=data.type or (InterviewType.CLIENT if user.role == UserRole.EMPLOYER else InterviewType.TALENDUS),
+        type=data.type or InterviewType.TALENDUS,
         notes=data.notes,
         status=InterviewStatus.SCHEDULED,
     )
@@ -196,9 +200,7 @@ def create_interview(db: Session, user: User, data: InterviewIn, ip: str | None)
 
 def patch_interview(db: Session, user: User, interview_id: str, data: InterviewPatchIn) -> Interview:
     row = get_interview(db, user, interview_id)
-    if user.role not in {UserRole.RECRUITER, UserRole.EMPLOYER} | ADMINS:
-        raise AppError(403, "Modification non autorisée.", "FORBIDDEN")
-    if user.role == UserRole.EMPLOYER and not _visible(db, user, row):
+    if user.role not in {UserRole.RECRUITER} | ADMINS:
         raise AppError(403, "Modification non autorisée.", "FORBIDDEN")
     payload = data.model_dump(exclude_unset=True)
     rescheduled = False
@@ -236,10 +238,10 @@ def patch_interview(db: Session, user: User, interview_id: str, data: InterviewP
 
 def set_status(db: Session, user: User, interview_id: str, status: InterviewStatus) -> Interview:
     row = get_interview(db, user, interview_id)
+    if user.role == UserRole.EMPLOYER:
+        raise AppError(403, "Le suivi des entretiens est assuré par Talendus.", "FORBIDDEN")
     if user.role == UserRole.CANDIDATE and status not in {InterviewStatus.CONFIRMED, InterviewStatus.CANCELLED}:
         raise AppError(403, "Un candidat peut confirmer ou annuler uniquement.", "FORBIDDEN")
-    if user.role == UserRole.EMPLOYER and status not in {InterviewStatus.CONFIRMED, InterviewStatus.CANCELLED, InterviewStatus.COMPLETED}:
-        raise AppError(403, "Statut non autorisé.", "FORBIDDEN")
     row.status = status
     audit(db, "interview.status", user, "interview", row.id, metadata={"status": status.value})
     cand_user = row.candidate.user if row.candidate else None

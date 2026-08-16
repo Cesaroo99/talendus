@@ -63,7 +63,7 @@ def change_status(
     application_id: str,
     payload: StatusChangeIn,
     db: Session = Depends(get_db),
-    user: User = Depends(require_roles(UserRole.EMPLOYER, UserRole.RECRUITER, UserRole.ADMIN)),
+    user: User = Depends(require_roles(UserRole.RECRUITER, UserRole.ADMIN)),
 ):
     application = applications_service.change_status(db, user, application_id, payload.status, payload.comment)
     return ok(applications_service.serialize_application(application, user))
