@@ -72,20 +72,11 @@ INDEX_EN = rf"""
             <div class="row">
                 <div class="col-lg-8">
                     <div class="hero2-heading tl-hero-lock">
-                        <h5>The talent that keeps industry moving.</h5>
-                        <div class="space16"></div>
-                        <h1>Qualified candidates from day 7.</h1>
-                        <div class="space16"></div>
-                        <p>A recruiting partner for Quebec operations — production, maintenance, logistics, supervision and business continuity.</p>
-                        <div class="space32"></div>
                         <div class="btn-area1">
                             <a href="contact.html" class="vl-btn2">Start a hire <span><i class="fa-solid fa-arrow-right"></i></span></a>
                             <a href="candidates.html#cv" class="vl-btn2 btn2">Submit my resume <span><i class="fa-solid fa-arrow-right"></i></span></a>
                         </div>
-                        <div class="tl-hero-badges">
-                          <span class="tl-badge tl-badge-light">Operations · Quebec</span>
-                          <span class="tl-badge tl-badge-light">Consultation by appointment</span>
-                        </div>
+                        <h1 class="tl-hero-note">The talent that keeps industry moving. Free for candidates — presented to the right employers.</h1>
                     </div>
                 </div>
             </div>
@@ -97,20 +88,11 @@ INDEX_EN = rf"""
             <div class="row">
                 <div class="col-lg-8">
                     <div class="hero2-heading tl-hero-lock">
-                        <h5>Industrial jobs · Quebec</h5>
-                        <div class="space16"></div>
-                        <h1>Find plant work in Quebec, presented to the right employers.</h1>
-                        <div class="space16"></div>
-                        <p>Operator, forklift, welder, CNC, maintenance, supervision: we introduce you to operations that are actually hiring.</p>
-                        <div class="space32"></div>
                         <div class="btn-area1">
                             <a href="jobs.html" class="vl-btn2">Browse jobs <span><i class="fa-solid fa-arrow-right"></i></span></a>
                             <a href="candidates.html#cv" class="vl-btn2 btn2">Submit my resume <span><i class="fa-solid fa-arrow-right"></i></span></a>
                         </div>
-                        <div class="tl-hero-badges">
-                          <span class="tl-badge tl-badge-light">Free for candidates</span>
-                          <span class="tl-badge tl-badge-light">Real plant mandates</span>
-                        </div>
+                        <p class="tl-hero-note">The talent that keeps industry moving. Free for candidates — presented to the right employers.</p>
                     </div>
                 </div>
             </div>
