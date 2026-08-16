@@ -233,7 +233,7 @@ def write_fr(write, wrap, page_hero, cta):
                     kicker,
                     h1,
                     lead,
-                    actions=f'<a class="tl-btn" href="contact.html">{cta_label}</a><a class="tl-btn tl-btn-ghost" href="contact.html">Réserver une démonstration</a>',
+                    actions=f'<a class="tl-btn" href="contact.html">{cta_label}</a>',
                     badges='<span class="tl-badge tl-badge-light">Cabinet industriel</span>',
                 )
                 + inner
@@ -453,7 +453,7 @@ def write_en(write, wrap, page_hero, cta):
                     kicker,
                     h1,
                     lead,
-                    actions=f'<a class="tl-btn" href="contact.html">{cta_label}</a><a class="tl-btn tl-btn-ghost" href="contact.html">Book a demo</a>',
+                    actions=f'<a class="tl-btn" href="contact.html">{cta_label}</a>',
                     badges='<span class="tl-badge tl-badge-light">Industrial firm</span>',
                 )
                 + inner

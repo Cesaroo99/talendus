@@ -502,10 +502,6 @@ def header(solid=True, lang="fr", alt_url="", persona="gateway"):
                 {switch}
                 <a href="{h['account']}" class="tl-account-link" data-account-link data-auth-open="login">{t['nav_account']}</a>
                 <a href="{h['account']}" class="tl-account-link tl-register-link" data-auth-open="register">{t['nav_register']}</a>
-                <div class="hero-btn1">
-                  <a href="{h['jobs']}" class="vl-btn2 tl-header-cta" data-persona-cta="talent">{t['cta_talent_primary']} <span><i class="fa-solid fa-arrow-right"></i></span></a>
-                  <a href="{h['contact']}" class="vl-btn2 tl-header-cta" data-persona-cta="entreprise">{t['cta_hire_primary']} <span><i class="fa-solid fa-arrow-right"></i></span></a>
-                </div>
               </div>
               <div class="tl-mobile-tools">
                   {switch}
@@ -540,13 +536,7 @@ def header(solid=True, lang="fr", alt_url="", persona="gateway"):
             <p class="tl-offcanvas-note">{t['offcanvas_note']}</p>
             <div class="vl-offcanvas-cta">
               <a href="{h['account']}" class="tl-btn tl-btn-ghost" data-account-link data-auth-open="login">{t['nav_account']}</a>
-              <a href="{h['account']}" class="tl-btn tl-btn-ghost" data-auth-open="register">{t['nav_register']}</a>
-              <a href="{h['candidates']}" class="tl-btn" data-persona-cta="gateway" data-set-persona="talent">{t['cta_gateway_talent']}</a>
-              <a href="{h['employers']}" class="tl-btn tl-btn-electric" data-persona-cta="gateway" data-set-persona="entreprise">{t['cta_gateway_hire']}</a>
-              <a href="{h['jobs']}" class="tl-btn" data-persona-cta="talent">{t['cta_talent_primary']}</a>
-              <a href="{h['cv']}" class="tl-btn tl-btn-electric" data-persona-cta="talent">{t['cta_talent_secondary']}</a>
-              <a href="{h['publish']}" class="tl-btn" data-persona-cta="entreprise">{t['cta_hire_secondary']}</a>
-              <a href="{h['contact']}" class="tl-btn tl-btn-electric" data-persona-cta="entreprise">{t['cta_hire_demo']}</a>
+              <a href="{h['account']}" class="tl-btn" data-auth-open="register">{t['nav_register']}</a>
             </div>
         </div>
     </div>
@@ -556,20 +546,41 @@ def header(solid=True, lang="fr", alt_url="", persona="gateway"):
 """
 
 
-def speed_strip(lang="fr", persona="entreprise"):
-    t, h = COPY[lang], HREFS[lang]
-    if persona == "talent":
-        kicker, heading, copy = t["speed_kicker_talent"], t["speed_h2_talent"], t["speed_p_talent"]
-        actions = (
-            f'<a class="tl-btn tl-btn-lg" href="{h["jobs"]}">{t["cta_talent_primary"]}</a>'
-            f'<a class="tl-btn tl-btn-ghost" href="{h["cv"]}">{t["cta_talent_secondary"]}</a>'
+def proof_stats(lang="fr"):
+    if lang == "en":
+        kicker, heading = "Results", "What operations actually measure"
+        items = (
+            ("7 d", "Qualified candidates on operations mandates"),
+            ("92 %", "Of placements still in post after the probation period"),
+            ("100 %", "Of our mandates in industry, logistics or operations"),
         )
     else:
-        kicker, heading, copy = t["speed_kicker"], t["speed_h2"], t["speed_p"]
-        actions = (
-            f'<a class="tl-btn tl-btn-lg" href="{h["contact"]}">{t["cta_hire_primary"]}</a>'
-            f'<a class="tl-btn tl-btn-ghost" href="{h["contact"]}">{t["cta_hire_demo"]}</a>'
+        kicker, heading = "Résultats", "Ce que les usines mesurent vraiment"
+        items = (
+            ("7 j", "Premiers candidats qualifiés, sur les mandats d’opération"),
+            ("92 %", "Des placements encore en poste après la période d’essai"),
+            ("100 %", "De nos mandats dans l’industrie, la logistique ou l’entreposage"),
         )
+    cards = "".join(f'<div class="tl-stat"><b>{n}</b><p>{p}</p></div>' for n, p in items)
+    return f"""
+<section class="tl-section-sm">
+  <div class="container">
+    <div class="tl-center" style="max-width:640px;margin:0 auto 28px">
+      <div class="tl-kicker">{kicker}</div>
+      <h2 class="tl-h2">{heading}</h2>
+    </div>
+    <div class="tl-stats tl-stats-compact">{cards}</div>
+  </div>
+</section>
+"""
+
+
+def speed_strip(lang="fr", persona="entreprise"):
+    t = COPY[lang]
+    if persona == "talent":
+        kicker, heading, copy = t["speed_kicker_talent"], t["speed_h2_talent"], t["speed_p_talent"]
+    else:
+        kicker, heading, copy = t["speed_kicker"], t["speed_h2"], t["speed_p"]
     return f"""
 <section class="tl-speed">
   <div class="container">
@@ -578,9 +589,6 @@ def speed_strip(lang="fr", persona="entreprise"):
         <span class="tl-badge tl-badge-light">{kicker}</span>
         <h2>{heading}</h2>
         <p>{copy}</p>
-      </div>
-      <div class="tl-speed-actions">
-        {actions}
       </div>
     </div>
   </div>
@@ -592,22 +600,12 @@ def cta_band(lang="fr", persona="gateway"):
     t, h = COPY[lang], HREFS[lang]
     if persona == "talent":
         kicker, heading, copy = t["cta_talent_kicker"], t["cta_talent_h2"], t["cta_talent_p"]
-        actions = (
-            f'<a class="tl-btn tl-btn-lg" href="{h["account"]}" data-auth-open="register">{t["cta_talent_profile"]}</a>'
-            f'<a class="tl-btn tl-btn-ghost" href="{h["jobs"]}">{t["cta_talent_primary"]}</a>'
-        )
+        action = f'<a class="tl-btn tl-btn-lg" href="{h["cv"]}">{t["cta_talent_secondary"]}</a>'
     elif persona == "entreprise":
         kicker, heading, copy = t["cta_kicker"], t["cta_h2"], t["cta_p"]
-        actions = (
-            f'<a class="tl-btn tl-btn-lg" href="{h["publish"]}">{t["cta_hire_secondary"]}</a>'
-            f'<a class="tl-btn tl-btn-ghost" href="{h["contact"]}">{t["cta_hire_demo"]}</a>'
-        )
+        action = f'<a class="tl-btn tl-btn-lg" href="{h["contact"]}">{t["cta_hire_primary"]}</a>'
     else:
-        kicker, heading, copy = t["cta_gateway_kicker"], t["cta_gateway_h2"], t["cta_gateway_p"]
-        actions = (
-            f'<a class="tl-btn tl-btn-lg" href="{h["candidates"]}" data-set-persona="talent">{t["cta_gateway_talent"]}</a>'
-            f'<a class="tl-btn tl-btn-ghost" href="{h["employers"]}" data-set-persona="entreprise">{t["cta_gateway_hire"]}</a>'
-        )
+        return ""
     return f"""
 <section class="tl-cta-band">
   <div class="container">
@@ -615,7 +613,7 @@ def cta_band(lang="fr", persona="gateway"):
     <h2 class="tl-h2">{heading}</h2>
     <p>{copy}</p>
     <div class="tl-actions">
-      {actions}
+      {action}
     </div>
   </div>
 </section>
@@ -626,20 +624,6 @@ def footer(lang="fr"):
     t, h, a = COPY[lang], HREFS[lang], pfx(lang)
     return f"""
 {whatsapp_fab(lang)}
-<div class="tl-sticky">
-  <div class="tl-sticky-persona" data-persona-bar="gateway">
-    <a href="{h['candidates']}" data-set-persona="talent">{t['cta_gateway_talent']}</a>
-    <a class="alt" href="{h['employers']}" data-set-persona="entreprise">{t['cta_gateway_hire']}</a>
-  </div>
-  <div class="tl-sticky-persona" data-persona-bar="talent">
-    <a href="{h['jobs']}">{t['cta_talent_primary']}</a>
-    <a class="alt" href="{h['cv']}">{t['cta_talent_secondary']}</a>
-  </div>
-  <div class="tl-sticky-persona" data-persona-bar="entreprise">
-    <a href="{h['publish']}">{t['cta_hire_secondary']}</a>
-    <a class="alt" href="{h['contact']}">{t['cta_hire_demo']}</a>
-  </div>
-</div>
 <div class="vl-footer2-section-area">
   <div class="container">
     <div class="row">
