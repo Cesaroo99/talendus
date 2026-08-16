@@ -2,12 +2,13 @@ from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.deps import client_ip, get_current_user, require_roles
+from app.deps import client_ip, get_current_user, get_current_user_optional, require_roles
 from app.errors import ok
 from app.models import User
 from app.models.enums import JobStatus, UserRole
 from app.schemas import JobIn, JobPatchIn
 from app.services import jobs as jobs_service
+from app.services.portal import list_saved_jobs, save_job, saved_job_ids, unsave_job
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
 
@@ -29,6 +30,7 @@ def search_jobs(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=12, ge=1, le=50),
     db: Session = Depends(get_db),
+    user: User | None = Depends(get_current_user_optional),
 ):
     items, total = jobs_service.search_jobs(
         db,
@@ -49,8 +51,13 @@ def search_jobs(
         radius_km=radius_km,
     )
     pages = max(1, (total + page_size - 1) // page_size) if total else 0
+    payload = [jobs_service.serialize_job(item) for item in items]
+    if user and user.role == UserRole.CANDIDATE:
+        saved = saved_job_ids(db, user, [item["id"] for item in payload])
+        for item in payload:
+            item["saved"] = item["id"] in saved
     return ok(
-        [jobs_service.serialize_job(item) for item in items],
+        payload,
         meta={"total": total, "page": page, "page_size": page_size, "pages": pages},
     )
 
@@ -67,6 +74,38 @@ def managed_jobs(
 ):
     items = jobs_service.list_managed(db, user)
     return ok([jobs_service.serialize_job(item) for item in items])
+
+
+@router.get("/saved")
+def saved_jobs(db: Session = Depends(get_db), user: User = Depends(require_roles(UserRole.CANDIDATE))):
+    return ok(list_saved_jobs(db, user))
+
+
+@router.get("/managed/{job_id}")
+def get_managed_job(
+    job_id: str,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_roles(UserRole.EMPLOYER, UserRole.RECRUITER, UserRole.ADMIN)),
+):
+    return ok(jobs_service.serialize_job(jobs_service.get_managed_job(db, user, job_id)))
+
+
+@router.post("/{job_id}/save")
+def bookmark_job(
+    job_id: str,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_roles(UserRole.CANDIDATE)),
+):
+    return ok(save_job(db, user, job_id))
+
+
+@router.delete("/{job_id}/save")
+def remove_bookmark(
+    job_id: str,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_roles(UserRole.CANDIDATE)),
+):
+    return ok(unsave_job(db, user, job_id))
 
 
 @router.get("/{slug}")

@@ -14,7 +14,7 @@ router = APIRouter(prefix="/interviews", tags=["interviews"])
 
 @router.get("")
 def list_interviews(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    return ok([interviews_service.serialize_interview(row) for row in interviews_service.list_interviews(db, user)])
+    return ok([interviews_service.serialize_interview(row, user) for row in interviews_service.list_interviews(db, user)])
 
 
 @router.post("")
@@ -22,10 +22,10 @@ def create_interview(
     payload: InterviewIn,
     request: Request,
     db: Session = Depends(get_db),
-    user: User = Depends(require_roles(UserRole.RECRUITER, UserRole.ADMIN)),
+    user: User = Depends(require_roles(UserRole.RECRUITER, UserRole.ADMIN, UserRole.EMPLOYER)),
 ):
     row = interviews_service.create_interview(db, user, payload, client_ip(request))
-    return ok(interviews_service.serialize_interview(row), message="Entretien planifié.")
+    return ok(interviews_service.serialize_interview(row, user), message="Entretien planifié.")
 
 
 @router.post("/reminders")
@@ -39,7 +39,7 @@ def send_reminders(
 
 @router.get("/{interview_id}")
 def get_interview(interview_id: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    return ok(interviews_service.serialize_interview(interviews_service.get_interview(db, user, interview_id)))
+    return ok(interviews_service.serialize_interview(interviews_service.get_interview(db, user, interview_id), user))
 
 
 @router.patch("/{interview_id}")
@@ -47,10 +47,10 @@ def patch_interview(
     interview_id: str,
     payload: InterviewPatchIn,
     db: Session = Depends(get_db),
-    user: User = Depends(require_roles(UserRole.RECRUITER, UserRole.ADMIN)),
+    user: User = Depends(require_roles(UserRole.RECRUITER, UserRole.ADMIN, UserRole.EMPLOYER)),
 ):
     row = interviews_service.patch_interview(db, user, interview_id, payload)
-    return ok(interviews_service.serialize_interview(row))
+    return ok(interviews_service.serialize_interview(row, user))
 
 
 @router.post("/{interview_id}/status")
@@ -61,4 +61,4 @@ def change_status(
     user: User = Depends(get_current_user),
 ):
     row = interviews_service.set_status(db, user, interview_id, payload.status)
-    return ok(interviews_service.serialize_interview(row))
+    return ok(interviews_service.serialize_interview(row, user))

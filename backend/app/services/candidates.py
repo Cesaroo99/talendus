@@ -17,7 +17,7 @@ from app.services.audit import audit
 from app.services.auth import ensure_candidate
 from app.services.notifications import notify
 from app.services.resume_parse import parse_json_dump, parse_resume_bytes
-from app.services.storage import save_resume
+from app.services.storage import delete_stored, save_resume
 
 
 def create_staff_candidate(db: Session, actor: User, data) -> Candidate:
@@ -148,10 +148,12 @@ def upload_cv(db: Session, user: User, data: bytes, filename: str) -> Resume:
 
 
 def serialize_candidate(profile: Candidate, include_private: bool = True) -> dict:
+    from app.services.portal import profile_completeness
+
     user = profile.user
     public = {
         "id": profile.id,
-        "first_name": user.first_name,
+        "first_name": user.first_name if user else "",
         "title": profile.title,
         "city": profile.city,
         "sector": profile.sector,
@@ -159,47 +161,51 @@ def serialize_candidate(profile: Candidate, include_private: bool = True) -> dic
         "skills": profile.skills,
         "languages": profile.languages,
         "experience_level": profile.experience_level,
+        "bio": profile.bio,
+        "experiences": [
+            {"id": e.id, "company": e.company, "role": e.role, "years": e.years, "description": e.description}
+            for e in (profile.experiences or [])
+        ],
+        "education": [
+            {"id": e.id, "school": e.school, "diploma": e.diploma, "year": e.year}
+            for e in (profile.education or [])
+        ],
+        "certifications": [
+            {"id": c.id, "name": c.name, "issuer": c.issuer, "year": c.year}
+            for c in (profile.certifications or [])
+        ],
+        "resumes": [
+            {
+                "id": r.id,
+                "original_name": r.original_name,
+                "is_primary": r.is_primary,
+                "size_bytes": r.size_bytes,
+                "parse_status": r.parse_status,
+                "created_at": r.created_at.isoformat() if r.created_at else None,
+                "download_path": f"/api/candidates/resumes/{r.id}/file",
+            }
+            for r in (profile.resumes or [])
+        ],
     }
     if not include_private:
         return public
     public.update(
         {
-            "email": user.email,
-            "phone": user.phone,
-            "last_name": user.last_name,
+            "email": user.email if user else None,
+            "phone": user.phone if user else None,
+            "last_name": user.last_name if user else "",
             "availability": profile.availability,
             "desired_salary_min": profile.desired_salary_min,
             "desired_salary_max": profile.desired_salary_max,
             "mobility": profile.mobility,
             "contract_type": profile.contract_type,
             "shift_preference": profile.shift_preference,
-            "bio": profile.bio,
             "education_level": profile.education_level,
             "job_search_status": profile.job_search_status.value if profile.job_search_status else None,
             "work_preferences": profile.work_preferences,
-            "experiences": [
-                {"id": e.id, "company": e.company, "role": e.role, "years": e.years, "description": e.description}
-                for e in profile.experiences
-            ],
-            "education": [
-                {"id": e.id, "school": e.school, "diploma": e.diploma, "year": e.year}
-                for e in profile.education
-            ],
-            "certifications": [
-                {"id": c.id, "name": c.name, "issuer": c.issuer, "year": c.year}
-                for c in profile.certifications
-            ],
-            "resumes": [
-                {
-                    "id": r.id,
-                    "original_name": r.original_name,
-                    "is_primary": r.is_primary,
-                    "size_bytes": r.size_bytes,
-                    "storage_url": r.storage_url,
-                    "parse_status": r.parse_status,
-                }
-                for r in profile.resumes
-            ],
+            "completeness": profile_completeness(profile) if user else None,
+            "updated_at": profile.updated_at.isoformat() if profile.updated_at else None,
+            "avatar_path": user.avatar_path if user else None,
         }
     )
     return public
@@ -231,6 +237,76 @@ def get_resume_for_user(db: Session, user: User, resume_id: str) -> Resume:
             raise AppError(403, "Vous n'avez pas accès à ce fichier.", "FORBIDDEN")
         return resume
     raise AppError(403, "Vous n'avez pas accès à ce fichier.", "FORBIDDEN")
+
+
+def delete_resume(db: Session, user: User, resume_id: str) -> None:
+    resume = get_resume_for_user(db, user, resume_id)
+    profile = ensure_candidate(db, user)
+    if resume.candidate_id != profile.id:
+        raise AppError(403, "Vous n'avez pas accès à ce fichier.", "FORBIDDEN")
+    was_primary = resume.is_primary
+    delete_stored(resume.stored_name, resume.storage_url, "resumes")
+    db.delete(resume)
+    db.flush()
+    if was_primary:
+        nxt = db.scalar(select(Resume).where(Resume.candidate_id == profile.id).order_by(Resume.created_at.desc()))
+        if nxt:
+            nxt.is_primary = True
+    audit(db, "candidate.resume_delete", user, "candidate", profile.id)
+    db.commit()
+
+
+def _owned_row(db: Session, user: User, model, row_id: str):
+    profile = ensure_candidate(db, user)
+    row = db.get(model, row_id)
+    if not row or row.candidate_id != profile.id:
+        raise AppError(404, "Élément introuvable.", "NOT_FOUND")
+    return row
+
+
+def patch_experience(db: Session, user: User, row_id: str, data: ExperienceIn) -> CandidateExperience:
+    row = _owned_row(db, user, CandidateExperience, row_id)
+    for key, value in data.model_dump(exclude_unset=True).items():
+        setattr(row, key, value)
+    db.commit()
+    db.refresh(row)
+    return row
+
+
+def delete_experience(db: Session, user: User, row_id: str) -> None:
+    row = _owned_row(db, user, CandidateExperience, row_id)
+    db.delete(row)
+    db.commit()
+
+
+def patch_education(db: Session, user: User, row_id: str, data: EducationIn) -> CandidateEducation:
+    row = _owned_row(db, user, CandidateEducation, row_id)
+    for key, value in data.model_dump(exclude_unset=True).items():
+        setattr(row, key, value)
+    db.commit()
+    db.refresh(row)
+    return row
+
+
+def delete_education(db: Session, user: User, row_id: str) -> None:
+    row = _owned_row(db, user, CandidateEducation, row_id)
+    db.delete(row)
+    db.commit()
+
+
+def patch_certification(db: Session, user: User, row_id: str, data: CertificationIn) -> CandidateCertification:
+    row = _owned_row(db, user, CandidateCertification, row_id)
+    for key, value in data.model_dump(exclude_unset=True).items():
+        setattr(row, key, value)
+    db.commit()
+    db.refresh(row)
+    return row
+
+
+def delete_certification(db: Session, user: User, row_id: str) -> None:
+    row = _owned_row(db, user, CandidateCertification, row_id)
+    db.delete(row)
+    db.commit()
 
 
 def analyze_with_ai(db: Session, user: User, candidate_id: str, purpose: str) -> dict:

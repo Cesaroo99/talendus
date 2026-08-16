@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from urllib.parse import quote
 
 from sqlalchemy import Select, case, func, or_, select
@@ -12,6 +13,21 @@ from app.rbac import ADMINS
 from app.schemas import JobIn, JobPatchIn
 from app.services.access import company_ids_for_employer, first_employer_company, user_belongs_to_company
 from app.services.audit import audit
+
+
+def _parse_expires(value: str | None):
+    if not value:
+        return None
+    raw = value.strip().replace("Z", "+00:00")
+    if "T" not in raw and len(raw) == 10:
+        raw = raw + "T23:59:59+00:00"
+    try:
+        dt = datetime.fromisoformat(raw)
+    except ValueError as exc:
+        raise AppError(400, "Date limite invalide.", "INVALID_DATETIME") from exc
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt
 
 
 def _unique_slug(db: Session, base: str, ignore_id: str | None = None) -> str:
@@ -65,6 +81,7 @@ def serialize_job(job: JobOffer) -> dict:
         "certifications": job.certifications,
         "shift": job.shift,
         "benefits": job.benefits,
+        "start_date": job.start_date,
         "status": job.status.value,
         "published_at": job.published_at.isoformat() if job.published_at else None,
         "expires_at": job.expires_at.isoformat() if job.expires_at else None,
@@ -254,6 +271,8 @@ def create_job(db: Session, user: User, data: JobIn, ip: str | None = None) -> J
         benefits=data.benefits,
         currency=getattr(data, "currency", None) or "CAD",
         openings=getattr(data, "openings", None) or 1,
+        start_date=getattr(data, "start_date", None),
+        expires_at=_parse_expires(getattr(data, "expires_at", None)),
         status=JobStatus.DRAFT,
     )
     db.add(job)
@@ -273,6 +292,8 @@ def update_job(db: Session, user: User, job_id: str, data: JobIn | JobPatchIn) -
         raise AppError(404, "Offre introuvable.", "JOB_NOT_FOUND")
     _assert_can_manage(db, user, job)
     payload = data.model_dump(exclude_unset=True, exclude={"company_id", "slug"})
+    if "expires_at" in payload:
+        payload["expires_at"] = _parse_expires(payload.get("expires_at"))
     for key, value in payload.items():
         setattr(job, key, value)
     if data.slug:

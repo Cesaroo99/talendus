@@ -6,6 +6,10 @@ Disallow: /espace.html
 Disallow: /espace-employeur.html
 Disallow: /en/account.html
 Disallow: /en/account-employer.html
+Disallow: /candidate
+Disallow: /employer
+Disallow: /en/candidate
+Disallow: /en/employer
 Disallow: /index1.html
 Disallow: /index2.html
 Disallow: /index3.html

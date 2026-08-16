@@ -10,4 +10,12 @@ backend/data/*
 !backend/data/.gitkeep
 backend/storage/resumes/*
 !backend/storage/resumes/.gitkeep
+backend/storage/documents/*
+!backend/storage/documents/.gitkeep
+backend/storage/avatars/*
+!backend/storage/avatars/.gitkeep
+backend/storage/logos/*
+!backend/storage/logos/.gitkeep
+backend/storage/attachments/*
+!backend/storage/attachments/.gitkeep
 *.db

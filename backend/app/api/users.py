@@ -1,14 +1,17 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, File, UploadFile
+from fastapi.responses import FileResponse, RedirectResponse
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.deps import get_current_user
-from app.errors import ok
+from app.errors import AppError, ok
 from app.models import User
 from app.models.enums import AccountStatus, UserRole, utcnow
 from app.schemas import UserPreferenceIn, UserPublic, UserUpdateIn
 from app.services.audit import audit
+from app.services.portal import set_avatar
 from app.services.settings import ensure_preferences, serialize_preferences, update_preferences
+from app.services.storage import open_stored
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -16,6 +19,27 @@ router = APIRouter(prefix="/users", tags=["users"])
 @router.get("/me")
 def me(user: User = Depends(get_current_user)):
     return ok(UserPublic.model_validate(user).model_dump(mode="json"))
+
+
+@router.post("/me/avatar")
+async def upload_avatar(
+    file: UploadFile = File(...),
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    data = await file.read()
+    updated = set_avatar(db, user, data, file.filename or "avatar.jpg")
+    return ok(UserPublic.model_validate(updated).model_dump(mode="json"), message="Photo enregistrée.")
+
+
+@router.get("/me/avatar")
+def my_avatar(user: User = Depends(get_current_user)):
+    if not user.avatar_path:
+        raise AppError(404, "Aucune photo.", "NOT_FOUND")
+    url, path = open_stored(user.avatar_path, None, "avatars")
+    if url:
+        return RedirectResponse(url)
+    return FileResponse(path, media_type="image/jpeg")
 
 
 @router.patch("/me")

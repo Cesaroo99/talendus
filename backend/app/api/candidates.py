@@ -5,14 +5,16 @@ from sqlalchemy import select
 
 from app.database import get_db
 from app.deps import get_current_user, require_roles
-from app.errors import ok
-from app.models import Candidate, User
+from app.errors import AppError, ok
+from app.models import Application, Candidate, JobOffer, User
 from app.models.enums import UserRole
 from app.rbac import is_admin
 from app.integrations.schemas import AiPurposeIn
 from app.schemas import CandidateProfileIn, CertificationIn, EducationIn, ExperienceIn
 from app.services import candidates as cand_svc
+from app.services.access import company_ids_for_employer
 from app.services.auth import ensure_candidate
+from app.services.portal import candidate_dashboard
 from app.services.storage import open_resume
 
 router = APIRouter(prefix="/candidates", tags=["candidates"])
@@ -35,6 +37,11 @@ def my_profile(user: User = Depends(get_current_user), db: Session = Depends(get
     return ok(cand_svc.serialize_candidate(profile, include_private=True))
 
 
+@router.get("/me/dashboard")
+def my_dashboard(user: User = Depends(require_roles(UserRole.CANDIDATE)), db: Session = Depends(get_db)):
+    return ok(candidate_dashboard(db, user))
+
+
 @router.patch("/me")
 def update_profile(payload: CandidateProfileIn, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     profile = cand_svc.update_profile(db, user, payload)
@@ -47,16 +54,52 @@ def add_exp(payload: ExperienceIn, user: User = Depends(get_current_user), db: S
     return ok({"id": row.id})
 
 
+@router.patch("/me/experiences/{row_id}")
+def patch_exp(row_id: str, payload: ExperienceIn, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    row = cand_svc.patch_experience(db, user, row_id, payload)
+    return ok({"id": row.id})
+
+
+@router.delete("/me/experiences/{row_id}")
+def del_exp(row_id: str, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    cand_svc.delete_experience(db, user, row_id)
+    return ok(message="Expérience supprimée.")
+
+
 @router.post("/me/education")
 def add_edu(payload: EducationIn, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     row = cand_svc.add_education(db, user, payload)
     return ok({"id": row.id})
 
 
+@router.patch("/me/education/{row_id}")
+def patch_edu(row_id: str, payload: EducationIn, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    row = cand_svc.patch_education(db, user, row_id, payload)
+    return ok({"id": row.id})
+
+
+@router.delete("/me/education/{row_id}")
+def del_edu(row_id: str, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    cand_svc.delete_education(db, user, row_id)
+    return ok(message="Formation supprimée.")
+
+
 @router.post("/me/certifications")
 def add_cert(payload: CertificationIn, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     row = cand_svc.add_certification(db, user, payload)
     return ok({"id": row.id})
+
+
+@router.patch("/me/certifications/{row_id}")
+def patch_cert(row_id: str, payload: CertificationIn, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    row = cand_svc.patch_certification(db, user, row_id, payload)
+    return ok({"id": row.id})
+
+
+@router.delete("/me/certifications/{row_id}")
+def del_cert(row_id: str, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    cand_svc.delete_certification(db, user, row_id)
+    return ok(message="Certification supprimée.")
 
 
 @router.post("/me/resume")
@@ -68,6 +111,12 @@ async def upload_resume(
     data = await file.read()
     row = cand_svc.upload_cv(db, user, data, file.filename or "cv.pdf")
     return ok({"id": row.id, "original_name": row.original_name, "parse_status": row.parse_status})
+
+
+@router.delete("/me/resume/{resume_id}")
+def delete_resume(resume_id: str, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    cand_svc.delete_resume(db, user, resume_id)
+    return ok(message="CV supprimé.")
 
 
 @router.get("")
@@ -106,9 +155,20 @@ def get_candidate(
         .where(Candidate.id == candidate_id)
     )
     if not profile:
-        from app.errors import AppError
         raise AppError(404, "Candidat introuvable.", "CANDIDATE_NOT_FOUND")
     private = is_admin(user) or user.role == UserRole.RECRUITER
+    if user.role == UserRole.EMPLOYER:
+        ids = company_ids_for_employer(db, user)
+        if not ids:
+            raise AppError(403, "Vous n'avez pas accès à ce candidat.", "FORBIDDEN")
+        linked = db.scalar(
+            select(Application.id)
+            .join(JobOffer, Application.job_id == JobOffer.id)
+            .where(Application.candidate_id == profile.id, JobOffer.company_id.in_(ids))
+        )
+        if not linked:
+            raise AppError(403, "Vous n'avez pas accès à ce candidat.", "FORBIDDEN")
+        private = False
     return ok(cand_svc.serialize_candidate(profile, include_private=private))
 
 

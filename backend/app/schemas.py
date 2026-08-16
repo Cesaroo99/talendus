@@ -3,7 +3,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
-from app.models.enums import ApplicationStatus, InterviewStatus, InterviewType, InvoiceStatus, JobSearchStatus, JobStatus, PaymentMethod, UserRole
+from app.models.enums import ApplicationStatus, CompanyMemberRole, InterviewStatus, InterviewType, InvoiceStatus, JobSearchStatus, JobStatus, PaymentMethod, UserRole
 
 
 class ORMModel(BaseModel):
@@ -154,6 +154,8 @@ class JobIn(BaseModel):
     slug: str | None = None
     currency: str | None = "CAD"
     openings: int | None = Field(default=1, ge=1, le=500)
+    start_date: str | None = None
+    expires_at: str | None = None
 
 
 class JobPatchIn(BaseModel):
@@ -176,6 +178,8 @@ class JobPatchIn(BaseModel):
     slug: str | None = None
     currency: str | None = None
     openings: int | None = Field(default=None, ge=1, le=500)
+    start_date: str | None = None
+    expires_at: str | None = None
 
 
 class JobOut(ORMModel):
@@ -251,6 +255,18 @@ class ContactIn(BaseModel):
     company: str | None = None
 
 
+class CompanyMemberIn(BaseModel):
+    email: EmailStr
+    first_name: str = Field(min_length=1, max_length=80)
+    last_name: str = Field(min_length=1, max_length=80)
+    member_role: CompanyMemberRole = CompanyMemberRole.MEMBER
+    password: str | None = Field(default=None, min_length=8, max_length=128)
+
+
+class CompanyMemberPatchIn(BaseModel):
+    member_role: CompanyMemberRole
+
+
 class RecruiterInviteIn(BaseModel):
     email: EmailStr
     first_name: str = Field(min_length=1, max_length=80)
@@ -303,6 +319,8 @@ class InterviewIn(BaseModel):
     location: str | None = None
     type: InterviewType | None = None
     notes: str | None = None
+    meeting_url: str | None = Field(default=None, max_length=500)
+    meeting_provider: str | None = Field(default=None, max_length=40)
 
 
 class InterviewPatchIn(BaseModel):
@@ -311,6 +329,8 @@ class InterviewPatchIn(BaseModel):
     location: str | None = None
     type: InterviewType | None = None
     notes: str | None = None
+    meeting_url: str | None = Field(default=None, max_length=500)
+    meeting_provider: str | None = Field(default=None, max_length=40)
     status: InterviewStatus | None = None
 
 
@@ -372,6 +392,9 @@ class UserPreferenceIn(BaseModel):
     notify_message: bool | None = None
     notify_match: bool | None = None
     notify_interview: bool | None = None
+    notify_sms: bool | None = None
+    notify_whatsapp: bool | None = None
+    notify_push: bool | None = None
     privacy_profile_public: bool | None = None
 
 

@@ -32,6 +32,9 @@ class JobSearchStatus(str, Enum):
 
 class CompanyMemberRole(str, Enum):
     OWNER = "OWNER"
+    ADMIN = "ADMIN"
+    HR = "HR"
+    RECRUITER = "RECRUITER"
     MEMBER = "MEMBER"
     BILLING = "BILLING"
 
@@ -89,7 +92,17 @@ class NotificationType(str, Enum):
     ADMIN = "ADMIN"
     MESSAGE = "MESSAGE"
     DOCUMENT_ADDED = "DOCUMENT_ADDED"
+    DOCUMENT_MISSING = "DOCUMENT_MISSING"
+    PROFILE_INCOMPLETE = "PROFILE_INCOMPLETE"
     SYSTEM = "SYSTEM"
+
+
+class NotificationChannel(str, Enum):
+    IN_APP = "in_app"
+    EMAIL = "email"
+    SMS = "sms"
+    WHATSAPP = "whatsapp"
+    PUSH = "push"
 
 
 class EmailType(str, Enum):

@@ -14,6 +14,9 @@ def serialize_preferences(row: UserPreference) -> dict:
         "notify_message": row.notify_message,
         "notify_match": row.notify_match,
         "notify_interview": row.notify_interview,
+        "notify_sms": getattr(row, "notify_sms", False),
+        "notify_whatsapp": getattr(row, "notify_whatsapp", False),
+        "notify_push": getattr(row, "notify_push", False),
         "privacy_profile_public": row.privacy_profile_public,
         "updated_at": row.updated_at.isoformat() if row.updated_at else None,
     }

@@ -52,7 +52,21 @@ def notify(
     row = Notification(user_id=user.id, type=ntype, title=title, message=message, href=href)
     db.add(row)
     logger.info("notify user=%s type=%s", user.id, ntype)
+    _queue_external_channels(db, user, ntype, title, message)
     return row
+
+
+def _queue_external_channels(db: Session, user: User, ntype: NotificationType, title: str, message: str) -> None:
+    """Point d'extension pour e-mail (déjà envoyé ailleurs), SMS, WhatsApp et push."""
+    pref = user.preferences
+    if pref is None:
+        return
+    if pref.notify_sms:
+        logger.info("notify channel=sms queued user=%s type=%s", user.id, ntype)
+    if pref.notify_whatsapp:
+        logger.info("notify channel=whatsapp queued user=%s type=%s", user.id, ntype)
+    if pref.notify_push:
+        logger.info("notify channel=push queued user=%s type=%s", user.id, ntype)
 
 
 def serialize_notification(row: Notification) -> dict:
@@ -62,6 +76,7 @@ def serialize_notification(row: Notification) -> dict:
         "title": row.title,
         "message": row.message,
         "href": row.href,
+        "channel": row.channel.value if getattr(row, "channel", None) else "in_app",
         "is_read": row.is_read,
         "read_at": row.read_at.isoformat() if row.read_at else None,
         "created_at": row.created_at.isoformat() if row.created_at else None,

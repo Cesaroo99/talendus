@@ -4,7 +4,7 @@ from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Integer, String, Tex
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
-from app.models.enums import EmailStatus, EmailType, NotificationType, utcnow
+from app.models.enums import EmailStatus, EmailType, NotificationChannel, NotificationType, utcnow
 from app.models.identity import uid
 
 
@@ -17,6 +17,9 @@ class Notification(Base):
     title: Mapped[str] = mapped_column(String(180), nullable=False)
     message: Mapped[str] = mapped_column(Text, default="")
     href: Mapped[str | None] = mapped_column(String(255))
+    channel: Mapped[NotificationChannel] = mapped_column(
+        Enum(NotificationChannel), default=NotificationChannel.IN_APP, index=True
+    )
     is_read: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
     read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

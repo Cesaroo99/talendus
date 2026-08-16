@@ -197,6 +197,7 @@ def serialize_company(c: Company) -> dict:
         "size_label": c.size_label,
         "status": c.status.value if c.status else None,
         "logo_path": c.logo_path,
+        "updated_at": c.updated_at.isoformat() if c.updated_at else None,
     }
 
 

@@ -37,9 +37,10 @@ def _parse_when(value: str) -> datetime:
     return dt
 
 
-def serialize_interview(row: Interview) -> dict:
+def serialize_interview(row: Interview, viewer: User | None = None) -> dict:
     candidate = row.candidate
     user = candidate.user if candidate else None
+    hide_notes = viewer is not None and viewer.role == UserRole.CANDIDATE
     return {
         "id": row.id,
         "candidate_id": row.candidate_id,
@@ -50,10 +51,12 @@ def serialize_interview(row: Interview) -> dict:
         "scheduled_at": row.scheduled_at.isoformat() if row.scheduled_at else None,
         "duration_minutes": row.duration_minutes,
         "location": row.location,
+        "meeting_url": row.meeting_url,
+        "meeting_provider": row.meeting_provider,
         "type": row.type.value,
         "type_label": TYPE_LABEL.get(row.type, row.type.value),
         "status": row.status.value,
-        "notes": row.notes,
+        "notes": None if hide_notes else row.notes,
         "reminder_sent_at": row.reminder_sent_at.isoformat() if row.reminder_sent_at else None,
         "candidate_name": user.full_name if user else None,
         "job_title": row.job.title if row.job else None,
@@ -109,8 +112,8 @@ def get_interview(db: Session, user: User, interview_id: str) -> Interview:
 
 
 def create_interview(db: Session, user: User, data: InterviewIn, ip: str | None) -> Interview:
-    if user.role not in {UserRole.RECRUITER} | ADMINS:
-        raise AppError(403, "Seuls les recruteurs peuvent planifier un entretien.", "FORBIDDEN")
+    if user.role not in {UserRole.RECRUITER, UserRole.EMPLOYER} | ADMINS:
+        raise AppError(403, "Seuls les recruteurs et employeurs peuvent planifier un entretien.", "FORBIDDEN")
     candidate = db.get(Candidate, data.candidate_id)
     if not candidate:
         raise AppError(404, "Candidat introuvable.", "CANDIDATE_NOT_FOUND")
@@ -130,6 +133,10 @@ def create_interview(db: Session, user: User, data: InterviewIn, ip: str | None)
         job = db.get(JobOffer, job_id)
         if job:
             company_id = company_id or job.company_id
+    if user.role == UserRole.EMPLOYER:
+        ids = company_ids_for_employer(db, user)
+        if not company_id or company_id not in ids:
+            raise AppError(403, "Vous ne pouvez planifier un entretien que pour vos offres.", "FORBIDDEN")
     when = _parse_when(data.scheduled_at)
     row = Interview(
         candidate_id=candidate.id,
@@ -140,7 +147,9 @@ def create_interview(db: Session, user: User, data: InterviewIn, ip: str | None)
         scheduled_at=when,
         duration_minutes=data.duration_minutes or 30,
         location=data.location or "Visio",
-        type=data.type or InterviewType.TALENDUS,
+        meeting_url=data.meeting_url,
+        meeting_provider=data.meeting_provider,
+        type=data.type or (InterviewType.CLIENT if user.role == UserRole.EMPLOYER else InterviewType.TALENDUS),
         notes=data.notes,
         status=InterviewStatus.SCHEDULED,
     )
@@ -154,7 +163,7 @@ def create_interview(db: Session, user: User, data: InterviewIn, ip: str | None)
         NotificationType.INTERVIEW_INVITE,
         "Entretien planifié",
         f"{TYPE_LABEL.get(row.type, row.type.value)} le {when_label} — {row.location or ''}".strip(),
-        href="/espace.html",
+        href="/espace.html#/interviews",
     )
     if cand_user:
         send_email(
@@ -187,8 +196,10 @@ def create_interview(db: Session, user: User, data: InterviewIn, ip: str | None)
 
 def patch_interview(db: Session, user: User, interview_id: str, data: InterviewPatchIn) -> Interview:
     row = get_interview(db, user, interview_id)
-    if user.role not in {UserRole.RECRUITER} | ADMINS:
-        raise AppError(403, "Modification réservée à l'équipe Talendus.", "FORBIDDEN")
+    if user.role not in {UserRole.RECRUITER, UserRole.EMPLOYER} | ADMINS:
+        raise AppError(403, "Modification non autorisée.", "FORBIDDEN")
+    if user.role == UserRole.EMPLOYER and not _visible(db, user, row):
+        raise AppError(403, "Modification non autorisée.", "FORBIDDEN")
     payload = data.model_dump(exclude_unset=True)
     rescheduled = False
     if "scheduled_at" in payload and payload["scheduled_at"]:
@@ -239,7 +250,7 @@ def set_status(db: Session, user: User, interview_id: str, status: InterviewStat
             NotificationType.INTERVIEW_INVITE,
             "Entretien mis à jour",
             f"Statut : {status.value}",
-            href="/espace.html",
+            href="/espace.html#/interviews",
         )
         from app.integrations.hooks import maybe_send_whatsapp
 

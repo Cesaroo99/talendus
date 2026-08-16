@@ -1692,3 +1692,209 @@ table, .tl-job-card p, .tl-card .body p { color: var(--tl-navy); }
   .tl-header-tools .tl-account-link { display: none; }
   .tl-consent { bottom: 72px; }
 }
+
+/* Portail candidat / employeur */
+.tl-portal-active .tl-page-hero { padding: 28px 0 4px; }
+.tl-portal-active .tl-page-hero .tl-lead,
+.tl-portal-active .tl-page-hero .tl-actions { display: none; }
+.tl-portal {
+  display: grid;
+  gap: 20px;
+  align-items: start;
+}
+@media (min-width: 980px) {
+  .tl-portal { grid-template-columns: 240px minmax(0, 1fr); gap: 28px; }
+}
+.tl-portal-nav {
+  background: #fff;
+  border: 1px solid var(--tl-line);
+  border-radius: var(--tl-radius);
+  box-shadow: var(--tl-shadow-sm);
+  padding: 12px;
+  position: sticky;
+  top: 88px;
+}
+.tl-portal-nav button,
+.tl-portal-nav a.tl-portal-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  color: var(--tl-navy);
+  font-weight: 700;
+  font-size: 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.tl-portal-nav button.is-active,
+.tl-portal-nav a.tl-portal-link.is-active {
+  background: var(--tl-navy);
+  color: #fff;
+}
+.tl-portal-badge {
+  display: inline-flex;
+  min-width: 20px;
+  height: 20px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--tl-orange);
+  color: #fff;
+  font-size: 11px;
+  padding: 0 6px;
+}
+.tl-portal-nav button.is-active .tl-portal-badge { background: #fff; color: var(--tl-navy); }
+.tl-portal-main { min-width: 0; }
+.tl-portal-toolbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.tl-stat-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0 0 22px;
+}
+@media (min-width: 800px) {
+  .tl-stat-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+.tl-stat-card {
+  background: #fff;
+  border: 1px solid var(--tl-line);
+  border-radius: var(--tl-radius);
+  box-shadow: var(--tl-shadow-sm);
+  padding: 16px;
+}
+.tl-stat-card b { display: block; font-size: 28px; color: var(--tl-navy); line-height: 1.1; }
+.tl-stat-card span { color: var(--tl-steel); font-size: 13px; font-weight: 600; }
+.tl-progress {
+  height: 10px;
+  background: var(--tl-ice);
+  border-radius: 999px;
+  overflow: hidden;
+  margin: 8px 0 16px;
+}
+.tl-progress > i { display: block; height: 100%; background: var(--tl-orange); border-radius: 999px; }
+.tl-quick-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
+.tl-timeline { list-style: none; padding: 0; margin: 0; }
+.tl-timeline li {
+  position: relative;
+  padding: 0 0 18px 22px;
+  border-left: 2px solid var(--tl-line);
+  margin-left: 8px;
+}
+.tl-timeline li:last-child { border-left-color: transparent; padding-bottom: 0; }
+.tl-timeline li::before {
+  content: "";
+  position: absolute;
+  left: -7px;
+  top: 4px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--tl-line);
+}
+.tl-timeline li.is-done::before { background: var(--tl-orange); }
+.tl-timeline li.is-current::before { background: var(--tl-navy); box-shadow: 0 0 0 4px rgba(11, 31, 58, 0.12); }
+.tl-empty, .tl-error, .tl-success-banner {
+  background: #fff;
+  border: 1px solid var(--tl-line);
+  border-radius: var(--tl-radius);
+  padding: 28px 22px;
+  text-align: center;
+}
+.tl-error { border-color: #e7b0b0; }
+.tl-skeleton {
+  height: 14px;
+  background: linear-gradient(90deg, #eef2f6, #f7f9fb, #eef2f6);
+  background-size: 200% 100%;
+  animation: tl-shimmer 1.2s infinite;
+  border-radius: 8px;
+  margin: 8px 0;
+}
+@keyframes tl-shimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+.tl-list-cards { display: grid; gap: 12px; }
+.tl-list-card {
+  background: #fff;
+  border: 1px solid var(--tl-line);
+  border-radius: var(--tl-radius);
+  padding: 16px;
+  box-shadow: var(--tl-shadow-sm);
+}
+.tl-list-card h3 { margin: 6px 0 8px; font-size: 18px; }
+.tl-meta { color: var(--tl-steel); font-size: 13px; margin: 0 0 8px; }
+.tl-filters {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 1fr;
+  margin-bottom: 16px;
+}
+@media (min-width: 800px) {
+  .tl-filters { grid-template-columns: 1.4fr repeat(4, minmax(0, 1fr)) auto; align-items: end; }
+}
+.tl-filters input, .tl-filters select, .tl-portal select, .tl-form input, .tl-form select, .tl-form textarea {
+  width: 100%;
+}
+.tl-pager { display: flex; gap: 8px; justify-content: center; margin-top: 16px; }
+.tl-mobile-nav {
+  display: none;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: #fff;
+  border: 1px solid var(--tl-line);
+  border-radius: var(--tl-radius);
+  padding: 8px;
+  margin-bottom: 14px;
+}
+.tl-mobile-nav select { width: 100%; min-height: 44px; }
+.tl-table-wrap { overflow-x: auto; }
+.tl-portal-table { width: 100%; border-collapse: collapse; }
+.tl-portal-table th, .tl-portal-table td {
+  text-align: left;
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--tl-line);
+  font-size: 14px;
+  vertical-align: top;
+}
+@media (max-width: 979px) {
+  .tl-portal-nav { display: none; }
+  .tl-mobile-nav { display: block; }
+  .tl-portal-table, .tl-portal-table thead, .tl-portal-table tbody, .tl-portal-table th, .tl-portal-table td, .tl-portal-table tr {
+    display: block;
+  }
+  .tl-portal-table thead { display: none; }
+  .tl-portal-table tr {
+    background: #fff;
+    border: 1px solid var(--tl-line);
+    border-radius: var(--tl-radius);
+    padding: 12px;
+    margin-bottom: 10px;
+  }
+  .tl-portal-table td { border: 0; padding: 4px 0; }
+  .tl-portal-table td::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--tl-steel);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+  .tl-stat-card b { font-size: 24px; }
+  .tl-quick-actions .tl-btn { min-height: 44px; }
+}
+.tl-msg-bubble { background: var(--tl-ice); border-radius: 12px; padding: 10px 12px; margin: 0 0 8px; }
+.tl-msg-bubble.is-mine { background: #e8f0ff; }
+.tl-chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.tl-form .tl-row-2 { display: grid; gap: 12px; }
+@media (min-width: 700px) { .tl-form .tl-row-2 { grid-template-columns: 1fr 1fr; } }
+.tl-disabled, .tl-btn:disabled { opacity: .55; cursor: not-allowed; }

@@ -26,6 +26,10 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         private = (
             path.startswith("/admin")
             or path.startswith("/api/")
+            or path.startswith("/candidate")
+            or path.startswith("/employer")
+            or path.startswith("/en/candidate")
+            or path.startswith("/en/employer")
             or path in PRIVATE_PATHS
             or path.endswith("404.html")
             or response.status_code == 404

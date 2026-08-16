@@ -896,7 +896,7 @@ def build_en(write, wrap, page_hero):
             "Profile, resume, applications, matches, messages and interviews — follow your industrial job search.",
             badges='<span class="tl-badge tl-badge-light">Private space</span>',
         )
-        + """<section class="tl-section"><div class="container"><div id="tl-account"></div></div></section>""",
+        + """<section class="tl-section tl-portal-section"><div class="container"><div id="tl-account"></div></div></section>""",
         lang="en",
         alt="espace.html",
         robots="noindex,nofollow",
@@ -910,7 +910,7 @@ def build_en(write, wrap, page_hero):
             "Jobs, incoming applications, pipeline and invoices — follow your industrial mandates.",
             badges='<span class="tl-badge tl-badge-light">Private space</span>',
         )
-        + """<section class="tl-section"><div class="container"><div id="tl-account" data-space="employer"></div></div></section>""",
+        + """<section class="tl-section tl-portal-section"><div class="container"><div id="tl-account" data-space="employer"></div></div></section>""",
         lang="en",
         alt="espace-employeur.html",
         robots="noindex,nofollow",

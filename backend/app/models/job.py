@@ -41,6 +41,7 @@ class JobOffer(Base):
     shift: Mapped[str | None] = mapped_column(String(80))
     benefits: Mapped[str | None] = mapped_column(Text)
     status: Mapped[JobStatus] = mapped_column(Enum(JobStatus), default=JobStatus.DRAFT, index=True)
+    start_date: Mapped[str | None] = mapped_column(String(16))
     published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
     expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

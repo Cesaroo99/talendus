@@ -20,6 +20,9 @@ class UserPreference(Base):
     notify_message: Mapped[bool] = mapped_column(Boolean, default=True)
     notify_match: Mapped[bool] = mapped_column(Boolean, default=True)
     notify_interview: Mapped[bool] = mapped_column(Boolean, default=True)
+    notify_sms: Mapped[bool] = mapped_column(Boolean, default=False)
+    notify_whatsapp: Mapped[bool] = mapped_column(Boolean, default=False)
+    notify_push: Mapped[bool] = mapped_column(Boolean, default=False)
     privacy_profile_public: Mapped[bool] = mapped_column(Boolean, default=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
 

@@ -1028,7 +1028,7 @@ write("espace.html", wrap(
         "Profil, CV, candidatures, correspondances, messages et entretiens — le suivi de votre recherche d'emploi industriel.",
         badges='<span class="tl-badge tl-badge-light">Espace privé</span>'
     )
-    + """<section class="tl-section"><div class="container"><div id="tl-account"></div></div></section>""",
+    + """<section class="tl-section tl-portal-section"><div class="container"><div id="tl-account"></div></div></section>""",
     robots="noindex,nofollow",
 ))
 write("espace-employeur.html", wrap(
@@ -1040,7 +1040,7 @@ write("espace-employeur.html", wrap(
         "Offres, candidatures reçues, pipeline et factures — le suivi de vos mandats industriels.",
         badges='<span class="tl-badge tl-badge-light">Espace privé</span>'
     )
-    + """<section class="tl-section"><div class="container"><div id="tl-account" data-space="employer"></div></div></section>""",
+    + """<section class="tl-section tl-portal-section"><div class="container"><div id="tl-account" data-space="employer"></div></div></section>""",
     robots="noindex,nofollow",
 ))
 write("confidentialite.html", wrap(
@@ -1127,7 +1127,7 @@ def sitemap_url(fr, en):
     encoding="utf-8",
 )
 (ROOT / "robots.txt").write_text(
-    "User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /api/\nDisallow: /espace.html\nDisallow: /espace-employeur.html\nDisallow: /en/account.html\nDisallow: /en/account-employer.html\nDisallow: /index1.html\nDisallow: /index2.html\nDisallow: /index3.html\nDisallow: /index4.html\nDisallow: /index5.html\nDisallow: /index6.html\nDisallow: /index7.html\nDisallow: /index8.html\nDisallow: /index9.html\nDisallow: /index10.html\nDisallow: /projects.html\nDisallow: /team.html\nDisallow: /testimonial.html\nSitemap: https://talendus.ca/sitemap.xml\n",
+    "User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /api/\nDisallow: /espace.html\nDisallow: /espace-employeur.html\nDisallow: /en/account.html\nDisallow: /en/account-employer.html\nDisallow: /candidate\nDisallow: /employer\nDisallow: /en/candidate\nDisallow: /en/employer\nDisallow: /index1.html\nDisallow: /index2.html\nDisallow: /index3.html\nDisallow: /index4.html\nDisallow: /index5.html\nDisallow: /index6.html\nDisallow: /index7.html\nDisallow: /index8.html\nDisallow: /index9.html\nDisallow: /index10.html\nDisallow: /projects.html\nDisallow: /team.html\nDisallow: /testimonial.html\nSitemap: https://talendus.ca/sitemap.xml\n",
     encoding="utf-8",
 )
 print("done")

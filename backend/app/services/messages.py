@@ -92,7 +92,7 @@ def send_message(db: Session, sender: User, recipient_id: str, body: str, applic
         NotificationType.MESSAGE,
         "Nouveau message",
         f"{sender.full_name} vous a écrit.",
-        href="/espace.html" if recipient.role == UserRole.CANDIDATE else "/admin/#/notifications",
+        href="/espace.html#/messages" if recipient.role == UserRole.CANDIDATE else "/espace-employeur.html#/messages",
     )
     audit(db, "message.send", sender, "message", None, ip, {"to": recipient.id})
     db.commit()
@@ -194,8 +194,31 @@ def directory(db: Session, user: User) -> list[dict]:
     people: list[User] = []
     if user.role == UserRole.CANDIDATE:
         people = list(db.scalars(select(User).where(User.role.in_([UserRole.RECRUITER, UserRole.ADMIN, UserRole.SUPER_ADMIN]), User.is_active.is_(True))).all())
+        applied_owners = list(
+            db.scalars(
+                select(User)
+                .join(Company, Company.owner_user_id == User.id)
+                .join(JobOffer, JobOffer.company_id == Company.id)
+                .join(Application, Application.job_id == JobOffer.id)
+                .join(Candidate, Application.candidate_id == Candidate.id)
+                .where(Candidate.user_id == user.id, User.is_active.is_(True))
+            ).unique().all()
+        )
+        people = people + [p for p in applied_owners if p.id not in {x.id for x in people}]
     elif user.role == UserRole.EMPLOYER:
         people = list(db.scalars(select(User).where(User.role.in_([UserRole.RECRUITER, UserRole.ADMIN, UserRole.SUPER_ADMIN]), User.is_active.is_(True))).all())
+        ids = company_ids_for_employer(db, user)
+        if ids:
+            applicants = list(
+                db.scalars(
+                    select(User)
+                    .join(Candidate, Candidate.user_id == User.id)
+                    .join(Application, Application.candidate_id == Candidate.id)
+                    .join(JobOffer, Application.job_id == JobOffer.id)
+                    .where(JobOffer.company_id.in_(ids), User.is_active.is_(True))
+                ).unique().all()
+            )
+            people = people + [p for p in applicants if p.id not in {x.id for x in people}]
     elif _is_staff(user):
         people = list(
             db.scalars(
@@ -211,7 +234,7 @@ def directory(db: Session, user: User) -> list[dict]:
             "id": p.id,
             "first_name": p.first_name,
             "last_name": p.last_name,
-            "email": p.email,
+            "email": p.email if _is_staff(user) else None,
             "role": p.role.value,
         }
         for p in people

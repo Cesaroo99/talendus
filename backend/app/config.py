@@ -110,6 +110,11 @@ class Settings(BaseSettings):
         path.mkdir(parents=True, exist_ok=True)
         return path
 
+    def storage_subdir(self, name: str) -> Path:
+        path = Path(self.storage_dir) / name
+        path.mkdir(parents=True, exist_ok=True)
+        return path
+
 
 @lru_cache
 def get_settings() -> Settings:

@@ -82,6 +82,8 @@ class Interview(Base):
     scheduled_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
     duration_minutes: Mapped[int] = mapped_column(Integer, default=30)
     location: Mapped[str | None] = mapped_column(String(160))
+    meeting_url: Mapped[str | None] = mapped_column(String(500))
+    meeting_provider: Mapped[str | None] = mapped_column(String(40))
     type: Mapped[InterviewType] = mapped_column(Enum(InterviewType), default=InterviewType.TALENDUS)
     status: Mapped[InterviewStatus] = mapped_column(Enum(InterviewStatus), default=InterviewStatus.SCHEDULED, index=True)
     notes: Mapped[str | None] = mapped_column(Text)

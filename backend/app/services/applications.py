@@ -103,7 +103,7 @@ def apply(db: Session, user: User, data: ApplicationCreateIn, ip: str | None = N
             template="employer_notice",
             variables={"candidate": user.full_name, "job": job.title},
         )
-    notify(db, user, NotificationType.APPLICATION_NEW, "Candidature envoyée", f"Votre candidature pour {job.title} a été transmise.")
+    notify(db, user, NotificationType.APPLICATION_NEW, "Candidature envoyée", f"Votre candidature pour {job.title} a été transmise.", href="/espace.html#/applications")
     audit(db, "application.create", user, "application", application.id, ip, {"job_id": job.id})
     db.commit()
     db.refresh(application)
@@ -203,7 +203,7 @@ def change_status(db: Session, user: User, application_id: str, status: Applicat
         db, candidate_user, ntype,
         "Mise à jour de candidature",
         f"{application.job.title} : {status.value}",
-        href=f"/emplois.html",
+        href="/espace.html#/applications/" + application.id,
     )
     template = "interview" if status == ApplicationStatus.INTERVIEW else "application_status"
     send_email(
@@ -261,6 +261,7 @@ def list_inbox(db: Session, user: User, job_id: str | None = None) -> list[Appli
 
 def serialize_application(row: Application, viewer: User | None = None) -> dict:
     include_staff = viewer is not None and viewer.role != UserRole.CANDIDATE
+    hide_internal = viewer is None or viewer.role == UserRole.CANDIDATE
     payload = {
         "id": row.id,
         "status": row.status.value,
@@ -275,6 +276,8 @@ def serialize_application(row: Application, viewer: User | None = None) -> dict:
             "title": row.job.title,
             "location": row.job.location,
             "company_name": row.job.company.name if row.job.company else None,
+            "sector": row.job.sector,
+            "contract_type": row.job.contract_type,
         },
         "resume_id": row.resume_id,
         "pipeline_stage": stage_for(row.status),
@@ -282,9 +285,9 @@ def serialize_application(row: Application, viewer: User | None = None) -> dict:
             {
                 "old_status": h.old_status,
                 "new_status": h.new_status,
-                "comment": h.comment,
+                "comment": None if hide_internal else h.comment,
                 "created_at": h.created_at.isoformat() if h.created_at else None,
-                "actor_id": h.actor_id,
+                "actor_id": None if hide_internal else h.actor_id,
             }
             for h in (row.history or [])
         ],
@@ -296,8 +299,10 @@ def serialize_application(row: Application, viewer: User | None = None) -> dict:
                 "id": row.candidate.id,
                 "first_name": row.candidate.user.first_name,
                 "last_name": row.candidate.user.last_name,
-                "email": row.candidate.user.email,
+                "email": row.candidate.user.email if viewer and viewer.role != UserRole.EMPLOYER else None,
                 "title": row.candidate.title,
                 "city": row.candidate.city,
+                "skills": row.candidate.skills,
+                "years_experience": row.candidate.years_experience,
             }
     return payload
