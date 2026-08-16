@@ -28,9 +28,9 @@
       file.indexOf("emploi-") === 0 ||
       file.indexOf("job-") === 0
     ) return "candidats";
-    if (file === "services.html" || file === "service.html") return "services";
+    if (file === "services.html" || file === "service.html" || file.indexOf("recrutement-") === 0 || file.indexOf("industrial-recruiting") === 0 || file.indexOf("manufacturing-recruiting") === 0 || file.indexOf("technical-recruiting") === 0 || file.indexOf("permanent-recruiting") === 0 || file.indexOf("temporary-recruiting") === 0 || file.indexOf("executive-search") === 0 || file.indexOf("leadership-recruiting") === 0) return "services";
     if (file === "a-propos.html" || file === "about.html") return "about";
-    if (file === "blog.html" || file.indexOf("article-") === 0 || file === "blog-single.html") return "blog";
+    if (file === "blog.html" || file.indexOf("article-") === 0 || file === "blog-single.html" || (window.location.pathname || "").indexOf("/blog/") === 0) return "blog";
     if (file === "contact.html") return "contact";
     if (file === "espace.html" || file === "account.html") return "candidats";
     if (file === "espace-employeur.html" || file === "account-employer.html") return "employeurs";
@@ -196,6 +196,7 @@
           send.then(function () {
             showFormMessage(form, fallback, false);
             form.reset();
+            if (window.TalendusTrack) window.TalendusTrack.apply({ content_name: slug || "job" });
           }).catch(function (err) {
             showFormMessage(form, (err && err.message) || fallback, true);
           }).then(done);
@@ -211,6 +212,10 @@
         }).then(function () {
           showFormMessage(form, fallback, false);
           form.reset();
+          if (window.TalendusTrack) {
+            if (kind === "contact" || (form.getAttribute("data-form") === "contact")) window.TalendusTrack.contact({ content_name: "contact" });
+            else window.TalendusTrack.lead({ content_name: kind || "form" });
+          }
         }).catch(function () {
           showFormMessage(form, fallback, false);
           form.reset();
@@ -283,9 +288,19 @@
       });
       if (empty) empty.hidden = shown !== 0;
     }
+    var searchTimer = null;
+    function filterJobsAndTrack() {
+      filterJobs();
+      var q = ((search && search.value) || "").trim();
+      if (!q || !window.TalendusTrack) return;
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(function () {
+        window.TalendusTrack.search({ search_term: q, content_category: "jobs" });
+      }, 600);
+    }
     [search, cat, city, type, shift, sal].forEach(function (el) {
-      if (el) el.addEventListener("input", filterJobs);
-      if (el) el.addEventListener("change", filterJobs);
+      if (el) el.addEventListener("input", filterJobsAndTrack);
+      if (el) el.addEventListener("change", filterJobsAndTrack);
     });
 
     var jobList = document.getElementById("job-list");
@@ -305,6 +320,24 @@
           return '<article class="tl-job-card" data-job="' + escapeHtml(hay) + '" data-city="' + escapeHtml(job.location || "") + '" data-cat="' + escapeHtml((job.sector || "").toLowerCase()) + '" data-type="' + escapeHtml(job.contract_type || "") + '" data-shift="' + escapeHtml(shiftVal) + '" data-salary="' + escapeHtml(salary) + '"><div class="body"><span class="tl-chip orange">' + escapeHtml(job.contract_type || "") + '</span><span class="tl-chip">' + escapeHtml(job.location || "") + '</span><h3><a href="' + href + '">' + escapeHtml(job.title) + '</a></h3><p>' + escapeHtml([salary, shiftVal].filter(Boolean).join(" · ")) + "</p>" + share + '<a class="tl-split-cta" href="' + href + '" style="color:var(--tl-orange);margin-top:auto;padding-top:14px">' + (isEn ? "View role →" : "Voir le poste →") + "</a></div></article>";
         }).join("");
         filterJobs();
+      }).catch(function () {});
+    }
+
+    var blogList = document.getElementById("blog-list");
+    if (blogList && window.TalendusAPI) {
+      window.TalendusAPI.request("/blog" + (isEn ? "?lang=en" : "?lang=fr")).then(function (payload) {
+        var items = (payload && payload.data) || [];
+        if (!items.length) return;
+        items.forEach(function (post) {
+          if (blogList.querySelector('[data-slug="' + post.slug + '"]')) return;
+          var a = document.createElement("a");
+          a.className = "tl-card";
+          a.setAttribute("data-slug", post.slug);
+          a.href = "/blog/" + encodeURIComponent(post.slug);
+          var imgSrc = post.cover_image || "/assets/img/all-images/industry/usine-equipe.jpg";
+          a.innerHTML = '<div class="tl-hero-media" style="height:180px"><img src="' + escapeHtml(imgSrc) + '" alt="' + escapeHtml(post.title) + '" loading="lazy" decoding="async"></div><div class="body"><span class="tl-chip">' + escapeHtml(post.category || "Blog") + "</span><h3>" + escapeHtml(post.title) + "</h3><p>" + escapeHtml(post.excerpt || "") + "</p></div>";
+          blogList.appendChild(a);
+        });
       }).catch(function () {});
     }
 

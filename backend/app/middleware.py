@@ -5,10 +5,11 @@ from collections import defaultdict, deque
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
-from starlette.responses import JSONResponse, Response
+from starlette.responses import JSONResponse, RedirectResponse, Response
 
 from app.config import get_settings
 from app.errors import error_body
+from app.services.seo import PRIVATE_PATHS, REDIRECTS
 
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
@@ -19,8 +20,18 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
         response.headers.setdefault("X-XSS-Protection", "1; mode=block")
         response.headers.setdefault("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
-        if request.url.path.startswith("/api/"):
+        path = request.url.path
+        if path.startswith("/api/"):
             response.headers.setdefault("Cache-Control", "no-store")
+        private = (
+            path.startswith("/admin")
+            or path.startswith("/api/")
+            or path in PRIVATE_PATHS
+            or path.endswith("404.html")
+            or response.status_code == 404
+        )
+        if private:
+            response.headers["X-Robots-Tag"] = "noindex, nofollow"
         return response
 
 
@@ -33,7 +44,13 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next) -> Response:
         if not request.url.path.startswith("/api/"):
             return await call_next(request)
-        if request.url.path.rstrip("/") in {"/api/health", "/api/docs", "/api/openapi.json"}:
+        if request.url.path.rstrip("/") in {
+            "/api/health",
+            "/api/docs",
+            "/api/redoc",
+            "/api/openapi.json",
+            "/api/tracking/config",
+        }:
             return await call_next(request)
         if request.url.path.startswith("/api/webhooks/"):
             return await call_next(request)
@@ -50,4 +67,12 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 content=error_body("Trop de requêtes. Réessayez dans une minute.", "RATE_LIMITED"),
             )
         window.append(now)
+        return await call_next(request)
+
+
+class SeoRedirectMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next) -> Response:
+        target = REDIRECTS.get(request.url.path)
+        if target:
+            return RedirectResponse(url=target, status_code=301)
         return await call_next(request)

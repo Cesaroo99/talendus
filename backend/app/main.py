@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from app.config import get_settings
 from app.database import init_db
 from app.errors import AppError, app_error_handler, http_error_handler, unhandled_handler, validation_handler
-from app.middleware import RateLimitMiddleware, SecurityHeadersMiddleware
+from app.middleware import RateLimitMiddleware, SecurityHeadersMiddleware, SeoRedirectMiddleware
 from app.seed import seed_if_empty
 from app.services.email import start_worker
 
@@ -50,6 +50,7 @@ def create_app() -> FastAPI:
         allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
         allow_headers=["Authorization", "Content-Type", "Accept"],
     )
+    application.add_middleware(SeoRedirectMiddleware)
     application.add_exception_handler(AppError, app_error_handler)
     application.add_exception_handler(HTTPException, http_error_handler)
     application.add_exception_handler(RequestValidationError, validation_handler)
@@ -59,6 +60,7 @@ def create_app() -> FastAPI:
         admin,
         applications,
         auth,
+        blog,
         candidates,
         companies,
         contracts,
@@ -70,6 +72,7 @@ def create_app() -> FastAPI:
         notifications,
         public,
         recruiters,
+        site,
         users,
         webhooks,
         integrations,
@@ -91,8 +94,11 @@ def create_app() -> FastAPI:
     application.include_router(contracts.router, prefix="/api")
     application.include_router(matching.router, prefix="/api")
     application.include_router(integrations.router, prefix="/api")
+    application.include_router(blog.router, prefix="/api")
+    application.include_router(blog.admin_router, prefix="/api")
     application.include_router(admin.router, prefix="/api")
     application.include_router(webhooks.router, prefix="/api")
+    application.include_router(site.router)
 
     if SITE_ROOT.joinpath("index.html").exists() and settings.app_env != "test":
         application.mount("/", StaticFiles(directory=str(SITE_ROOT), html=True), name="site")

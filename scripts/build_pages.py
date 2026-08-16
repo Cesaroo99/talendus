@@ -8,6 +8,7 @@ from parts import (
     FAQ_HOME, FAQ_EMPLOYEURS, FAQ_CANDIDATS,
 )
 from en_pages import build_en
+from seo_pages import write_fr as write_seo_fr
 
 ROOT = Path("/workspace")
 SPEED_STRIP = speed_strip("fr")
@@ -34,6 +35,18 @@ def alt_for(slug):
         "conditions.html": "en/terms.html",
         "404.html": "en/404.html",
         "espace.html": "en/account.html",
+        "espace-employeur.html": "en/account-employer.html",
+        "recrutement-industriel.html": "en/industrial-recruiting.html",
+        "recrutement-manufacturier.html": "en/manufacturing-recruiting.html",
+        "recrutement-technique.html": "en/technical-recruiting.html",
+        "recrutement-permanent.html": "en/permanent-recruiting.html",
+        "recrutement-temporaire.html": "en/temporary-recruiting.html",
+        "chasse-de-tetes.html": "en/executive-search.html",
+        "recrutement-cadres.html": "en/leadership-recruiting.html",
+        "recrutement-industriel-montreal.html": "en/industrial-recruiting-montreal.html",
+        "recrutement-industriel-laval.html": "en/industrial-recruiting-laval.html",
+        "recrutement-industriel-longueuil.html": "en/industrial-recruiting-longueuil.html",
+        "recrutement-industriel-quebec.html": "en/industrial-recruiting-quebec.html",
     }
     if slug in special:
         return special[slug]
@@ -45,10 +58,37 @@ def alt_for(slug):
         return "en/" + slug
     return "en/" + slug
 
-def wrap(title, desc, slug, body, solid=True, lang="fr", alt=None):
+def wrap(title, desc, slug, body, solid=True, lang="fr", alt=None, **seo):
     if alt is None:
         alt = alt_for(slug) if lang == "fr" else ""
-    return wrap_page(title, desc, slug, body, solid=solid, lang=lang, alt=alt)
+    return wrap_page(title, desc, slug, body, solid=solid, lang=lang, alt=alt, **seo)
+
+
+def job_ld(title, city, slug, typ, sal, req, lang="fr"):
+    host = "https://talendus.ca"
+    url = f"{host}/emploi-{slug}.html" if lang == "fr" else f"{host}/en/job-{slug}.html"
+    emp = "FULL_TIME" if (typ or "").lower().startswith("perm") else "TEMPORARY"
+    return {
+        "@context": "https://schema.org",
+        "@type": "JobPosting",
+        "title": title,
+        "description": req,
+        "identifier": {"@type": "PropertyValue", "name": "Talendus", "value": slug},
+        "datePosted": "2026-07-20",
+        "employmentType": emp,
+        "hiringOrganization": {"@type": "EmploymentAgency", "name": "Talendus", "sameAs": host},
+        "jobLocation": {
+            "@type": "Place",
+            "address": {
+                "@type": "PostalAddress",
+                "addressLocality": city,
+                "addressRegion": "QC",
+                "addressCountry": "CA",
+            },
+        },
+        "baseSalary": {"@type": "MonetaryAmount", "currency": "CAD", "value": sal},
+        "url": url,
+    }
 
 def write(name, html):
     path = ROOT / name
@@ -110,7 +150,7 @@ INDEX_BODY = r"""
 <div class="hero2-arrow-hero">
     <div class="hero-main-slider">
       <div class="hero2-slider-area">
-        <div class="img1"><img src="assets/img/all-images/industry/usine-equipe.jpg" alt="Équipe de production dans une usine québécoise"></div>
+        <div class="img1"><img src="assets/img/all-images/industry/usine-equipe.jpg" alt="Équipe de production dans une usine québécoise" fetchpriority="high" decoding="async"></div>
         <div class="container">
             <div class="row">
                 <div class="col-lg-8">
@@ -135,7 +175,7 @@ INDEX_BODY = r"""
         </div>
     </div>
     <div class="hero2-slider-area">
-        <div class="img1"><img src="assets/img/all-images/industry/entrepot-logistique.jpg" alt="Entrepôt logistique et caristes au Québec"></div>
+        <div class="img1"><img src="assets/img/all-images/industry/entrepot-logistique.jpg" alt="Entrepôt logistique et caristes au Québec" loading="lazy" decoding="async"></div>
         <div class="container">
             <div class="row">
                 <div class="col-lg-8">
@@ -400,9 +440,9 @@ INDEX_BODY = r"""
       <h2 class="tl-h2">Ressources recrutement, RH et industrie au Québec</h2>
     </div>
     <div class="tl-grid-3">
-      <a class="tl-card" href="article-mauvaise-embauche.html"><div class="tl-hero-media" style="height:180px"><img src="assets/img/all-images/industry/usine-equipe.jpg" alt=""></div><div class="body"><span class="tl-chip">RH</span><h3>Combien coûte une mauvaise embauche en usine ?</h3></div></a>
-      <a class="tl-card" href="article-machiniste-cnc.html"><div class="tl-hero-media" style="height:180px"><img src="assets/img/all-images/industry/cnc-machiniste.jpg" alt=""></div><div class="body"><span class="tl-chip">Manufacturier</span><h3>Recruter un machiniste CNC au Québec</h3></div></a>
-      <a class="tl-card" href="article-caristes-entrepot.html"><div class="tl-hero-media" style="height:180px"><img src="assets/img/all-images/industry/entrepot-logistique.jpg" alt=""></div><div class="body"><span class="tl-chip">Logistique</span><h3>Pénurie de caristes : stratégies d’entrepôt</h3></div></a>
+      <a class="tl-card" href="article-mauvaise-embauche.html"><div class="tl-hero-media" style="height:180px"><img src="assets/img/all-images/industry/usine-equipe.jpg" alt="Équipe d'usine au Québec" loading="lazy" decoding="async"></div><div class="body"><span class="tl-chip">RH</span><h3>Combien coûte une mauvaise embauche en usine ?</h3></div></a>
+      <a class="tl-card" href="article-machiniste-cnc.html"><div class="tl-hero-media" style="height:180px"><img src="assets/img/all-images/industry/cnc-machiniste.jpg" alt="Machiniste CNC" loading="lazy" decoding="async"></div><div class="body"><span class="tl-chip">Manufacturier</span><h3>Recruter un machiniste CNC au Québec</h3></div></a>
+      <a class="tl-card" href="article-caristes-entrepot.html"><div class="tl-hero-media" style="height:180px"><img src="assets/img/all-images/industry/entrepot-logistique.jpg" alt="Caristes en entrepôt" loading="lazy" decoding="async"></div><div class="body"><span class="tl-chip">Logistique</span><h3>Pénurie de caristes : stratégies d’entrepôt</h3></div></a>
     </div>
   </div>
 </section>
@@ -482,16 +522,16 @@ simple_page(
 
 # Services
 services_cards = "".join(
-    f'<div class="tl-card"><div class="body"><span class="tl-chip orange">{chip}</span><h3>{t}</h3><p>{p}</p></div></div>'
-    for chip, t, p in [
-        ("Permanent", "Recrutement permanent", "Mandats de postes stables en usine, entrepôt et gestion manufacturière. Honoraires au succès, garantie de remplacement."),
-        ("Passif", "Chasse de têtes", "Approche directe de candidats passifs pour les profils rares : CNC, électromécanique, cadres d'usine."),
-        ("Direction", "Recrutement de cadres", "Directeurs d'usine, de production, de maintenance et de logistique. Mandats souvent confidentiels."),
-        ("Quart", "Recrutement de superviseurs", "Contremaîtres et superviseurs de quart capables de tenir KPI, SST et climat d'équipe."),
-        ("Métiers", "Métiers spécialisés", "Soudeurs, machinistes, mécaniciens industriels, électromécaniciens, set-up, qualité."),
-        ("Urgent", "Recrutement urgent", "Processus accéléré lorsqu’un quart critique est découvert. Shortlist filtrée, pas une avalanche de CV."),
-        ("Discret", "Mandats confidentiels", "Remplacements de cadres ou réorganisations menés sans bruit interne."),
-        ("RH", "Accompagnement RH", "Descriptifs de poste, grilles salariales industrielles, entrevues conjointes et intégration."),
+    f'<a class="tl-card" href="{href}"><div class="body"><span class="tl-chip orange">{chip}</span><h3>{t}</h3><p>{p}</p></div></a>'
+    for href, chip, t, p in [
+        ("recrutement-permanent.html", "Permanent", "Recrutement permanent", "Mandats de postes stables en usine, entrepôt et gestion manufacturière. Honoraires au succès, garantie de remplacement."),
+        ("chasse-de-tetes.html", "Passif", "Chasse de têtes", "Approche directe de candidats passifs pour les profils rares : CNC, électromécanique, cadres d'usine."),
+        ("recrutement-cadres.html", "Direction", "Recrutement de cadres", "Directeurs d'usine, de production, de maintenance et de logistique. Mandats souvent confidentiels."),
+        ("recrutement-industriel.html", "Quart", "Recrutement de superviseurs", "Contremaîtres et superviseurs de quart capables de tenir KPI, SST et climat d'équipe."),
+        ("recrutement-technique.html", "Métiers", "Métiers spécialisés", "Soudeurs, machinistes, mécaniciens industriels, électromécaniciens, set-up, qualité."),
+        ("recrutement-temporaire.html", "Urgent", "Recrutement urgent", "Processus accéléré lorsqu’un quart critique est découvert. Shortlist filtrée, pas une avalanche de CV."),
+        ("chasse-de-tetes.html", "Discret", "Mandats confidentiels", "Remplacements de cadres ou réorganisations menés sans bruit interne."),
+        ("entreprises.html", "RH", "Accompagnement RH", "Descriptifs de poste, grilles salariales industrielles, entrevues conjointes et intégration."),
     ]
 )
 simple_page(
@@ -840,7 +880,7 @@ for slug, title, city, cat, typ, sal, shift, req in JOBS:
               <p>{req}</p>
               <h3>Ce que nous offrons</h3>
               <ul><li>Poste {typ.lower()}</li><li>Rémunération : {sal}</li><li>Horaire : {shift}</li><li>Accompagnement Talendus jusqu'à l'embauche</li></ul>
-              <p><a href="emplois.html">← Toutes les offres</a></p>
+              <p><a href="emplois.html">← Toutes les offres</a> · <a href="recrutement-industriel.html">Recrutement industriel</a> · <a href="candidats.html">Espace candidats</a></p>
             </div>
             <div class="col-lg-4 offset-lg-1" id="postuler">
               <h3>Postuler</h3>
@@ -853,7 +893,9 @@ for slug, title, city, cat, typ, sal, shift, req in JOBS:
             </div>
           </div>
         </div></section>
-        """
+        """,
+        extra_json_ld=job_ld(title, city, slug, typ, sal, req),
+        og_type="article",
     ))
 
 # Secteurs
@@ -908,7 +950,7 @@ for slug, name, title, desc in SECTORS:
 
 # Blog
 art_cards = "".join(
-    f'<a class="tl-card" href="article-{s}.html"><div class="tl-hero-media" style="height:180px"><img src="assets/img/all-images/industry/{img}" alt=""></div><div class="body"><span class="tl-chip">{cat}</span><h3>{t}</h3><p>{lead}</p></div></a>'
+    f'<a class="tl-card" href="article-{s}.html"><div class="tl-hero-media" style="height:180px"><img src="assets/img/all-images/industry/{img}" alt="{t}" loading="lazy" decoding="async"></div><div class="body"><span class="tl-chip">{cat}</span><h3>{t}</h3><p>{lead}</p></div></a>'
     for s, t, cat, img, lead in ARTICLES
 )
 topics = "".join(f'<li style="margin-bottom:8px">{t}</li>' for t in TOPICS)
@@ -922,9 +964,20 @@ write("blog.html", wrap(
         actions='<a class="tl-btn" href="contact.html">Réserver une consultation gratuite</a>',
         badges=""
     )
-    + f'<section class="tl-section"><div class="container"><div class="tl-grid-3">{art_cards}</div><h2 class="tl-h2" style="margin-top:48px">Sujets à venir</h2><ul class="tl-muted">{topics}</ul></div></section>'
+    + f'<section class="tl-section"><div class="container"><div class="tl-grid-3" id="blog-list">{art_cards}</div><h2 class="tl-h2" style="margin-top:48px">Sujets à venir</h2><ul class="tl-muted">{topics}</ul></div></section>'
 ))
 for slug, title, cat, img, lead in ARTICLES:
+    article_schema = {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": title,
+        "description": lead,
+        "author": {"@type": "Organization", "name": "Talendus"},
+        "publisher": {"@type": "Organization", "name": "Talendus", "url": "https://talendus.ca"},
+        "mainEntityOfPage": f"https://talendus.ca/article-{slug}.html",
+        "inLanguage": "fr-CA",
+        "image": f"https://talendus.ca/assets/img/all-images/industry/{img}",
+    }
     write(f"article-{slug}.html", wrap(
         f"{title} | Blog Talendus",
         lead,
@@ -932,7 +985,7 @@ for slug, title, cat, img, lead in ARTICLES:
         page_hero(cat, title, lead, badges="")
         + f"""
         <section class="tl-section"><div class="container" style="max-width:800px">
-          <img src="assets/img/all-images/industry/{img}" alt="" style="width:100%;border-radius:16px;margin-bottom:24px">
+          <img src="assets/img/all-images/industry/{img}" alt="{title}" style="width:100%;border-radius:16px;margin-bottom:24px" loading="lazy" decoding="async">
           <p class="tl-lead">{lead}</p>
           <h2>Ce que nous observons au Québec</h2>
           <p>Les usines et centres de distribution n'embauchent pas comme un siège de services. Les quarts, la SST, les cartes de compétences et la culture de plancher pèsent autant que le CV. Un poste vacant de 6 semaines coûte souvent plus cher qu'un mandat de recrutement bien cadré.</p>
@@ -944,12 +997,16 @@ for slug, title, cat, img, lead in ARTICLES:
           </ul>
           <h2>Comment Talendus intervient</h2>
           <p>Nous ciblons des profils industriels, validons le fit de quart et présentons peu de dossiers, mais des dossiers défendables.</p>
+          <p><a href="recrutement-industriel.html">Recrutement industriel</a> · <a href="emplois.html">Offres d'emploi</a> · <a href="entreprises.html">Solutions entreprises</a></p>
           <div class="tl-actions" style="margin-top:28px">
             <a class="tl-btn" href="contact.html">Parler à un spécialiste</a>
             <a class="tl-btn tl-btn-ghost-dark" href="blog.html">Retour au blog</a>
           </div>
         </div></section>
-        """
+        """,
+        extra_json_ld=article_schema,
+        og_type="article",
+        og_image=f"assets/img/all-images/industry/{img}",
     ))
 
 write("404.html", wrap(
@@ -959,7 +1016,8 @@ write("404.html", wrap(
     page_hero("404", "Cette page n'existe pas.", "Le mandat, lui, existe peut-être encore.",
               actions='<a class="tl-btn" href="index.html">Retour à l\'accueil</a><a class="tl-btn tl-btn-ghost" href="contact.html">Réserver une consultation</a>',
               badges="")
-    + '<section class="tl-section"><div class="container"><p class="tl-lead">Vérifiez l\'URL ou reprenez depuis l\'accueil, les offres ou le formulaire de consultation.</p></div></section>'
+    + '<section class="tl-section"><div class="container"><p class="tl-lead">Vérifiez l\'URL ou reprenez depuis l\'accueil, les offres ou le formulaire de consultation.</p></div></section>',
+    robots="noindex,nofollow",
 ))
 write("espace.html", wrap(
     "Mon espace candidat | Talendus",
@@ -970,7 +1028,8 @@ write("espace.html", wrap(
         "Profil, CV, candidatures, correspondances, messages et entretiens — le suivi de votre recherche d'emploi industriel.",
         badges='<span class="tl-badge tl-badge-light">Espace privé</span>'
     )
-    + """<section class="tl-section"><div class="container"><div id="tl-account"></div></div></section>"""
+    + """<section class="tl-section"><div class="container"><div id="tl-account"></div></div></section>""",
+    robots="noindex,nofollow",
 ))
 write("espace-employeur.html", wrap(
     "Espace employeur | Talendus",
@@ -981,14 +1040,22 @@ write("espace-employeur.html", wrap(
         "Offres, candidatures reçues, pipeline et factures — le suivi de vos mandats industriels.",
         badges='<span class="tl-badge tl-badge-light">Espace privé</span>'
     )
-    + """<section class="tl-section"><div class="container"><div id="tl-account" data-space="employer"></div></div></section>"""
+    + """<section class="tl-section"><div class="container"><div id="tl-account" data-space="employer"></div></div></section>""",
+    robots="noindex,nofollow",
 ))
 write("confidentialite.html", wrap(
     "Politique de confidentialité | Talendus",
-    "Politique de confidentialité de Talendus, talendus.ca.",
+    "Politique de confidentialité et cookies de Talendus, talendus.ca.",
     "confidentialite.html",
     page_hero("Légal", "Politique de confidentialité", "Les CV et mandats sont traités de façon confidentielle.", badges="")
-    + """<section class="tl-section"><div class="container" style="max-width:800px"><p>Talendus collecte les informations nécessaires au recrutement (coordonnées, CV, description de poste). Elles ne sont pas vendues à des tiers. Elles sont utilisées uniquement pour évaluer des candidatures, ouvrir des mandats et communiquer avec vous.</p><p>Vous pouvez demander l'accès, la correction ou la suppression en écrivant à info@talendus.ca. Les données sont conservées le temps nécessaire au recrutement et aux obligations légales applicables au Québec.</p></div></section>"""
+    + """<section class="tl-section"><div class="container" style="max-width:800px">
+    <h2>Données de recrutement</h2>
+    <p>Talendus collecte les informations nécessaires au recrutement (coordonnées, CV, description de poste). Elles ne sont pas vendues à des tiers. Elles sont utilisées uniquement pour évaluer des candidatures, ouvrir des mandats et communiquer avec vous.</p>
+    <p>Vous pouvez demander l'accès, la correction ou la suppression en écrivant à info@talendus.ca. Les données sont conservées le temps nécessaire au recrutement et aux obligations légales applicables au Québec.</p>
+    <h2>Cookies et mesure d'audience</h2>
+    <p>Les cookies essentiels assurent le fonctionnement du site (connexion, sécurité, préférences de langue). Les cookies d'analyse (Google Analytics) et de marketing (Meta Pixel) ne sont chargés qu'<strong>après votre consentement</strong>. Vous pouvez accepter, refuser ou modifier ce choix à tout moment via le bandeau cookies ou en écrivant à info@talendus.ca.</p>
+    <p>Aucun identifiant publicitaire n'est déposé tant que vous n'avez pas accepté les cookies non essentiels. Talendus ne revend pas vos données de navigation.</p>
+    </div></section>"""
 ))
 write("conditions.html", wrap(
     "Conditions d'utilisation | Talendus",
@@ -1000,8 +1067,10 @@ write("conditions.html", wrap(
 
 for old, new in [("about.html", "a-propos.html"), ("service.html", "services.html"), ("blog-single.html", "blog.html")]:
     write(old, wrap("Redirection | Talendus", "Redirection.", old,
-                    f'<section class="tl-section"><div class="container"><p>Cette page a été déplacée. <a href="{new}">Continuer</a></p><script>location.replace("{new}");</script></div></section>',))
+                    f'<section class="tl-section"><div class="container"><p>Cette page a été déplacée. <a href="{new}">Continuer</a></p><script>location.replace("{new}");</script></div></section>',
+                    robots="noindex,nofollow"))
 
+write_seo_fr(write, wrap, page_hero, CTA_BAND)
 build_en(write, wrap, page_hero)
 
 fr_urls = [("", "en/")]
@@ -1014,9 +1083,19 @@ pairs = [
     ("secteurs.html", "en/sectors.html"),
     ("blog.html", "en/blog.html"),
     ("contact.html", "en/contact.html"),
-    ("espace.html", "en/account.html"),
     ("confidentialite.html", "en/privacy.html"),
     ("conditions.html", "en/terms.html"),
+    ("recrutement-industriel.html", "en/industrial-recruiting.html"),
+    ("recrutement-manufacturier.html", "en/manufacturing-recruiting.html"),
+    ("recrutement-technique.html", "en/technical-recruiting.html"),
+    ("recrutement-permanent.html", "en/permanent-recruiting.html"),
+    ("recrutement-temporaire.html", "en/temporary-recruiting.html"),
+    ("chasse-de-tetes.html", "en/executive-search.html"),
+    ("recrutement-cadres.html", "en/leadership-recruiting.html"),
+    ("recrutement-industriel-montreal.html", "en/industrial-recruiting-montreal.html"),
+    ("recrutement-industriel-laval.html", "en/industrial-recruiting-laval.html"),
+    ("recrutement-industriel-longueuil.html", "en/industrial-recruiting-longueuil.html"),
+    ("recrutement-industriel-quebec.html", "en/industrial-recruiting-quebec.html"),
 ]
 pairs += [(f"emploi-{s}.html", f"en/job-{s}.html") for s, *_ in JOBS]
 pairs += [(f"secteur-{s}.html", f"en/sector-{s}.html") for s, *_ in SECTORS]
@@ -1048,7 +1127,7 @@ def sitemap_url(fr, en):
     encoding="utf-8",
 )
 (ROOT / "robots.txt").write_text(
-    "User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /espace.html\nDisallow: /espace-employeur.html\nDisallow: /en/account.html\nDisallow: /en/account-employer.html\nSitemap: https://talendus.ca/sitemap.xml\n",
+    "User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /api/\nDisallow: /espace.html\nDisallow: /espace-employeur.html\nDisallow: /en/account.html\nDisallow: /en/account-employer.html\nDisallow: /index1.html\nDisallow: /index2.html\nDisallow: /index3.html\nDisallow: /index4.html\nDisallow: /index5.html\nDisallow: /index6.html\nDisallow: /index7.html\nDisallow: /index8.html\nDisallow: /index9.html\nDisallow: /index10.html\nDisallow: /projects.html\nDisallow: /team.html\nDisallow: /testimonial.html\nSitemap: https://talendus.ca/sitemap.xml\n",
     encoding="utf-8",
 )
 print("done")

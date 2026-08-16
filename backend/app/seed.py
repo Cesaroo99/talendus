@@ -38,9 +38,11 @@ from app.models import (
     SystemSetting,
     User,
     UserPreference,
+    BlogPost,
 )
 from app.models.enums import (
     ApplicationStatus,
+    BlogStatus,
     CompanyMemberRole,
     CompanyStatus,
     ContractStatus,
@@ -481,6 +483,53 @@ def _seed(db: Session) -> None:
     ]
     for key, value, label in settings_rows:
         db.add(SystemSetting(key=key, value=value, label=label, updated_by=users["sophie.admin@talendus.ca"].id))
+
+    now = utcnow()
+    db.add(
+        BlogPost(
+            slug="penurie-main-oeuvre-industrielle",
+            lang="fr",
+            title="Pénurie de main-d'œuvre industrielle : ce que les usines peuvent encore faire",
+            excerpt="La rareté des métiers n'est pas une fatalité. Quart, salaire réel et accueil 30/60/90 restent les leviers qui tiennent.",
+            body=(
+                "Les usines québécoises ne manquent pas d'offres d'emploi : elles manquent de profils qui tiennent un quart. "
+                "Un portail généraliste attire du volume ; il n'évalue pas la SST, le rythme de ligne ni le fit d'horaire.\n\n"
+                "Les employeurs qui s'en sortent clarifient le salaire réel, le quart et l'accueil dès le brief. "
+                "Talendus approche aussi des candidats passifs — déjà en poste — plutôt que de recycler les mêmes CV."
+            ),
+            category="Marché de l'emploi",
+            tags="pénurie de main-d'œuvre, recrutement industriel, métiers spécialisés",
+            author_name="Alexandre Fortin",
+            cover_image="/assets/img/all-images/industry/usine-equipe.jpg",
+            seo_title="Pénurie de main-d'œuvre industrielle au Québec | Talendus",
+            seo_description="Comment les usines québécoises attirent encore des métiers spécialisés malgré la pénurie : quart, salaire réel et recrutement ciblé.",
+            status=BlogStatus.PUBLISHED,
+            published_at=now,
+            created_by=users["alex.editeur@talendus.ca"].id,
+        )
+    )
+    db.add(
+        BlogPost(
+            slug="conseils-cv-usine",
+            lang="fr",
+            title="CV d'usine : ce que les contremaîtres regardent vraiment",
+            excerpt="Cartes de compétences, quarts tenus et machines utilisées pèsent plus qu'un paragraphe d'objectifs.",
+            body=(
+                "Un CV industriel utile indique les machines, les quarts, les cartes SST et la durée en poste. "
+                "Les objectifs génériques n'aident pas un superviseur pressé.\n\n"
+                "Si vous cherchez un poste en production, maintenance ou entrepôt au Québec, déposez un dossier clair : "
+                "Talendus le présente seulement aux employeurs dont l'horaire et le salaire correspondent."
+            ),
+            category="Conseils candidats",
+            tags="CV, recherche d'emploi, entretiens d'embauche",
+            author_name="Alexandre Fortin",
+            cover_image="/assets/img/all-images/industry/cnc-machiniste.jpg",
+            seo_title="CV et recherche d'emploi en usine au Québec | Talendus",
+            seo_description="Conseils concrets pour un CV industriel : compétences, quarts, cartes SST. Destiné aux candidats d'usine au Québec.",
+            status=BlogStatus.DRAFT,
+            created_by=users["alex.editeur@talendus.ca"].id,
+        )
+    )
 
 
 if __name__ == "__main__":

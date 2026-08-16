@@ -649,7 +649,7 @@
 
   /* ---------- Content ---------- */
   function viewContent() {
-    var map = { pages: S().pages, blog: S().posts, temoignages: S().testimonials, faq: S().faqs, seo: S().posts };
+    var map = { pages: S().pages, blog: [], temoignages: S().testimonials, faq: S().faqs, seo: S().posts };
     var labels = { pages: "Pages du site", blog: "Blog", temoignages: "Témoignages", faq: "FAQ", seo: "Contenu SEO" };
     var items = map[contentTab] || [];
     var rows = items.map(function (it) {
@@ -659,11 +659,37 @@
             <button class="btn btn-ghost btn-sm" data-cms="toggle:${contentTab}:${it.id}">${it.status === "publie" || it.status === "publiee" ? "Dépublier" : "Publier"}</button>
             <button class="btn btn-ghost btn-sm" data-cms="arch:${contentTab}:${it.id}">Archiver</button></td></tr>`;
     }).join("");
+    if (contentTab === "blog") {
+      rows = '<tr><td colspan="5">Chargement des articles…</td></tr>';
+    }
     return `
-      <div class="page-head"><div><h1>Contenu</h1><p>CMS du site public talendus.ca</p></div>
+      <div class="page-head"><div><h1>Contenu</h1><p>CMS du site public talendus.ca — le blog est enregistré dans l’API (brouillon, publication, programmation).</p></div>
         <div class="actions"><button class="btn btn-orange" data-cms="new:${contentTab}">Créer</button></div></div>
       <div class="tabs">${Object.keys(labels).map(function (k) { return '<button class="tab' + (contentTab === k ? " is-on" : "") + '" data-ctab="' + k + '">' + labels[k] + "</button>"; }).join("")}</div>
-      <div class="card"><div class="table-wrap"><table class="data"><thead><tr><th>Titre</th><th>Slug / SEO</th><th>Statut</th><th>MAJ</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+      <div class="card"><div class="table-wrap"><table class="data"><thead><tr><th>Titre</th><th>Slug / SEO</th><th>Statut</th><th>MAJ</th><th>Actions</th></tr></thead><tbody id="cms-rows">${rows}</tbody></table></div></div>`;
+  }
+
+  function blogStatusLabel(status) {
+    var map = { DRAFT: "brouillon", PUBLISHED: "publie", SCHEDULED: "planifie", ARCHIVED: "archive" };
+    return map[status] || (status || "").toLowerCase();
+  }
+
+  async function hydrateBlogCms() {
+    var tbody = document.getElementById("cms-rows");
+    if (!tbody || contentTab !== "blog" || !window.TalendusAPI) return;
+    try {
+      var json = await window.TalendusAPI.request("/admin/blog");
+      var items = json.data || [];
+      tbody.innerHTML = items.map(function (it) {
+        return "<tr><td><b>" + U.esc(it.title) + "</b></td><td>" + U.esc(it.slug) + "</td><td>" + U.badge(blogStatusLabel(it.status)) + "</td><td>" + U.esc((it.updated_at || "").slice(0, 10)) + "</td>" +
+          '<td><button class="btn btn-ghost btn-sm" data-cms="edit:blog:' + it.id + '">Modifier</button>' +
+          '<button class="btn btn-ghost btn-sm" data-cms="prev:blog:' + it.slug + '">Prévisualiser</button>' +
+          '<button class="btn btn-ghost btn-sm" data-cms="toggle:blog:' + it.id + '" data-status="' + it.status + '">' + (it.status === "PUBLISHED" ? "Dépublier" : "Publier") + "</button>" +
+          '<button class="btn btn-ghost btn-sm" data-cms="arch:blog:' + it.id + '">Archiver</button></td></tr>';
+      }).join("") || '<tr><td colspan="5">Aucun article. Créez le premier depuis « Créer ».</td></tr>';
+    } catch (err) {
+      tbody.innerHTML = "<tr><td colspan='5'>Impossible de charger le blog API. Vérifiez la connexion.</td></tr>";
+    }
   }
 
   /* ---------- Finance ---------- */
@@ -1088,6 +1114,54 @@
       if (cms) {
         var p = cms.getAttribute("data-cms").split(":");
         var action = p[0], tab = p[1], cid = p[2];
+        if (tab === "blog" && window.TalendusAPI) {
+          if (action === "prev") {
+            window.open("/blog/" + encodeURIComponent(cid), "_blank");
+            return;
+          }
+          if (action === "toggle" || action === "arch") {
+            var next = action === "arch" ? "ARCHIVED" : (cms.getAttribute("data-status") === "PUBLISHED" ? "DRAFT" : "PUBLISHED");
+            window.TalendusAPI.request("/admin/blog/" + cid, { method: "PATCH", body: { status: next } }).then(function () {
+              U.toast("Statut article mis à jour.", "ok");
+              hydrateBlogCms();
+            }).catch(function (err) { U.toast((err && err.message) || "Erreur", "err"); });
+            return;
+          }
+          var load = cid ? window.TalendusAPI.request("/admin/blog/" + cid).then(function (j) { return j.data; }) : Promise.resolve({});
+          load.then(function (item) {
+            U.modal({
+              title: action === "new" ? "Nouvel article" : "Éditer l’article",
+              body: '<form id="ef" class="form-grid">' +
+                U.field("Titre", "title", item.title || "") +
+                U.field("Slug SEO", "slug", item.slug || "") +
+                U.field("Title SEO", "seo_title", item.seo_title || "") +
+                U.field("Meta description", "seo_description", item.seo_description || "", "textarea", "full") +
+                U.field("Extrait", "excerpt", item.excerpt || "", "textarea", "full") +
+                U.field("Corps", "body", item.body || "", "textarea", "full") +
+                U.field("Catégorie", "category", item.category || "") +
+                U.field("Tags", "tags", Array.isArray(item.tags) ? item.tags.join(", ") : (item.tags || "")) +
+                U.field("Auteur", "author_name", item.author_name || "") +
+                U.field("Image principale", "cover_image", item.cover_image || "") +
+                U.field("Statut", "status", { options: [{ v: "DRAFT", l: "Brouillon" }, { v: "PUBLISHED", l: "Publié" }, { v: "SCHEDULED", l: "Programmé" }, { v: "ARCHIVED", l: "Archivé" }], selected: item.status || "DRAFT" }, "select") +
+                U.field("Publication programmée", "scheduled_at", (item.scheduled_at || "").slice(0, 16), "datetime-local") +
+                "</form>",
+              footer: '<button class="btn btn-ghost" data-close>Annuler</button><button class="btn btn-orange" id="save">Enregistrer</button>',
+              onMount: function (box, close) {
+                box.querySelector("#save").onclick = async function () {
+                  var d = U.formData(box.querySelector("#ef"));
+                  if (d.scheduled_at) d.scheduled_at = new Date(d.scheduled_at).toISOString();
+                  else d.scheduled_at = null;
+                  try {
+                    if (action === "new") await window.TalendusAPI.request("/admin/blog", { method: "POST", body: d });
+                    else await window.TalendusAPI.request("/admin/blog/" + cid, { method: "PATCH", body: d });
+                    close(); U.toast("Article enregistré.", "ok"); hydrateBlogCms();
+                  } catch (err) { U.toast((err && err.message) || "Erreur", "err"); }
+                };
+              }
+            });
+          });
+          return;
+        }
         var col = { pages: "pages", blog: "posts", temoignages: "testimonials", faq: "faqs", seo: "posts" }[tab];
         if (action === "new" || action === "edit") {
           var item = cid ? S()[col].find(function (x) { return x.id === cid; }) : { title: "", q: "", seo: "" };
@@ -1299,6 +1373,7 @@
       }
       var v = document.getElementById("view");
       if (v) { v.innerHTML = inner; bindView(); }
+      if (r.name === "content") hydrateBlogCms();
     }, 180);
   }
 

@@ -143,5 +143,12 @@ class PaymentMethod(str, Enum):
     OTHER = "OTHER"
 
 
+class BlogStatus(str, Enum):
+    DRAFT = "DRAFT"
+    PUBLISHED = "PUBLISHED"
+    SCHEDULED = "SCHEDULED"
+    ARCHIVED = "ARCHIVED"
+
+
 OPEN_JOB_STATUSES = {JobStatus.PUBLISHED}
 PUBLIC_JOB_STATUSES = {JobStatus.PUBLISHED, JobStatus.PAUSED}

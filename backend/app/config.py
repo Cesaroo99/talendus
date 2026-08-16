@@ -94,6 +94,11 @@ class Settings(BaseSettings):
     esignature_api_base_url: str = ""
     esignature_webhook_secret: str = ""
 
+    tracking_enabled: bool = False
+    ga_measurement_id: str = ""
+    meta_pixel_id: str = ""
+    seo_canonical_host: str = "https://talendus.ca"
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]

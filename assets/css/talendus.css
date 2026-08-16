@@ -1657,6 +1657,38 @@ table, .tl-job-card p, .tl-card .body p { color: var(--tl-navy); }
   margin-top: 12px;
 }
 .tl-share-linkedin:hover { color: var(--tl-orange); }
+.tl-consent {
+  position: fixed;
+  z-index: 80;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  background: var(--tl-navy);
+  color: #fff;
+  border-radius: var(--tl-radius);
+  box-shadow: var(--tl-shadow);
+  padding: 18px 20px;
+}
+.tl-consent-inner {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.tl-consent-title {
+  font-weight: 800;
+  margin: 0 0 6px;
+}
+.tl-consent-text {
+  margin: 0;
+  color: #d7e0ea;
+  font-size: 14px;
+  max-width: 640px;
+}
+.tl-consent-text a { color: #fff; text-decoration: underline; }
+.tl-consent-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 @media (max-width: 1199px) {
   .tl-header-tools .tl-account-link { display: none; }
+  .tl-consent { bottom: 72px; }
 }

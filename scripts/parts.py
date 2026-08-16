@@ -1,5 +1,9 @@
 SITE = "https://talendus.ca"
 WA_HREF = "https://wa.me/15145550199?text="
+OG_IMAGE = "assets/img/all-images/industry/usine-equipe.jpg"
+
+import html as html_lib
+import json
 
 def pfx(lang):
     return "../" if lang == "en" else ""
@@ -37,6 +41,14 @@ COPY = {
         "nav_contact": "Contact",
         "nav_account": "Mon espace",
         "nav_employer_account": "Espace employeur",
+        "nav_svc_industrial": "Recrutement industriel",
+        "nav_svc_mfg": "Recrutement manufacturier",
+        "nav_svc_tech": "Recrutement technique",
+        "nav_svc_perm": "Recrutement permanent",
+        "nav_svc_temp": "Recrutement temporaire",
+        "nav_svc_search": "Chasse de têtes",
+        "nav_svc_lead": "Recrutement de cadres",
+        "footer_places": "Régions",
         "cta_primary": "Confier un recrutement",
         "cta_secondary": "Déposer mon CV",
         "menu_open": "Ouvrir le menu",
@@ -86,6 +98,14 @@ COPY = {
         "nav_contact": "Contact",
         "nav_account": "My account",
         "nav_employer_account": "Employer portal",
+        "nav_svc_industrial": "Industrial recruiting",
+        "nav_svc_mfg": "Manufacturing recruiting",
+        "nav_svc_tech": "Technical recruiting",
+        "nav_svc_perm": "Permanent recruiting",
+        "nav_svc_temp": "Temporary recruiting",
+        "nav_svc_search": "Executive search",
+        "nav_svc_lead": "Leadership recruiting",
+        "footer_places": "Regions",
         "cta_primary": "Start a hire",
         "cta_secondary": "Submit my resume",
         "menu_open": "Open menu",
@@ -131,10 +151,21 @@ HREFS = {
         "contact": "contact.html",
         "privacy": "confidentialite.html",
         "terms": "conditions.html",
-        "headhunt": "services.html",
+        "headhunt": "chasse-de-tetes.html",
         "urgent": "contact.html",
         "account": "espace.html",
         "employer_account": "espace-employeur.html",
+        "svc_industrial": "recrutement-industriel.html",
+        "svc_mfg": "recrutement-manufacturier.html",
+        "svc_tech": "recrutement-technique.html",
+        "svc_perm": "recrutement-permanent.html",
+        "svc_temp": "recrutement-temporaire.html",
+        "svc_search": "chasse-de-tetes.html",
+        "svc_lead": "recrutement-cadres.html",
+        "geo_mtl": "recrutement-industriel-montreal.html",
+        "geo_laval": "recrutement-industriel-laval.html",
+        "geo_long": "recrutement-industriel-longueuil.html",
+        "geo_qc": "recrutement-industriel-quebec.html",
     },
     "en": {
         "home": "index.html",
@@ -151,10 +182,21 @@ HREFS = {
         "contact": "contact.html",
         "privacy": "privacy.html",
         "terms": "terms.html",
-        "headhunt": "services.html",
+        "headhunt": "executive-search.html",
         "urgent": "contact.html",
         "account": "account.html",
         "employer_account": "account-employer.html",
+        "svc_industrial": "industrial-recruiting.html",
+        "svc_mfg": "manufacturing-recruiting.html",
+        "svc_tech": "technical-recruiting.html",
+        "svc_perm": "permanent-recruiting.html",
+        "svc_temp": "temporary-recruiting.html",
+        "svc_search": "executive-search.html",
+        "svc_lead": "leadership-recruiting.html",
+        "geo_mtl": "industrial-recruiting-montreal.html",
+        "geo_laval": "industrial-recruiting-laval.html",
+        "geo_long": "industrial-recruiting-longueuil.html",
+        "geo_qc": "industrial-recruiting-quebec.html",
     },
 }
 
@@ -182,7 +224,18 @@ def nav_html(lang):
                                       <li><a href="{h['account']}">{t['nav_account']}</a></li>
                                   </ul>
                               </li>
-                              <li data-nav="services"><a href="{h['services']}">{t['nav_services_top']}</a></li>
+                              <li class="has-dropdown" data-nav="services">
+                                <a href="{h['services']}">{t['nav_services_top']} <span class="tl-nav-caret" aria-hidden="true"><i class="fa-solid fa-angle-down"></i></span></a>
+                                  <ul class="sub-menu">
+                                      <li><a href="{h['svc_industrial']}">{t['nav_svc_industrial']}</a></li>
+                                      <li><a href="{h['svc_mfg']}">{t['nav_svc_mfg']}</a></li>
+                                      <li><a href="{h['svc_tech']}">{t['nav_svc_tech']}</a></li>
+                                      <li><a href="{h['svc_perm']}">{t['nav_svc_perm']}</a></li>
+                                      <li><a href="{h['svc_temp']}">{t['nav_svc_temp']}</a></li>
+                                      <li><a href="{h['svc_search']}">{t['nav_svc_search']}</a></li>
+                                      <li><a href="{h['svc_lead']}">{t['nav_svc_lead']}</a></li>
+                                  </ul>
+                              </li>
                               <li data-nav="about"><a href="{h['about']}">{t['nav_about']}</a></li>
                               <li data-nav="blog"><a href="{h['blog']}">{t['nav_blog']}</a></li>
                               <li data-nav="contact"><a href="{h['contact']}">{t['nav_contact']}</a></li>
@@ -230,7 +283,7 @@ def whatsapp_fab(lang):
 </a>"""
 
 
-def head(title, description, canonical, extra_css="", lang="fr", alt_path=""):
+def head(title, description, canonical, extra_css="", lang="fr", alt_path="", robots="index,follow", extra_json_ld=None, og_type="website", og_image=""):
     t = COPY[lang]
     a = pfx(lang)
     can = canonical.lstrip("/")
@@ -242,32 +295,61 @@ def head(title, description, canonical, extra_css="", lang="fr", alt_path=""):
         self_url = f"{SITE}/{can}" if can else f"{SITE}/en/"
         alt_abs = f"{SITE}/{alt_path}" if alt_path else f"{SITE}/"
         fr_href, en_href = alt_abs, self_url
-    json_ld = (
-        '{"@context":"https://schema.org","@type":"EmploymentAgency","name":"Talendus",'
-        '"url":"https://talendus.ca","telephone":"+1-514-555-0199","email":"info@talendus.ca",'
-        '"slogan":"%s","areaServed":"Quebec","address":{"@type":"PostalAddress","addressLocality":"Montreal","addressRegion":"QC","addressCountry":"CA"}}'
-        % t["tagline"].replace('"', '\\"')
+    safe_title = html_lib.escape(title, quote=True)
+    safe_desc = html_lib.escape(description, quote=True)
+    img_path = og_image or OG_IMAGE
+    if img_path.startswith("http"):
+        og_abs = img_path
+    else:
+        og_abs = f"{SITE}/{img_path.lstrip('/')}"
+    agency = {
+        "@context": "https://schema.org",
+        "@type": "EmploymentAgency",
+        "name": "Talendus",
+        "url": SITE,
+        "telephone": "+1-514-555-0199",
+        "email": "info@talendus.ca",
+        "slogan": t["tagline"],
+        "areaServed": "Quebec",
+        "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Montreal",
+            "addressRegion": "QC",
+            "addressCountry": "CA",
+        },
+        "sameAs": [SITE],
+    }
+    blocks = [agency]
+    if extra_json_ld:
+        blocks.extend(extra_json_ld if isinstance(extra_json_ld, list) else [extra_json_ld])
+    json_scripts = "".join(
+        f'<script type="application/ld+json">{json.dumps(block, ensure_ascii=False)}</script>\n    '
+        for block in blocks
     )
     return f"""<!DOCTYPE html>
 <html lang="{t['html_lang']}">
 <head>
      <meta charset="UTF-8">
      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-     <title>{title}</title>
-     <meta name="description" content="{description}">
-     <meta name="keywords" content="{t['keywords']}">
+     <title>{safe_title}</title>
+     <meta name="description" content="{safe_desc}">
      <link rel="canonical" href="{self_url}">
      <link rel="alternate" hreflang="fr-CA" href="{fr_href}">
      <link rel="alternate" hreflang="en-CA" href="{en_href}">
      <link rel="alternate" hreflang="x-default" href="{fr_href if lang == 'en' else self_url}">
+     <meta name="robots" content="{html_lib.escape(robots, quote=True)}">
      <meta property="og:locale" content="{t['og_locale']}">
      <meta property="og:locale:alternate" content="{'en_CA' if lang == 'fr' else 'fr_CA'}">
-     <meta property="og:title" content="{title}">
-     <meta property="og:description" content="{description}">
-     <meta property="og:type" content="website">
+     <meta property="og:title" content="{safe_title}">
+     <meta property="og:description" content="{safe_desc}">
+     <meta property="og:type" content="{html_lib.escape(og_type, quote=True)}">
      <meta property="og:url" content="{self_url}">
      <meta property="og:site_name" content="Talendus">
-     <meta name="robots" content="index,follow">
+     <meta property="og:image" content="{og_abs}">
+     <meta name="twitter:card" content="summary_large_image">
+     <meta name="twitter:title" content="{safe_title}">
+     <meta name="twitter:description" content="{safe_desc}">
+     <meta name="twitter:image" content="{og_abs}">
     <link rel="shortcut icon" href="{a}assets/img/logo/fav-logo1.png" type="image/png">
     <link rel="stylesheet" href="{a}assets/css/plugins/bootstrap.min.css">
     <link rel="stylesheet" href="{a}assets/css/plugins/aos.css">
@@ -278,7 +360,7 @@ def head(title, description, canonical, extra_css="", lang="fr", alt_path=""):
     <link rel="stylesheet" href="{a}assets/css/main.css">
     <link rel="stylesheet" href="{a}assets/css/talendus.css">
     {extra_css}
-    <script type="application/ld+json">{json_ld}</script>
+    {json_scripts}
 </head>
 """
 
@@ -417,6 +499,7 @@ def footer(lang="fr"):
           <ul>
             <li><a href="{h['about']}">{t['nav_about']}</a></li>
             <li><a href="{h['services']}">{t['nav_services_top']}</a></li>
+            <li><a href="{h['svc_industrial']}">{t['nav_svc_industrial']}</a></li>
             <li><a href="{h['sectors']}">{t['nav_sectors'].split()[0] if lang == 'fr' else 'Industries'}</a></li>
             <li><a href="{h['blog']}">{t['nav_blog']}</a></li>
             <li><a href="{h['contact']}">{t['nav_contact']}</a></li>
@@ -430,9 +513,9 @@ def footer(lang="fr"):
             <li><a href="{h['employers']}">{t['nav_employers']}</a></li>
             <li><a href="{h['candidates']}">{t['nav_candidates']}</a></li>
             <li><a href="{h['jobs']}">{t['nav_jobs']}</a></li>
-            <li><a href="{h['account']}">{t['nav_account']}</a></li>
-            <li><a href="{h['headhunt']}">{'Chasse de têtes' if lang == 'fr' else 'Search mandates'}</a></li>
-            <li><a href="{h['urgent']}">{'Mandat urgent' if lang == 'fr' else 'Urgent mandate'}</a></li>
+            <li><a href="{h['svc_perm']}">{t['nav_svc_perm']}</a></li>
+            <li><a href="{h['svc_search']}">{'Chasse de têtes' if lang == 'fr' else 'Search mandates'}</a></li>
+            <li><a href="{h['svc_lead']}">{t['nav_svc_lead']}</a></li>
           </ul>
         </div>
       </div>
@@ -445,6 +528,10 @@ def footer(lang="fr"):
             <li><a href="{wa_link(lang)}" target="_blank" rel="noopener noreferrer">WhatsApp</a></li>
             <li>{t['footer_hours']}</li>
             <li><a href="{h['contact']}">{t['footer_place']}</a></li>
+            <li><a href="{h['geo_mtl']}">{'Montréal' if lang == 'fr' else 'Montreal'}</a></li>
+            <li><a href="{h['geo_laval']}">Laval</a></li>
+            <li><a href="{h['geo_long']}">Longueuil</a></li>
+            <li><a href="{h['geo_qc']}">{'Québec' if lang == 'fr' else 'Quebec'}</a></li>
           </ul>
         </div>
       </div>
@@ -455,26 +542,29 @@ def footer(lang="fr"):
         <a href="{h['home']}">{t['footer_copy']}</a>
         <ul>
           <li><a href="{h['privacy']}">{t['privacy']}</a><span> | </span></li>
-          <li><a href="{h['terms']}">{t['terms']}</a></li>
+          <li><a href="{h['terms']}">{t['terms']}</a><span> | </span></li>
+          <li><a href="#" data-consent-open>{'Cookies' if lang == 'fr' else 'Cookies'}</a></li>
         </ul>
       </div>
     </div>
   </div>
 </div>
 <script src="{a}assets/js/plugins/jquery-3-7-1.min.js"></script>
-<script src="{a}assets/js/plugins/bootstrap.min.js"></script>
-<script src="{a}assets/js/plugins/fontawesome.js"></script>
-<script src="{a}assets/js/plugins/aos.js"></script>
-<script src="{a}assets/js/plugins/counter.js"></script>
-<script src="{a}assets/js/plugins/magnific-popup.js"></script>
-<script src="{a}assets/js/plugins/nice-select.js"></script>
-<script src="{a}assets/js/plugins/waypoints.js"></script>
-<script src="{a}assets/js/plugins/slick-slider.js"></script>
-<script src="{a}assets/js/plugins/circle-progress.js"></script>
-<script src="{a}assets/js/main.js"></script>
-<script src="{a}assets/js/api.js"></script>
-<script src="{a}assets/js/talendus.js"></script>
-<script src="{a}assets/js/account.js"></script>
+<script src="{a}assets/js/plugins/bootstrap.min.js" defer></script>
+<script src="{a}assets/js/plugins/fontawesome.js" defer></script>
+<script src="{a}assets/js/plugins/aos.js" defer></script>
+<script src="{a}assets/js/plugins/counter.js" defer></script>
+<script src="{a}assets/js/plugins/magnific-popup.js" defer></script>
+<script src="{a}assets/js/plugins/nice-select.js" defer></script>
+<script src="{a}assets/js/plugins/waypoints.js" defer></script>
+<script src="{a}assets/js/plugins/slick-slider.js" defer></script>
+<script src="{a}assets/js/plugins/circle-progress.js" defer></script>
+<script src="{a}assets/js/main.js" defer></script>
+<script src="{a}assets/js/api.js" defer></script>
+<script src="{a}assets/js/talendus.js" defer></script>
+<script src="{a}assets/js/account.js" defer></script>
+<script src="{a}assets/js/consent.js" defer></script>
+<script src="{a}assets/js/tracking.js" defer></script>
 </body>
 </html>
 """
@@ -610,7 +700,7 @@ FAQ_CANDIDATES_EN = [
      "Mainly Greater Montreal, Laval, the South Shore, Montérégie, the Eastern Townships, Centre-du-Québec and Quebec City. Tell us your mobility and we target accordingly."),
 ]
 
-def wrap(title, desc, slug, body, solid=True, lang="fr", alt=""):
+def wrap(title, desc, slug, body, solid=True, lang="fr", alt="", robots="index,follow", extra_json_ld=None, og_type="website", og_image=""):
     if lang == "fr":
         switch = alt or "en/index.html"
     elif not alt or alt in ("", "index.html"):
@@ -618,7 +708,17 @@ def wrap(title, desc, slug, body, solid=True, lang="fr", alt=""):
     else:
         switch = "../" + alt.lstrip("/")
     return (
-        head(title, desc, slug, lang=lang, alt_path=alt)
+        head(
+            title,
+            desc,
+            slug,
+            lang=lang,
+            alt_path=alt,
+            robots=robots,
+            extra_json_ld=extra_json_ld,
+            og_type=og_type,
+            og_image=og_image,
+        )
         + header(solid, lang=lang, alt_url=switch)
         + body
         + footer(lang)

@@ -23,6 +23,7 @@ from app.models.ops import (
 )
 from app.models.rbac import Permission, Role
 from app.models.settings import SystemSetting, UserPreference
+from app.models.cms import BlogPost
 from app.models.integrations import ExternalJob, IntegrationCall, WebhookEvent
 
 __all__ = [
@@ -59,4 +60,5 @@ __all__ = [
     "ExternalJob",
     "WebhookEvent",
     "IntegrationCall",
+    "BlogPost",
 ]

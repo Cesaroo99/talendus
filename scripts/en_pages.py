@@ -1,6 +1,7 @@
 """English pages for Talendus — native copy, not machine-translated chrome."""
 
 from parts import speed_strip, cta_band, faq_html, FAQ_HOME_EN, FAQ_EMPLOYERS_EN, FAQ_CANDIDATES_EN
+from seo_pages import write_en as write_seo_en
 
 A = "../assets/"
 SPEED = speed_strip("en")
@@ -66,7 +67,7 @@ INDEX_EN = rf"""
 <div class="hero2-arrow-hero">
     <div class="hero-main-slider">
       <div class="hero2-slider-area">
-        <div class="img1"><img src="{img('usine-equipe.jpg')}" alt="Production team on a Quebec plant floor"></div>
+        <div class="img1"><img src="{img('usine-equipe.jpg')}" alt="Production team on a Quebec plant floor" fetchpriority="high" decoding="async"></div>
         <div class="container">
             <div class="row">
                 <div class="col-lg-8">
@@ -91,7 +92,7 @@ INDEX_EN = rf"""
         </div>
     </div>
     <div class="hero2-slider-area">
-        <div class="img1"><img src="{img('entrepot-logistique.jpg')}" alt="Logistics warehouse and forklift operators in Quebec"></div>
+        <div class="img1"><img src="{img('entrepot-logistique.jpg')}" alt="Logistics warehouse and forklift operators in Quebec" loading="lazy" decoding="async"></div>
         <div class="container">
             <div class="row">
                 <div class="col-lg-8">
@@ -345,9 +346,9 @@ INDEX_EN = rf"""
       <h2 class="tl-h2">Recruiting, HR and industry resources in Quebec</h2>
     </div>
     <div class="tl-grid-3">
-      <a class="tl-card" href="article-mauvaise-embauche.html"><div class="tl-hero-media" style="height:180px"><img src="{img('usine-equipe.jpg')}" alt=""></div><div class="body"><span class="tl-chip">HR</span><h3>What a bad plant hire really costs</h3></div></a>
-      <a class="tl-card" href="article-machiniste-cnc.html"><div class="tl-hero-media" style="height:180px"><img src="{img('cnc-machiniste.jpg')}" alt=""></div><div class="body"><span class="tl-chip">Manufacturing</span><h3>Hiring a CNC machinist in Quebec</h3></div></a>
-      <a class="tl-card" href="article-caristes-entrepot.html"><div class="tl-hero-media" style="height:180px"><img src="{img('entrepot-logistique.jpg')}" alt=""></div><div class="body"><span class="tl-chip">Logistics</span><h3>Forklift shortage: warehouse tactics</h3></div></a>
+      <a class="tl-card" href="article-mauvaise-embauche.html"><div class="tl-hero-media" style="height:180px"><img src="{img('usine-equipe.jpg')}" alt="Plant team in Quebec" loading="lazy" decoding="async"></div><div class="body"><span class="tl-chip">HR</span><h3>What a bad plant hire really costs</h3></div></a>
+      <a class="tl-card" href="article-machiniste-cnc.html"><div class="tl-hero-media" style="height:180px"><img src="{img('cnc-machiniste.jpg')}" alt="CNC machinist" loading="lazy" decoding="async"></div><div class="body"><span class="tl-chip">Manufacturing</span><h3>Hiring a CNC machinist in Quebec</h3></div></a>
+      <a class="tl-card" href="article-caristes-entrepot.html"><div class="tl-hero-media" style="height:180px"><img src="{img('entrepot-logistique.jpg')}" alt="Warehouse forklift operators" loading="lazy" decoding="async"></div><div class="body"><span class="tl-chip">Logistics</span><h3>Forklift shortage: warehouse tactics</h3></div></a>
     </div>
   </div>
 </section>
@@ -406,16 +407,16 @@ def build_en(write, wrap, page_hero):
     ))
 
     services_cards = "".join(
-        f'<div class="tl-card"><div class="body"><span class="tl-chip orange">{chip}</span><h3>{t}</h3><p>{p}</p></div></div>'
-        for chip, t, p in [
-            ("Permanent", "Permanent recruiting", "Stable roles in plants, warehouses and manufacturing leadership. Success fees, replacement guarantee."),
-            ("Passive", "Search mandates", "Direct approach of passive candidates for scarce profiles: CNC, electromechanics, plant leaders."),
-            ("Leadership", "Manager recruiting", "Plant, production, maintenance and logistics managers. Often confidential."),
-            ("Shift", "Supervisor recruiting", "Forepersons and shift supervisors who can hold KPIs, health & safety and team climate."),
-            ("Trades", "Skilled trades", "Welders, machinists, industrial mechanics, electromechanical technicians, set-up, quality."),
-            ("Urgent", "Urgent recruiting", "Accelerated process when a critical shift is uncovered. A filtered shortlist, not a resume flood."),
-            ("Discreet", "Confidential mandates", "Manager replacements or reorganizations run without internal noise."),
-            ("HR", "HR support", "Job descriptions, industrial salary grids, joint interviews and onboarding."),
+        f'<a class="tl-card" href="{href}"><div class="body"><span class="tl-chip orange">{chip}</span><h3>{t}</h3><p>{p}</p></div></a>'
+        for href, chip, t, p in [
+            ("permanent-recruiting.html", "Permanent", "Permanent recruiting", "Stable roles in plants, warehouses and manufacturing leadership. Success fees, replacement guarantee."),
+            ("executive-search.html", "Passive", "Search mandates", "Direct approach of passive candidates for scarce profiles: CNC, electromechanics, plant leaders."),
+            ("leadership-recruiting.html", "Leadership", "Manager recruiting", "Plant, production, maintenance and logistics managers. Often confidential."),
+            ("industrial-recruiting.html", "Shift", "Supervisor recruiting", "Forepersons and shift supervisors who can hold KPIs, health & safety and team climate."),
+            ("technical-recruiting.html", "Trades", "Skilled trades", "Welders, machinists, industrial mechanics, electromechanical technicians, set-up, quality."),
+            ("temporary-recruiting.html", "Urgent", "Urgent recruiting", "Accelerated process when a critical shift is uncovered. A filtered shortlist, not a resume flood."),
+            ("executive-search.html", "Discreet", "Confidential mandates", "Manager replacements or reorganizations run without internal noise."),
+            ("employers.html", "HR", "HR support", "Job descriptions, industrial salary grids, joint interviews and onboarding."),
         ]
     )
     write("en/services.html", wrap(
@@ -735,7 +736,7 @@ def build_en(write, wrap, page_hero):
               <p>{req}</p>
               <h3>What we offer</h3>
               <ul><li>{typ} role</li><li>Pay: {sal}</li><li>Schedule: {shift}</li><li>Talendus support through to hire</li></ul>
-              <p><a href="jobs.html">← All openings</a></p>
+              <p><a href="jobs.html">← All openings</a> · <a href="industrial-recruiting.html">Industrial recruiting</a></p>
             </div>
             <div class="col-lg-4 offset-lg-1" id="postuler">
               <h3>Apply</h3>
@@ -751,6 +752,20 @@ def build_en(write, wrap, page_hero):
         """,
             lang="en",
             alt=f"emploi-{slug}.html",
+            extra_json_ld={
+                "@context": "https://schema.org",
+                "@type": "JobPosting",
+                "title": title,
+                "description": req,
+                "identifier": {"@type": "PropertyValue", "name": "Talendus", "value": slug},
+                "datePosted": "2026-07-20",
+                "employmentType": "FULL_TIME" if typ.lower().startswith("perm") else "TEMPORARY",
+                "hiringOrganization": {"@type": "EmploymentAgency", "name": "Talendus", "sameAs": "https://talendus.ca"},
+                "jobLocation": {"@type": "Place", "address": {"@type": "PostalAddress", "addressLocality": city, "addressRegion": "QC", "addressCountry": "CA"}},
+                "baseSalary": {"@type": "MonetaryAmount", "currency": "CAD", "value": sal},
+                "url": f"https://talendus.ca/en/job-{slug}.html",
+            },
+            og_type="article",
         ))
 
     sec_cards = "".join(
@@ -799,7 +814,7 @@ def build_en(write, wrap, page_hero):
         ))
 
     art_cards = "".join(
-        f'<a class="tl-card" href="article-{s}.html"><div class="tl-hero-media" style="height:180px"><img src="{img(im)}" alt=""></div><div class="body"><span class="tl-chip">{cat}</span><h3>{t}</h3><p>{lead}</p></div></a>'
+        f'<a class="tl-card" href="article-{s}.html"><div class="tl-hero-media" style="height:180px"><img src="{img(im)}" alt="{t}" loading="lazy" decoding="async"></div><div class="body"><span class="tl-chip">{cat}</span><h3>{t}</h3><p>{lead}</p></div></a>'
         for s, t, cat, im, lead in ARTICLES_EN
     )
     topics = "".join(f'<li style="margin-bottom:8px">{t}</li>' for t in TOPICS_EN)
@@ -813,7 +828,7 @@ def build_en(write, wrap, page_hero):
             actions='<a class="tl-btn" href="contact.html">Start a hire</a>',
             badges="",
         )
-        + f'<section class="tl-section"><div class="container"><div class="tl-grid-3">{art_cards}</div><h2 class="tl-h2" style="margin-top:48px">Coming topics</h2><ul class="tl-muted">{topics}</ul></div></section>',
+        + f'<section class="tl-section"><div class="container"><div class="tl-grid-3" id="blog-list">{art_cards}</div><h2 class="tl-h2" style="margin-top:48px">Coming topics</h2><ul class="tl-muted">{topics}</ul></div></section>',
         lang="en",
         alt="blog.html",
     ))
@@ -825,7 +840,7 @@ def build_en(write, wrap, page_hero):
             page_hero(cat, title, lead, badges="")
             + f"""
         <section class="tl-section"><div class="container" style="max-width:800px">
-          <img src="{img(im)}" alt="" style="width:100%;border-radius:16px;margin-bottom:24px">
+          <img src="{img(im)}" alt="{title}" style="width:100%;border-radius:16px;margin-bottom:24px" loading="lazy" decoding="async">
           <p class="tl-lead">{lead}</p>
           <h2>What we see in Quebec</h2>
           <p>Plants and distribution centres do not hire like a services head office. Shifts, health &amp; safety, competency cards and floor culture weigh as much as the resume. A six-week vacancy often costs more than a well-scoped recruiting mandate.</p>
@@ -837,6 +852,7 @@ def build_en(write, wrap, page_hero):
           </ul>
           <h2>How Talendus steps in</h2>
           <p>We target industrial profiles, validate shift fit and present few files — each one defensible.</p>
+          <p><a href="industrial-recruiting.html">Industrial recruiting</a> · <a href="jobs.html">Job openings</a></p>
           <div class="tl-actions" style="margin-top:28px">
             <a class="tl-btn" href="contact.html">Start a hire</a>
             <a class="tl-btn tl-btn-ghost-dark" href="blog.html">Back to the blog</a>
@@ -845,6 +861,19 @@ def build_en(write, wrap, page_hero):
         """,
             lang="en",
             alt=f"article-{slug}.html",
+            extra_json_ld={
+                "@context": "https://schema.org",
+                "@type": "Article",
+                "headline": title,
+                "description": lead,
+                "author": {"@type": "Organization", "name": "Talendus"},
+                "publisher": {"@type": "Organization", "name": "Talendus", "url": "https://talendus.ca"},
+                "mainEntityOfPage": f"https://talendus.ca/en/article-{slug}.html",
+                "inLanguage": "en-CA",
+                "image": f"https://talendus.ca/assets/img/all-images/industry/{im}",
+            },
+            og_type="article",
+            og_image=f"assets/img/all-images/industry/{im}",
         ))
 
     write("en/404.html", wrap(
@@ -856,6 +885,7 @@ def build_en(write, wrap, page_hero):
                   badges=""),
         lang="en",
         alt="404.html",
+        robots="noindex,nofollow",
     ))
     write("en/account.html", wrap(
         "My candidate account | Talendus",
@@ -869,6 +899,7 @@ def build_en(write, wrap, page_hero):
         + """<section class="tl-section"><div class="container"><div id="tl-account"></div></div></section>""",
         lang="en",
         alt="espace.html",
+        robots="noindex,nofollow",
     ))
     write("en/account-employer.html", wrap(
         "Employer portal | Talendus",
@@ -882,13 +913,21 @@ def build_en(write, wrap, page_hero):
         + """<section class="tl-section"><div class="container"><div id="tl-account" data-space="employer"></div></div></section>""",
         lang="en",
         alt="espace-employeur.html",
+        robots="noindex,nofollow",
     ))
     write("en/privacy.html", wrap(
         "Privacy policy | Talendus",
         "Talendus privacy policy, talendus.ca.",
         "en/privacy.html",
         page_hero("Legal", "Privacy policy", "Resumes and mandates are handled confidentially.", badges="")
-        + """<section class="tl-section"><div class="container" style="max-width:800px"><p>Talendus collects information needed for recruiting (contact details, resumes, job descriptions). It is not sold to third parties. It is used only to assess applications, open mandates and communicate with you.</p><p>You may request access, correction or deletion by writing to info@talendus.ca. Data is kept as long as needed for recruiting and legal obligations in Quebec.</p></div></section>""",
+        + """<section class="tl-section"><div class="container" style="max-width:800px">
+        <h2>Recruiting data</h2>
+        <p>Talendus collects information needed for recruiting (contact details, resumes, job descriptions). It is not sold to third parties. It is used only to assess applications, open mandates and communicate with you.</p>
+        <p>You may request access, correction or deletion by writing to info@talendus.ca. Data is kept as long as needed for recruiting and legal obligations in Quebec.</p>
+        <h2>Cookies and measurement</h2>
+        <p>Essential cookies keep the site working (sign-in, security, language). Analytics (Google Analytics) and marketing (Meta Pixel) cookies load <strong>only after you consent</strong>. You can accept, refuse or change this later via the cookie banner or by writing to info@talendus.ca.</p>
+        <p>No advertising identifier is set until you accept non-essential cookies. Talendus does not sell browsing data.</p>
+        </div></section>""",
         lang="en",
         alt="confidentialite.html",
     ))
@@ -901,3 +940,4 @@ def build_en(write, wrap, page_hero):
         lang="en",
         alt="conditions.html",
     ))
+    write_seo_en(write, wrap, page_hero, CTA)

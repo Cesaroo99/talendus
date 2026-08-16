@@ -110,18 +110,6 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/contact.html"/>
   </url>
   <url>
-    <loc>https://talendus.ca/espace.html</loc>
-    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/espace.html"/>
-    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/account.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/espace.html"/>
-  </url>
-  <url>
-    <loc>https://talendus.ca/en/account.html</loc>
-    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/espace.html"/>
-    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/account.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/espace.html"/>
-  </url>
-  <url>
     <loc>https://talendus.ca/confidentialite.html</loc>
     <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/confidentialite.html"/>
     <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/privacy.html"/>
@@ -144,6 +132,138 @@
     <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/conditions.html"/>
     <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/terms.html"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/conditions.html"/>
+  </url>
+  <url>
+    <loc>https://talendus.ca/recrutement-industriel.html</loc>
+    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/recrutement-industriel.html"/>
+    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/industrial-recruiting.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/recrutement-industriel.html"/>
+  </url>
+  <url>
+    <loc>https://talendus.ca/en/industrial-recruiting.html</loc>
+    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/recrutement-industriel.html"/>
+    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/industrial-recruiting.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/recrutement-industriel.html"/>
+  </url>
+  <url>
+    <loc>https://talendus.ca/recrutement-manufacturier.html</loc>
+    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/recrutement-manufacturier.html"/>
+    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/manufacturing-recruiting.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/recrutement-manufacturier.html"/>
+  </url>
+  <url>
+    <loc>https://talendus.ca/en/manufacturing-recruiting.html</loc>
+    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/recrutement-manufacturier.html"/>
+    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/manufacturing-recruiting.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/recrutement-manufacturier.html"/>
+  </url>
+  <url>
+    <loc>https://talendus.ca/recrutement-technique.html</loc>
+    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/recrutement-technique.html"/>
+    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/technical-recruiting.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/recrutement-technique.html"/>
+  </url>
+  <url>
+    <loc>https://talendus.ca/en/technical-recruiting.html</loc>
+    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/recrutement-technique.html"/>
+    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/technical-recruiting.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/recrutement-technique.html"/>
+  </url>
+  <url>
+    <loc>https://talendus.ca/recrutement-permanent.html</loc>
+    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/recrutement-permanent.html"/>
+    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/permanent-recruiting.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/recrutement-permanent.html"/>
+  </url>
+  <url>
+    <loc>https://talendus.ca/en/permanent-recruiting.html</loc>
+    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/recrutement-permanent.html"/>
+    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/permanent-recruiting.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/recrutement-permanent.html"/>
+  </url>
+  <url>
+    <loc>https://talendus.ca/recrutement-temporaire.html</loc>
+    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/recrutement-temporaire.html"/>
+    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/temporary-recruiting.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/recrutement-temporaire.html"/>
+  </url>
+  <url>
+    <loc>https://talendus.ca/en/temporary-recruiting.html</loc>
+    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/recrutement-temporaire.html"/>
+    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/temporary-recruiting.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/recrutement-temporaire.html"/>
+  </url>
+  <url>
+    <loc>https://talendus.ca/chasse-de-tetes.html</loc>
+    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/chasse-de-tetes.html"/>
+    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/executive-search.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/chasse-de-tetes.html"/>
+  </url>
+  <url>
+    <loc>https://talendus.ca/en/executive-search.html</loc>
+    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/chasse-de-tetes.html"/>
+    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/executive-search.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/chasse-de-tetes.html"/>
+  </url>
+  <url>
+    <loc>https://talendus.ca/recrutement-cadres.html</loc>
+    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/recrutement-cadres.html"/>
+    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/leadership-recruiting.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/recrutement-cadres.html"/>
+  </url>
+  <url>
+    <loc>https://talendus.ca/en/leadership-recruiting.html</loc>
+    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/recrutement-cadres.html"/>
+    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/leadership-recruiting.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/recrutement-cadres.html"/>
+  </url>
+  <url>
+    <loc>https://talendus.ca/recrutement-industriel-montreal.html</loc>
+    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/recrutement-industriel-montreal.html"/>
+    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/industrial-recruiting-montreal.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/recrutement-industriel-montreal.html"/>
+  </url>
+  <url>
+    <loc>https://talendus.ca/en/industrial-recruiting-montreal.html</loc>
+    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/recrutement-industriel-montreal.html"/>
+    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/industrial-recruiting-montreal.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/recrutement-industriel-montreal.html"/>
+  </url>
+  <url>
+    <loc>https://talendus.ca/recrutement-industriel-laval.html</loc>
+    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/recrutement-industriel-laval.html"/>
+    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/industrial-recruiting-laval.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/recrutement-industriel-laval.html"/>
+  </url>
+  <url>
+    <loc>https://talendus.ca/en/industrial-recruiting-laval.html</loc>
+    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/recrutement-industriel-laval.html"/>
+    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/industrial-recruiting-laval.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/recrutement-industriel-laval.html"/>
+  </url>
+  <url>
+    <loc>https://talendus.ca/recrutement-industriel-longueuil.html</loc>
+    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/recrutement-industriel-longueuil.html"/>
+    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/industrial-recruiting-longueuil.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/recrutement-industriel-longueuil.html"/>
+  </url>
+  <url>
+    <loc>https://talendus.ca/en/industrial-recruiting-longueuil.html</loc>
+    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/recrutement-industriel-longueuil.html"/>
+    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/industrial-recruiting-longueuil.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/recrutement-industriel-longueuil.html"/>
+  </url>
+  <url>
+    <loc>https://talendus.ca/recrutement-industriel-quebec.html</loc>
+    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/recrutement-industriel-quebec.html"/>
+    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/industrial-recruiting-quebec.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/recrutement-industriel-quebec.html"/>
+  </url>
+  <url>
+    <loc>https://talendus.ca/en/industrial-recruiting-quebec.html</loc>
+    <xhtml:link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/recrutement-industriel-quebec.html"/>
+    <xhtml:link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/industrial-recruiting-quebec.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://talendus.ca/recrutement-industriel-quebec.html"/>
   </url>
   <url>
     <loc>https://talendus.ca/emploi-cariste.html</loc>
