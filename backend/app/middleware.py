@@ -35,6 +35,8 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
         if request.url.path.rstrip("/") in {"/api/health", "/api/docs", "/api/openapi.json"}:
             return await call_next(request)
+        if request.url.path.startswith("/api/webhooks/"):
+            return await call_next(request)
         ip = request.headers.get("x-forwarded-for", "").split(",")[0].strip() or (
             request.client.host if request.client else "unknown"
         )

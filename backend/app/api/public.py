@@ -26,26 +26,6 @@ def job_board(db: Session = Depends(get_db)):
     return ok(jobs_service.export_board(db))
 
 
-@router.get("/integrations/linkedin")
-def linkedin_status():
-    from app.config import get_settings
-
-    settings = get_settings()
-    configured = bool(settings.linkedin_client_id and settings.linkedin_client_secret)
-    return ok(
-        {
-            "configured": configured,
-            "share_enabled": True,
-            "posting_enabled": configured,
-            "message": (
-                "Publication LinkedIn prête (OAuth configuré)."
-                if configured
-                else "Partage d’offre via URL LinkedIn disponible. La publication automatique nécessite LINKEDIN_CLIENT_ID et LINKEDIN_CLIENT_SECRET."
-            ),
-        }
-    )
-
-
 @router.post("/contact")
 def contact(payload: ContactIn, request: Request, db: Session = Depends(get_db)):
     send_email(

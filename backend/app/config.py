@@ -43,6 +43,7 @@ class Settings(BaseSettings):
     s3_access_key: str = ""
     s3_secret_key: str = ""
     s3_prefix: str = "talendus"
+    stripe_enabled: bool = True
     stripe_secret_key: str = ""
     stripe_webhook_secret: str = ""
     stripe_publishable_key: str = ""
@@ -52,8 +53,46 @@ class Settings(BaseSettings):
     seed_password: str = "talendus"
     default_currency: str = "CAD"
     default_tax_rate_bp: int = 14975
+
+    integrations_timeout_seconds: int = 15
+    integrations_max_retries: int = 2
+
+    linkedin_enabled: bool = False
     linkedin_client_id: str = ""
     linkedin_client_secret: str = ""
+    linkedin_api_base_url: str = "https://api.linkedin.com"
+
+    indeed_enabled: bool = False
+    indeed_publisher_id: str = ""
+    indeed_api_key: str = ""
+    indeed_api_base_url: str = "https://apis.indeed.com"
+
+    whatsapp_enabled: bool = False
+    whatsapp_access_token: str = ""
+    whatsapp_phone_number_id: str = ""
+    whatsapp_webhook_secret: str = ""
+    whatsapp_api_base_url: str = "https://graph.facebook.com/v21.0"
+
+    google_maps_enabled: bool = False
+    google_maps_api_key: str = ""
+    google_maps_api_base_url: str = "https://maps.googleapis.com/maps/api"
+
+    paypal_enabled: bool = False
+    paypal_client_id: str = ""
+    paypal_client_secret: str = ""
+    paypal_webhook_id: str = ""
+    paypal_api_base_url: str = "https://api-m.sandbox.paypal.com"
+
+    openai_enabled: bool = False
+    openai_api_key: str = ""
+    openai_model: str = "gpt-4o-mini"
+    openai_api_base_url: str = "https://api.openai.com/v1"
+
+    esignature_enabled: bool = False
+    esignature_provider: str = "docusign"
+    esignature_api_key: str = ""
+    esignature_api_base_url: str = ""
+    esignature_webhook_secret: str = ""
 
     @property
     def cors_origin_list(self) -> list[str]:

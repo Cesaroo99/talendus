@@ -15,6 +15,7 @@ from app.api import (
     recruiters,
     users,
     webhooks,
+    integrations,
 )
 
 __all__ = [
@@ -34,4 +35,5 @@ __all__ = [
     "recruiters",
     "users",
     "webhooks",
+    "integrations",
 ]

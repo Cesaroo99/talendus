@@ -426,6 +426,9 @@ def test_schema_tables_and_constraints(client):
         "user_preferences",
         "system_settings",
         "audit_logs",
+        "external_jobs",
+        "webhook_events",
+        "integration_calls",
     }
     assert expected.issubset(tables)
     uniques = {u["name"] for u in inspect(engine).get_unique_constraints("applications")}

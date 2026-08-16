@@ -189,7 +189,10 @@ Erreur :
 | GET/POST | `/interviews` + `/interviews/{id}/status` | mixte |
 | GET/POST | `/invoices` + send + payments | finance / admin (lecture recruteur / employeur) |
 | GET/POST | `/contracts` `/contracts/{id}/sign` | mixte |
+| GET | `/integrations` `/integrations/status/{name}` | staff |
 | GET | `/integrations/linkedin` | public |
+| POST | `/integrations/jobs/import` `/integrations/jobs/sync` | staff / admin |
+| POST | `/webhooks/stripe` `/webhooks/paypal` `/webhooks/whatsapp` `/webhooks/esignature` | signatures fournisseurs |
 | GET | `/notifications` `/notifications/unread` | oui |
 | GET | `/admin/bootstrap` `/admin/users` `/admin/audit` `/admin/stats` `/admin/settings` `/emails` | staff / admin |
 | POST | `/admin/candidates` | recruteur / admin |
@@ -233,7 +236,7 @@ Couvrent inscription, connexion, permissions, publication d’offre, candidature
 - **Facturation** : factures et paiements en base (finance / admin). Checkout Stripe (`POST /api/invoices/{id}/checkout`) si `STRIPE_SECRET_KEY` est défini ; webhook `POST /api/webhooks/stripe` pose `stripe_payment_intent_id` et marque la facture payée. Sans clé : 503 `STRIPE_NOT_CONFIGURED`.
 - **Job board** : `GET /api/job-board` (JSON). Partage LinkedIn via URL officielle. Publication automatique seulement si `LINKEDIN_CLIENT_ID` / `LINKEDIN_CLIENT_SECRET` sont définis (`posting_enabled`).
 - **Stockage CV** : local ou S3 (`STORAGE_BACKEND=s3`). Téléchargement authentifié (URL présignée S3 ou fichier local).
-- **Parse CV** : extraction déterministe (e-mails, téléphones, compétences industrielles) dans `parse_json`. Un échec de parse n’empêche pas l’upload.
+- **Intégrations** : couche `app/integrations/` (un module par fournisseur). Catalogue `GET /api/integrations`. Sans identifiants : 503 `INTEGRATION_NOT_CONFIGURED`, aucun appel simulé. Détail : [`INTEGRATIONS.md`](INTEGRATIONS.md).
 
 ## Déploiement
 
@@ -246,4 +249,4 @@ Couvrent inscription, connexion, permissions, publication d’offre, candidature
 
 ## Non livré volontairement
 
-Matching LLM, WebSockets, visioconférence Zoom, DocuSign, Redis/Celery obligatoire, publication LinkedIn sans identifiants OAuth.
+Matching LLM automatique, WebSockets, visioconférence Zoom, DocuSign branché, Redis/Celery obligatoire, publication LinkedIn / import Indeed sans accès partenaire officiel.

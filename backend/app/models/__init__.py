@@ -23,6 +23,7 @@ from app.models.ops import (
 )
 from app.models.rbac import Permission, Role
 from app.models.settings import SystemSetting, UserPreference
+from app.models.integrations import ExternalJob, IntegrationCall, WebhookEvent
 
 __all__ = [
     "User",
@@ -55,4 +56,7 @@ __all__ = [
     "ContractSignature",
     "UserPreference",
     "SystemSetting",
+    "ExternalJob",
+    "WebhookEvent",
+    "IntegrationCall",
 ]

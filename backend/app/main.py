@@ -72,6 +72,7 @@ def create_app() -> FastAPI:
         recruiters,
         users,
         webhooks,
+        integrations,
     )
 
     application.include_router(public.router, prefix="/api")
@@ -89,6 +90,7 @@ def create_app() -> FastAPI:
     application.include_router(invoices.router, prefix="/api")
     application.include_router(contracts.router, prefix="/api")
     application.include_router(matching.router, prefix="/api")
+    application.include_router(integrations.router, prefix="/api")
     application.include_router(admin.router, prefix="/api")
     application.include_router(webhooks.router, prefix="/api")
 
