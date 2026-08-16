@@ -5,12 +5,14 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from parts import (
     wrap as wrap_page, page_hero, speed_strip, cta_band, faq_html, proof_stats,
-    FAQ_EMPLOYEURS, FAQ_CANDIDATS,
+    FAQ_EMPLOYEURS, FAQ_CANDIDATS, FAQ_HOME,
 )
 from positioning import (
     homepage_after_hero, job_search_filters, employer_need_fields,
     talent_trade_options, sectors_cloud, trades_cloud, ai_coming_soon,
-    human_hire_band,
+    human_hire_band, problems_section, approach_section, process_section,
+    why_talendus_section, ai_engine_section, human_section, company_types_section,
+    candidate_journey_section, for_companies_section, for_candidates_section,
 )
 from en_pages import build_en
 from seo_pages import write_fr as write_seo_fr
@@ -172,25 +174,24 @@ INDEX_BODY = r"""
         <div class="img1"><img src="assets/img/all-images/industry/usine-equipe.jpg" alt="Équipe au travail" fetchpriority="high" decoding="async"></div>
         <div class="container">
             <div class="hero2-heading tl-hero-lock">
-                <h5>Talendus. La plateforme de recrutement intelligente pour toutes les entreprises.</h5>
+                <h5>Talendus. Agence de placement intelligente.</h5>
                 <div class="space16"></div>
-                <h1>Recrutez mieux, plus vite et plus intelligemment.</h1>
+                <h1>Les bons talents. Plus rapidement. Plus intelligemment.</h1>
                 <div class="space16"></div>
-                <p>Vous cherchez un emploi, ou vous recrutez ? Talendus accompagne les candidats et les entreprises de toutes tailles, des PME aux plus grandes organisations, dans tous les secteurs.</p>
-                <p>Du premier besoin de recrutement à l'identification des meilleurs candidats, Talendus simplifie votre processus de recrutement.</p>
+                <p>Nous recherchons, évaluons et présélectionnons les talents les plus pertinents pour les entreprises — expertise humaine, technologie et intelligence artificielle, au service d'un seul processus.</p>
             </div>
             <div class="tl-persona-cards">
               <a class="tl-persona-card is-talent" href="candidats.html" data-set-persona="talent">
                 <span class="tl-kicker">Candidats</span>
                 <h2>Je cherche un emploi</h2>
-                <p>Parcourez les offres, créez votre profil, suivez vos candidatures. C'est gratuit. Un conseiller présente votre dossier aux employeurs.</p>
-                <span class="tl-persona-go">Trouver un emploi <i class="fa-solid fa-arrow-right"></i></span>
+                <p>Créez votre profil, déposez votre CV. Talendus étudie votre parcours et vous contacte lorsqu'une opportunité correspond. C'est gratuit.</p>
+                <span class="tl-persona-go">Créer mon profil <i class="fa-solid fa-arrow-right"></i></span>
               </a>
               <a class="tl-persona-card is-hire" href="entreprises.html" data-set-persona="entreprise">
                 <span class="tl-kicker">Entreprises</span>
                 <h2>Je recrute</h2>
-                <p>On vous présente les bons talents, dans les meilleurs délais. Une shortlist claire, pas une pile de CV à trier.</p>
-                <span class="tl-persona-go">Trouver des talents <i class="fa-solid fa-arrow-right"></i></span>
+                <p>Confiez-nous votre besoin. Nous recherchons, présélectionnons et vous présentons une shortlist qualifiée. Vous gardez la décision finale.</p>
+                <span class="tl-persona-go">Confier mon recrutement <i class="fa-solid fa-arrow-right"></i></span>
               </a>
             </div>
         </div>
@@ -199,10 +200,18 @@ INDEX_BODY = r"""
 """
 
 write("index.html", wrap(
-    "Talendus | Plateforme de recrutement pour toutes les entreprises",
-    "Talendus est la plateforme de recrutement intelligente pour toutes les entreprises, des PME aux plus grandes organisations. Recrutez mieux, plus vite et plus intelligemment. Tous secteurs.",
+    "Talendus | Agence de placement intelligente",
+    "Talendus est une agence de placement intelligente. Confiez votre besoin : nous recherchons, présélectionnons et présentons les talents les plus pertinents. Tous secteurs. Nous recrutons mieux, plus vite et plus intelligemment grâce à l'IA.",
     "",
-    INDEX_BODY + homepage_after_hero("fr"),
+    INDEX_BODY + homepage_after_hero("fr") + """
+    <section class="tl-section tl-ice"><div class="container">
+      <div class="tl-center" style="max-width:720px;margin:0 auto 28px">
+        <div class="tl-kicker" id="faq">FAQ</div>
+        <h2 class="tl-h2">Ce qu'on nous demande d'abord</h2>
+      </div>
+      """ + faq_html(FAQ_HOME) + """
+    </div></section>
+    """,
     solid=False,
 ))
 
@@ -214,19 +223,25 @@ def simple_page(title, desc, slug, kicker, h1, lead, inner, actions=""):
 
 # À propos
 simple_page(
-    "À propos de Talendus | Plateforme de recrutement pour toutes les entreprises",
-    "Talendus aide les entreprises de tous secteurs à recruter les bons talents. Histoire, mission et façon de travailler.",
-    "a-propos.html", "Le cabinet", "Talendus est une plateforme de recrutement pour les entreprises.",
-    "Nous aidons les entreprises de tous secteurs à recruter les bons talents. L'industrie, le métier et la localisation sont des paramètres — jamais des limites.",
+    "À propos de Talendus | Agence de placement intelligente",
+    "Talendus est une agence de placement qui combine recrutement, expertise humaine, technologie et intelligence artificielle. Tous secteurs, tous métiers.",
+    "a-propos.html", "L'agence", "Talendus est né pour rendre le recrutement plus efficace, plus humain et plus intelligent.",
+    "Nous ne donnons pas simplement accès à des candidats. Nous faisons le travail de recherche pour les entreprises. Nous n'alignons pas simplement les talents devant des offres : nous les accompagnons vers les opportunités qui leur correspondent.",
     """
     <section class="tl-section"><div class="container">
     <div class="row g-4"><div class="col-lg-7">
-    <h2 class="tl-h2">Pourquoi on existe</h2>
-    <p class="tl-lead">Trop d'entreprises perdent des semaines à chercher les bons candidats, à trier trop de CV, ou à faire durer un processus trop long. On a bâti une plateforme qui simplifie le recrutement — pour toutes les entreprises, pas pour une industrie.</p>
-    <h2 class="tl-h2">Ce qu'on fait</h2>
-    <p>On connecte les employeurs aux talents dont ils ont besoin : développeurs, comptables, soudeurs, infirmiers, chauffeurs, responsables RH, et bien d'autres. Un conseiller présente les dossiers. Candidats et employeurs restent chacun de leur côté.</p>
-    <h2 class="tl-h2">Où on va</h2>
-    <p>Recruter mieux, plus vite et plus intelligemment grâce à l'IA. Le matching, l'analyse de CV et le classement des candidats arriveront. Ils ne sont pas simulés aujourd'hui.</p>
+    <div class="tl-prose" style="max-width:none">
+    <h2 class="tl-h2">Pourquoi nous existons</h2>
+    <p>Trop d'entreprises perdent des semaines à chercher les bonnes personnes, à trier trop de candidatures, ou à laisser un processus s'éterniser. Trop de talents envoient des CV dans le vide. Le recrutement mérite mieux qu'un tableau d'affichage ou qu'un logiciel que l'on doit apprendre à utiliser seul.</p>
+    <p>Talendus a été conçu comme une agence de placement nouvelle génération : généraliste, humaine et technologique. Lorsqu'une entreprise a un besoin, elle nous le transmet. Nous prenons en charge la recherche et la présélection. L'intelligence artificielle et nos outils accélèrent ce travail interne. Les conseillers restent là pour comprendre, qualifier et présenter. L'entreprise garde la décision finale.</p>
+    <h2 class="tl-h2">Ce que nous faisons</h2>
+    <p>Nous rapprochons les entreprises et les talents. Développeurs, comptables, soudeurs, infirmiers, chauffeurs, responsables RH, gestionnaires — et bien d'autres métiers, dans tous les secteurs. Un conseiller présente les dossiers. Candidats et employeurs restent chacun de leur côté. Il n'y a pas de canal direct non médié.</p>
+    <p>Nous recrutons mieux, plus vite et plus intelligemment grâce à l'IA : « nous recrutons » signifie que Talendus mène la recherche et la présélection pour le compte de l'entreprise. « Plus vite » : nos outils et notre organisation accélèrent le travail. « Plus intelligemment » : données, technologie, IA et expertise humaine, ensemble.</p>
+    <h2 class="tl-h2">Ce que nous ne sommes pas</h2>
+    <p>Pas un job board où l'entreprise parcourt une base. Pas une marketplace. Pas un ATS en libre-service. Pas un logiciel qui promet un candidat parfait sans humain. La technologie reste au service du processus Talendus.</p>
+    <h2 class="tl-h2">Où nous allons</h2>
+    <p>Nous intégrons progressivement des capacités d'analyse et de rapprochement au cœur de notre processus. Elles ne sont pas toutes opérationnelles aujourd'hui. Nous ne simulons pas de scores ni de classements. Tant qu'une capacité n'est pas réellement en place, un conseiller fait le travail — avec la même règle : vous confiez le besoin, nous présentons une sélection qualifiée.</p>
+    </div>
     </div>
     <div class="col-lg-4 offset-lg-1">
       <div class="tl-hero-media" style="height:360px;border-radius:16px;overflow:hidden;margin-bottom:18px">
@@ -235,23 +250,24 @@ simple_page(
     </div></div>
     </div></section>
     <section class="tl-section tl-ice"><div class="container">
-    <h2 class="tl-h2">Comment on travaille</h2>
+    <h2 class="tl-h2">Comment nous travaillons</h2>
     <div class="tl-grid-3">
-      <div class="tl-card"><div class="body"><h3>Tous les secteurs</h3><p>Talendus s'adresse à toutes les industries. Le secteur est un filtre de recherche, pas le positionnement de la marque.</p></div></div>
-      <div class="tl-card"><div class="body"><h3>Rigueur</h3><p>On évalue le métier, les compétences, l'expérience et le fit. Pas une avalanche de CV.</p></div></div>
-      <div class="tl-card"><div class="body"><h3>Parole tenue</h3><p>Délais, dossiers, garantie : ce qui est dit est livré. Un seul conseiller jusqu'à l'entrée en poste.</p></div></div>
+      <div class="tl-card"><div class="body"><h3>Généraliste</h3><p>Tous les secteurs, toutes les tailles d'entreprise, une grande variété de métiers. Le secteur est un paramètre du mandat, pas l'identité de l'agence.</p></div></div>
+      <div class="tl-card"><div class="body"><h3>Intermédiaire</h3><p>L'entreprise confie. Le candidat crée son profil. Talendus recherche, présélectionne, présente. Personne n'est laissé seul devant une base de données.</p></div></div>
+      <div class="tl-card"><div class="body"><h3>Humain et technologique</h3><p>L'IA accélère l'analyse interne. Les conseillers valident la pertinence. Vous choisissez. Rien n'est promis comme décision automatique.</p></div></div>
     </div>
     </div></section>
     <section class="tl-section"><div class="container">
     <div class="row g-4">
       <div class="col-lg-6">
-        <h2 class="tl-h2">Ce à quoi on s'engage</h2>
+        <h2 class="tl-h2">Ce à quoi nous nous engageons</h2>
         <ul>
           <li>Présélection avant toute présentation.</li>
           <li>Transparence sur les délais et la rareté du profil.</li>
           <li>Suivi d'intégration 30/60/90 jours.</li>
           <li>Garantie de remplacement sur les mandats permanents.</li>
-          <li>Pas de fausses fonctionnalités IA tant qu'elles ne sont pas développées.</li>
+          <li>Pas de fausse fonctionnalité IA : ce qui n'est pas intégré n'est pas simulé.</li>
+          <li>Aucun contact direct employeur–candidat hors de Talendus.</li>
         </ul>
       </div>
       <div class="col-lg-6">
@@ -265,6 +281,7 @@ simple_page(
     </div>
     </div></section>
     """
+    + human_section("fr")
     + sectors_cloud("fr"),
     actions='<a class="tl-btn" href="candidats.html" data-set-persona="talent">Pour les Talents</a><a class="tl-btn tl-btn-ghost" href="entreprises.html" data-set-persona="entreprise">Pour les Entreprises</a>'
 )
@@ -273,21 +290,21 @@ simple_page(
 services_cards = "".join(
     f'<a class="tl-card" href="{href}"><div class="body"><span class="tl-chip orange">{chip}</span><h3>{t}</h3><p>{p}</p></div></a>'
     for href, chip, t, p in [
-        ("recrutement-permanent.html", "Permanent", "Recrutement permanent", "Postes stables dans tous les secteurs. Honoraires au succès, garantie de remplacement."),
-        ("chasse-de-tetes.html", "Passif", "Chasse de têtes", "On approche des gens déjà en poste pour les profils rares, quel que soit le secteur."),
-        ("recrutement-cadres.html", "Direction", "Recrutement de cadres", "Gestionnaires et dirigeants. Souvent confidentiel."),
+        ("recrutement-permanent.html", "Permanent", "Recrutement permanent", "Postes stables dans tous les secteurs. Honoraires au succès, garantie de remplacement. Talendus mène la recherche ; vous choisissez."),
+        ("chasse-de-tetes.html", "Passif", "Chasse de têtes", "Nous approchons des personnes déjà en poste pour les profils rares. Vous ne parcourez pas une base : nous identifions et présentons."),
+        ("recrutement-cadres.html", "Direction", "Recrutement de cadres", "Gestionnaires et dirigeants. Souvent confidentiel. Shortlist qualifiée, décision chez vous."),
         ("recrutement-industriel.html", "Exemple", "Recrutement industriel", "Un exemple parmi d'autres : production, maintenance, logistique. Talendus n'est pas limité à l'industrie."),
-        ("recrutement-technique.html", "Métiers", "Métiers spécialisés", "Techniciens, soudeurs, développeurs, infirmiers, comptables — une grande variété de profils."),
+        ("recrutement-technique.html", "Métiers", "Métiers spécialisés", "Techniciens, soudeurs, développeurs, infirmiers, comptables — une grande variété de profils, tous secteurs."),
         ("recrutement-temporaire.html", "Urgent", "Recrutement urgent", "Quand un poste critique est découvert. Une shortlist filtrée, pas une avalanche de CV."),
         ("chasse-de-tetes.html", "Discret", "Mandats confidentiels", "Remplacements de cadres ou réorganisations menés sans bruit interne."),
-        ("entreprises.html", "RH", "Accompagnement RH", "Descriptifs de poste, grilles salariales, entrevues conjointes et intégration."),
+        ("entreprises.html", "RH", "Accompagnement RH", "Descriptifs de poste, grilles salariales, entrevues conjointes et intégration — autour du mandat de placement."),
     ]
 )
 simple_page(
-    "Services de recrutement | Talendus",
-    "Recrutement permanent, chasse de têtes, cadres et métiers spécialisés pour les entreprises de tous secteurs.",
-    "services.html", "Services", "Du premier besoin à l'embauche : un seul interlocuteur.",
-    "Permanent, temporaire, chasse de têtes, cadres et métiers. Pour toutes les entreprises, pas pour une industrie.",
+    "Services de recrutement | Agence de placement Talendus",
+    "Recrutement permanent, chasse de têtes, cadres et métiers spécialisés. Talendus recherche et présélectionne ; l'entreprise décide. Tous secteurs.",
+    "services.html", "Services", "Du besoin à la shortlist : un seul interlocuteur.",
+    "Permanent, temporaire, chasse de têtes, cadres et métiers. Vous confiez le mandat. Nous faisons la recherche. Vous gardez le choix final.",
     f'''
     <section class="tl-section"><div class="container">
       <div class="tl-grid-4">{services_cards}</div>
@@ -296,11 +313,11 @@ simple_page(
       <div class="row align-items-center g-4">
         <div class="col-lg-6">
           <h2 class="tl-h2">Pourquoi les entreprises nous mandatent</h2>
-          <p class="tl-lead">Parce qu'un dossier de trop, c'est du temps perdu. On présente peu de candidats. Chacun a déjà passé le filtre.</p>
+          <p class="tl-lead">Parce qu'un dossier de trop, c'est du temps perdu. Nous présentons peu de candidats. Chacun a déjà passé le filtre Talendus.</p>
           <ul>
-            <li>Une shortlist, pas un portail d'emplois déguisé.</li>
+            <li>Une shortlist qualifiée, pas un portail d'emplois déguisé.</li>
             <li>Un délai annoncé dès le brief, selon la rareté réelle du profil.</li>
-            <li>Un conseiller qui comprend le poste, pas seulement le secteur.</li>
+            <li>Un conseiller qui comprend le poste — l'IA soutient nos équipes, elle ne vous est pas remise comme un moteur de recherche.</li>
           </ul>
         </div>
         <div class="col-lg-6">
@@ -311,44 +328,63 @@ simple_page(
       </div>
     </div></section>
     ''' + ai_coming_soon("fr"),
-    actions='<a class="tl-btn" href="contact.html">Parler à un recruteur</a>'
+    actions='<a class="tl-btn" href="contact.html">Confier mon recrutement</a>'
 )
 
 # Entreprises (URL canonique) + redirection Employeurs
 EMPLOYERS_BODY = (
     page_hero(
         "Entreprises",
-        "Trouvez les talents dont votre entreprise a besoin.",
-        "Publiez une offre, décrivez un besoin, ou parlez à un recruteur. Quel que soit votre secteur.",
-        actions='<a class="tl-btn" href="contact.html">Parler à un recruteur</a><a class="tl-btn tl-btn-ghost" href="publier-une-offre.html">Publier une offre</a>',
-        badges='<span class="tl-badge tl-badge-light">Appel sur rendez-vous</span> <span class="tl-badge tl-badge-light">Tous secteurs</span>'
+        "Vous recrutez ? Confiez-nous votre besoin.",
+        "Talendus recherche, évalue et présélectionne les talents les plus pertinents. Vous étudiez une shortlist qualifiée et vous prenez la décision finale. Tous secteurs, toutes tailles d'entreprise.",
+        actions='<a class="tl-btn" href="contact.html">Confier mon recrutement</a><a class="tl-btn tl-btn-ghost" href="publier-une-offre.html">Décrire mon besoin</a>',
+        badges='<span class="tl-badge tl-badge-light">Agence de placement</span> <span class="tl-badge tl-badge-light">Tous secteurs</span>'
     )
     + proof_stats("fr")
+    + problems_section("fr")
     + """
     <section class="tl-section"><div class="container">
-      <div class="tl-grid-3">
-        <div class="tl-card"><div class="body"><span class="tl-chip orange">Positionnement</span><h3>Pourquoi Talendus</h3><p>Nous aidons les entreprises de tous secteurs à recruter les bons talents. Pas une agence coincée dans une industrie.</p></div></div>
-        <div class="tl-card"><div class="body"><span class="tl-chip orange">Délai</span><h3>Délais tenus</h3><p>Premiers dossiers visés en 7 jours sur un métier d'opérations. 3 à 8 semaines pour les profils rares et les cadres. On l'annonce dès le brief.</p></div></div>
-        <div class="tl-card"><div class="body"><span class="tl-chip orange">Confiance</span><h3>Garanties</h3><p>Remplacement inclus sur les mandats permanents. Conditions confirmées à l'ouverture. Un seul conseiller jusqu'à l'entrée en poste.</p></div></div>
+      <div class="tl-prose">
+        <div class="tl-kicker">La solution Talendus</div>
+        <h2 class="tl-h2">Nous faisons le travail de recherche pour vous.</h2>
+        <p>Vous avez un poste à pourvoir. Au lieu de publier une annonce et de trier des dizaines — parfois des centaines — de candidatures, vous transmettez le besoin à Talendus. Nous comprenons le poste, nous recherchons les profils, nous analysons les parcours, nous présélectionnons, nous échangeons avec les candidats lorsque c'est nécessaire, nous évaluons, puis nous vous présentons une sélection qualifiée.</p>
+        <p>Vous n'accédez pas à une base de CV. Vous ne « cherchez pas des talents » sur Talendus comme sur un logiciel ATS. Vous mandattez une agence. L'intelligence artificielle aide nos équipes à traiter plus vite l'information ; elle n'est pas un assistant que vous utilisez pour chasser vous-même. La décision d'embauche reste la vôtre.</p>
       </div>
     </div></section>
-    <section class="tl-section tl-ice"><div class="container">
-      <div class="tl-center" style="max-width:720px;margin:0 auto 36px">
-        <div class="tl-kicker">Comment ça se passe</div>
-        <h2 class="tl-h2">De l'appel au premier dossier</h2>
-      </div>
-      <div class="tl-steps">
-        <div class="tl-step"><span>01</span><h3>Appel</h3><p>30 minutes pour comprendre le poste, le secteur, le volume et l'urgence.</p></div>
-        <div class="tl-step"><span>02</span><h3>Ciblage</h3><p>On active le réseau selon le métier, les compétences et la localisation.</p></div>
-        <div class="tl-step"><span>03</span><h3>Filtre</h3><p>Entrevue Talendus avant que votre équipe perde une heure.</p></div>
-        <div class="tl-step"><span>04</span><h3>Shortlist</h3><p>Premiers dossiers visés en 7 jours. Comparables, avec une recommandation claire.</p></div>
-        <div class="tl-step"><span>05</span><h3>Suivi</h3><p>Intégration 30/60/90 et garantie de remplacement.</p></div>
+    """
+    + process_section("fr")
+    + """
+    <section class="tl-section"><div class="container">
+      <div class="row g-4">
+        <div class="col-lg-6">
+          <h2 class="tl-h2">Recherche des talents</h2>
+          <p>Nous mobilisons le réseau Talendus, les profils déjà connus, les candidatures reçues et, lorsque c'est utile, une offre cadrée. Les personnes déjà en poste peuvent être approchées discrètement. L'objectif n'est pas d'afficher le plus grand nombre d'annonces : c'est d'identifier les profils qui présentent le meilleur potentiel de correspondance avec votre besoin.</p>
+        </div>
+        <div class="col-lg-6">
+          <h2 class="tl-h2">Présélection</h2>
+          <p>Chaque profil identifié est analysé : compétences, expérience, qualifications, cohérence avec le poste et critères convenus avec vous. Ce qui ne tient pas n'arrive pas sur votre bureau. Vous ne devenez pas le premier filtre d'une pile de CV.</p>
+        </div>
+        <div class="col-lg-6">
+          <h2 class="tl-h2">Entretiens</h2>
+          <p>Lorsque c'est nécessaire, Talendus échange avec les candidats avant de vous les présenter : validation du parcours, motivations, adéquation. Vos entretiens, ensuite, portent sur des personnes déjà qualifiées. Vous organisez votre processus ; nous restons l'intermédiaire.</p>
+        </div>
+        <div class="col-lg-6">
+          <h2 class="tl-h2">Shortlist</h2>
+          <p>Nous ne transmettons pas une liste massive. Nous présentons une sélection de profils pertinents, chacun que nous sommes prêts à défendre. La pertinence est ce que nous vendons. Le volume, non.</p>
+        </div>
       </div>
     </div></section>
+    """
+    + ai_engine_section("fr")
+    + human_section("fr")
+    + why_talendus_section("fr")
+    + company_types_section("fr")
+    + sectors_cloud("fr")
+    + """
     <section class="tl-section" id="calculateur"><div class="container">
       <div class="row align-items-center g-4">
         <div class="col-lg-5"><h2 class="tl-h2">Combien coûte une mauvaise embauche</h2>
-        <p class="tl-lead">Estimez l'impact d'un mauvais fit : salaire, formation, heures sup. et perte de productivité. Un mandat Talendus coûte presque toujours moins cher qu'un poste vacant trop longtemps.</p></div>
+        <p class="tl-lead">Estimez l'impact d'un mauvais fit : salaire, formation, heures sup. et perte de productivité. Un mandat Talendus — recherche et présélection comprises — coûte presque toujours moins cher qu'un poste vacant trop longtemps.</p></div>
         <div class="col-lg-6 offset-lg-1">
           <div class="tl-calc">
             <label for="tl-salary">Salaire annuel du poste ($)</label>
@@ -360,22 +396,6 @@ EMPLOYERS_BODY = (
         </div>
       </div>
     </div></section>
-    <section class="tl-section"><div class="container">
-      <div class="tl-center" style="max-width:720px;margin:0 auto 36px">
-        <div class="tl-kicker">Ce que vous pouvez faire ici</div>
-        <h2 class="tl-h2">Recruter, publier, chasser, accompagner</h2>
-      </div>
-      <div class="tl-grid-4">
-        <a class="tl-card" href="contact.html"><div class="body"><span class="tl-chip orange">Recruteur</span><h3>Parler à un recruteur</h3><p>Confiez-nous votre recrutement. Secteur, poste, volume, localisation.</p></div></a>
-        <a class="tl-card" href="publier-une-offre.html"><div class="body"><span class="tl-chip orange">Mandat</span><h3>Publier une offre</h3><p>Décrivez le poste, le contrat et l'urgence. On ouvre le sourcing.</p></div></a>
-        <a class="tl-card" href="chasse-de-tetes.html"><div class="body"><span class="tl-chip orange">Passif</span><h3>Trouver des talents</h3><p>Approche discrète des gens déjà en poste, tous secteurs.</p></div></a>
-        <a class="tl-card" href="solutions-rh.html"><div class="body"><span class="tl-chip orange">RH</span><h3>Solutions RH</h3><p>Descriptifs, grilles salariales, entrevues conjointes et intégration 30/60/90.</p></div></a>
-      </div>
-    </div></section>
-    """
-    + sectors_cloud("fr")
-    + ai_coming_soon("fr")
-    + """
     <section class="tl-section tl-ice" id="temoignages"><div class="container">
       <div class="tl-center" style="max-width:720px;margin:0 auto 36px">
         <div class="tl-kicker">Témoignages entreprises</div>
@@ -399,21 +419,21 @@ EMPLOYERS_BODY = (
         </blockquote>
       </div>
     </div></section>
-    <section class="tl-section tl-ice"><div class="container">
+    <section class="tl-section"><div class="container">
       <div class="tl-center" style="max-width:720px;margin:0 auto 28px">
         <div class="tl-kicker" id="faq">FAQ entreprises</div>
         <h2 class="tl-h2">Ce que demandent les RH et les gestionnaires</h2>
       </div>
       """ + faq_html(FAQ_EMPLOYEURS) + """
       <div class="tl-center" style="margin-top:32px">
-        <a class="tl-btn tl-btn-lg" href="contact.html">Décrire mon besoin de recrutement</a>
+        <a class="tl-btn tl-btn-lg" href="contact.html">Confier mon recrutement</a>
       </div>
     </div></section>
     """
 )
 write("entreprises.html", wrap(
-    "Entreprises | Recrutement pour toutes les entreprises — Talendus",
-    "Confiez un recrutement à Talendus. Publiez une offre, trouvez des talents ou parlez à un recruteur. Tous secteurs.",
+    "Entreprises | Agence de placement — Talendus",
+    "Confiez un recrutement à Talendus. Nous recherchons, présélectionnons et présentons une shortlist qualifiée. Tous secteurs. Vous gardez la décision finale.",
     "entreprises.html",
     EMPLOYERS_BODY,
 ))
@@ -426,30 +446,32 @@ write("employeurs.html", wrap(
 
 # Candidats
 write("candidats.html", wrap(
-    "Candidats | Trouver un emploi au Québec — Talendus",
-    "Créez votre profil chez Talendus. Offres dans tous les secteurs : technologie, santé, finance, manufacturier, commerce et plus.",
+    "Candidats | Rejoindre Talendus — agence de placement",
+    "Créez votre profil chez Talendus. Nous étudions votre parcours et vous contactons lorsqu'une opportunité correspond. Gratuit. Tous secteurs.",
     "candidats.html",
     page_hero(
         "Candidats",
-        "Trouvez un emploi sans enchaîner les entrevues pour rien.",
-        "Créez votre profil. Un conseiller vous rappelle si un mandat colle. Vous n'êtes pas envoyé à l'aveugle chez quinze employeurs.",
-        actions='<a class="tl-btn" href="candidats.html#cv">Créer mon profil</a><a class="tl-btn tl-btn-ghost" href="emplois.html">Découvrir les offres</a>',
+        "Créez votre profil. Talendus vous accompagne vers les opportunités qui collent.",
+        "Vous n'êtes pas un CV dans une base. Un conseiller étudie votre parcours, peut vous contacter, vous évaluer, et vous présenter à une entreprise lorsque l'adéquation tient. C'est gratuit.",
+        actions='<a class="tl-btn" href="candidats.html#cv">Créer mon profil</a><a class="tl-btn tl-btn-ghost" href="emplois.html">Voir les opportunités</a>',
         badges='<span class="tl-badge tl-badge-light">Sans frais pour vous</span> <span class="tl-badge tl-badge-light">Tous secteurs</span>'
     )
+    + for_candidates_section("fr")
+    + candidate_journey_section("fr")
     + """
     <section class="tl-section" id="cv"><div class="container">
       <div class="row g-4">
         <div class="col-lg-5">
           <h2 class="tl-h2">Créer votre profil</h2>
-          <p class="tl-lead">Indiquez votre métier, vos compétences et votre région. Un conseiller vous rappelle si un mandat colle. On ne vous envoie pas sur quinze entrevues pour rien.</p>
+          <p class="tl-lead">Indiquez votre métier, vos compétences, vos préférences et votre région. Déposez votre CV. Un conseiller Talendus étudie le dossier et vous contacte si un mandat correspond. Vous n'êtes pas envoyé à l'aveugle chez quinze employeurs.</p>
           <div class="tl-notice" style="color:var(--tl-navy)">En semaine, on répond en général en moins de 30 minutes.</div>
           <p id="processus"></p>
-          <h3>Comment ça se passe</h3>
+          <h3>Ce que Talendus fait ensuite</h3>
           <ol>
-            <li>Créez votre profil.</li>
-            <li>Postulez aux offres ou déposez votre CV.</li>
-            <li>Suivez vos candidatures avec un conseiller Talendus.</li>
-            <li>On vous contacte quand le poste et le salaire correspondent.</li>
+            <li>Analyse de votre profil et de votre CV.</li>
+            <li>Considération pour les mandats pertinents — y compris non affichés.</li>
+            <li>Échanges avec un conseiller, puis étapes de sélection si besoin.</li>
+            <li>Présentation à une entreprise uniquement lorsque ça colle.</li>
           </ol>
         </div>
         <div class="col-lg-6 offset-lg-1">
@@ -469,15 +491,8 @@ write("candidats.html", wrap(
     </div></section>
     """
     + trades_cloud("fr")
+    + human_section("fr")
     + """
-    <section class="tl-section tl-ice"><div class="container">
-      <h2 class="tl-h2">Conseils carrière</h2>
-      <div class="tl-grid-3">
-        <div class="tl-card"><div class="body"><h3>Préparer une entrevue</h3><p>Exemples concrets, compétences, travail d'équipe : ce que les gestionnaires écoutent vraiment.</p></div></div>
-        <div class="tl-card"><div class="body"><h3>Mettre en valeur vos compétences</h3><p>Python, Excel, soudure, conduite : listez-les en tête de CV. C'est souvent le premier filtre.</p></div></div>
-        <div class="tl-card"><div class="body"><h3>Voir les offres</h3><p><a href="emplois.html">Consultez les postes ouverts</a> ou laissez-nous vous approcher pour un mandat confidentiel.</p></div></div>
-      </div>
-    </div></section>
     <section class="tl-section" id="temoignages"><div class="container">
       <div class="tl-center" style="max-width:720px;margin:0 auto 36px">
         <div class="tl-kicker">Témoignages candidats</div>
@@ -513,8 +528,8 @@ write("candidats.html", wrap(
 
 # Contact
 write("contact.html", wrap(
-    "Contact | Parler à un recruteur — Talendus",
-    "Contactez Talendus à Montréal. Décrivez un besoin de recrutement ou créez votre profil. Appels sur rendez-vous. 514 555-0199 · info@talendus.ca",
+    "Contact | Confier un recrutement ou créer un profil — Talendus",
+    "Contactez Talendus à Montréal. Confiez un besoin de recrutement ou créez votre profil. Appels sur rendez-vous. 514 555-0199 · info@talendus.ca",
     "contact.html",
     page_hero(
         "Contact",
@@ -576,7 +591,7 @@ write("contact.html", wrap(
           <a class="tl-persona-door" href="#formulaire" data-set-persona="entreprise">
             <span class="tl-kicker">Entreprises</span>
             <h2>Je recrute</h2>
-            <p>Ouvrez un mandat, publiez une offre ou réservez un appel.</p>
+            <p>Ouvrez un mandat : décrivez le poste, nous faisons la recherche.</p>
             <span class="tl-split-cta">Continuer →</span>
           </a>
         </div>
@@ -605,7 +620,7 @@ write("contact.html", wrap(
         <div data-persona-only="entreprise">
           <div class="tl-kicker">Entreprises</div>
           <h2 class="tl-h2">Décrire mon besoin de recrutement</h2>
-          <p class="tl-lead">Secteur, poste, volume, localisation, type de contrat. Appel gratuit, sur rendez-vous.</p>
+          <p class="tl-lead">Vous transmettez le poste. Talendus recherche et présélectionne. Appel gratuit, sur rendez-vous.</p>
           <form class="tl-form" action="#" method="post" data-form="contact">
             <input type="hidden" name="profil" value="Employeur — je recrute">
             <label>Nom</label><input required name="nom">
@@ -614,12 +629,12 @@ write("contact.html", wrap(
             <label>Téléphone</label><input name="tel">
             <label>Objet</label>
             <select name="objet">
-              <option>Parler à un recruteur</option>
-              <option>Publier une offre</option>
-              <option>Décrire mon besoin de recrutement</option>
+              <option>Confier mon recrutement</option>
+              <option>Décrire mon besoin</option>
+              <option>Parler à Talendus</option>
             </select>
             """ + employer_need_fields("fr") + """
-            <button class="tl-btn tl-btn-lg" type="submit">Confiez-nous votre recrutement</button>
+            <button class="tl-btn tl-btn-lg" type="submit">Confier mon recrutement</button>
             <div class="tl-success"></div>
           </form>
         </div>
@@ -647,14 +662,14 @@ for slug, title, city, cat, typ, sal, shift, req, sector, skills, exp in JOBS:
       </div>
     </article>''')
 write("emplois.html", wrap(
-    "Offres d'emploi | Talendus",
-    "Postes ouverts dans tous les secteurs : développeur, comptable, soudeur, infirmier, chauffeur, cariste et plus. Filtrez par secteur, métier, compétences, expérience et localisation.",
+    "Offres d'emploi | Opportunités Talendus",
+    "Postes accompagnés par Talendus dans tous les secteurs. Postuler envoie votre dossier à notre équipe, pas à l'employeur en direct.",
     "emplois.html",
     page_hero(
-        "Offres d'emploi", "Découvrez les offres. Tous secteurs, tous métiers.",
-        "Filtrez par secteur, métier, compétences, expérience, localisation et type d'emploi, puis postulez. Un conseiller Talendus présente votre dossier à l'employeur.",
+        "Offres d'emploi", "Des opportunités. Tous secteurs, tous métiers.",
+        "Filtrez, puis postulez. Un conseiller Talendus présente votre dossier à l'employeur. Vous pouvez aussi créer un profil : beaucoup de mandats ne sont pas affichés.",
         actions='<a class="tl-btn" href="candidats.html#cv">Créer mon profil</a>',
-        badges='<span class="tl-badge tl-badge-light">Banque de talents</span>'
+        badges='<span class="tl-badge tl-badge-light">Via Talendus</span>'
     )
     + f"""
     <section class="tl-section"><div class="container">
@@ -668,7 +683,7 @@ write("emplois.html", wrap(
 for slug, title, city, cat, typ, sal, shift, req, sector, skills, exp in JOBS:
     write(f"emploi-{slug}.html", wrap(
         f"{title} à {city} | Emploi — Talendus",
-        f"Poste de {title} à {city}, Québec. {typ}. Postulez via Talendus, plateforme de recrutement pour toutes les entreprises.",
+        f"Poste de {title} à {city}, Québec. {typ}. Postulez via Talendus : un conseiller présente votre dossier. Agence de placement, tous secteurs.",
         f"emploi-{slug}.html",
         page_hero(
             f"{city} · {typ}", title, f"{sal} · {shift} · Recrutement Talendus",
@@ -680,7 +695,7 @@ for slug, title, city, cat, typ, sal, shift, req, sector, skills, exp in JOBS:
           <div class="row g-4">
             <div class="col-lg-7">
               <h2 class="tl-h2">Le poste</h2>
-              <p class="tl-lead">Talendus recrute un(e) {title.lower()} pour un employeur à {city}. Secteur : {sector}. Compétences : {skills}.</p>
+              <p class="tl-lead">Talendus recrute un(e) {title.lower()} pour un employeur à {city}. Secteur : {sector}. Compétences : {skills}. Postuler envoie votre dossier à notre équipe, pas à l'entreprise en direct.</p>
               <h3>Profil recherché</h3>
               <p>{req}</p>
               <h3>Ce que nous offrons</h3>
@@ -709,13 +724,13 @@ sec_cards = "".join(
     for s, n, t, d in SECTORS
 )
 write("secteurs.html", wrap(
-    "Tous les secteurs | Plateforme de recrutement — Talendus",
-    "Talendus s'adresse à toutes les industries. Technologie, construction, santé, finance, manufacturier, commerce et bien plus encore.",
+    "Tous les secteurs | Agence de placement — Talendus",
+    "Talendus recrute pour tous les secteurs et tous les types de métiers. Technologie, construction, santé, finance, industrie, commerce et bien plus.",
     "secteurs.html",
     page_hero(
-        "Tous les secteurs", "Talendus s'adresse à toutes les industries.",
-        "Ces secteurs sont des exemples de la capacité de la plateforme, pas une liste exclusive. Quel que soit votre secteur, Talendus vous aide à trouver les bons talents.",
-        actions='<a class="tl-btn" href="contact.html">Parler à un recruteur</a>'
+        "Tous les secteurs", "Talendus recrute pour tous les secteurs et tous les types de métiers.",
+        "Ces secteurs sont des exemples, pas une liste exclusive. PME, startups, grandes organisations : un accompagnement adapté à chaque besoin de recrutement.",
+        actions='<a class="tl-btn" href="contact.html">Confier mon recrutement</a>'
     )
     + sectors_cloud("fr")
     + f'<section class="tl-section tl-ice"><div class="container"><div class="tl-center" style="max-width:720px;margin:0 auto 28px"><div class="tl-kicker">Exemples de pages</div><h2 class="tl-h2">Quelques verticales déjà documentées</h2><p class="tl-lead">D\'autres pages (construction, santé, finance, informatique…) viendront avec du contenu réel, pas des pages vides.</p></div><div class="tl-grid-3">{sec_cards}</div></div></section>'
@@ -728,13 +743,13 @@ for slug, name, title, desc in SECTORS:
         f"secteur-{slug}.html",
         page_hero(
             "Exemple de secteur", name, desc,
-            actions='<a class="tl-btn" href="contact.html">Parler à un recruteur</a>'
+            actions='<a class="tl-btn" href="contact.html">Confier mon recrutement</a>'
         )
         + f"""
         <section class="tl-section"><div class="container">
           <div class="row g-4">
             <div class="col-lg-7">
-              <p class="tl-lead">{desc} Ce n'est pas une spécialisation exclusive : Talendus recrute pour toutes les entreprises.</p>
+              <p class="tl-lead">{desc} Ce n'est pas une spécialisation exclusive : Talendus recrute pour toutes les entreprises, dans tous les métiers.</p>
               <h2 class="tl-h2">Métiers typiques</h2>
               <p>Opération, métiers spécialisés, supervision, gestion — et d'autres profils selon votre besoin.</p>
               <div class="tl-actions" style="margin-top:24px">
@@ -746,8 +761,8 @@ for slug, name, title, desc in SECTORS:
               <div class="tl-card"><div class="body">
                 <span class="tl-chip orange">Tous secteurs</span>
                 <h3>Un exemple, pas une limite</h3>
-                <p>Un brief clair, une shortlist, un seul conseiller. Pas 40 CV à trier.</p>
-                <a class="tl-btn" href="contact.html" style="margin-top:16px">Parler à un recruteur</a>
+                <p>Un brief clair, une shortlist, un seul conseiller. Vous ne parcourez pas une base de CV.</p>
+                <a class="tl-btn" href="contact.html" style="margin-top:16px">Confier mon recrutement</a>
               </div></div>
             </div>
           </div>
@@ -768,7 +783,7 @@ write("blog.html", wrap(
     page_hero(
         "Blog", "Recrutement, RH et carrière.",
         "Des textes utiles pour les entreprises et les candidats. Le problème du recrutement, pas une industrie.",
-        actions='<a class="tl-btn" href="contact.html">Parler à un recruteur</a>',
+        actions='<a class="tl-btn" href="contact.html">Confier mon recrutement</a>',
         badges=""
     )
     + f'<section class="tl-section"><div class="container"><div class="tl-grid-3" id="blog-list">{art_cards}</div><h2 class="tl-h2" style="margin-top:48px">Sujets à venir</h2><ul class="tl-muted">{topics}</ul></div></section>'
@@ -803,10 +818,10 @@ for slug, title, cat, img, lead in ARTICLES:
             <li>Prévoir l'accueil 30/60/90 jours : c'est là que se joue la rétention.</li>
           </ul>
           <h2>Comment Talendus intervient</h2>
-          <p>On cible des profils selon le métier et les compétences, on valide le fit et on présente peu de dossiers — chacun qu'on est prêt à défendre. L'IA viendra plus tard : matching et classement ne sont pas simulés aujourd'hui.</p>
+          <p>Nous ciblons des profils selon le métier et les compétences, nous validons le fit et nous présentons peu de dossiers — chacun que nous sommes prêts à défendre. L'IA aide Talendus à traiter l'information plus vite, au cœur de notre processus ; elle ne choisit pas à la place de l'entreprise, et plusieurs capacités sont encore en cours d'intégration.</p>
           <p><a href="secteurs.html">Tous les secteurs</a> · <a href="emplois.html">Offres d'emploi</a> · <a href="entreprises.html">Solutions entreprises</a></p>
           <div class="tl-actions" style="margin-top:28px">
-            <a class="tl-btn" href="contact.html">Parler à un spécialiste</a>
+            <a class="tl-btn" href="contact.html">Confier mon recrutement</a>
             <a class="tl-btn tl-btn-ghost-dark" href="blog.html">Retour au blog</a>
           </div>
         </div></section>
@@ -828,23 +843,23 @@ write("404.html", wrap(
 ))
 write("espace.html", wrap(
     "Mon espace candidat | Talendus",
-    "Connectez-vous pour gérer votre profil, votre CV, vos candidatures et vos notifications Talendus.",
+    "Connectez-vous pour gérer votre profil, votre CV, vos candidatures et vos échanges avec Talendus.",
     "espace.html",
     page_hero(
         "Candidats", "Votre dossier Talendus.",
-        "Profil, CV, candidatures, messages et entretiens. Suivez votre recherche d'emploi.",
+        "Profil, CV, candidatures, messages avec votre conseiller et entretiens. Talendus reste votre interlocuteur.",
         badges='<span class="tl-badge tl-badge-light">Espace privé</span>'
     )
     + """<section class="tl-section tl-portal-section"><div class="container"><div id="tl-account"></div></div></section>""",
     robots="noindex,nofollow",
 ))
 write("espace-employeur.html", wrap(
-    "Espace employeur | Talendus",
-    "Connectez-vous pour gérer vos offres, candidatures, pipeline et factures Talendus.",
+    "Espace entreprise | Talendus",
+    "Suivez les dossiers que Talendus vous présente, vos mandats et vos factures. Vous ne parcourez pas une base de candidats.",
     "espace-employeur.html",
     page_hero(
-        "Entreprises", "Votre espace employeur.",
-        "Offres, dossiers présentés, pipeline et factures. Suivez vos recrutements.",
+        "Entreprises", "Votre espace entreprise.",
+        "Mandats, shortlists présentées, pipeline et factures. Tout contact avec les candidats passe par Talendus.",
         badges='<span class="tl-badge tl-badge-light">Espace privé</span>'
     )
     + """<section class="tl-section tl-portal-section"><div class="container"><div id="tl-account" data-space="employer"></div></div></section>""",
@@ -874,42 +889,39 @@ write("conditions.html", wrap(
 
 simple_page(
     "Comment ça fonctionne | Parcours talent Talendus",
-    "Créez votre profil, postulez, suivez vos candidatures. Talendus présente votre dossier à l'employeur. Gratuit pour les talents.",
+    "Créez votre profil, déposez votre CV, soyez considéré pour des opportunités. Talendus présente votre dossier. Gratuit pour les talents.",
     "comment-ca-fonctionne.html",
     "Talents",
-    "Du CV jusqu'à l'entrevue, on s'occupe de la présentation.",
-    "Créez votre espace, déposez votre CV, postulez. Talendus parle à l'employeur à votre place. Vous n'envoyez jamais vos coordonnées en direct.",
-    """
-    <section class="tl-section"><div class="container">
-      <div class="tl-steps">
-        <div class="tl-step"><span>01</span><h3>Créer son profil</h3><p>Métier, compétences, région, CV. Cinq minutes pour entrer dans le réseau.</p></div>
-        <div class="tl-step"><span>02</span><h3>Postuler</h3><p>Offres ouvertes ou mandat confidentiel. On filtre avant de vous présenter.</p></div>
-        <div class="tl-step"><span>03</span><h3>Suivre ses candidatures</h3><p>Un conseiller Talendus fait le pont. Pas de messages directs employeur–candidat.</p></div>
-        <div class="tl-step"><span>04</span><h3>Être contacté</h3><p>Quand le poste, le salaire et l'environnement correspondent, on vous appelle.</p></div>
-      </div>
-    </div></section>
-    """,
+    "Du profil à une présentation éventuelle, Talendus reste au milieu.",
+    "Créez votre espace, déposez votre CV, postulez aux offres si vous le souhaitez. Nous étudions votre parcours, pouvons vous contacter, et parlons à l'entreprise à votre place. Vous n'envoyez jamais vos coordonnées en direct.",
+    candidate_journey_section("fr"),
     actions='<a class="tl-btn" href="espace.html" data-auth-open="register">Créer mon profil</a>',
 )
 
 simple_page(
-    "Publier une offre | Recrutement Talendus",
-    "Publiez une offre d'emploi. Talendus sourcene, filtre et vous présente des dossiers. Tous secteurs.",
+    "Vous recrutez ? Confiez-nous votre besoin | Talendus",
+    "Décrivez le poste. Talendus analyse, recherche, présélectionne, évalue et vous présente les meilleurs profils. Vous prenez la décision finale.",
     "publier-une-offre.html",
     "Entreprises",
-    "Décrivez le poste. On ouvre le sourcing.",
-    "Poste, secteur, contrat, urgence : plus c'est clair, plus vite on vous envoie des dossiers. Comptez une trentaine de minutes pour le brief.",
-    """
+    "Vous recrutez ? Confiez-nous votre besoin.",
+    "Décrivez le poste, les compétences, l'expérience, le lieu et ce qui compte vraiment. Talendus prend ensuite en charge la recherche et la présélection. Une offre visible n'est pas obligatoire.",
+    process_section("fr")
+    + """
     <section class="tl-section"><div class="container">
-      <div class="tl-steps">
-        <div class="tl-step"><span>01</span><h3>Brief</h3><p>30 minutes : poste, secteur, compétences, salaire réel.</p></div>
-        <div class="tl-step"><span>02</span><h3>Publication cadrée</h3><p>Offre visible ou mandat confidentiel, selon votre besoin.</p></div>
-        <div class="tl-step"><span>03</span><h3>Filtre Talendus</h3><p>Les candidatures passent par notre équipe. Vous voyez les dossiers présentés.</p></div>
-        <div class="tl-step"><span>04</span><h3>Shortlist</h3><p>Premiers dossiers visés en 7 jours sur un métier d'opérations.</p></div>
+      <div class="tl-prose">
+        <h2 class="tl-h2">Ce que vous avez à faire — et ce que nous faisons</h2>
+        <p><strong>1. Décrivez votre besoin.</strong> Poste, responsabilités, compétences, expérience, qualifications, conditions, lieu, exigences particulières. Plus le brief est clair, plus la recherche est nette.</p>
+        <p><strong>2. Talendus analyse le poste.</strong> Nous clarifions les critères essentiels et le type de profil recherché avant d'approcher qui que ce soit.</p>
+        <p><strong>3. Nous recherchons les talents.</strong> Réseau, profils connus, outils, et progressivement l'IA au service de nos équipes — pas un moteur que vous utilisez vous-même.</p>
+        <p><strong>4. Nous présélectionnons.</strong> Compétences, parcours, cohérence avec le mandat. Le bruit n'arrive pas sur votre bureau.</p>
+        <p><strong>5. Nous évaluons les profils.</strong> Échanges et entretiens avec les candidats lorsque c'est nécessaire.</p>
+        <p><strong>6. Nous vous présentons les meilleurs candidats.</strong> Une shortlist qualifiée, pas une liste massive de CV.</p>
+        <p><strong>7. Vous prenez la décision finale.</strong> Vous étudiez, vous rencontrez, vous choisissez. Talendus n'embauche pas à votre place.</p>
       </div>
     </div></section>
-    """ + human_hire_band("fr"),
-    actions='<a class="tl-btn" href="espace-employeur.html" data-auth-open="register">Publier une offre</a>',
+    """
+    + human_hire_band("fr"),
+    actions='<a class="tl-btn" href="contact.html">Décrire mon besoin</a><a class="tl-btn tl-btn-ghost" href="espace-employeur.html" data-auth-open="register">Ouvrir un espace entreprise</a>',
 )
 
 simple_page(
@@ -928,7 +940,7 @@ simple_page(
       </div>
     </div></section>
     """,
-    actions='<a class="tl-btn" href="contact.html">Parler à un recruteur</a>',
+    actions='<a class="tl-btn" href="contact.html">Confier mon recrutement</a>',
 )
 
 for old, new in [("about.html", "a-propos.html"), ("service.html", "services.html"), ("blog-single.html", "blog.html")]:

@@ -56,7 +56,7 @@ def create_app() -> FastAPI:
     public_docs = settings.app_env != "production"
     application = FastAPI(
         title="Talendus API",
-        description="Back-end de la plateforme de recrutement Talendus, pour toutes les entreprises.",
+        description="Back-end de l'agence de placement Talendus.",
         version="1.0.0",
         docs_url="/api/docs" if public_docs else None,
         redoc_url="/api/redoc" if public_docs else None,
