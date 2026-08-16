@@ -41,43 +41,55 @@ TRACKING_ENABLED=false
 GA_MEASUREMENT_ID=G-XXXXXXXX
 META_PIXEL_ID=1234567890
 SEO_CANONICAL_HOST=https://talendus.ca
+GOOGLE_SITE_VERIFICATION=
 ```
 
 - `TRACKING_ENABLED=false` : aucun script tiers, même si les IDs sont remplis.
 - En `APP_ENV=test`, le tracking est toujours coupé.
 - Ne jamais coller les IDs dans le HTML.
 
-## Google Analytics 4 (actions manuelles)
+## Google Analytics 4
+
+**Déjà en place dans le code :** Consent Mode v2 (refus par défaut), chargeur unique, événements nommés pour conversions, IP anonymisée, pas de Google Signals.
+
+**Encore manuel (compte Google requis) :**
 
 1. Créer une propriété GA4 (région Canada si possible).
 2. Flux Web → URL `https://talendus.ca` → copier l’ID `G-…`.
-3. Mettre `GA_MEASUREMENT_ID` et `TRACKING_ENABLED=true` **après** validation du bandeau cookies en production.
-4. Dans Admin GA4 → Événements, marquer comme conversions :
-   - `generate_lead` (demande de recrutement / formulaires employeur)
+3. Mettre `GA_MEASUREMENT_ID` et `TRACKING_ENABLED=true` **en production**.
+4. Dans Admin GA4 → Événements, marquer comme conversions les noms déjà envoyés :
+   - `generate_lead`
    - `contact`
-   - `submit_application` (candidature)
-   - `search` (filtre d’offres, après saisie réelle)
-   - `view_content` (fiche d’emploi)
-5. Explorer → acquisition : organique, direct, social, campagnes (`utm_source`, `utm_medium`, `utm_campaign` déjà lus par GA4).
-6. Ne pas ajouter un second extrait gtag (GTM + ce chargeur = double comptage). Si vous passez à GTM plus tard, désactiver `GA_MEASUREMENT_ID` ici.
+   - `submit_application`
+   - `search`
+   - `view_content`
+5. Ne pas ajouter un second extrait gtag.
 
-## Google Search Console (actions manuelles)
+`GET /api/tracking/config` liste ces conversions (`data.conversions`).
 
-1. [search.google.com/search-console](https://search.google.com/search-console) → Ajouter la propriété **Préfixe d’URL** `https://talendus.ca`.
-2. Validation : fichier HTML, enregistrement DNS, ou balise meta. La balise meta se place dans `scripts/parts.py` (`head`) **une fois**, puis `python scripts/build_pages.py`.
-3. Sitemaps → soumettre `https://talendus.ca/sitemap.xml`.
-4. Vérifier que `https://talendus.ca/robots.txt` pointe vers ce sitemap.
-5. Inspection d’URL sur l’accueil, `/recrutement-industriel.html`, une offre, un article.
-6. Demander l’indexation des pages piliers après mise en ligne.
+## Google Search Console
 
-Le sitemap FastAPI est la source de vérité (pages statiques + articles CMS publiés + offres `PUBLISHED`). Un `sitemap.xml` de secours est aussi généré à la racine pour un hébergement statique.
+**Déjà en place :** sitemap, robots, canonicals, noindex des espaces privés, fichier de validation.
 
-## Meta Pixel / Meta Business Manager (actions manuelles)
+**Encore manuel (compte Google requis) :**
 
-1. Meta Events Manager → créer un Pixel → copier l’ID numérique.
-2. `META_PIXEL_ID=…` + consentement marketing accepté.
-3. Événements envoyés **après une action réelle** : `PageView`, `Lead`, `Contact`, `SubmitApplication`, `Search`, `ViewContent`.
-4. Ne pas recoller le Pixel dans d’autres composants.
+1. [Search Console](https://search.google.com/search-console) → propriété **Préfixe d’URL** `https://talendus.ca`.
+2. Choisir la validation **fichier HTML**. Google affiche un nom du type `googleJETON.html`.
+3. Copier le jeton dans `GOOGLE_SITE_VERIFICATION` (sans le préfixe `google` ni `.html`) puis redémarrer l’API.
+   - Le fichier devient `https://talendus.ca/googleJETON.html`.
+   - Pour la méthode **balise meta**, le même jeton est injecté au `python3 scripts/build_pages.py` si la variable est dans l’environnement.
+4. Sitemaps → soumettre `https://talendus.ca/sitemap.xml`.
+5. Inspection d’URL sur l’accueil et les pages piliers après mise en ligne HTTPS.
+
+## Meta Pixel / Meta Business Manager
+
+**Déjà en place :** chargeur unique, consentement marketing, `grant`/`revoke`, événements PageView / Lead / Contact / SubmitApplication / Search / ViewContent.
+
+**Encore manuel (compte Meta requis) :**
+
+1. Events Manager → créer un Pixel → `META_PIXEL_ID`.
+2. `TRACKING_ENABLED=true` en production.
+3. Ne pas recoller le Pixel ailleurs. Les campagnes Ads réutilisent le même ID.
 5. Pour les campagnes Ads : utiliser le même Pixel ; les UTM suffisent côté site. Un catalogue d’offres Meta n’est pas branché (à faire plus tard sans toucher au chargeur).
 
 ## Blog / ressources (admin)

@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import HTMLResponse, PlainTextResponse, Response
 from sqlalchemy.orm import Session
 
+from app.config import get_settings
 from app.database import get_db
 from app.errors import AppError, ok
 from app.services import blog as blog_svc
@@ -24,6 +25,18 @@ def sitemap(db: Session = Depends(get_db)):
         content=xml,
         media_type="application/xml; charset=utf-8",
         headers={"Cache-Control": "public, max-age=3600"},
+    )
+
+
+@router.get("/google{token}.html", include_in_schema=False)
+def google_site_verification(token: str):
+    expected = (get_settings().google_site_verification or "").strip()
+    if not expected or token != expected or not token.replace("_", "").replace("-", "").isalnum():
+        raise AppError(404, "Page introuvable.", "NOT_FOUND")
+    return PlainTextResponse(
+        f"google-site-verification: {expected}\n",
+        media_type="text/html; charset=utf-8",
+        headers={"X-Robots-Tag": "noindex, nofollow", "Cache-Control": "public, max-age=300"},
     )
 
 

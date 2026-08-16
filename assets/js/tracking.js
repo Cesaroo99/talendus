@@ -15,6 +15,26 @@
     return false;
   }
 
+  function consentFlags(c) {
+    var analytics = !!(c && c.analytics);
+    var marketing = !!(c && c.marketing);
+    return {
+      analytics_storage: analytics ? "granted" : "denied",
+      ad_storage: marketing ? "granted" : "denied",
+      ad_user_data: marketing ? "granted" : "denied",
+      ad_personalization: marketing ? "granted" : "denied"
+    };
+  }
+
+  function applyConsentToVendors(c) {
+    if (typeof global.gtag === "function") {
+      global.gtag("consent", "update", consentFlags(c));
+    }
+    if (global.fbq) {
+      global.fbq("consent", c && c.marketing ? "grant" : "revoke");
+    }
+  }
+
   function loadScript(src, id) {
     if (document.getElementById(id)) return;
     var s = document.createElement("script");
@@ -31,8 +51,12 @@
     global.gtag = global.gtag || function () { global.dataLayer.push(arguments); };
     loadScript("https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(id), "tl-ga");
     global.gtag("js", new Date());
-    global.gtag("consent", "update", { analytics_storage: "granted" });
-    global.gtag("config", id, { anonymize_ip: true, send_page_view: false });
+    global.gtag("consent", "update", consentFlags(consent()));
+    global.gtag("config", id, {
+      anonymize_ip: true,
+      send_page_view: false,
+      allow_google_signals: false
+    });
   }
 
   function bootPixel(id) {
@@ -74,13 +98,13 @@
         view_content: "ViewContent",
         page_view: "PageView"
       };
-      var pixelName = map[name] || name;
-      global.fbq("track", pixelName, params);
+      global.fbq("track", map[name] || name, params);
     }
   }
 
   function applyConfig(data) {
     config = data || {};
+    applyConsentToVendors(consent());
     if (!config.enabled) return;
     if (allowed("analytics")) bootGa(config.ga_measurement_id);
     if (allowed("marketing")) bootPixel(config.meta_pixel_id);
@@ -93,6 +117,7 @@
 
   function fetchConfig() {
     var c = consent();
+    applyConsentToVendors(c);
     if (!c || (!c.analytics && !c.marketing)) return;
     fetch("/api/tracking/config", { headers: { Accept: "application/json" } })
       .then(function (res) { return res.json(); })

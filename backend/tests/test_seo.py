@@ -53,6 +53,8 @@ def test_tracking_config_disabled_by_default(client):
     assert data["ga_measurement_id"] == ""
     assert data["meta_pixel_id"] == ""
     assert data["consent_required"] is True
+    assert "generate_lead" in data["conversions"]
+    assert "submit_application" in data["conversions"]
     assert tracking_public_config()["enabled"] is False
 
 
@@ -163,3 +165,24 @@ def test_job_posting_schema_hides_client_name():
 
 def test_robots_helper_mentions_sitemap():
     assert "Sitemap: https://talendus.ca/sitemap.xml" in robots_txt()
+
+
+def test_gsc_verification_file_404_when_unset(client):
+    res = client.get("/googleabc123.html")
+    assert res.status_code == 404
+
+
+def test_gsc_verification_file_when_configured(client, monkeypatch):
+    from app.config import get_settings
+
+    monkeypatch.setenv("GOOGLE_SITE_VERIFICATION", "abc123xyz")
+    get_settings.cache_clear()
+    try:
+        res = client.get("/googleabc123xyz.html")
+        assert res.status_code == 200, res.text
+        assert "google-site-verification: abc123xyz" in res.text
+        assert "noindex" in (res.headers.get("x-robots-tag") or "")
+        assert client.get("/googleother.html").status_code == 404
+    finally:
+        monkeypatch.delenv("GOOGLE_SITE_VERIFICATION", raising=False)
+        get_settings.cache_clear()

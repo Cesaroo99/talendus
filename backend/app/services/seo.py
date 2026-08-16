@@ -74,7 +74,7 @@ def job_posting_schema(job: JobOffer) -> dict:
         "identifier": {"@type": "PropertyValue", "name": "Talendus", "value": job.slug or job.id},
         "datePosted": job.published_at.date().isoformat() if job.published_at else None,
         "employmentType": "FULL_TIME" if (job.contract_type or "").lower().startswith("perm") else "OTHER",
-        "hiringOrganization": {"@type": "EmploymentAgency", "name": "Talendus", "sameAs": host},
+        "hiringOrganization": {"@type": "EmploymentAgency", "name": "Talendus", "sameAs": host, "logo": f"{host}/assets/img/logo/logo1.png"},
         "jobLocation": {
             "@type": "Place",
             "address": {
@@ -229,6 +229,14 @@ def tracking_public_config() -> dict:
         "ga_measurement_id": ga,
         "meta_pixel_id": pixel,
         "consent_required": True,
+        "conversions": [
+            "generate_lead",
+            "contact",
+            "submit_application",
+            "search",
+            "view_content",
+        ],
+        "ga_notes": "Marquer ces événements comme conversions dans GA4 Admin → Événements.",
     }
 
 

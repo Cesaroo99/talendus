@@ -98,6 +98,7 @@ class Settings(BaseSettings):
     ga_measurement_id: str = ""
     meta_pixel_id: str = ""
     seo_canonical_host: str = "https://talendus.ca"
+    google_site_verification: str = ""
 
     @property
     def cors_origin_list(self) -> list[str]:

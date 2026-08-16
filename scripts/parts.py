@@ -4,6 +4,7 @@ OG_IMAGE = "assets/img/all-images/industry/usine-equipe.jpg"
 
 import html as html_lib
 import json
+import os
 
 def pfx(lang):
     return "../" if lang == "en" else ""
@@ -317,15 +318,42 @@ def head(title, description, canonical, extra_css="", lang="fr", alt_path="", ro
             "addressRegion": "QC",
             "addressCountry": "CA",
         },
+        "logo": f"{SITE}/assets/img/logo/logo1.png",
+        "image": f"{SITE}/{OG_IMAGE}",
         "sameAs": [SITE],
     }
-    blocks = [agency]
+    website = {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Talendus",
+        "url": SITE,
+        "inLanguage": ["fr-CA", "en-CA"],
+        "publisher": {"@type": "Organization", "name": "Talendus", "url": SITE},
+    }
+    blocks = [agency, website]
     if extra_json_ld:
         blocks.extend(extra_json_ld if isinstance(extra_json_ld, list) else [extra_json_ld])
     json_scripts = "".join(
         f'<script type="application/ld+json">{json.dumps(block, ensure_ascii=False)}</script>\n    '
         for block in blocks
     )
+    gsc = (os.environ.get("GOOGLE_SITE_VERIFICATION") or "").strip()
+    gsc_meta = (
+        f'<meta name="google-site-verification" content="{html_lib.escape(gsc, quote=True)}">\n     '
+        if gsc
+        else ""
+    )
+    consent_default = """<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('consent', 'default', {
+  ad_storage: 'denied',
+  ad_user_data: 'denied',
+  ad_personalization: 'denied',
+  analytics_storage: 'denied',
+  wait_for_update: 500
+});
+</script>"""
     return f"""<!DOCTYPE html>
 <html lang="{t['html_lang']}">
 <head>
@@ -333,7 +361,7 @@ def head(title, description, canonical, extra_css="", lang="fr", alt_path="", ro
      <meta name="viewport" content="width=device-width, initial-scale=1.0">
      <title>{safe_title}</title>
      <meta name="description" content="{safe_desc}">
-     <link rel="canonical" href="{self_url}">
+     {gsc_meta}<link rel="canonical" href="{self_url}">
      <link rel="alternate" hreflang="fr-CA" href="{fr_href}">
      <link rel="alternate" hreflang="en-CA" href="{en_href}">
      <link rel="alternate" hreflang="x-default" href="{fr_href if lang == 'en' else self_url}">
@@ -350,6 +378,7 @@ def head(title, description, canonical, extra_css="", lang="fr", alt_path="", ro
      <meta name="twitter:title" content="{safe_title}">
      <meta name="twitter:description" content="{safe_desc}">
      <meta name="twitter:image" content="{og_abs}">
+     <meta name="theme-color" content="#0b1f3a">
     <link rel="shortcut icon" href="{a}assets/img/logo/fav-logo1.png" type="image/png">
     <link rel="stylesheet" href="{a}assets/css/plugins/bootstrap.min.css">
     <link rel="stylesheet" href="{a}assets/css/plugins/aos.css">
@@ -360,6 +389,7 @@ def head(title, description, canonical, extra_css="", lang="fr", alt_path="", ro
     <link rel="stylesheet" href="{a}assets/css/main.css">
     <link rel="stylesheet" href="{a}assets/css/talendus.css">
     {extra_css}
+    {consent_default}
     {json_scripts}
 </head>
 """
@@ -376,7 +406,7 @@ def header(solid=True, lang="fr", alt_url=""):
       <div class="container">
           <div class="tl-header-bar">
               <div class="vl-logo">
-                  <a href="{h['home']}"><img src="{a}assets/img/logo/logo1.png" alt="Talendus"></a>
+                  <a href="{h['home']}"><img src="{a}assets/img/logo/logo1.png" width="372" height="72" alt="Talendus"></a>
               </div>
               <div class="vl-main-menu tl-desktop-nav">
                   <nav class="vl-mobile-menu-active">
@@ -407,7 +437,7 @@ def header(solid=True, lang="fr", alt_url=""):
     <div class="vl-offcanvas-wrapper">
         <div class="vl-offcanvas-header d-flex justify-content-between align-items-center">
             <div class="vl-offcanvas-logo">
-                <a href="{h['home']}"><img src="{a}assets/img/logo/logo1.png" alt="Talendus"></a>
+                <a href="{h['home']}"><img src="{a}assets/img/logo/logo1.png" width="372" height="72" alt="Talendus"></a>
             </div>
             <div class="vl-offcanvas-close">
                <button type="button" class="vl-offcanvas-close-toggle" aria-label="{t['menu_close']}"><i class="fa-solid fa-xmark"></i></button>
