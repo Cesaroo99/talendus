@@ -1,6 +1,6 @@
 HEADER_NAV = """
-                              <li><a href="index.html">Accueil</a></li>
-                              <li class="has-dropdown">
+                              <li data-nav="home"><a href="index.html">Accueil</a></li>
+                              <li class="has-dropdown" data-nav="employeurs">
                                 <a href="employeurs.html">Employeurs <span><i class="fa-solid fa-angle-down d-lg-inline d-none"></i></span></a>
                                   <ul class="sub-menu">
                                       <li><a href="employeurs.html">Pourquoi Talendus</a></li>
@@ -9,7 +9,7 @@ HEADER_NAV = """
                                       <li><a href="employeurs.html#calculateur">Calculateur d'embauche</a></li>
                                   </ul>
                               </li>
-                              <li class="has-dropdown">
+                              <li class="has-dropdown" data-nav="candidats">
                                 <a href="candidats.html">Candidats <span><i class="fa-solid fa-angle-down d-lg-inline d-none"></i></span></a>
                                   <ul class="sub-menu">
                                       <li><a href="emplois.html">Offres d'emploi</a></li>
@@ -17,10 +17,30 @@ HEADER_NAV = """
                                       <li><a href="candidats.html#processus">Processus</a></li>
                                   </ul>
                               </li>
-                              <li><a href="services.html">Services</a></li>
-                              <li><a href="a-propos.html">À propos</a></li>
-                              <li><a href="blog.html">Blog</a></li>
-                              <li><a href="contact.html">Contact</a></li>
+                              <li data-nav="services"><a href="services.html">Services</a></li>
+                              <li data-nav="about"><a href="a-propos.html">À propos</a></li>
+                              <li data-nav="blog"><a href="blog.html">Blog</a></li>
+                              <li data-nav="contact"><a href="contact.html">Contact</a></li>
+"""
+
+PRELOADER = """
+<div class="preloader tl-preloader" role="status" aria-label="Chargement Talendus">
+  <div class="tl-preloader-stage">
+    <div class="tl-preloader-orbit" aria-hidden="true">
+      <span class="tl-ring tl-ring-a"></span>
+      <span class="tl-ring tl-ring-b"></span>
+      <span class="tl-ring tl-ring-c"></span>
+      <div class="tl-preloader-mark">
+        <svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+          <path fill="#ffffff" fill-rule="evenodd" d="M18 1.5c9.113 0 16.5 7.387 16.5 16.5S27.113 34.5 18 34.5 1.5 27.113 1.5 18 8.887 1.5 18 1.5zm-7.25 9.75h14.5a1.75 1.75 0 1 1 0 3.5h-5.5v12.75a1.75 1.75 0 1 1-3.5 0V14.75h-5.5a1.75 1.75 0 1 1 0-3.5z"/>
+        </svg>
+      </div>
+    </div>
+    <p class="tl-preloader-word">Talendus</p>
+    <p class="tl-preloader-tag">Recrutement industriel · Québec</p>
+    <div class="tl-preloader-bar" aria-hidden="true"><span></span></div>
+  </div>
+</div>
 """
 
 def head(title, description, canonical, extra_css=""):
@@ -53,12 +73,7 @@ def head(title, description, canonical, extra_css=""):
 def header(solid=True):
     cls = "tl-solid-header" if solid else ""
     return f"""<body class="{cls}">
-<div class="preloader">
-  <div class="loading-container">
-    <div class="loading"></div>
-    <div id="loading-icon"><img src="assets/img/logo/preloder.png" alt="Talendus"></div>
-  </div>
-</div>
+{PRELOADER}
 <header class="homepage2-body">
   <div id="vl-header-sticky" class="vl-header-area vl-transparent-header">
       <div class="container">
@@ -110,7 +125,8 @@ def header(solid=True):
             <div class="space20"></div>
             <span><a href="tel:+15145550199"><i class="fa-solid fa-phone"></i> 514 555-0199</a></span>
             <span><a href="mailto:info@talendus.ca"><i class="fa-regular fa-envelope"></i> info@talendus.ca</a></span>
-            <span><a href="contact.html"><i class="fa-solid fa-location-dot"></i> Montréal, Québec</a></span>
+            <span><a href="contact.html"><i class="fa-solid fa-location-dot"></i> Montréal, Québec · sur rendez-vous</a></span>
+            <p class="tl-offcanvas-note">Réponse moyenne sous 30 minutes durant les heures d'ouverture.</p>
             <div class="vl-offcanvas-cta">
               <a href="contact.html" class="tl-btn">Réserver une consultation</a>
               <a href="candidats.html#cv" class="tl-btn tl-btn-electric">Déposer mon CV</a>
@@ -127,13 +143,13 @@ SPEED_STRIP = """
   <div class="container">
     <div class="tl-speed-inner">
       <div>
-        <span class="tl-badge tl-badge-light">À partir de 7 jours</span>
-        <h2>Recevez vos premiers candidats qualifiés en seulement 7 jours.</h2>
-        <p>Pas six semaines de CV génériques. Un vivier industriel, une présélection terrain et une première shortlist calée sur votre production.</p>
+        <span class="tl-badge tl-badge-light">Délai d’exécution</span>
+        <h2>Premiers candidats qualifiés à partir de 7 jours.</h2>
+        <p>Une shortlist industrielle, pas une pile de CV. On ouvre le mandat, on filtre comme un contremaître, on vous présente des dossiers défendables.</p>
       </div>
       <div class="tl-speed-actions">
         <a class="tl-btn tl-btn-lg" href="contact.html">Réserver une consultation gratuite</a>
-        <a class="tl-btn tl-btn-ghost" href="employeurs.html">Parler à un spécialiste</a>
+        <a class="tl-btn tl-btn-ghost" href="contact.html">Demander un recrutement</a>
       </div>
     </div>
   </div>
@@ -143,9 +159,9 @@ SPEED_STRIP = """
 CTA_BAND = """
 <section class="tl-cta-band">
   <div class="container">
-    <span class="tl-badge tl-badge-light">Recrutement accéléré</span>
-    <h2 class="tl-h2">Un poste vacant en usine coûte plus cher qu’un mandat bien mené.</h2>
-    <p>Employeurs : premiers candidats qualifiés sous 7 jours. Candidats : un dossier présenté aux usines qui recrutent vraiment.</p>
+    <span class="tl-badge tl-badge-light">Cabinet industriel</span>
+    <h2 class="tl-h2">Votre usine n’a pas besoin d’une agence généraliste.</h2>
+    <p>Un interlocuteur qui parle production, quarts et SST. Consultation gratuite, sur rendez-vous. Réponse moyenne sous 30 minutes durant les heures d’ouverture.</p>
     <div class="tl-actions">
       <a class="tl-btn tl-btn-lg" href="contact.html">Obtenir une consultation gratuite</a>
       <a class="tl-btn tl-btn-ghost" href="candidats.html#cv">Déposer mon CV</a>
@@ -167,7 +183,7 @@ FOOTER = """
           <img src="assets/img/logo/logo1.png" alt="Talendus">
           <div class="space16"></div>
           <p>Nous recrutons exclusivement pour les usines, entrepôts et entreprises manufacturières du Québec.</p>
-          <p class="tl-muted" style="margin-top:12px">Premiers candidats qualifiés en seulement 7 jours.</p>
+          <p class="tl-muted" style="margin-top:12px">Consultations sur rendez-vous uniquement.</p>
         </div>
       </div>
       <div class="col-lg col-md-6">
@@ -200,7 +216,8 @@ FOOTER = """
           <ul>
             <li><a href="tel:+15145550199">514 555-0199</a></li>
             <li><a href="mailto:info@talendus.ca">info@talendus.ca</a></li>
-            <li><a href="contact.html">Montréal, Québec</a></li>
+            <li>Lun–Ven, 8 h à 17 h</li>
+            <li><a href="contact.html">Montréal · sur rendez-vous</a></li>
           </ul>
         </div>
       </div>
@@ -233,16 +250,12 @@ FOOTER = """
 </html>
 """
 
-def page_hero(kicker, title, lead, actions="", badges=None):
-    if badges is None:
-        badge_html = '<span class="tl-badge tl-badge-light">Premiers candidats sous 7 jours</span>'
-    else:
-        badge_html = badges
+def page_hero(kicker, title, lead, actions="", badges=""):
     act = f'<div class="tl-actions">{actions}</div>' if actions else ""
     return f"""
 <section class="tl-page-hero">
   <div class="container">
-    {badge_html}
+    {badges}
     <div class="tl-kicker">{kicker}</div>
     <h1 class="tl-h1">{title}</h1>
     <p class="tl-lead">{lead}</p>
@@ -250,3 +263,64 @@ def page_hero(kicker, title, lead, actions="", badges=None):
   </div>
 </section>
 """
+
+def faq_html(items, open_first=True):
+    parts = ['<div class="tl-faq">']
+    for i, (q, a) in enumerate(items):
+        opened = " open" if open_first and i == 0 else ""
+        parts.append(f"<details{opened}><summary>{q}</summary><p>{a}</p></details>")
+    parts.append("</div>")
+    return "".join(parts)
+
+FAQ_HOME = [
+    ("Talendus est-il une agence de placement généraliste ?",
+     "Non. Nous ne recrutons pas en bureau, en TI, en vente ou en service à la clientèle. Talendus travaille exclusivement avec des usines, des entrepôts et des entreprises manufacturières du Québec."),
+    ("À partir de quand recevons-nous les premiers candidats ?",
+     "Sur les mandats d’opération, de cariste et plusieurs métiers d’usine, les premiers candidats qualifiés arrivent à partir de 7 jours. Ce délai correspond à une shortlist filtrée — pas à une pile de CV. Un machiniste CNC rare ou un directeur d’usine prend davantage de temps : nous l’annonçons dès le brief."),
+    ("Dans quelles régions du Québec recrutez-vous ?",
+     "Grand Montréal, Laval, Rive-Sud, Montérégie, Estrie, Centre-du-Québec, Mauricie et région de Québec. Nous menons aussi des mandats en région lorsque le profil l’exige."),
+    ("Comment se passe une consultation ?",
+     "Les consultations sont sur rendez-vous uniquement. Un appel de 30 minutes suffit pour comprendre le quart, le salaire réel, la SST et l’urgence. Réponse moyenne sous 30 minutes durant les heures d’ouverture (lun.–ven., 8 h à 17 h)."),
+    ("Offrez-vous une garantie de remplacement ?",
+     "Oui, sur les mandats permanents. La durée est confirmée à l’ouverture du dossier, par écrit. Le suivi 30/60/90 jours fait partie du mandat, pas d’une option."),
+    ("Travaillez-vous avec des candidats en recherche active seulement ?",
+     "Non. Une part importante de notre vivier est passive : opérateurs, métiers et cadres déjà en poste que nous approchons discrètement. C’est souvent là que se trouvent les profils qui restent."),
+    ("Puis-je déposer un CV même s’il n’y a pas d’offre affichée ?",
+     "Oui. Plusieurs mandats sont confidentiels. Nous qualifions votre métier, vos quarts et votre mobilité, puis nous vous présentons lorsqu’un employeur industriel correspond."),
+    ("Comment facturez-vous les employeurs ?",
+     "Honoraires au succès, calculés sur le salaire annuel du candidat placé. Aucun frais si le mandat n’aboutit pas, selon les conditions de l’entente. La consultation initiale est gratuite."),
+]
+
+FAQ_EMPLOYEURS = [
+    ("Combien de temps avant les premiers dossiers ?",
+     "Premiers candidats qualifiés à partir de 7 jours sur les métiers d’opération et plusieurs postes d’usine. Superviseurs, métiers rares et cadres : 3 à 8 semaines, annoncé dès la consultation — sans promesse cosmétique."),
+    ("Que se passe-t-il pendant la consultation ?",
+     "Sur rendez-vous. Nous parlons quart, compétences, SST, salaire réel et ce qui a déjà échoué. Vous repartez avec un plan de recherche, pas un discours RH générique."),
+    ("Présentez-vous beaucoup de CV ?",
+     "Non. L’objectif est que votre contremaître ne perde pas une heure. Nous filtrons, nous rencontrons, nous présentons peu de dossiers — chacun défendable."),
+    ("Intervenez-vous en région ?",
+     "Oui. Outre le Grand Montréal, nous menons des mandats en Montérégie, Estrie, Centre-du-Québec, Mauricie et région de Québec."),
+    ("Comment sont calculés les honoraires ?",
+     "Au succès, sur le salaire annuel du candidat placé. Pas de frais si le mandat n’aboutit pas, selon l’entente. La consultation est gratuite."),
+    ("Quelle garantie offrez-vous ?",
+     "Remplacement inclus sur les mandats permanents. Durée confirmée à l’ouverture. Suivi d’intégration 30/60/90 jours."),
+    ("Pouvez-vous mener un mandat confidentiel ?",
+     "Oui. Remplacement de cadre, réorganisation ou poste sensible : approche discrète, sans bruit interne, jusqu’à ce que vous choisissiez le moment de communiquer."),
+    ("Recrutez-vous aussi du personnel de bureau ?",
+     "Non. Si le poste n’est pas en usine, en entrepôt, en logistique ou en gestion manufacturière, nous déclinons. C’est ce qui protège la qualité du vivier."),
+]
+
+FAQ_CANDIDATS = [
+    ("Dois-je payer pour vos services ?",
+     "Non. Les honoraires sont assumés par l’employeur. Le dépôt de CV et l’accompagnement jusqu’à l’embauche sont sans frais pour vous."),
+    ("Que se passe-t-il après l’envoi de mon CV ?",
+     "Nous qualifions votre métier, vos quarts et votre région. S’il y a correspondance, un conseiller vous appelle. Réponse moyenne sous 30 minutes durant les heures d’ouverture lorsque vous nous écrivez ou nous joignez."),
+    ("Puis-je postuler s’il n’y a pas d’offre affichée ?",
+     "Oui. Plusieurs usines recrutent en mandat confidentiel. Votre profil reste actif dans notre vivier industriel."),
+    ("Quels métiers placez-vous ?",
+     "Journalier, opérateur, cariste, soudeur, machiniste CNC, électromécanicien, mécanicien industriel, superviseur, coordonnateur logistique, directeur d’usine — et les métiers connexes d’atelier."),
+    ("M’enverrez-vous sur des entrevues au hasard ?",
+     "Non. Nous présentons votre dossier uniquement aux employeurs manufacturiers dont le quart, le salaire et l’environnement correspondent à ce que vous avez indiqué."),
+    ("Travaillez-vous partout au Québec ?",
+     "Principalement le Grand Montréal, Laval, la Rive-Sud, la Montérégie, l’Estrie, le Centre-du-Québec et Québec. Dites-nous votre mobilité : nous ciblons en conséquence."),
+]

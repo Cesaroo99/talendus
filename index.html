@@ -4,10 +4,10 @@
      <meta charset="UTF-8">
      <meta name="viewport" content="width=device-width, initial-scale=1.0">
      <title>Talendus | Recrutement industriel et manufacturier au Québec</title>
-     <meta name="description" content="Recevez vos premiers candidats qualifiés en seulement 7 jours. Talendus recrute exclusivement pour les usines, entrepôts et entreprises manufacturières du Québec.">
+     <meta name="description" content="Talendus recrute exclusivement pour les usines, entrepôts et entreprises manufacturières du Québec. Consultation gratuite sur rendez-vous.">
      <link rel="canonical" href="https://talendus.ca/">
      <meta property="og:title" content="Talendus | Recrutement industriel et manufacturier au Québec">
-     <meta property="og:description" content="Recevez vos premiers candidats qualifiés en seulement 7 jours. Talendus recrute exclusivement pour les usines, entrepôts et entreprises manufacturières du Québec.">
+     <meta property="og:description" content="Talendus recrute exclusivement pour les usines, entrepôts et entreprises manufacturières du Québec. Consultation gratuite sur rendez-vous.">
      <meta property="og:type" content="website">
      <meta property="og:url" content="https://talendus.ca/">
      <meta name="robots" content="index,follow">
@@ -23,12 +23,25 @@
     
 </head>
 <body class="">
-<div class="preloader">
-  <div class="loading-container">
-    <div class="loading"></div>
-    <div id="loading-icon"><img src="assets/img/logo/preloder.png" alt="Talendus"></div>
+
+<div class="preloader tl-preloader" role="status" aria-label="Chargement Talendus">
+  <div class="tl-preloader-stage">
+    <div class="tl-preloader-orbit" aria-hidden="true">
+      <span class="tl-ring tl-ring-a"></span>
+      <span class="tl-ring tl-ring-b"></span>
+      <span class="tl-ring tl-ring-c"></span>
+      <div class="tl-preloader-mark">
+        <svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+          <path fill="#ffffff" fill-rule="evenodd" d="M18 1.5c9.113 0 16.5 7.387 16.5 16.5S27.113 34.5 18 34.5 1.5 27.113 1.5 18 8.887 1.5 18 1.5zm-7.25 9.75h14.5a1.75 1.75 0 1 1 0 3.5h-5.5v12.75a1.75 1.75 0 1 1-3.5 0V14.75h-5.5a1.75 1.75 0 1 1 0-3.5z"/>
+        </svg>
+      </div>
+    </div>
+    <p class="tl-preloader-word">Talendus</p>
+    <p class="tl-preloader-tag">Recrutement industriel · Québec</p>
+    <div class="tl-preloader-bar" aria-hidden="true"><span></span></div>
   </div>
 </div>
+
 <header class="homepage2-body">
   <div id="vl-header-sticky" class="vl-header-area vl-transparent-header">
       <div class="container">
@@ -43,8 +56,8 @@
                       <nav class="vl-mobile-menu-active">
                           <ul>
 
-                              <li><a href="index.html">Accueil</a></li>
-                              <li class="has-dropdown">
+                              <li data-nav="home"><a href="index.html">Accueil</a></li>
+                              <li class="has-dropdown" data-nav="employeurs">
                                 <a href="employeurs.html">Employeurs <span><i class="fa-solid fa-angle-down d-lg-inline d-none"></i></span></a>
                                   <ul class="sub-menu">
                                       <li><a href="employeurs.html">Pourquoi Talendus</a></li>
@@ -53,7 +66,7 @@
                                       <li><a href="employeurs.html#calculateur">Calculateur d'embauche</a></li>
                                   </ul>
                               </li>
-                              <li class="has-dropdown">
+                              <li class="has-dropdown" data-nav="candidats">
                                 <a href="candidats.html">Candidats <span><i class="fa-solid fa-angle-down d-lg-inline d-none"></i></span></a>
                                   <ul class="sub-menu">
                                       <li><a href="emplois.html">Offres d'emploi</a></li>
@@ -61,10 +74,10 @@
                                       <li><a href="candidats.html#processus">Processus</a></li>
                                   </ul>
                               </li>
-                              <li><a href="services.html">Services</a></li>
-                              <li><a href="a-propos.html">À propos</a></li>
-                              <li><a href="blog.html">Blog</a></li>
-                              <li><a href="contact.html">Contact</a></li>
+                              <li data-nav="services"><a href="services.html">Services</a></li>
+                              <li data-nav="about"><a href="a-propos.html">À propos</a></li>
+                              <li data-nav="blog"><a href="blog.html">Blog</a></li>
+                              <li data-nav="contact"><a href="contact.html">Contact</a></li>
 
                           </ul>
                       </nav>
@@ -103,7 +116,8 @@
             <div class="space20"></div>
             <span><a href="tel:+15145550199"><i class="fa-solid fa-phone"></i> 514 555-0199</a></span>
             <span><a href="mailto:info@talendus.ca"><i class="fa-regular fa-envelope"></i> info@talendus.ca</a></span>
-            <span><a href="contact.html"><i class="fa-solid fa-location-dot"></i> Montréal, Québec</a></span>
+            <span><a href="contact.html"><i class="fa-solid fa-location-dot"></i> Montréal, Québec · sur rendez-vous</a></span>
+            <p class="tl-offcanvas-note">Réponse moyenne sous 30 minutes durant les heures d'ouverture.</p>
             <div class="vl-offcanvas-cta">
               <a href="contact.html" class="tl-btn">Réserver une consultation</a>
               <a href="candidats.html#cv" class="tl-btn tl-btn-electric">Déposer mon CV</a>
@@ -122,19 +136,19 @@
             <div class="row">
                 <div class="col-lg-8">
                     <div class="hero2-heading tl-hero-lock">
-                        <h5>Recrutement accéléré · Québec</h5>
+                        <h5>Recrutement industriel · Québec</h5>
                         <div class="space16"></div>
-                        <h1>Recevez vos premiers candidats qualifiés en seulement 7 jours.</h1>
+                        <h1>Premiers candidats qualifiés à partir de 7 jours.</h1>
                         <div class="space16"></div>
-                        <p>Cabinet exclusivement industriel. Présélection terrain. Garantie de remplacement. Pas une agence généraliste.</p>
+                        <p>Cabinet exclusivement manufacturier. Présélection terrain, garantie de remplacement, un interlocuteur qui parle usine.</p>
                         <div class="space32"></div>
                         <div class="btn-area1">
                             <a href="contact.html" class="vl-btn2">Réserver une consultation <span><i class="fa-solid fa-arrow-right"></i></span></a>
                             <a href="employeurs.html" class="vl-btn2 btn2">Demander un recrutement <span><i class="fa-solid fa-arrow-right"></i></span></a>
                         </div>
                         <div class="tl-hero-badges">
-                          <span class="tl-badge tl-badge-light">À partir de 7 jours</span>
-                          <span class="tl-badge tl-badge-light">Premiers candidats sous 7 jours</span>
+                          <span class="tl-badge tl-badge-light">Spécialiste usine &amp; entrepôt</span>
+                          <span class="tl-badge tl-badge-light">Consultation sur rendez-vous</span>
                         </div>
                     </div>
                 </div>
@@ -158,8 +172,8 @@
                             <a href="candidats.html#cv" class="vl-btn2 btn2">Déposer mon CV <span><i class="fa-solid fa-arrow-right"></i></span></a>
                         </div>
                         <div class="tl-hero-badges">
-                          <span class="tl-badge tl-badge-light">Réponse rapide</span>
-                          <span class="tl-badge tl-badge-light">Recrutement accéléré</span>
+                          <span class="tl-badge tl-badge-light">Sans frais pour le candidat</span>
+                          <span class="tl-badge tl-badge-light">Mandats d’usine réels</span>
                         </div>
                     </div>
                 </div>
@@ -177,29 +191,13 @@
     </div>
 </div>
 
-<section class="tl-speed">
-  <div class="container">
-    <div class="tl-speed-inner">
-      <div>
-        <span class="tl-badge tl-badge-light">À partir de 7 jours</span>
-        <h2>Recevez vos premiers candidats qualifiés en seulement 7 jours.</h2>
-        <p>Pas six semaines de CV génériques. Un vivier industriel, une présélection terrain et une première shortlist calée sur votre production.</p>
-      </div>
-      <div class="tl-speed-actions">
-        <a class="tl-btn tl-btn-lg" href="contact.html">Réserver une consultation gratuite</a>
-        <a class="tl-btn tl-btn-ghost" href="employeurs.html">Parler à un spécialiste</a>
-      </div>
-    </div>
-  </div>
-</section>
-
 <section class="tl-section-sm">
   <div class="container">
     <div class="tl-split">
       <a class="employeurs" href="employeurs.html">
         <div class="tl-kicker" style="color:#ffb37a">Employeurs</div>
         <h3>Besoin d’un soudeur, d’un superviseur ou d’un directeur d’usine ?</h3>
-        <p>Consultation gratuite. Premiers profils qualifiés sous 7 jours. Présélection calée sur votre quart.</p>
+        <p>Consultation gratuite, sur rendez-vous. Présélection calée sur votre quart — pas 80 CV à trier en fin de shift.</p>
         <span class="tl-split-cta">Demander un recrutement →</span>
       </a>
       <a class="candidats" href="candidats.html">
@@ -219,7 +217,7 @@
       <h2 class="tl-h2">Un cabinet calibré pour la réalité des usines québécoises</h2>
     </div>
     <div class="tl-stats">
-      <div class="tl-stat"><b>7 j</b><p>Délai pour présenter vos premiers candidats qualifiés</p></div>
+      <div class="tl-stat"><b>7 j</b><p>Premiers candidats qualifiés à partir de 7 jours, sur les mandats d’opération</p></div>
       <div class="tl-stat"><b>92 %</b><p>Des placements encore en poste après la période d’essai</p></div>
       <div class="tl-stat"><b>100 %</b><p>De nos mandats dans l’industrie, la logistique ou l’entreposage</p></div>
       <div class="tl-stat"><b>1 200+</b><p>Talents industriels actifs dans notre réseau au Québec</p></div>
@@ -237,7 +235,6 @@
         <div class="space24"></div>
         <ul class="tl-muted">
           <li>Spécialisation exclusive : manufacturier, industrie, logistique, entrepôt.</li>
-          <li>Premiers candidats qualifiés en seulement 7 jours sur les mandats d’opération.</li>
           <li>Évaluation terrain : compétences, quart de travail, culture d’usine.</li>
           <li>Garantie de remplacement sur les mandats permanents.</li>
         </ul>
@@ -287,7 +284,7 @@
       <div class="tl-card"><div class="body"><span class="tl-chip orange">Logistique</span><h3>Entrepôt &amp; distribution</h3><p>Cariste, commis, coordonnateur logistique, superviseur d’entrepôt.</p></div></div>
       <div class="tl-card"><div class="body"><span class="tl-chip orange">Supervision</span><h3>Encadrement</h3><p>Superviseur de production, contremaître, chef d’équipe de quart.</p></div></div>
       <div class="tl-card"><div class="body"><span class="tl-chip orange">Cadres</span><h3>Gestion manufacturière</h3><p>Directeur d’usine, directeur de production, responsable maintenance.</p></div></div>
-      <div class="tl-card"><div class="body"><span class="tl-chip orange">Urgent</span><h3>Renforts de quart</h3><p>Mandats accélérés : premiers profils sous 7 jours quand un quart critique doit être comblé.</p></div></div>
+      <div class="tl-card"><div class="body"><span class="tl-chip orange">Urgent</span><h3>Renforts de quart</h3><p>Mandats accélérés quand un quart critique doit être comblé — sans diluer le filtre technique.</p></div></div>
     </div>
     <div class="tl-center" style="margin-top:28px"><a class="tl-btn" href="emplois.html">Trouver un emploi</a></div>
   </div>
@@ -303,7 +300,7 @@
       <div class="tl-step"><span>01</span><h3>Diagnostic d’usine</h3><p>Quart, compétences, SST, culture et urgence réelle du mandat.</p></div>
       <div class="tl-step"><span>02</span><h3>Ciblage industriel</h3><p>Réseau passif, références d’usine et approche directe.</p></div>
       <div class="tl-step"><span>03</span><h3>Évaluation terrain</h3><p>Entrevues techniques, validations et tests de compétences.</p></div>
-      <div class="tl-step"><span>04</span><h3>Présentation J+7</h3><p>Premiers dossiers comparables, recommandation claire, dès 7 jours.</p></div>
+      <div class="tl-step"><span>04</span><h3>Présentation</h3><p>Dossiers comparables, recommandation claire. Premiers candidats qualifiés à partir de 7 jours.</p></div>
       <div class="tl-step"><span>05</span><h3>Intégration</h3><p>Suivi 30/60/90 jours et garantie de remplacement.</p></div>
     </div>
   </div>
@@ -320,8 +317,8 @@
         <div class="tl-hero-media" style="height:200px"><img src="assets/img/all-images/industry/soudeur-atelier.jpg" alt="Mandat de recrutement de soudeurs"></div>
         <div class="body">
           <span class="tl-chip">Métallurgie · Drummondville</span>
-          <h3>3 soudeurs-monteurs, premiers profils en 7 jours</h3>
-          <p>Une PME en croissance devait ouvrir un deuxième quart. Présélection technique et démarrage sans arrêt de ligne.</p>
+          <h3>3 soudeurs-monteurs pour un deuxième quart</h3>
+          <p>Une PME en croissance devait ouvrir un quart sans arrêter la ligne. Présélection technique, démarrage cadré.</p>
         </div>
       </article>
       <article class="tl-case">
@@ -329,7 +326,7 @@
         <div class="body">
           <span class="tl-chip">Entrepôt · Laval</span>
           <h3>Superviseur de quart + 8 caristes</h3>
-          <p>Pic saisonnier absorbé en 4 semaines, avec rétention supérieure à la moyenne du site. Première shortlist sous 7 jours.</p>
+          <p>Pic saisonnier absorbé en 4 semaines, avec une rétention supérieure à la moyenne du site.</p>
         </div>
       </article>
       <article class="tl-case">
@@ -346,44 +343,39 @@
 
 <section class="tl-section tl-ice">
   <div class="container">
-    <div class="row g-4">
-      <div class="col-lg-5">
-        <div class="tl-kicker">Témoignages</div>
-        <h2 class="tl-h2">Ce que disent les usines et les candidats</h2>
-        <p class="tl-lead">Des retours d’employeurs manufacturiers et de professionnels placés au Québec.</p>
-      </div>
-      <div class="col-lg-7">
-        <div class="tl-card" style="margin-bottom:16px"><div class="body">
-          <p>« Ils ont compris notre réalité de quarts rotatifs dès le premier appel. Le superviseur présenté connaissait déjà un environnement Lean comparable. »</p>
-          <b>M.L. — Directrice des opérations, usine alimentaire, Rive-Sud</b>
-        </div></div>
-        <div class="tl-card" style="margin-bottom:16px"><div class="body">
-          <p>« Pas une agence qui envoie 40 CV. Trois dossiers solides, un électromécanicien en poste, et un suivi après l’embauche. »</p>
-          <b>J.R. — Directeur maintenance, métallurgie, Mauricie</b>
-        </div></div>
-        <div class="tl-card"><div class="body">
-          <p>« J’étais cariste de nuit. Talendus m’a présenté un poste de coordonnateur logistique à Laval. Entrevue claire, conditions nettes. »</p>
-          <b>A.D. — Candidate placée, Laval</b>
-        </div></div>
-      </div>
+    <div class="tl-center" style="max-width:720px;margin:0 auto 36px">
+      <div class="tl-kicker">Témoignages</div>
+      <h2 class="tl-h2">Ce que disent les usines et les candidats</h2>
+      <p class="tl-lead">Des retours d’employeurs manufacturiers et de professionnels placés au Québec — pas des citations génériques.</p>
+    </div>
+    <div class="tl-grid-3 tl-quotes">
+      <blockquote class="tl-quote">
+        <div class="tl-quote-mark" aria-hidden="true">“</div>
+        <p>Ils ont compris nos quarts rotatifs dès le premier appel. Le superviseur présenté connaissait déjà un environnement Lean comparable.</p>
+        <footer><strong>M.L.</strong><span>Directrice des opérations · usine alimentaire, Rive-Sud</span></footer>
+      </blockquote>
+      <blockquote class="tl-quote">
+        <div class="tl-quote-mark" aria-hidden="true">“</div>
+        <p>Pas une agence qui envoie 40 CV. Trois dossiers solides, un électromécanicien en poste, et un suivi après l’embauche.</p>
+        <footer><strong>J.R.</strong><span>Directeur maintenance · métallurgie, Mauricie</span></footer>
+      </blockquote>
+      <blockquote class="tl-quote">
+        <div class="tl-quote-mark" aria-hidden="true">“</div>
+        <p>J’étais cariste de nuit. Talendus m’a présenté un poste de coordonnateur logistique à Laval. Entrevue claire, conditions nettes.</p>
+        <footer><strong>A.D.</strong><span>Candidate placée · Laval</span></footer>
+      </blockquote>
     </div>
   </div>
 </section>
 
 <section class="tl-section">
   <div class="container">
-    <div class="row g-4">
-      <div class="col-lg-5">
-        <div class="tl-kicker">FAQ</div>
-        <h2 class="tl-h2">Questions fréquentes sur le recrutement industriel</h2>
-      </div>
-      <div class="col-lg-7 tl-faq">
-        <details open><summary>Pouvez-vous vraiment présenter des candidats en 7 jours ?</summary><p>Oui, sur les mandats d’opération, de cariste et plusieurs métiers d’usine. Le délai de 7 jours correspond à la première shortlist qualifiée — pas à une pile de CV non filtrés. Les profils rares (CNC, cadres) prennent davantage de temps, et nous le disons dès l’ouverture du mandat.</p></details>
-        <details><summary>Dans quelles régions du Québec recrutez-vous ?</summary><p>Principalement le Grand Montréal, Laval, la Rive-Sud, la Montérégie, l’Estrie, le Centre-du-Québec et la région de Québec. Nous menons aussi des mandats en région lorsque le profil l’exige.</p></details>
-        <details><summary>Êtes-vous une agence de placement généraliste ?</summary><p>Non. Talendus ne recrute pas en bureau, en TI ou en vente. Nous travaillons exclusivement avec des usines, entrepôts et entreprises manufacturières.</p></details>
-        <details><summary>Offrez-vous une garantie ?</summary><p>Oui. Les mandats permanents incluent une garantie de remplacement. La durée est confirmée à l’ouverture du mandat.</p></details>
-      </div>
+    <div class="tl-center" style="max-width:720px;margin:0 auto 36px">
+      <div class="tl-kicker">FAQ</div>
+      <h2 class="tl-h2">Avant d’ouvrir un mandat ou de déposer un CV</h2>
+      <p class="tl-lead">Les questions que se posent les RH, les directeurs d’usine et les candidats — réponses franches.</p>
     </div>
+    <div class="tl-faq"><details open><summary>Talendus est-il une agence de placement généraliste ?</summary><p>Non. Nous ne recrutons pas en bureau, en TI, en vente ou en service à la clientèle. Talendus travaille exclusivement avec des usines, des entrepôts et des entreprises manufacturières du Québec.</p></details><details><summary>À partir de quand recevons-nous les premiers candidats ?</summary><p>Sur les mandats d’opération, de cariste et plusieurs métiers d’usine, les premiers candidats qualifiés arrivent à partir de 7 jours. Ce délai correspond à une shortlist filtrée — pas à une pile de CV. Un machiniste CNC rare ou un directeur d’usine prend davantage de temps : nous l’annonçons dès le brief.</p></details><details><summary>Dans quelles régions du Québec recrutez-vous ?</summary><p>Grand Montréal, Laval, Rive-Sud, Montérégie, Estrie, Centre-du-Québec, Mauricie et région de Québec. Nous menons aussi des mandats en région lorsque le profil l’exige.</p></details><details><summary>Comment se passe une consultation ?</summary><p>Les consultations sont sur rendez-vous uniquement. Un appel de 30 minutes suffit pour comprendre le quart, le salaire réel, la SST et l’urgence. Réponse moyenne sous 30 minutes durant les heures d’ouverture (lun.–ven., 8 h à 17 h).</p></details><details><summary>Offrez-vous une garantie de remplacement ?</summary><p>Oui, sur les mandats permanents. La durée est confirmée à l’ouverture du dossier, par écrit. Le suivi 30/60/90 jours fait partie du mandat, pas d’une option.</p></details><details><summary>Travaillez-vous avec des candidats en recherche active seulement ?</summary><p>Non. Une part importante de notre vivier est passive : opérateurs, métiers et cadres déjà en poste que nous approchons discrètement. C’est souvent là que se trouvent les profils qui restent.</p></details><details><summary>Puis-je déposer un CV même s’il n’y a pas d’offre affichée ?</summary><p>Oui. Plusieurs mandats sont confidentiels. Nous qualifions votre métier, vos quarts et votre mobilité, puis nous vous présentons lorsqu’un employeur industriel correspond.</p></details><details><summary>Comment facturez-vous les employeurs ?</summary><p>Honoraires au succès, calculés sur le salaire annuel du candidat placé. Aucun frais si le mandat n’aboutit pas, selon les conditions de l’entente. La consultation initiale est gratuite.</p></details></div>
   </div>
 </section>
 
@@ -391,10 +383,11 @@
   <div class="container">
     <div class="row align-items-center g-4">
       <div class="col-lg-5">
-        <div class="tl-kicker">Contact rapide</div>
+        <div class="tl-kicker">Contact</div>
         <h2 class="tl-h2">Parlez-nous de votre mandat ou de votre CV</h2>
-        <p class="tl-lead">Réponse sous 24 heures ouvrables. Consultation employeur sans engagement. Premiers candidats qualifiés en seulement 7 jours.</p>
-        <p><a href="tel:+15145550199">514 555-0199</a><br><a href="mailto:info@talendus.ca">info@talendus.ca</a></p>
+        <p class="tl-lead">Consultations sur rendez-vous uniquement. Réponse moyenne sous 30 minutes durant les heures d’ouverture.</p>
+        <div class="tl-notice">Lun–Ven, 8 h à 17 h · Rencontres planifiées selon vos disponibilités.</div>
+        <p style="margin-top:18px"><a href="tel:+15145550199">514 555-0199</a><br><a href="mailto:info@talendus.ca">info@talendus.ca</a></p>
         <div class="tl-actions" style="margin-top:18px">
           <a class="tl-btn" href="contact.html">Parler à un spécialiste</a>
         </div>
@@ -423,9 +416,9 @@
 
 <section class="tl-cta-band">
   <div class="container">
-    <span class="tl-badge tl-badge-light">Recrutement accéléré</span>
-    <h2 class="tl-h2">Un poste vacant en usine coûte plus cher qu’un mandat bien mené.</h2>
-    <p>Employeurs : premiers candidats qualifiés sous 7 jours. Candidats : un dossier présenté aux usines qui recrutent vraiment.</p>
+    <span class="tl-badge tl-badge-light">Cabinet industriel</span>
+    <h2 class="tl-h2">Votre usine n’a pas besoin d’une agence généraliste.</h2>
+    <p>Un interlocuteur qui parle production, quarts et SST. Consultation gratuite, sur rendez-vous. Réponse moyenne sous 30 minutes durant les heures d’ouverture.</p>
     <div class="tl-actions">
       <a class="tl-btn tl-btn-lg" href="contact.html">Obtenir une consultation gratuite</a>
       <a class="tl-btn tl-btn-ghost" href="candidats.html#cv">Déposer mon CV</a>
@@ -459,7 +452,7 @@
           <img src="assets/img/logo/logo1.png" alt="Talendus">
           <div class="space16"></div>
           <p>Nous recrutons exclusivement pour les usines, entrepôts et entreprises manufacturières du Québec.</p>
-          <p class="tl-muted" style="margin-top:12px">Premiers candidats qualifiés en seulement 7 jours.</p>
+          <p class="tl-muted" style="margin-top:12px">Consultations sur rendez-vous uniquement.</p>
         </div>
       </div>
       <div class="col-lg col-md-6">
@@ -492,7 +485,8 @@
           <ul>
             <li><a href="tel:+15145550199">514 555-0199</a></li>
             <li><a href="mailto:info@talendus.ca">info@talendus.ca</a></li>
-            <li><a href="contact.html">Montréal, Québec</a></li>
+            <li>Lun–Ven, 8 h à 17 h</li>
+            <li><a href="contact.html">Montréal · sur rendez-vous</a></li>
           </ul>
         </div>
       </div>

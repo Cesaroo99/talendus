@@ -4,9 +4,56 @@
     else document.addEventListener("DOMContentLoaded", fn);
   }
 
+  function fileName() {
+    var file = (window.location.pathname.split("/").pop() || "index.html").toLowerCase();
+    return file || "index.html";
+  }
+
+  function navKey(file) {
+    if (!file || file === "index.html") return "home";
+    if (file === "employeurs.html" || file === "secteurs.html" || file.indexOf("secteur-") === 0) return "employeurs";
+    if (file === "candidats.html" || file === "emplois.html" || file.indexOf("emploi-") === 0) return "candidats";
+    if (file === "services.html" || file === "service.html") return "services";
+    if (file === "a-propos.html" || file === "about.html") return "about";
+    if (file === "blog.html" || file.indexOf("article-") === 0 || file === "blog-single.html") return "blog";
+    if (file === "contact.html") return "contact";
+    return "";
+  }
+
+  function markActiveNav() {
+    var key = navKey(fileName());
+    document.querySelectorAll("[data-nav]").forEach(function (el) {
+      el.classList.toggle("is-active", key && el.getAttribute("data-nav") === key);
+    });
+  }
+
   ready(function () {
+    markActiveNav();
+    setTimeout(markActiveNav, 250);
+
     if (window.jQuery) {
-      var $slider = window.jQuery(".hero-main-slider");
+      var $ = window.jQuery;
+      $(window).off("load");
+      $(window).on("load.talendus", function () {
+        var minMs = 900;
+        var start = window.performance && performance.now ? performance.now() : Date.now();
+        function hide() {
+          var elapsed = (window.performance && performance.now ? performance.now() : Date.now()) - start;
+          var wait = Math.max(0, minMs - elapsed);
+          setTimeout(function () {
+            $(".preloader").addClass("is-done");
+            setTimeout(function () {
+              $(".preloader").remove();
+            }, 480);
+          }, wait);
+        }
+        hide();
+      });
+      if (document.readyState === "complete") {
+        $(window).trigger("load.talendus");
+      }
+
+      var $slider = $(".hero-main-slider");
       if ($slider.length) {
         if ($slider.hasClass("slick-initialized")) {
           $slider.slick("unslick");
@@ -24,8 +71,8 @@
           cssEase: "ease-in-out",
           adaptiveHeight: false,
           draggable: true,
-          prevArrow: window.jQuery(".next-arrow-hero"),
-          nextArrow: window.jQuery(".prev-arrow-hero")
+          prevArrow: $(".next-arrow-hero"),
+          nextArrow: $(".prev-arrow-hero")
         });
       }
     }
@@ -36,7 +83,7 @@
         var box = form.querySelector(".tl-success");
         if (box) {
           box.style.display = "block";
-          box.textContent = "Merci. Un conseiller Talendus vous répondra sous 24 heures ouvrables.";
+          box.textContent = "Merci. Réponse moyenne sous 30 minutes durant les heures d’ouverture. Un conseiller vous rejoint.";
         }
         form.reset();
       });
