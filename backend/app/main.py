@@ -6,6 +6,8 @@ from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.responses import FileResponse as StarletteFileResponse
 
 from app.boot import assert_runtime_safe
 from app.config import get_settings
@@ -22,13 +24,30 @@ logging.basicConfig(level=logging.INFO if not settings.debug else logging.DEBUG,
 SITE_ROOT = Path(__file__).resolve().parents[2]
 
 
+class SiteStatic(StaticFiles):
+    """404 HTML Talendus au lieu d'une erreur brute / 502 proxy."""
+
+    async def get_response(self, path: str, scope):
+        try:
+            return await super().get_response(path, scope)
+        except StarletteHTTPException as exc:
+            if exc.status_code == 404:
+                not_found = SITE_ROOT / "404.html"
+                if not_found.exists():
+                    return StarletteFileResponse(not_found, status_code=404, media_type="text/html; charset=utf-8")
+            raise
+
+
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     assert_runtime_safe(settings)
-    init_db()
-    if settings.app_env != "test":
-        seed_if_empty()
-        start_worker()
+    try:
+        init_db()
+        if settings.app_env != "test":
+            seed_if_empty()
+            start_worker()
+    except Exception:
+        logger.exception("Démarrage base/seed en échec — le site public reste servi")
     logger.info("Talendus API ready env=%s", settings.app_env)
     yield
 
@@ -106,7 +125,7 @@ def create_app() -> FastAPI:
     application.include_router(site.router)
 
     if SITE_ROOT.joinpath("index.html").exists() and settings.app_env != "test":
-        application.mount("/", StaticFiles(directory=str(SITE_ROOT), html=True), name="site")
+        application.mount("/", SiteStatic(directory=str(SITE_ROOT), html=True), name="site")
     return application
 
 

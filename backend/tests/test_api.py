@@ -11,6 +11,12 @@ def test_health(client):
     assert body["data"]["status"] == "ok"
 
 
+def test_ready(client):
+    res = client.get("/api/ready")
+    assert res.status_code == 200
+    assert res.json()["data"]["status"] == "ready"
+
+
 def test_register_and_login(client):
     data = register(client, "cand@example.com")
     assert data["user"]["role"] == "CANDIDATE"

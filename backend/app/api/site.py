@@ -24,6 +24,14 @@ def _portal_page(relative: str):
     return FileResponse(path, media_type="text/html; charset=utf-8", headers=PORTAL_HEADERS)
 
 
+@router.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    icon = SITE_ROOT / "assets" / "img" / "logo" / "fav-logo1.png"
+    if not icon.exists():
+        raise AppError(404, "Page introuvable.", "NOT_FOUND")
+    return FileResponse(icon, media_type="image/png", headers={"Cache-Control": "public, max-age=86400"})
+
+
 @router.get("/robots.txt", include_in_schema=False)
 def robots():
     return PlainTextResponse(robots_txt(), media_type="text/plain; charset=utf-8")
@@ -31,7 +39,14 @@ def robots():
 
 @router.get("/sitemap.xml", include_in_schema=False)
 def sitemap(db: Session = Depends(get_db)):
-    xml = sitemap_xml(db)
+    try:
+        xml = sitemap_xml(db)
+    except Exception:
+        xml = (
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+            "<url><loc>https://talendus.ca/</loc></url></urlset>"
+        )
     return Response(
         content=xml,
         media_type="application/xml; charset=utf-8",

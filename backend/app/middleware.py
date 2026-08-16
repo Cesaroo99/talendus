@@ -3,6 +3,7 @@ from __future__ import annotations
 import time
 from collections import defaultdict, deque
 
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse, RedirectResponse, Response
@@ -14,7 +15,19 @@ from app.services.seo import PRIVATE_PATHS, REDIRECTS
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next) -> Response:
-        response = await call_next(request)
+        try:
+            response = await call_next(request)
+        except StarletteHTTPException:
+            raise
+        except Exception:
+            from app.errors import html_error, wants_html
+
+            if wants_html(request):
+                return html_error(503)
+            return JSONResponse(
+                status_code=503,
+                content=error_body("Service momentanément indisponible.", "UNAVAILABLE"),
+            )
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
         response.headers.setdefault("X-Frame-Options", "DENY")
         response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
@@ -52,6 +65,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
         if request.url.path.rstrip("/") in {
             "/api/health",
+            "/api/ready",
             "/api/docs",
             "/api/redoc",
             "/api/openapi.json",

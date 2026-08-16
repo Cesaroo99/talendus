@@ -16,16 +16,20 @@ router = APIRouter(tags=["public"])
 
 
 @router.get("/health")
-def health(db: Session = Depends(get_db)):
-    db.execute(text("SELECT 1"))
-    settings = get_settings()
-    return ok(
-        {
-            "status": "ok",
-            "service": "talendus-api",
-            "env": settings.app_env,
-        }
-    )
+def health():
+    """Liveness : ne touche pas la base. Render s'en sert ; un 502 ici coupe tout le site."""
+    return ok({"status": "ok", "service": "talendus-api", "env": get_settings().app_env})
+
+
+@router.get("/ready")
+def ready(db: Session = Depends(get_db)):
+    try:
+        db.execute(text("SELECT 1"))
+    except Exception:
+        from app.errors import AppError
+
+        raise AppError(503, "Base de données indisponible.", "DB_UNAVAILABLE") from None
+    return ok({"status": "ready", "service": "talendus-api"})
 
 
 @router.get("/job-board")
