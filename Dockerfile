@@ -7,7 +7,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     DEBUG=false \
     PORT=8000 \
     STORAGE_DIR=/var/data \
-    WEB_CONCURRENCY=2
+    WEB_CONCURRENCY=1
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends libpq5 \
@@ -29,9 +29,11 @@ COPY --chown=talendus:talendus en /app/en
 COPY --chown=talendus:talendus *.html robots.txt sitemap.xml /app/
 
 RUN chmod +x /app/scripts/entrypoint.sh \
-    && chown -R talendus:talendus /var/data /app
+    && chown -R talendus:talendus /app \
+    && chmod 777 /var/data
 
-USER talendus
+# Root : le disque Render est monté par-dessus /var/data et n'est pas
+# toujours inscriptible par un utilisateur non-root au premier boot.
 EXPOSE 8000
 WORKDIR /app/backend
 ENTRYPOINT ["/app/scripts/entrypoint.sh"]

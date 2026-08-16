@@ -12,6 +12,13 @@ def test_normalize_postgres_urls():
     assert normalize_database_url("sqlite:///./data/talendus.db").startswith("sqlite:")
 
 
+def test_normalize_keeps_url_encoded_passwords():
+    raw = "postgres://talendus:p%40ss%25word@dpg-host:5432/talendus"
+    got = normalize_database_url(raw)
+    assert got == "postgresql+psycopg://talendus:p%40ss%25word@dpg-host:5432/talendus"
+    assert "%25" in got
+
+
 def test_production_rejects_debug_and_weak_secrets():
     with pytest.raises(RuntimeError, match="DEBUG"):
         assert_runtime_safe(SimpleNamespace(app_env="production", debug=True, secret_key="x" * 40, jwt_secret="y" * 40, database_url="postgresql+psycopg://u:p@h/db", admin_password=""))
