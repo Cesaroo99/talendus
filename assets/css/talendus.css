@@ -479,7 +479,25 @@ a.tl-card:hover, .tl-job-card:hover, .tl-case:hover {
 .tl-sticky a:hover { transform: translateY(-2px); }
 
 /* ----- Filters ----- */
-.tl-filters { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 22px; }
+.tl-form .nice-select,
+.tl-filters .nice-select {
+  float: none;
+  width: 100%;
+  height: 48px;
+  line-height: 46px;
+  border: 1px solid #d5dee7;
+  border-radius: var(--tl-radius-sm);
+  margin-bottom: 12px;
+  font-size: 16px;
+  color: var(--tl-navy);
+}
+.tl-form .nice-select .list,
+.tl-filters .nice-select .list { width: 100%; }
+.tl-filters .nice-select {
+  width: auto;
+  min-width: 180px;
+  margin-bottom: 0;
+}
 .tl-filters input, .tl-filters select {
   border: 1px solid #d5dee7;
   border-radius: 10px;
