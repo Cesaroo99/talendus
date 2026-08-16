@@ -1,48 +1,4 @@
-<!DOCTYPE html>
-<html lang="fr-CA">
-<head>
-     <meta charset="UTF-8">
-     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-     <title>Contact | Consultation recrutement industriel Québec — Talendus</title>
-     <meta name="description" content="Contactez Talendus à Montréal : consultation gratuite, recrutement usine, entrepôt et manufacturier au Québec. 514 555-0199 · info@talendus.ca">
-     <link rel="canonical" href="https://talendus.ca/contact.html">
-     <meta property="og:title" content="Contact | Consultation recrutement industriel Québec — Talendus">
-     <meta property="og:description" content="Contactez Talendus à Montréal : consultation gratuite, recrutement usine, entrepôt et manufacturier au Québec. 514 555-0199 · info@talendus.ca">
-     <meta property="og:type" content="website">
-     <meta property="og:url" content="https://talendus.ca/contact.html">
-     <meta name="robots" content="index,follow">
-    <link rel="shortcut icon" href="assets/img/logo/fav-logo1.png" type="image/png">
-    <link rel="stylesheet" href="assets/css/plugins/bootstrap.min.css">
-    <link rel="stylesheet" href="assets/css/plugins/aos.css">
-    <link rel="stylesheet" href="assets/css/plugins/fontawesome.css">
-    <link rel="stylesheet" href="assets/css/plugins/magnific-popup.css">
-    <link rel="stylesheet" href="assets/css/plugins/slick-slider.css">
-    <link rel="stylesheet" href="assets/css/plugins/nice-select.css">
-    <link rel="stylesheet" href="assets/css/main.css">
-    <link rel="stylesheet" href="assets/css/talendus.css">
-    
-</head>
-<body class="tl-solid-header">
-<div class="preloader">
-  <div class="loading-container">
-    <div class="loading"></div>
-    <div id="loading-icon"><img src="assets/img/logo/preloder.png" alt="Talendus"></div>
-  </div>
-</div>
-<header class="homepage2-body">
-  <div id="vl-header-sticky" class="vl-header-area vl-transparent-header">
-      <div class="container">
-          <div class="row align-items-center">
-              <div class="col-lg-2 col-md-6 col-6">
-                  <div class="vl-logo">
-                      <a href="index.html"><img src="assets/img/logo/logo1.png" alt="Talendus"></a>
-                  </div>
-              </div>
-              <div class="col-lg-8 d-none d-lg-block">
-                  <div class="vl-main-menu text-center">
-                      <nav class="vl-mobile-menu-active">
-                          <ul>
-
+HEADER_NAV = """
                               <li><a href="index.html">Accueil</a></li>
                               <li class="has-dropdown">
                                 <a href="employeurs.html">Employeurs <span><i class="fa-solid fa-angle-down d-lg-inline d-none"></i></span></a>
@@ -65,7 +21,58 @@
                               <li><a href="a-propos.html">À propos</a></li>
                               <li><a href="blog.html">Blog</a></li>
                               <li><a href="contact.html">Contact</a></li>
+"""
 
+def head(title, description, canonical, extra_css=""):
+    return f"""<!DOCTYPE html>
+<html lang="fr-CA">
+<head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>{title}</title>
+     <meta name="description" content="{description}">
+     <link rel="canonical" href="https://talendus.ca/{canonical}">
+     <meta property="og:title" content="{title}">
+     <meta property="og:description" content="{description}">
+     <meta property="og:type" content="website">
+     <meta property="og:url" content="https://talendus.ca/{canonical}">
+     <meta name="robots" content="index,follow">
+    <link rel="shortcut icon" href="assets/img/logo/fav-logo1.png" type="image/png">
+    <link rel="stylesheet" href="assets/css/plugins/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/css/plugins/aos.css">
+    <link rel="stylesheet" href="assets/css/plugins/fontawesome.css">
+    <link rel="stylesheet" href="assets/css/plugins/magnific-popup.css">
+    <link rel="stylesheet" href="assets/css/plugins/slick-slider.css">
+    <link rel="stylesheet" href="assets/css/plugins/nice-select.css">
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="assets/css/talendus.css">
+    {extra_css}
+</head>
+"""
+
+def header(solid=True):
+    cls = "tl-solid-header" if solid else ""
+    return f"""<body class="{cls}">
+<div class="preloader">
+  <div class="loading-container">
+    <div class="loading"></div>
+    <div id="loading-icon"><img src="assets/img/logo/preloder.png" alt="Talendus"></div>
+  </div>
+</div>
+<header class="homepage2-body">
+  <div id="vl-header-sticky" class="vl-header-area vl-transparent-header">
+      <div class="container">
+          <div class="row align-items-center">
+              <div class="col-lg-2 col-md-6 col-6">
+                  <div class="vl-logo">
+                      <a href="index.html"><img src="assets/img/logo/logo1.png" alt="Talendus"></a>
+                  </div>
+              </div>
+              <div class="col-lg-8 d-none d-lg-block">
+                  <div class="vl-main-menu text-center">
+                      <nav class="vl-mobile-menu-active">
+                          <ul>
+{HEADER_NAV}
                           </ul>
                       </nav>
                   </div>
@@ -109,42 +116,9 @@
   </div>
   <div class="vl-offcanvas-overlay"></div>
 </div>
+"""
 
-<section class="tl-page-hero">
-  <div class="container">
-    <div class="tl-kicker">Contact</div>
-    <h1 class="tl-h1">Consultation gratuite pour votre prochain mandat industriel.</h1>
-    <p class="tl-lead" style="color:rgba(255,255,255,.84)">Téléphone, courriel ou formulaire. Adresse affichée configurable selon votre bureau.</p>
-  </div>
-</section>
-
-    <section class="tl-section"><div class="container">
-      <div class="row">
-        <div class="col-lg-5">
-          <h2 class="tl-h2">Nous joindre</h2>
-          <p><strong>Téléphone :</strong> <a href="tel:+15145550199">514 555-0199</a><br>
-          <strong>Courriel :</strong> <a href="mailto:info@talendus.ca">info@talendus.ca</a><br>
-          <strong>Adresse :</strong> Montréal (Québec) — adresse de bureau configurable.</p>
-          <div class="tl-hero-media" style="height:280px;border-radius:16px;overflow:hidden;margin-top:18px">
-            <iframe title="Carte Montréal" src="https://maps.google.com/maps?q=Montréal%20Québec&t=&z=11&ie=UTF8&iwloc=&output=embed" width="100%" height="280" style="border:0" loading="lazy"></iframe>
-          </div>
-        </div>
-        <div class="col-lg-6 offset-lg-1">
-          <form class="tl-form" action="#" method="post">
-            <label>Nom</label><input required>
-            <label>Entreprise (optionnel)</label><input>
-            <label>Courriel</label><input type="email" required>
-            <label>Téléphone</label><input>
-            <label>Objet</label>
-            <select><option>Mandat de recrutement</option><option>Candidature</option><option>Consultation</option></select>
-            <label>Message</label><textarea required></textarea>
-            <button class="tl-btn" type="submit">Demander une consultation</button>
-            <div class="tl-success"></div>
-          </form>
-        </div>
-      </div>
-    </div></section>
-    
+FOOTER = """
 <div class="tl-sticky">
   <a href="contact.html">Consultation gratuite</a>
   <a class="alt" href="candidats.html#cv">Déposer un CV</a>
@@ -220,3 +194,15 @@
 <script src="assets/js/talendus.js"></script>
 </body>
 </html>
+"""
+
+def page_hero(kicker, title, lead):
+    return f"""
+<section class="tl-page-hero">
+  <div class="container">
+    <div class="tl-kicker">{kicker}</div>
+    <h1 class="tl-h1">{title}</h1>
+    <p class="tl-lead" style="color:rgba(255,255,255,.84)">{lead}</p>
+  </div>
+</section>
+"""
