@@ -11,6 +11,16 @@
     var isEn = (document.documentElement.lang || "").toLowerCase().indexOf("en") === 0;
     document.body.classList.add("tl-portal-active");
 
+    function assetPrefix() {
+      var img = document.querySelector(".vl-logo img");
+      var src = img && img.getAttribute("src");
+      if (src) return src.replace(/assets\/img\/logo\/[^/?#]+$/, "");
+      return isEn ? "../" : "";
+    }
+    function logoUrl() { return assetPrefix() + "assets/img/logo/logo1.png"; }
+    function plantUrl() { return assetPrefix() + "assets/img/all-images/industry/usine-equipe.jpg"; }
+    var MARK_SVG = '<svg viewBox="0 0 36 36" aria-hidden="true"><path fill="#ffffff" fill-rule="evenodd" d="M18 1.5c9.113 0 16.5 7.387 16.5 16.5S27.113 34.5 18 34.5 1.5 27.113 1.5 18 8.887 1.5 18 1.5zm-7.25 9.75h14.5a1.75 1.75 0 1 1 0 3.5h-5.5v12.75a1.75 1.75 0 1 1-3.5 0V14.75h-5.5a1.75 1.75 0 1 1 0-3.5z"/></svg>';
+
     var t = isEn ? {
       login: "Sign in", register: "Create an account", email: "Email", password: "Password",
       first: "First name", last: "Last name", submitLogin: "Sign in", submitRegister: "Create my account",
@@ -22,6 +32,16 @@
       emptyMsgs: "No messages yet.", emptyInts: "No interviews scheduled.", emptyDocs: "No documents yet.",
       emptySaved: "No saved jobs.", markAll: "Mark all as read", markRead: "Mark as read",
       welcome: "Your candidate workspace", guest: "Sign in to follow your applications.",
+      welcomeEmployer: "Your hiring workspace", guestEmployer: "Sign in to manage jobs and applications.",
+      registerEmployer: "Create an employer account",
+      brand: "We hire for Quebec plants.",
+      point1: "A consultant presents the files.",
+      point2: "Candidates and employers stay on their own side.",
+      loginLead: "Enter your workspace.",
+      registerLead: "Takes five minutes. Free for talent.",
+      registerEmployerLead: "Open a mandate and follow the files we present.",
+      haveAccount: "Already have an account?",
+      noAccount: "No account yet?",
       err: "Something went wrong.", saved: "Saved.", uploaded: "File saved.", send: "Send",
       confirm: "Confirm", cancel: "Cancel", to: "To", write: "Your message", score: "Match",
       welcomeEmployer: "Your hiring workspace", guestEmployer: "Sign in to manage jobs and applications.",
@@ -76,6 +96,16 @@
       emptyInts: "Aucun entretien planifié.", emptyDocs: "Aucun document pour le moment.",
       emptySaved: "Aucune offre sauvegardée.", markAll: "Tout marquer comme lu", markRead: "Marquer comme lu",
       welcome: "Votre espace candidat", guest: "Connectez-vous pour suivre vos candidatures.",
+      welcomeEmployer: "Votre espace employeur", guestEmployer: "Connectez-vous pour gérer vos offres et candidatures.",
+      registerEmployer: "Créer un compte employeur",
+      brand: "On recrute pour les usines du Québec.",
+      point1: "Un conseiller présente les dossiers.",
+      point2: "Candidats et employeurs, chacun de son côté.",
+      loginLead: "Entrez dans votre espace.",
+      registerLead: "Cinq minutes. C'est gratuit pour les talents.",
+      registerEmployerLead: "Ouvrez un mandat et suivez les dossiers présentés.",
+      haveAccount: "Déjà un compte ?",
+      noAccount: "Pas encore de compte ?",
       err: "Une erreur s’est produite.", saved: "Enregistré.", uploaded: "Fichier enregistré.", send: "Envoyer",
       confirm: "Confirmer", cancel: "Annuler", to: "Destinataire", write: "Votre message", score: "Score",
       welcomeEmployer: "Votre espace employeur", guestEmployer: "Connectez-vous pour gérer vos offres et candidatures.",
@@ -298,26 +328,48 @@
 
     function renderGuest() {
       var employer = isEmployerSpace();
+      document.body.classList.add("tl-auth-guest");
       var hash = (location.hash || "").replace(/^#\/?/, "");
-      if (window.TalendusAuth && (hash.indexOf("reset") === 0 || hash.indexOf("verify") === 0 || hash.indexOf("forgot") === 0 || hash.indexOf("login") === 0 || hash.indexOf("register") === 0)) {
+      if (window.TalendusAuth && (hash.indexOf("reset") === 0 || hash.indexOf("verify") === 0 || hash.indexOf("forgot") === 0)) {
         return;
       }
-      root.innerHTML = '<div class="tl-account-grid"><div><div class="tl-kicker">Talendus</div><h2 class="tl-h2">' +
-        esc(employer ? t.welcomeEmployer : t.welcome) + '</h2><p class="tl-lead">' + esc(employer ? t.guestEmployer : t.guest) +
-        "</p></div><div class=\"tl-account-cards\">" +
-        '<form class="tl-form" id="acc-login"><h3>' + esc(t.login) + "</h3><label>" + esc(t.email) +
-        '</label><input name="email" type="email" required><label>' + esc(t.password) +
-        '</label><input name="password" type="password" required minlength="8"><button class="tl-btn" type="submit">' +
-        esc(t.submitLogin) + '</button><p><button type="button" class="tl-text-btn" id="acc-forgot">' + esc(t.forgot) +
-        '</button></p><div class="tl-success"></div></form>' +
-        '<form class="tl-form" id="acc-register"><h3>' + esc(employer ? t.registerEmployer : t.register) + "</h3>" +
-        '<input class="tl-hp" name="website_url" tabindex="-1" autocomplete="off" aria-hidden="true">' +
-        "<label>" + esc(t.first) + '</label><input name="first_name" required><label>' +
-        esc(t.last) + '</label><input name="last_name" required>' +
-        (employer ? "<label>" + esc(t.company) + '</label><input name="company_name">' : "") +
-        "<label>" + esc(t.email) + '</label><input name="email" type="email" required><label>' + esc(t.password) +
-        '</label><input name="password" type="password" required minlength="8"><button class="tl-btn tl-btn-electric" type="submit">' +
-        esc(t.submitRegister) + '</button><div class="tl-success"></div></form></div></div>';
+      root.innerHTML =
+        '<div class="tl-auth-page">' +
+          '<div class="tl-auth-shell tl-auth-shell-page">' +
+            '<aside class="tl-auth-brand">' +
+              '<img class="tl-auth-photo" src="' + esc(plantUrl()) + '" alt="" width="600" height="800">' +
+              '<div class="tl-auth-brand-inner">' +
+                '<div class="tl-auth-mark">' + MARK_SVG + "</div>" +
+                '<p class="tl-auth-word">Talendus</p>' +
+                '<p class="tl-auth-tagline">' + esc(t.brand) + "</p>" +
+                '<ul class="tl-auth-points"><li>' + esc(t.point1) + "</li><li>" + esc(t.point2) + "</li></ul>" +
+              "</div></aside>" +
+            '<div class="tl-auth-panel">' +
+              '<a class="tl-auth-logo" href="index.html"><img src="' + esc(logoUrl()) + '" width="186" height="36" alt="Talendus"></a>' +
+              '<p class="tl-kicker">' + esc(employer ? t.welcomeEmployer : t.welcome) + "</p>" +
+              '<h2>' + esc(t.login) + " / " + esc(employer ? t.registerEmployer : t.register) + "</h2>" +
+              '<p class="tl-auth-lead">' + esc(employer ? t.guestEmployer : t.guest) + "</p>" +
+              '<div class="tl-account-cards">' +
+                '<form class="tl-form tl-auth-form" id="acc-login">' +
+                  "<h3>" + esc(t.login) + "</h3>" +
+                  '<p class="tl-auth-card-lead">' + esc(t.loginLead) + "</p>" +
+                  "<label>" + esc(t.email) + '</label><input name="email" type="email" required autocomplete="username">' +
+                  "<label>" + esc(t.password) + '</label><input name="password" type="password" required minlength="8" autocomplete="current-password">' +
+                  '<button class="tl-btn tl-btn-lg" type="submit">' + esc(t.submitLogin) + "</button>" +
+                  '<p class="tl-auth-forgot"><button type="button" class="tl-text-btn" id="acc-forgot">' + esc(t.forgot) + "</button></p>" +
+                  '<div class="tl-success"></div></form>' +
+                '<form class="tl-form tl-auth-form" id="acc-register">' +
+                  "<h3>" + esc(employer ? t.registerEmployer : t.register) + "</h3>" +
+                  '<p class="tl-auth-card-lead">' + esc(employer ? t.registerEmployerLead : t.registerLead) + "</p>" +
+                  '<input class="tl-hp" name="website_url" tabindex="-1" autocomplete="off" aria-hidden="true">' +
+                  '<div class="tl-row-2"><div><label>' + esc(t.first) + '</label><input name="first_name" required autocomplete="given-name"></div>' +
+                  "<div><label>" + esc(t.last) + '</label><input name="last_name" required autocomplete="family-name"></div></div>' +
+                  (employer ? "<label>" + esc(t.company) + '</label><input name="company_name" autocomplete="organization">' : "") +
+                  "<label>" + esc(t.email) + '</label><input name="email" type="email" required autocomplete="email">' +
+                  "<label>" + esc(t.password) + '</label><input name="password" type="password" required minlength="8" autocomplete="new-password">' +
+                  '<button class="tl-btn tl-btn-lg tl-btn-electric" type="submit">' + esc(t.submitRegister) + "</button>" +
+                  '<div class="tl-success"></div></form>' +
+              "</div></div></div></div>";
       document.getElementById("acc-login").addEventListener("submit", function (e) {
         e.preventDefault();
         var d = Object.fromEntries(new FormData(e.target).entries());
@@ -1078,6 +1130,7 @@
     }
 
     function renderAuthed() {
+      document.body.classList.remove("tl-auth-guest");
       var user = state.user;
       var route = currentRoute();
       countsThen(function () {
