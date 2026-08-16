@@ -107,16 +107,16 @@ Les articles HTML historiques `article-*.html` restent en ligne. Les nouveaux co
 
 | Page | Intention | Mot-clé principal | Secondaires | H1 | CTA |
 | --- | --- | --- | --- | --- | --- |
-| Accueil | Marque + industrial QC | recrutement industriel au Québec | agence de recrutement industriel | Premiers candidats qualifiés… | Confier un recrutement |
-| Recrutement industriel | Service | recrutement industriel au Québec | agence de placement industriel, personnel industriel | Recrutement industriel au Québec… | Consultation |
-| Manufacturier | Service | recrutement manufacturier | recrutement manufacturier Montréal | Recrutement manufacturier… | Mandat |
+| Accueil | Marque + tous secteurs | plateforme de recrutement | recrutement entreprises, tous secteurs | Recrutez mieux, plus vite et plus intelligemment. | Parler à un recruteur |
+| Recrutement industriel | Exemple de secteur | recrutement industriel au Québec | agence de placement, personnel industriel | Recrutement industriel : un exemple parmi d'autres | Parler à un recruteur |
+| Manufacturier | Exemple de secteur | recrutement manufacturier | recrutement manufacturier Montréal | Recrutement manufacturier… | Mandat |
 | Technique | Service | recrutement de talents techniques | travailleurs qualifiés | Recrutement technique… | Métier |
 | Permanent / temporaire | Type de contrat | recrutement permanent / temporaire | — | Selon la page | Mandat |
 | Chasse de têtes | Senior / passif | chasse de têtes | — | Chasse de têtes… | Mandat |
-| Cadres | Leadership | recrutement de cadres | — | Recrutement de cadres d'usine… | Mandat |
-| Montréal / Laval / Longueuil / Québec | Local | recrutement industriel + ville | agence locale | Distinct par bassin | Mandat local |
-| Emplois | Candidats | offres d'emploi usine | métiers | Postes industriels ouverts | Déposer un CV |
-| Blog | Autorité | pénurie, salaires, CV, rétention | un sujet par article | Titre de l’article | Consultation |
+| Cadres | Leadership | recrutement de cadres | — | Recrutement de cadres… | Mandat |
+| Montréal / Laval / Longueuil / Québec | Local | recrutement + ville | agence locale | Distinct par bassin | Mandat local |
+| Emplois | Candidats | offres d'emploi | métiers, compétences | Découvrez les offres | Créer mon profil |
+| Blog | Autorité | recrutement, RH, rétention | un sujet par article | Titre de l’article | Parler à un recruteur |
 
 Maillage : Accueil → Services → page service → articles / offres → candidature ; Accueil → Entreprises → contact.
 

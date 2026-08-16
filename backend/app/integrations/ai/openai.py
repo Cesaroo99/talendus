@@ -43,7 +43,7 @@ class OpenAIService:
                 "messages": [
                     {
                         "role": "system",
-                        "content": "Tu assistes Talendus, cabinet de recrutement industriel au Québec. Réponds en français, sans inventer de faits.",
+                        "content": "Tu assistes Talendus, plateforme de recrutement pour toutes les entreprises. Réponds en français, sans inventer de faits. L'IA n'est pas encore un moteur de matching en production : n'invente pas de scores ni de classements.",
                     },
                     {"role": "user", "content": prompt.strip()[:8000]},
                 ],
@@ -62,10 +62,10 @@ class OpenAIService:
         }
 
     def analyze_resume(self, text: str) -> dict:
-        return self.complete(purpose="resume_analysis", prompt=f"Analyse ce CV (recrutement industriel Québec) :\n{text}")
+        return self.complete(purpose="resume_analysis", prompt=f"Analyse ce CV (recrutement, tous secteurs) :\n{text}")
 
     def extract_skills(self, text: str) -> dict:
-        return self.complete(purpose="skill_extraction", prompt=f"Extrais les compétences industrielles, une par ligne :\n{text}")
+        return self.complete(purpose="skill_extraction", prompt=f"Extrais les compétences, une par ligne :\n{text}")
 
     def classify_profile(self, text: str) -> dict:
         return self.complete(purpose="profile_classification", prompt=f"Classe ce profil (métier, niveau, secteur) :\n{text}")

@@ -7,6 +7,11 @@ from parts import (
     wrap as wrap_page, page_hero, speed_strip, cta_band, faq_html, proof_stats,
     FAQ_EMPLOYEURS, FAQ_CANDIDATS,
 )
+from positioning import (
+    homepage_after_hero, job_search_filters, employer_need_fields,
+    talent_trade_options, sectors_cloud, trades_cloud, ai_coming_soon,
+    human_hire_band,
+)
 from en_pages import build_en
 from seo_pages import write_fr as write_seo_fr
 
@@ -102,80 +107,90 @@ def write(name, html):
     path.write_text(html, encoding="utf-8")
     print("wrote", name)
 
+# slug, titre, ville, cat, type, salaire, horaire, exigences, secteur, compétences, expérience
 JOBS = [
-    ("cariste", "Cariste", "Laval", "entrepot", "Permanent", "22 à 26 $/h", "Quart de jour", "Permis chariot élévateur, 1 an d'expérience en entrepôt, SST."),
-    ("operateur-production", "Opérateur de production", "Longueuil", "production", "Permanent", "20 à 24 $/h", "Quarts rotatifs", "Expérience d'usine, capacité à suivre des procédures, travail d'équipe."),
-    ("soudeur", "Soudeur-monteur", "Drummondville", "metallurgie", "Permanent", "28 à 34 $/h", "Quart de jour", "Soudure MIG/TIG, lecture de plans, cartes de compétences un atout."),
-    ("machiniste-cnc", "Machiniste CNC", "Saint-Jérôme", "manufacturier", "Permanent", "30 à 38 $/h", "Quart de jour", "Programmation ou set-up, lecture de dessins, 3 ans d'expérience."),
-    ("electromecanicien", "Électromécanicien", "Montréal", "maintenance", "Permanent", "32 à 40 $/h", "Quarts rotatifs", "Dépannage, hydraulique, pneumatique, électricité industrielle."),
-    ("mecanicien-industriel", "Mécanicien industriel", "Sherbrooke", "maintenance", "Permanent", "30 à 36 $/h", "Quart de jour", "Entretien préventif, alignement, convoyeurs, fiabilité."),
-    ("journalier-usine", "Journalier d'usine", "Boucherville", "production", "Permanent", "18 à 21 $/h", "Quart de soir", "Bonne condition physique, ponctualité, formation interne offerte."),
-    ("superviseur-production", "Superviseur de production", "Trois-Rivières", "supervision", "Permanent", "70 000 à 85 000 $", "Quart de jour", "Leadership d'équipe, KPI, Lean, 5 ans en usine."),
-    ("coordonnateur-logistique", "Coordonnateur logistique", "Anjou", "logistique", "Permanent", "55 000 à 68 000 $", "Quart de jour", "WMS, planification, anglais un atout."),
-    ("directeur-usine", "Directeur d'usine", "Québec", "cadres", "Permanent", "120 000 à 150 000 $", "Quart de jour", "P&L, Lean, gestion d'une usine 100+ employés. Mandat confidentiel."),
+    ("cariste", "Cariste", "Laval", "entrepot", "Permanent", "22 à 26 $/h", "Temps plein", "Permis chariot élévateur, 1 an d'expérience en entrepôt.", "transport", "conduite de chariot élévateur", "intermediaire"),
+    ("operateur-production", "Opérateur de production", "Longueuil", "production", "Permanent", "20 à 24 $/h", "Temps plein", "Expérience de production, capacité à suivre des procédures, travail d'équipe.", "manufacturier", "production", "debutant"),
+    ("soudeur", "Soudeur-monteur", "Drummondville", "metallurgie", "Permanent", "28 à 34 $/h", "Temps plein", "Soudure MIG/TIG, lecture de plans, cartes de compétences un atout.", "manufacturier", "soudure", "intermediaire"),
+    ("machiniste-cnc", "Machiniste CNC", "Saint-Jérôme", "manufacturier", "Permanent", "30 à 38 $/h", "Temps plein", "Programmation ou set-up, lecture de dessins, 3 ans d'expérience.", "manufacturier", "usinage CNC", "senior"),
+    ("electromecanicien", "Électromécanicien", "Montréal", "maintenance", "Permanent", "32 à 40 $/h", "Temps plein", "Dépannage, hydraulique, pneumatique, électricité.", "ingenierie", "électromécanique", "intermediaire"),
+    ("mecanicien-industriel", "Mécanicien industriel", "Sherbrooke", "maintenance", "Permanent", "30 à 36 $/h", "Temps plein", "Entretien préventif, alignement, convoyeurs, fiabilité.", "manufacturier", "mécanique", "intermediaire"),
+    ("journalier-usine", "Journalier d'usine", "Boucherville", "production", "Permanent", "18 à 21 $/h", "Temps plein", "Bonne condition physique, ponctualité, formation interne offerte.", "manufacturier", "production", "debutant"),
+    ("superviseur-production", "Superviseur de production", "Trois-Rivières", "supervision", "Permanent", "70 000 à 85 000 $", "Temps plein", "Leadership d'équipe, KPI, 5 ans en production.", "manufacturier", "supervision", "senior"),
+    ("coordonnateur-logistique", "Coordonnateur logistique", "Anjou", "logistique", "Permanent", "55 000 à 68 000 $", "Temps plein", "WMS, planification, anglais un atout.", "transport", "logistique, WMS", "intermediaire"),
+    ("directeur-usine", "Directeur d'usine", "Québec", "cadres", "Permanent", "120 000 à 150 000 $", "Temps plein", "P&L, Lean, gestion d'un site 100+ employés. Mandat confidentiel.", "manufacturier", "direction", "senior"),
+    ("developpeur", "Développeur", "Montréal", "technologie", "Permanent", "75 000 à 95 000 $", "Temps plein", "Python ou JavaScript, 2 ans d'expérience, travail en équipe.", "technologie", "Python, JavaScript", "intermediaire"),
+    ("comptable", "Comptable", "Québec", "finance", "Permanent", "55 000 à 70 000 $", "Temps plein", "Comptabilité, Excel, diplôme pertinent.", "finance", "Excel, comptabilité", "intermediaire"),
+    ("ingenieur", "Ingénieur", "Sherbrooke", "ingenierie", "Permanent", "80 000 à 100 000 $", "Temps plein", "Ingénierie, gestion de projet, 3 ans d'expérience.", "ingenierie", "gestion de projet", "senior"),
+    ("chauffeur", "Chauffeur", "Anjou", "transport", "Permanent", "22 à 28 $/h", "Temps plein", "Permis de conduire valide, ponctualité, dossier de conduite propre.", "transport", "conduite", "intermediaire"),
+    ("infirmier", "Infirmier", "Laval", "sante", "Permanent", "32 à 42 $/h", "Temps plein", "Permis OIIQ, expérience clinique, travail d'équipe.", "sante", "soins", "intermediaire"),
+    ("vendeur", "Vendeur", "Longueuil", "commerce", "Permanent", "18 à 24 $/h", "Temps plein", "Vente au détail, service client, aisance relationnelle.", "commerce", "vente", "debutant"),
+    ("responsable-rh", "Responsable RH", "Montréal", "administration", "Permanent", "70 000 à 90 000 $", "Temps plein", "Recrutement, relations de travail, 5 ans en RH.", "administration", "RH", "senior"),
+    ("specialiste-marketing", "Spécialiste marketing", "Montréal", "marketing", "Permanent", "55 000 à 75 000 $", "Temps plein", "Marketing digital, communication, gestion de campagnes.", "marketing", "marketing", "intermediaire"),
 ]
 
 SECTORS = [
-    ("manufacturier", "Manufacturier", "Recrutement manufacturier au Québec", "Usines de fabrication, assemblage et sous-traitance. Nous plaçons opérateurs, métiers et cadres de plant."),
-    ("production", "Production", "Recrutement en production au Québec", "Lignes, méthodes, qualité et supervision. Des profils qui tiennent un quart et un standard."),
-    ("entrepot", "Entrepôt", "Recrutement entrepôt Québec", "Caristes, préparateurs, commis et superviseurs d'entrepôt pour centres de distribution."),
-    ("logistique", "Logistique", "Recrutement logistique Québec", "Planification, transport interne, WMS et coordination de la chaîne d'approvisionnement."),
+    ("manufacturier", "Manufacturier", "Recrutement manufacturier au Québec", "Un exemple parmi d'autres : fabrication, assemblage et métiers de production. Talendus recrute aussi bien au-delà de l'industrie."),
+    ("production", "Production", "Recrutement en production au Québec", "Lignes, méthodes, qualité et supervision. Un des nombreux métiers que Talendus peut pourvoir."),
+    ("entrepot", "Entrepôt", "Recrutement entrepôt Québec", "Caristes, préparateurs, commis et superviseurs d'entrepôt — un exemple de profils logistiques."),
+    ("logistique", "Logistique", "Recrutement logistique Québec", "Planification, transport, WMS et coordination. La logistique est un secteur parmi d'autres."),
     ("distribution", "Distribution", "Recrutement distribution Québec", "Centres de distribution, expédition, réception et gestion des stocks."),
-    ("transport", "Transport", "Recrutement transport et logistique", "Coordination transport, expédition usine et profils liés aux flux industriels."),
-    ("transformation-alimentaire", "Transformation alimentaire", "Recrutement alimentaire industriel Québec", "Usines alimentaires : hygiène, quarts, opérateurs et supervision de production."),
-    ("metallurgie", "Métallurgie", "Recrutement métallurgie et soudure Québec", "Soudure, usinage, fabrication métallique et chaudronnerie."),
-    ("plasturgie", "Plasturgie", "Recrutement plasturgie Québec", "Injection, extrusion, set-up de presses et techniciens de procédé."),
-    ("maintenance", "Maintenance industrielle", "Recrutement maintenance industrielle Québec", "Électromécaniciens, mécaniciens industriels et responsables fiabilité."),
+    ("transport", "Transport", "Recrutement transport et logistique", "Chauffeurs, coordination transport et flux. Talendus accompagne aussi d'autres industries."),
+    ("transformation-alimentaire", "Transformation alimentaire", "Recrutement alimentaire Québec", "Production alimentaire : hygiène, opérateurs et supervision. Un exemple, pas une spécialisation exclusive."),
+    ("metallurgie", "Métallurgie", "Recrutement métallurgie et soudure Québec", "Soudure, usinage, fabrication métallique. D'autres métiers et secteurs sont tout autant concernés."),
+    ("plasturgie", "Plasturgie", "Recrutement plasturgie Québec", "Injection, extrusion, set-up et techniciens de procédé."),
+    ("maintenance", "Maintenance", "Recrutement maintenance Québec", "Techniciens, mécaniciens et responsables fiabilité — parmi une grande variété de métiers."),
 ]
 
 ARTICLES = [
-    ("mauvaise-embauche", "Combien coûte une mauvaise embauche en usine ?", "RH", "usine-equipe.jpg",
-     "Un mauvais fit en production ne se limite pas au salaire. Entre formation, heures supplémentaires, rebuts et roulement, la facture grimpe vite."),
-    ("machiniste-cnc", "Recruter un machiniste CNC au Québec en 2026", "Manufacturier", "cnc-machiniste.jpg",
-     "Le machiniste CNC est l'un des profils les plus tendus. Voici comment attirer, évaluer et retenir ce talent rare."),
+    ("mauvaise-embauche", "Combien coûte une mauvaise embauche ?", "RH", "usine-equipe.jpg",
+     "Un mauvais fit ne se limite pas au salaire. Entre formation, heures supplémentaires, perte de productivité et roulement, la facture grimpe vite — dans n'importe quel secteur."),
+    ("machiniste-cnc", "Recruter un machiniste CNC au Québec en 2026", "Métiers", "cnc-machiniste.jpg",
+     "Le machiniste CNC reste un profil tendu. Voici comment attirer, évaluer et retenir ce talent — un exemple parmi beaucoup d'autres métiers."),
     ("caristes-entrepot", "Pénurie de caristes : stratégies pour les entrepôts", "Logistique", "entrepot-logistique.jpg",
-     "Les centres de distribution se disputent les caristes expérimentés. Trois leviers concrets pour sécuriser vos quarts."),
-    ("superviseur-production", "Superviseur de production : le profil qui change une usine", "Production", "usine-equipe.jpg",
-     "Un bon superviseur stabilise le quart, la qualité et le climat. Voici le portrait que nous validons sur le terrain."),
-    ("roulement-manufacturier", "Réduire le roulement en recrutement manufacturier", "Recrutement", "soudeur-atelier.jpg",
-     "Le roulement n'est pas qu'un problème salarial. Processus d'accueil, quarts et adéquation culturelle font la différence."),
+     "Les centres de distribution se disputent les caristes expérimentés. Trois leviers concrets, transposables à d'autres métiers rares."),
+    ("superviseur-production", "Superviseur de production : le profil qui change une équipe", "Production", "usine-equipe.jpg",
+     "Un bon superviseur stabilise la qualité et le climat. Voici le portrait que nous validons — applicable à d'autres rôles de gestion."),
+    ("roulement-manufacturier", "Réduire le roulement en recrutement", "Recrutement", "soudeur-atelier.jpg",
+     "Le roulement n'est pas qu'un problème salarial. Accueil, clarté du poste et adéquation culturelle font la différence, quel que soit le secteur."),
 ]
 
 TOPICS = [
-    "Salaire soudeur au Québec", "Recrutement urgent en usine", "Cartes de compétences et SST",
-    "Quart de soir : comment recruter", "Chasse de têtes directeur d'usine", "WMS et profils d'entrepôt",
-    "Lean manufacturing et recrutement", "Intégration 30/60/90 en usine", "Électromécanicien : rareté du talent",
-    "Recrutement en région vs Grand Montréal", "Marque employeur manufacturière", "Tests techniques en entrevue",
-    "Préposé à la production alimentaire", "Contrats saisonniers en entrepôt", "Rétention des métiers spécialisés",
-    "Coût d'un poste vacant en production", "Recruter des immigrants en usine", "Automatisation et nouveaux métiers",
-    "FAQ garanties de remplacement", "Préparer une entrevue de superviseur",
+    "Rédiger une offre d'emploi claire", "Trop de candidatures, trop peu de fit",
+    "Recruter un développeur", "Recruter un comptable", "Recruter en santé",
+    "Recrutement en construction", "Télétravail et localisation", "Chasse de têtes cadres",
+    "Intégration 30/60/90", "Marque employeur", "Tests en entrevue",
+    "Contrats temporaires vs permanents", "Rétention des métiers spécialisés",
+    "Coût d'un poste vacant", "Recruter en région", "Compétences plutôt que titres",
+    "FAQ garanties de remplacement", "Préparer une entrevue de gestionnaire",
 ]
 
 
 INDEX_BODY = r"""
 <div class="hero2-arrow-hero tl-gateway-hero">
   <div class="hero2-slider-area">
-        <div class="img1"><img src="assets/img/all-images/industry/usine-equipe.jpg" alt="Équipe de production dans une usine québécoise" fetchpriority="high" decoding="async"></div>
+        <div class="img1"><img src="assets/img/all-images/industry/usine-equipe.jpg" alt="Équipe au travail" fetchpriority="high" decoding="async"></div>
         <div class="container">
             <div class="hero2-heading tl-hero-lock">
-                <h5>Recrutement industriel au Québec</h5>
+                <h5>Talendus — La plateforme de recrutement intelligente pour toutes les entreprises.</h5>
                 <div class="space16"></div>
-                <h1>Vous cherchez un emploi en usine, ou quelqu'un pour tenir un quart ?</h1>
+                <h1>Recrutez mieux, plus vite et plus intelligemment.</h1>
                 <div class="space16"></div>
-                <p>Talendus recrute pour les usines, les entrepôts et les métiers d'atelier. Dites-nous de quel côté vous êtes — on vous amène à la bonne page.</p>
+                <p>Talendus est la plateforme de recrutement qui aide les entreprises de tous secteurs à trouver les talents dont elles ont besoin.</p>
+                <p>Du premier besoin de recrutement à l'identification des meilleurs candidats, Talendus simplifie votre processus de recrutement.</p>
             </div>
             <div class="tl-persona-cards">
               <a class="tl-persona-card is-talent" href="candidats.html" data-set-persona="talent">
-                <span class="tl-kicker">Candidat</span>
+                <span class="tl-kicker">Candidats</span>
                 <h2>Je cherche un emploi</h2>
-                <p>Parcourez les postes, déposez votre CV, suivez vos candidatures. C'est gratuit. Un conseiller présente votre dossier aux employeurs.</p>
-                <span class="tl-persona-go">Voir les offres <i class="fa-solid fa-arrow-right"></i></span>
+                <p>Parcourez les offres, créez votre profil, suivez vos candidatures. C'est gratuit. Un conseiller présente votre dossier aux employeurs.</p>
+                <span class="tl-persona-go">Trouver un emploi <i class="fa-solid fa-arrow-right"></i></span>
               </a>
               <a class="tl-persona-card is-hire" href="entreprises.html" data-set-persona="entreprise">
-                <span class="tl-kicker">Employeur</span>
+                <span class="tl-kicker">Entreprises</span>
                 <h2>Je recrute</h2>
-                <p>Expliquez le poste, le quart et le salaire. On filtre, on vous envoie des dossiers, on suit jusqu'à l'entrée en poste.</p>
-                <span class="tl-persona-go">Demander un recrutement <i class="fa-solid fa-arrow-right"></i></span>
+                <p>Publiez une offre, trouvez des talents ou parlez à un recruteur. Quel que soit votre secteur.</p>
+                <span class="tl-persona-go">Trouver des talents <i class="fa-solid fa-arrow-right"></i></span>
               </a>
             </div>
         </div>
@@ -184,10 +199,10 @@ INDEX_BODY = r"""
 """
 
 write("index.html", wrap(
-    "Talendus | Recrutement industriel et manufacturier au Québec",
-    "Talendus recrute pour les usines du Québec : production, maintenance, logistique et supervision. Candidats d'un côté, employeurs de l'autre. Appel sur rendez-vous.",
+    "Talendus | Plateforme de recrutement pour toutes les entreprises",
+    "Talendus est la plateforme de recrutement intelligente pour toutes les entreprises. Recrutez mieux, plus vite et plus intelligemment. Tous secteurs.",
     "",
-    INDEX_BODY,
+    INDEX_BODY + homepage_after_hero("fr"),
     solid=False,
 ))
 
@@ -199,58 +214,58 @@ def simple_page(title, desc, slug, kicker, h1, lead, inner, actions=""):
 
 # À propos
 simple_page(
-    "À propos de Talendus | Cabinet de recrutement industriel Québec",
-    "Talendus recrute uniquement pour l'industrie québécoise : usines, entrepôts, métiers d'atelier. Histoire, mission et façon de travailler.",
-    "a-propos.html", "Le cabinet", "Talendus recrute pour l'industrie québécoise. Rien d'autre.",
-    "On s'occupe des gens qui tiennent la production, la maintenance, la logistique et la supervision. Pas du bureau, pas de la TI.",
+    "À propos de Talendus | Plateforme de recrutement pour toutes les entreprises",
+    "Talendus aide les entreprises de tous secteurs à recruter les bons talents. Histoire, mission et façon de travailler.",
+    "a-propos.html", "Le cabinet", "Talendus est une plateforme de recrutement pour les entreprises.",
+    "Nous aidons les entreprises de tous secteurs à recruter les bons talents. L'industrie, le métier et la localisation sont des paramètres — jamais des limites.",
     """
     <section class="tl-section"><div class="container">
     <div class="row g-4"><div class="col-lg-7">
     <h2 class="tl-h2">Pourquoi on existe</h2>
-    <p class="tl-lead">Trop d'usines perdent des semaines avec des agences qui ne distinguent pas un set-up CNC d'un poste de bureau. On a bâti un cabinet qui parle quart, SST et rythme de ligne — et qui s'arrête là.</p>
+    <p class="tl-lead">Trop d'entreprises perdent des semaines à chercher les bons candidats, à trier trop de CV, ou à faire durer un processus trop long. On a bâti une plateforme qui simplifie le recrutement — pour toutes les entreprises, pas pour une industrie.</p>
     <h2 class="tl-h2">Ce qu'on fait</h2>
-    <p>On connecte les employeurs d'usine du Québec aux opérateurs, métiers spécialisés, superviseurs et cadres de plant qui tiennent vraiment le plancher.</p>
+    <p>On connecte les employeurs aux talents dont ils ont besoin : développeurs, comptables, soudeurs, infirmiers, chauffeurs, responsables RH, et bien d'autres. Un conseiller présente les dossiers. Candidats et employeurs restent chacun de leur côté.</p>
     <h2 class="tl-h2">Où on va</h2>
-    <p>Devenir le premier appel quand une usine doit embaucher juste. Un réseau qui reste industriel, pas un catalogue fourre-tout.</p>
+    <p>Recruter mieux, plus vite et plus intelligemment grâce à l'IA. Le matching, l'analyse de CV et le classement des candidats arriveront. Ils ne sont pas simulés aujourd'hui.</p>
     </div>
     <div class="col-lg-4 offset-lg-1">
       <div class="tl-hero-media" style="height:360px;border-radius:16px;overflow:hidden;margin-bottom:18px">
-        <img src="assets/img/all-images/industry/usine-equipe.jpg" alt="Équipe Talendus sur le plancher d'usine">
+        <img src="assets/img/all-images/industry/usine-equipe.jpg" alt="Équipe au travail">
       </div>
     </div></div>
     </div></section>
     <section class="tl-section tl-ice"><div class="container">
     <h2 class="tl-h2">Comment on travaille</h2>
     <div class="tl-grid-3">
-      <div class="tl-card"><div class="body"><h3>Spécialisation</h3><p>Aucun mandat hors industrie. C'est le filtre. Ça évite de mélanger un cariste et un adjoint administratif.</p></div></div>
-      <div class="tl-card"><div class="body"><h3>Rigueur terrain</h3><p>On évalue comme un contremaître, pas comme un algorithme. Compétences, quart, SST, attitude.</p></div></div>
+      <div class="tl-card"><div class="body"><h3>Tous les secteurs</h3><p>Talendus s'adresse à toutes les industries. Le secteur est un filtre de recherche, pas le positionnement de la marque.</p></div></div>
+      <div class="tl-card"><div class="body"><h3>Rigueur</h3><p>On évalue le métier, les compétences, l'expérience et le fit. Pas une avalanche de CV.</p></div></div>
       <div class="tl-card"><div class="body"><h3>Parole tenue</h3><p>Délais, dossiers, garantie : ce qui est dit est livré. Un seul conseiller jusqu'à l'entrée en poste.</p></div></div>
     </div>
     </div></section>
     <section class="tl-section"><div class="container">
     <div class="row g-4">
       <div class="col-lg-6">
-        <h2 class="tl-h2">Pourquoi l'industrie manufacturière</h2>
-        <p>C'est là que le Québec crée de la valeur réelle. C'est aussi là que les métiers manquent le plus. On a choisi ce champ — et seulement celui-là.</p>
         <h2 class="tl-h2">Ce à quoi on s'engage</h2>
         <ul>
-          <li>Présélection industrielle avant toute présentation.</li>
+          <li>Présélection avant toute présentation.</li>
           <li>Transparence sur les délais et la rareté du profil.</li>
           <li>Suivi d'intégration 30/60/90 jours.</li>
           <li>Garantie de remplacement sur les mandats permanents.</li>
+          <li>Pas de fausses fonctionnalités IA tant qu'elles ne sont pas développées.</li>
         </ul>
       </div>
       <div class="col-lg-6">
         <div class="tl-stats" style="grid-template-columns:1fr 1fr">
           <div class="tl-stat"><b>7 j</b><p>Première shortlist visée, mandat d'opérations</p></div>
-          <div class="tl-stat"><b>100 %</b><p>Mandats industriels</p></div>
+          <div class="tl-stat"><b>Tous</b><p>Secteurs d'activité</p></div>
           <div class="tl-stat"><b>92 %</b><p>Encore en poste après 90 jours</p></div>
           <div class="tl-stat"><b>1 200+</b><p>Talents en réseau</p></div>
         </div>
       </div>
     </div>
     </div></section>
-    """,
+    """
+    + sectors_cloud("fr"),
     actions='<a class="tl-btn" href="candidats.html" data-set-persona="talent">Pour les Talents</a><a class="tl-btn tl-btn-ghost" href="entreprises.html" data-set-persona="entreprise">Pour les Entreprises</a>'
 )
 
@@ -258,21 +273,21 @@ simple_page(
 services_cards = "".join(
     f'<a class="tl-card" href="{href}"><div class="body"><span class="tl-chip orange">{chip}</span><h3>{t}</h3><p>{p}</p></div></a>'
     for href, chip, t, p in [
-        ("recrutement-permanent.html", "Permanent", "Recrutement permanent", "Postes stables en usine, entrepôt et gestion. Honoraires au succès, garantie de remplacement."),
-        ("chasse-de-tetes.html", "Passif", "Chasse de têtes", "On approche des gens déjà en poste pour les profils rares : CNC, électromécanique, cadres d'usine."),
-        ("recrutement-cadres.html", "Direction", "Recrutement de cadres", "Directeurs d'usine, de production, de maintenance et de logistique. Souvent confidentiel."),
-        ("recrutement-industriel.html", "Quart", "Recrutement de superviseurs", "Contremaîtres et superviseurs de quart capables de tenir KPI, SST et climat d'équipe."),
-        ("recrutement-technique.html", "Métiers", "Métiers spécialisés", "Soudeurs, machinistes, mécaniciens industriels, électromécaniciens, set-up, qualité."),
-        ("recrutement-temporaire.html", "Urgent", "Recrutement urgent", "Quand un quart critique est découvert. Une shortlist filtrée, pas une avalanche de CV."),
+        ("recrutement-permanent.html", "Permanent", "Recrutement permanent", "Postes stables dans tous les secteurs. Honoraires au succès, garantie de remplacement."),
+        ("chasse-de-tetes.html", "Passif", "Chasse de têtes", "On approche des gens déjà en poste pour les profils rares, quel que soit le secteur."),
+        ("recrutement-cadres.html", "Direction", "Recrutement de cadres", "Gestionnaires et dirigeants. Souvent confidentiel."),
+        ("recrutement-industriel.html", "Exemple", "Recrutement industriel", "Un exemple parmi d'autres : production, maintenance, logistique. Talendus n'est pas limité à l'industrie."),
+        ("recrutement-technique.html", "Métiers", "Métiers spécialisés", "Techniciens, soudeurs, développeurs, infirmiers, comptables — une grande variété de profils."),
+        ("recrutement-temporaire.html", "Urgent", "Recrutement urgent", "Quand un poste critique est découvert. Une shortlist filtrée, pas une avalanche de CV."),
         ("chasse-de-tetes.html", "Discret", "Mandats confidentiels", "Remplacements de cadres ou réorganisations menés sans bruit interne."),
         ("entreprises.html", "RH", "Accompagnement RH", "Descriptifs de poste, grilles salariales, entrevues conjointes et intégration."),
     ]
 )
 simple_page(
-    "Services de recrutement industriel | Talendus Québec",
-    "Recrutement permanent, chasse de têtes, cadres, superviseurs et métiers spécialisés pour les usines du Québec.",
-    "services.html", "Services", "Du journalier au directeur d'usine : un seul cabinet.",
-    "Permanent, temporaire, chasse de têtes, cadres et métiers. Tout ça pour le plancher, pas pour un siège.",
+    "Services de recrutement | Talendus",
+    "Recrutement permanent, chasse de têtes, cadres et métiers spécialisés pour les entreprises de tous secteurs.",
+    "services.html", "Services", "Du premier besoin à l'embauche : un seul interlocuteur.",
+    "Permanent, temporaire, chasse de têtes, cadres et métiers. Pour toutes les entreprises, pas pour une industrie.",
     f'''
     <section class="tl-section"><div class="container">
       <div class="tl-grid-4">{services_cards}</div>
@@ -280,40 +295,40 @@ simple_page(
     <section class="tl-section tl-ice"><div class="container">
       <div class="row align-items-center g-4">
         <div class="col-lg-6">
-          <h2 class="tl-h2">Pourquoi les usines nous mandatent</h2>
-          <p class="tl-lead">Parce qu'un dossier de trop, c'est du temps de contremaître perdu. On présente peu de candidats. Chacun a déjà passé le filtre du plancher.</p>
+          <h2 class="tl-h2">Pourquoi les entreprises nous mandatent</h2>
+          <p class="tl-lead">Parce qu'un dossier de trop, c'est du temps perdu. On présente peu de candidats. Chacun a déjà passé le filtre.</p>
           <ul>
             <li>Une shortlist, pas un portail d'emplois déguisé.</li>
             <li>Un délai annoncé dès le brief, selon la rareté réelle du profil.</li>
-            <li>Un conseiller qui connaît les quarts, la SST et le plancher.</li>
+            <li>Un conseiller qui comprend le poste, pas seulement le secteur.</li>
           </ul>
         </div>
         <div class="col-lg-6">
           <div class="tl-hero-media" style="height:340px;border-radius:18px;overflow:hidden">
-            <img src="assets/img/all-images/industry/soudeur-atelier.jpg" alt="Recrutement de métiers spécialisés en usine">
+            <img src="assets/img/all-images/industry/soudeur-atelier.jpg" alt="Recrutement de métiers spécialisés">
           </div>
         </div>
       </div>
     </div></section>
-    ''',
-    actions='<a class="tl-btn" href="contact.html">Demander un recrutement</a>'
+    ''' + ai_coming_soon("fr"),
+    actions='<a class="tl-btn" href="contact.html">Parler à un recruteur</a>'
 )
 
 # Entreprises (URL canonique) + redirection Employeurs
 EMPLOYERS_BODY = (
     page_hero(
         "Entreprises",
-        "Pourvoir un quart avec des gens qui tiennent le plancher.",
-        "Dites-nous le métier, le salaire réel et l'urgence. Vous recevez une shortlist filtrée — pas une pile de CV.",
-        actions='<a class="tl-btn" href="contact.html">Demander un recrutement</a>',
-        badges='<span class="tl-badge tl-badge-light">Appel sur rendez-vous</span> <span class="tl-badge tl-badge-light">Cabinet d\'usine</span>'
+        "Trouvez les talents dont votre entreprise a besoin.",
+        "Publiez une offre, décrivez un besoin, ou parlez à un recruteur. Quel que soit votre secteur.",
+        actions='<a class="tl-btn" href="contact.html">Parler à un recruteur</a><a class="tl-btn tl-btn-ghost" href="publier-une-offre.html">Publier une offre</a>',
+        badges='<span class="tl-badge tl-badge-light">Appel sur rendez-vous</span> <span class="tl-badge tl-badge-light">Tous secteurs</span>'
     )
     + proof_stats("fr")
     + """
     <section class="tl-section"><div class="container">
       <div class="tl-grid-3">
-        <div class="tl-card"><div class="body"><span class="tl-chip orange">Spécialisation</span><h3>Pourquoi Talendus</h3><p>Un cabinet dédié aux usines. Réseau de gens déjà en poste, évaluation technique et suivi d'intégration. Pas une agence qui recrute aussi des adjoints administratifs.</p></div></div>
-        <div class="tl-card"><div class="body"><span class="tl-chip orange">Délai</span><h3>Délais tenus</h3><p>Premiers dossiers visés en 7 jours sur un métier d'opérations. 3 à 8 semaines pour superviseurs, métiers rares et cadres. On l'annonce dès le brief.</p></div></div>
+        <div class="tl-card"><div class="body"><span class="tl-chip orange">Positionnement</span><h3>Pourquoi Talendus</h3><p>Nous aidons les entreprises de tous secteurs à recruter les bons talents. Pas une agence coincée dans une industrie.</p></div></div>
+        <div class="tl-card"><div class="body"><span class="tl-chip orange">Délai</span><h3>Délais tenus</h3><p>Premiers dossiers visés en 7 jours sur un métier d'opérations. 3 à 8 semaines pour les profils rares et les cadres. On l'annonce dès le brief.</p></div></div>
         <div class="tl-card"><div class="body"><span class="tl-chip orange">Confiance</span><h3>Garanties</h3><p>Remplacement inclus sur les mandats permanents. Conditions confirmées à l'ouverture. Un seul conseiller jusqu'à l'entrée en poste.</p></div></div>
       </div>
     </div></section>
@@ -323,9 +338,9 @@ EMPLOYERS_BODY = (
         <h2 class="tl-h2">De l'appel au premier dossier</h2>
       </div>
       <div class="tl-steps">
-        <div class="tl-step"><span>01</span><h3>Appel</h3><p>30 minutes pour comprendre le quart, le salaire réel et l'urgence.</p></div>
-        <div class="tl-step"><span>02</span><h3>Ciblage</h3><p>On active le réseau et les références d'usine.</p></div>
-        <div class="tl-step"><span>03</span><h3>Filtre terrain</h3><p>Entrevue Talendus avant que votre contremaître perde une heure.</p></div>
+        <div class="tl-step"><span>01</span><h3>Appel</h3><p>30 minutes pour comprendre le poste, le secteur, le volume et l'urgence.</p></div>
+        <div class="tl-step"><span>02</span><h3>Ciblage</h3><p>On active le réseau selon le métier, les compétences et la localisation.</p></div>
+        <div class="tl-step"><span>03</span><h3>Filtre</h3><p>Entrevue Talendus avant que votre équipe perde une heure.</p></div>
         <div class="tl-step"><span>04</span><h3>Shortlist</h3><p>Premiers dossiers visés en 7 jours. Comparables, avec une recommandation claire.</p></div>
         <div class="tl-step"><span>05</span><h3>Suivi</h3><p>Intégration 30/60/90 et garantie de remplacement.</p></div>
       </div>
@@ -333,7 +348,7 @@ EMPLOYERS_BODY = (
     <section class="tl-section" id="calculateur"><div class="container">
       <div class="row align-items-center g-4">
         <div class="col-lg-5"><h2 class="tl-h2">Combien coûte une mauvaise embauche</h2>
-        <p class="tl-lead">Estimez l'impact d'un mauvais fit : salaire, formation, heures sup. et perte de productivité. Un mandat Talendus coûte presque toujours moins cher qu'un quart instable.</p></div>
+        <p class="tl-lead">Estimez l'impact d'un mauvais fit : salaire, formation, heures sup. et perte de productivité. Un mandat Talendus coûte presque toujours moins cher qu'un poste vacant trop longtemps.</p></div>
         <div class="col-lg-6 offset-lg-1">
           <div class="tl-calc">
             <label for="tl-salary">Salaire annuel du poste ($)</label>
@@ -351,55 +366,59 @@ EMPLOYERS_BODY = (
         <h2 class="tl-h2">Recruter, publier, chasser, accompagner</h2>
       </div>
       <div class="tl-grid-4">
-        <a class="tl-card" href="entreprises.html"><div class="body"><span class="tl-chip orange">Services</span><h3>Recruter avec Talendus</h3><p>Présélection industrielle, shortlist courte, garantie de remplacement.</p></div></a>
-        <a class="tl-card" href="publier-une-offre.html"><div class="body"><span class="tl-chip orange">Mandat</span><h3>Publier une offre</h3><p>Décrivez le quart, le salaire réel et l'urgence. On ouvre le sourcing.</p></div></a>
-        <a class="tl-card" href="chasse-de-tetes.html"><div class="body"><span class="tl-chip orange">Passif</span><h3>Chasse de talents</h3><p>Approche discrète des gens déjà en poste : CNC, électromécanique, cadres.</p></div></a>
+        <a class="tl-card" href="contact.html"><div class="body"><span class="tl-chip orange">Recruteur</span><h3>Parler à un recruteur</h3><p>Confiez-nous votre recrutement. Secteur, poste, volume, localisation.</p></div></a>
+        <a class="tl-card" href="publier-une-offre.html"><div class="body"><span class="tl-chip orange">Mandat</span><h3>Publier une offre</h3><p>Décrivez le poste, le contrat et l'urgence. On ouvre le sourcing.</p></div></a>
+        <a class="tl-card" href="chasse-de-tetes.html"><div class="body"><span class="tl-chip orange">Passif</span><h3>Trouver des talents</h3><p>Approche discrète des gens déjà en poste, tous secteurs.</p></div></a>
         <a class="tl-card" href="solutions-rh.html"><div class="body"><span class="tl-chip orange">RH</span><h3>Solutions RH</h3><p>Descriptifs, grilles salariales, entrevues conjointes et intégration 30/60/90.</p></div></a>
       </div>
     </div></section>
+    """
+    + sectors_cloud("fr")
+    + ai_coming_soon("fr")
+    + """
     <section class="tl-section tl-ice" id="temoignages"><div class="container">
       <div class="tl-center" style="max-width:720px;margin:0 auto 36px">
         <div class="tl-kicker">Témoignages entreprises</div>
-        <h2 class="tl-h2">Ce que disent les usines</h2>
+        <h2 class="tl-h2">Ce que disent les employeurs</h2>
       </div>
       <div class="tl-grid-3 tl-quotes">
         <blockquote class="tl-quote">
           <div class="tl-quote-mark" aria-hidden="true">“</div>
-          <p>Ils ont compris nos quarts rotatifs dès le premier appel. Le superviseur présenté connaissait déjà un environnement Lean comparable.</p>
-          <footer><strong>M.L.</strong><span>Directrice des opérations · usine alimentaire, Rive-Sud</span></footer>
+          <p>Ils ont compris le poste dès le premier appel. Les dossiers présentés correspondaient vraiment à ce qu'on cherchait.</p>
+          <footer><strong>M.L.</strong><span>Directrice des opérations · Rive-Sud</span></footer>
         </blockquote>
         <blockquote class="tl-quote">
           <div class="tl-quote-mark" aria-hidden="true">“</div>
-          <p>Pas une agence qui envoie 40 CV. Trois dossiers solides, un électromécanicien en poste, et un suivi après l’embauche.</p>
-          <footer><strong>J.R.</strong><span>Directeur maintenance · métallurgie, Mauricie</span></footer>
+          <p>Pas une agence qui envoie 40 CV. Trois dossiers solides, un suivi après l'embauche.</p>
+          <footer><strong>J.R.</strong><span>Directeur · Mauricie</span></footer>
         </blockquote>
         <blockquote class="tl-quote">
           <div class="tl-quote-mark" aria-hidden="true">“</div>
-          <p>Mandat confidentiel de directeur d’usine mené sans bruit interne. Prise de poste calée sur notre calendrier de production.</p>
-          <footer><strong>S.B.</strong><span>VP opérations · manufacturier, Montérégie</span></footer>
+          <p>Mandat confidentiel mené sans bruit interne. Prise de poste calée sur notre calendrier.</p>
+          <footer><strong>S.B.</strong><span>VP · Montérégie</span></footer>
         </blockquote>
       </div>
     </div></section>
     <section class="tl-section tl-ice"><div class="container">
       <div class="tl-center" style="max-width:720px;margin:0 auto 28px">
         <div class="tl-kicker" id="faq">FAQ entreprises</div>
-        <h2 class="tl-h2">Ce que demandent les RH et les directeurs d'opérations</h2>
+        <h2 class="tl-h2">Ce que demandent les RH et les gestionnaires</h2>
       </div>
       """ + faq_html(FAQ_EMPLOYEURS) + """
       <div class="tl-center" style="margin-top:32px">
-        <a class="tl-btn tl-btn-lg" href="contact.html">Demander un recrutement</a>
+        <a class="tl-btn tl-btn-lg" href="contact.html">Décrire mon besoin de recrutement</a>
       </div>
     </div></section>
     """
 )
 write("entreprises.html", wrap(
-    "Entreprises | Recrutement manufacturier et industriel au Québec — Talendus",
-    "Confiez un recrutement à Talendus. Présélection industrielle et garantie de remplacement pour les usines du Québec.",
+    "Entreprises | Recrutement pour toutes les entreprises — Talendus",
+    "Confiez un recrutement à Talendus. Publiez une offre, trouvez des talents ou parlez à un recruteur. Tous secteurs.",
     "entreprises.html",
     EMPLOYERS_BODY,
 ))
 write("employeurs.html", wrap(
-    "Employeurs | Recrutement manufacturier et industriel au Québec — Talendus",
+    "Employeurs | Recrutement pour toutes les entreprises — Talendus",
     "Redirection vers l’espace entreprises Talendus.",
     "employeurs.html",
     '<section class="tl-section"><div class="container"><p>Cette page a été déplacée. <a href="entreprises.html">Continuer vers Entreprises</a></p><script>location.replace("entreprises.html");</script></div></section>',
@@ -407,22 +426,22 @@ write("employeurs.html", wrap(
 
 # Candidats
 write("candidats.html", wrap(
-    "Candidats | Emplois usine, entrepôt et métiers spécialisés au Québec — Talendus",
-    "Déposez votre CV chez Talendus. Offres en usine, entrepôt, logistique, maintenance et supervision au Québec.",
+    "Candidats | Trouver un emploi au Québec — Talendus",
+    "Créez votre profil chez Talendus. Offres dans tous les secteurs : technologie, santé, finance, manufacturier, commerce et plus.",
     "candidats.html",
     page_hero(
         "Candidats",
-        "Trouvez un poste en usine sans enchaîner les entrevues pour rien.",
-        "Déposez votre CV. Un conseiller vous rappelle si un mandat colle. Vous n'êtes pas envoyé à l'aveugle chez quinze employeurs.",
-        actions='<a class="tl-btn" href="candidats.html#cv">Déposer mon CV</a>',
-        badges='<span class="tl-badge tl-badge-light">Sans frais pour vous</span> <span class="tl-badge tl-badge-light">Mandats d\'usine réels</span>'
+        "Trouvez un emploi sans enchaîner les entrevues pour rien.",
+        "Créez votre profil. Un conseiller vous rappelle si un mandat colle. Vous n'êtes pas envoyé à l'aveugle chez quinze employeurs.",
+        actions='<a class="tl-btn" href="candidats.html#cv">Créer mon profil</a><a class="tl-btn tl-btn-ghost" href="emplois.html">Découvrir les offres</a>',
+        badges='<span class="tl-badge tl-badge-light">Sans frais pour vous</span> <span class="tl-badge tl-badge-light">Tous secteurs</span>'
     )
     + """
     <section class="tl-section" id="cv"><div class="container">
       <div class="row g-4">
         <div class="col-lg-5">
-          <h2 class="tl-h2">Déposer votre CV</h2>
-          <p class="tl-lead">Indiquez votre métier, vos quarts possibles et votre région. Un conseiller vous rappelle si un mandat colle. On ne vous envoie pas sur quinze entrevues pour rien.</p>
+          <h2 class="tl-h2">Créer votre profil</h2>
+          <p class="tl-lead">Indiquez votre métier, vos compétences et votre région. Un conseiller vous rappelle si un mandat colle. On ne vous envoie pas sur quinze entrevues pour rien.</p>
           <div class="tl-notice" style="color:var(--tl-navy)">En semaine, on répond en général en moins de 30 minutes.</div>
           <p id="processus"></p>
           <h3>Comment ça se passe</h3>
@@ -430,7 +449,7 @@ write("candidats.html", wrap(
             <li>Créez votre profil.</li>
             <li>Postulez aux offres ou déposez votre CV.</li>
             <li>Suivez vos candidatures avec un conseiller Talendus.</li>
-            <li>On vous contacte quand le quart et le salaire correspondent.</li>
+            <li>On vous contacte quand le poste et le salaire correspondent.</li>
           </ol>
         </div>
         <div class="col-lg-6 offset-lg-1">
@@ -439,24 +458,23 @@ write("candidats.html", wrap(
             <label>Courriel</label><input type="email" required name="courriel">
             <label>Téléphone</label><input name="tel">
             <label>Métier visé</label>
-            <select name="metier">
-              <option>Cariste</option><option>Opérateur de production</option><option>Soudeur</option>
-              <option>Machiniste CNC</option><option>Électromécanicien</option><option>Superviseur</option>
-              <option>Autre métier industriel</option>
-            </select>
-            <label>Région</label><input name="region" placeholder="Laval, Montérégie, Québec...">
+            <select name="metier">""" + talent_trade_options("fr") + """</select>
+            <label>Région</label><input name="region" placeholder="Laval, Montérégie, Québec, télétravail…">
             <label>Lien vers votre CV (Drive, Dropbox...)</label><input name="cv" placeholder="https://">
-            <button class="tl-btn tl-btn-lg" type="submit">Déposer mon CV</button>
+            <button class="tl-btn tl-btn-lg" type="submit">Créer mon profil</button>
             <div class="tl-success" role="status"></div>
           </form>
         </div>
       </div>
     </div></section>
+    """
+    + trades_cloud("fr")
+    + """
     <section class="tl-section tl-ice"><div class="container">
       <h2 class="tl-h2">Conseils carrière</h2>
       <div class="tl-grid-3">
-        <div class="tl-card"><div class="body"><h3>Préparer une entrevue d'usine</h3><p>Exemples de pannes, SST, travail d'équipe de quart : ce que les contremaîtres écoutent vraiment.</p></div></div>
-        <div class="tl-card"><div class="body"><h3>Mettre en valeur vos cartes</h3><p>Chariot, espace clos, cadenassage, soudure : listez-les en tête de CV. C'est souvent le premier filtre.</p></div></div>
+        <div class="tl-card"><div class="body"><h3>Préparer une entrevue</h3><p>Exemples concrets, compétences, travail d'équipe : ce que les gestionnaires écoutent vraiment.</p></div></div>
+        <div class="tl-card"><div class="body"><h3>Mettre en valeur vos compétences</h3><p>Python, Excel, soudure, conduite : listez-les en tête de CV. C'est souvent le premier filtre.</p></div></div>
         <div class="tl-card"><div class="body"><h3>Voir les offres</h3><p><a href="emplois.html">Consultez les postes ouverts</a> ou laissez-nous vous approcher pour un mandat confidentiel.</p></div></div>
       </div>
     </div></section>
@@ -468,25 +486,25 @@ write("candidats.html", wrap(
       <div class="tl-grid-3 tl-quotes">
         <blockquote class="tl-quote">
           <div class="tl-quote-mark" aria-hidden="true">“</div>
-          <p>J’étais cariste de nuit. Talendus m’a présenté un poste de coordonnateur logistique à Laval. Entrevue claire, conditions nettes.</p>
+          <p>Talendus m'a présenté un poste qui collait vraiment. Entrevue claire, conditions nettes.</p>
           <footer><strong>A.D.</strong><span>Candidate placée · Laval</span></footer>
         </blockquote>
         <blockquote class="tl-quote">
           <div class="tl-quote-mark" aria-hidden="true">“</div>
-          <p>Pas quinze entrevues inutiles. Un conseiller a compris mes quarts, puis m’a présenté une usine qui recrutait vraiment un soudeur-monteur.</p>
-          <footer><strong>K.T.</strong><span>Soudeur placé · Drummondville</span></footer>
+          <p>Pas quinze entrevues inutiles. Un conseiller a compris mon métier, puis m'a présenté une entreprise qui recrutait vraiment.</p>
+          <footer><strong>K.T.</strong><span>Candidat placé · Drummondville</span></footer>
         </blockquote>
         <blockquote class="tl-quote">
           <div class="tl-quote-mark" aria-hidden="true">“</div>
-          <p>J’ai déposé mon CV un mardi. Vendredi, j’avais une entrevue d’électromécanicien à Montréal. Sans frais, sans pression.</p>
-          <footer><strong>R.M.</strong><span>Électromécanicien · Montréal</span></footer>
+          <p>J'ai déposé mon CV un mardi. Vendredi, j'avais une entrevue. Sans frais, sans pression.</p>
+          <footer><strong>R.M.</strong><span>Candidat · Montréal</span></footer>
         </blockquote>
       </div>
     </div></section>
     <section class="tl-section" id="faq"><div class="container">
       <div class="tl-center" style="max-width:720px;margin:0 auto 28px">
         <div class="tl-kicker">FAQ candidats</div>
-        <h2 class="tl-h2">Avant de déposer votre CV</h2>
+        <h2 class="tl-h2">Avant de créer votre profil</h2>
       </div>
       """ + faq_html(FAQ_CANDIDATS) + """
     </div></section>
@@ -495,8 +513,8 @@ write("candidats.html", wrap(
 
 # Contact
 write("contact.html", wrap(
-    "Contact | Consultation recrutement industriel Québec — Talendus",
-    "Contactez Talendus à Montréal. Appels sur rendez-vous. En semaine, on répond en général en moins de 30 minutes. 514 555-0199 · info@talendus.ca",
+    "Contact | Parler à un recruteur — Talendus",
+    "Contactez Talendus à Montréal. Décrivez un besoin de recrutement ou créez votre profil. Appels sur rendez-vous. 514 555-0199 · info@talendus.ca",
     "contact.html",
     page_hero(
         "Contact",
@@ -552,7 +570,7 @@ write("contact.html", wrap(
           <a class="tl-persona-door" href="#formulaire" data-set-persona="talent">
             <span class="tl-kicker">Talents</span>
             <h2>Je cherche un emploi</h2>
-            <p>Déposez votre CV ou posez une question sur un poste d'usine. C'est gratuit.</p>
+            <p>Déposez votre CV ou posez une question sur un poste. C'est gratuit.</p>
             <span class="tl-split-cta">Continuer →</span>
           </a>
           <a class="tl-persona-door" href="#formulaire" data-set-persona="entreprise">
@@ -567,7 +585,7 @@ write("contact.html", wrap(
         <div data-persona-only="talent">
           <div class="tl-kicker">Talents</div>
           <h2 class="tl-h2">Déposer mon CV ou poser une question</h2>
-          <p class="tl-lead">C'est gratuit. Un conseiller vous rappelle si un mandat d'usine correspond.</p>
+          <p class="tl-lead">C'est gratuit. Un conseiller vous rappelle si un mandat correspond.</p>
           <form class="tl-form" action="#" method="post" data-form="contact">
             <input type="hidden" name="profil" value="Candidat — je cherche un poste">
             <label>Nom</label><input required name="nom">
@@ -579,15 +597,15 @@ write("contact.html", wrap(
               <option>Rejoindre la banque de talents</option>
               <option>Question sur une offre</option>
             </select>
-            <label>Message</label><textarea required name="message" placeholder="Métier, ville, quarts possibles"></textarea>
-            <button class="tl-btn tl-btn-lg" type="submit">Déposer mon CV</button>
+            <label>Message</label><textarea required name="message" placeholder="Métier, compétences, ville, type d'emploi"></textarea>
+            <button class="tl-btn tl-btn-lg" type="submit">Créer mon profil</button>
             <div class="tl-success"></div>
           </form>
         </div>
         <div data-persona-only="entreprise">
           <div class="tl-kicker">Entreprises</div>
-          <h2 class="tl-h2">Demander un recrutement</h2>
-          <p class="tl-lead">Décrivez le poste, le quart et l'urgence. Appel gratuit, sur rendez-vous.</p>
+          <h2 class="tl-h2">Décrire mon besoin de recrutement</h2>
+          <p class="tl-lead">Secteur, poste, volume, localisation, type de contrat. Appel gratuit, sur rendez-vous.</p>
           <form class="tl-form" action="#" method="post" data-form="contact">
             <input type="hidden" name="profil" value="Employeur — je recrute">
             <label>Nom</label><input required name="nom">
@@ -596,12 +614,12 @@ write("contact.html", wrap(
             <label>Téléphone</label><input name="tel">
             <label>Objet</label>
             <select name="objet">
-              <option>Demander un recrutement</option>
+              <option>Parler à un recruteur</option>
               <option>Publier une offre</option>
-              <option>Réserver un appel</option>
+              <option>Décrire mon besoin de recrutement</option>
             </select>
-            <label>Message</label><textarea required name="message" placeholder="Poste, ville, quart, urgence"></textarea>
-            <button class="tl-btn tl-btn-lg" type="submit">Demander un recrutement</button>
+            """ + employer_need_fields("fr") + """
+            <button class="tl-btn tl-btn-lg" type="submit">Confiez-nous votre recrutement</button>
             <div class="tl-success"></div>
           </form>
         </div>
@@ -618,9 +636,9 @@ write("contact.html", wrap(
 
 # Emplois listing
 cards = []
-for slug, title, city, cat, typ, sal, shift, req in JOBS:
+for slug, title, city, cat, typ, sal, shift, req, sector, skills, exp in JOBS:
     cards.append(f'''
-    <article class="tl-job-card" data-job="{title} {city} {cat} {typ} {sal} {shift}" data-city="{city}" data-cat="{cat}" data-type="{typ}" data-shift="{shift}" data-salary="{sal}">
+    <article class="tl-job-card" data-job="{title} {city} {cat} {typ} {sal} {shift} {sector} {skills} {exp}" data-city="{city}" data-cat="{cat}" data-type="{typ}" data-shift="{shift}" data-salary="{sal}" data-sector="{sector}" data-skills="{skills}" data-exp="{exp}">
       <div class="body">
         <span class="tl-chip orange">{typ}</span><span class="tl-chip">{city}</span>
         <h3><a href="emploi-{slug}.html">{title}</a></h3>
@@ -629,77 +647,40 @@ for slug, title, city, cat, typ, sal, shift, req in JOBS:
       </div>
     </article>''')
 write("emplois.html", wrap(
-    "Offres d'emploi usine et entrepôt au Québec | Talendus",
-    "Postes de cariste, opérateur, soudeur, machiniste CNC, électromécanicien, superviseur et directeur d'usine au Québec.",
+    "Offres d'emploi | Talendus",
+    "Postes ouverts dans tous les secteurs : développeur, comptable, soudeur, infirmier, chauffeur, cariste et plus. Filtrez par secteur, métier, compétences, expérience et localisation.",
     "emplois.html",
     page_hero(
-        "Offres d'emploi", "Postes ouverts en usine, en maintenance et en entrepôt.",
-        "Filtrez par métier et par région, puis postulez. Un conseiller Talendus présente votre dossier à l'employeur.",
-        actions='<a class="tl-btn" href="candidats.html#cv">Déposer mon CV</a>',
+        "Offres d'emploi", "Découvrez les offres. Tous secteurs, tous métiers.",
+        "Filtrez par secteur, métier, compétences, expérience, localisation et type d'emploi, puis postulez. Un conseiller Talendus présente votre dossier à l'employeur.",
+        actions='<a class="tl-btn" href="candidats.html#cv">Créer mon profil</a>',
         badges='<span class="tl-badge tl-badge-light">Banque de talents</span>'
     )
     + f"""
     <section class="tl-section"><div class="container">
-      <div class="tl-filters">
-        <input id="job-search" placeholder="Rechercher un métier, une ville…">
-        <select id="job-cat">
-          <option value="">Toutes les catégories</option>
-          <option value="production">Production</option>
-          <option value="entrepot">Entrepôt</option>
-          <option value="logistique">Logistique</option>
-          <option value="maintenance">Maintenance</option>
-          <option value="metallurgie">Métallurgie</option>
-          <option value="supervision">Supervision</option>
-          <option value="cadres">Cadres</option>
-        </select>
-        <select id="job-city">
-          <option value="">Toutes les villes</option>
-          <option>Laval</option><option>Longueuil</option><option>Montréal</option>
-          <option>Drummondville</option><option>Saint-Jérôme</option>
-          <option>Sherbrooke</option><option>Boucherville</option>
-          <option>Anjou</option><option>Trois-Rivières</option><option>Québec</option>
-        </select>
-        <select id="job-type">
-          <option value="">Tous les types</option>
-          <option value="Permanent">Permanent</option>
-          <option value="Temporaire">Temporaire</option>
-        </select>
-        <select id="job-shift">
-          <option value="">Tous les quarts</option>
-          <option value="Quart de jour">Quart de jour</option>
-          <option value="Quart de soir">Quart de soir</option>
-          <option value="Quarts rotatifs">Quarts rotatifs</option>
-        </select>
-        <select id="job-sal">
-          <option value="">Tous les salaires</option>
-          <option value="18">18 $/h et +</option>
-          <option value="25">25 $/h et +</option>
-          <option value="30">30 $/h et +</option>
-          <option value="50000">50 000 $ et +</option>
-        </select>
-      </div>
+      {job_search_filters("fr")}
       <div class="tl-grid-3" id="job-list">{''.join(cards)}</div>
-      <p class="tl-muted" id="job-empty" hidden>Aucun poste ne correspond à ces filtres. Déposez votre CV : on vous contacte quand un mandat colle.</p>
+      <p class="tl-muted" id="job-empty" hidden>Aucun poste ne correspond à ces filtres. Créez votre profil : on vous contacte quand un mandat colle.</p>
     </div></section>
     """
 ))
 
-for slug, title, city, cat, typ, sal, shift, req in JOBS:
+for slug, title, city, cat, typ, sal, shift, req, sector, skills, exp in JOBS:
     write(f"emploi-{slug}.html", wrap(
-        f"{title} à {city} | Emploi industriel Québec — Talendus",
-        f"Poste de {title} à {city}, Québec. {typ}. Postulez via Talendus, cabinet de recrutement industriel.",
+        f"{title} à {city} | Emploi — Talendus",
+        f"Poste de {title} à {city}, Québec. {typ}. Postulez via Talendus, plateforme de recrutement pour toutes les entreprises.",
         f"emploi-{slug}.html",
         page_hero(
-            f"{city} · {typ}", title, f"{sal} · {shift} · Recrutement industriel Talendus",
+            f"{city} · {typ}", title, f"{sal} · {shift} · Recrutement Talendus",
             actions='<a class="tl-btn" href="#postuler">Postuler</a>',
-            badges='<span class="tl-badge tl-badge-light">Poste industriel</span>'
+            badges='<span class="tl-badge tl-badge-light">Offre Talendus</span>'
         )
         + f"""
         <section class="tl-section"><div class="container">
           <div class="row g-4">
             <div class="col-lg-7">
               <h2 class="tl-h2">Le poste</h2>
-              <p class="tl-lead">Talendus recrute un(e) {title.lower()} pour un employeur d'usine ou de logistique à {city}. Environnement réel : SST, rythme de production, quarts.</p>
+              <p class="tl-lead">Talendus recrute un(e) {title.lower()} pour un employeur à {city}. Secteur : {sector}. Compétences : {skills}.</p>
               <h3>Profil recherché</h3>
               <p>{req}</p>
               <h3>Ce que nous offrons</h3>
@@ -728,15 +709,17 @@ sec_cards = "".join(
     for s, n, t, d in SECTORS
 )
 write("secteurs.html", wrap(
-    "Secteurs d'activité | Recrutement industriel Québec — Talendus",
-    "Talendus recrute dans le manufacturier, la production, l'entrepôt, la logistique, l'alimentaire, la métallurgie, la plasturgie et la maintenance au Québec.",
+    "Tous les secteurs | Plateforme de recrutement — Talendus",
+    "Talendus s'adresse à toutes les industries. Technologie, construction, santé, finance, manufacturier, commerce et bien plus encore.",
     "secteurs.html",
     page_hero(
-        "Secteurs", "Choisissez votre type d'usine.",
-        "Manufacturier, entrepôt, alimentaire, métallurgie, maintenance : on parle déjà votre langage.",
-        actions='<a class="tl-btn" href="contact.html">Demander un recrutement</a>'
+        "Tous les secteurs", "Talendus s'adresse à toutes les industries.",
+        "Ces secteurs sont des exemples de la capacité de la plateforme, pas une liste exclusive. Quel que soit votre secteur, Talendus vous aide à trouver les bons talents.",
+        actions='<a class="tl-btn" href="contact.html">Parler à un recruteur</a>'
     )
-    + f'<section class="tl-section"><div class="container"><div class="tl-grid-3">{sec_cards}</div></div></section>'
+    + sectors_cloud("fr")
+    + f'<section class="tl-section tl-ice"><div class="container"><div class="tl-center" style="max-width:720px;margin:0 auto 28px"><div class="tl-kicker">Exemples de pages</div><h2 class="tl-h2">Quelques verticales déjà documentées</h2><p class="tl-lead">D\'autres pages (construction, santé, finance, informatique…) viendront avec du contenu réel, pas des pages vides.</p></div><div class="tl-grid-3">{sec_cards}</div></div></section>'
+    + trades_cloud("fr")
 ))
 for slug, name, title, desc in SECTORS:
     write(f"secteur-{slug}.html", wrap(
@@ -744,27 +727,27 @@ for slug, name, title, desc in SECTORS:
         desc,
         f"secteur-{slug}.html",
         page_hero(
-            "Secteur", name, desc,
-            actions='<a class="tl-btn" href="contact.html">Demander un recrutement</a>'
+            "Exemple de secteur", name, desc,
+            actions='<a class="tl-btn" href="contact.html">Parler à un recruteur</a>'
         )
         + f"""
         <section class="tl-section"><div class="container">
           <div class="row g-4">
             <div class="col-lg-7">
-              <p class="tl-lead">{desc} On n'envoie pas de profils de bureau : seulement des gens qui ont déjà vécu un plancher d'usine ou un quai de réception.</p>
+              <p class="tl-lead">{desc} Ce n'est pas une spécialisation exclusive : Talendus recrute pour toutes les entreprises.</p>
               <h2 class="tl-h2">Métiers typiques</h2>
-              <p>Opération, métiers spécialisés, supervision et cadres selon la taille de votre site.</p>
+              <p>Opération, métiers spécialisés, supervision, gestion — et d'autres profils selon votre besoin.</p>
               <div class="tl-actions" style="margin-top:24px">
-                <a class="tl-btn" href="contact.html">Ouvrir un mandat {name.lower()}</a>
+                <a class="tl-btn" href="contact.html">Confiez-nous votre recrutement</a>
                 <a class="tl-btn tl-btn-ghost-dark" href="secteurs.html">Tous les secteurs</a>
               </div>
             </div>
             <div class="col-lg-5">
               <div class="tl-card"><div class="body">
-                <span class="tl-chip orange">Expertise terrain</span>
-                <h3>Un cabinet qui parle votre usine</h3>
-                <p>Un brief clair, une shortlist, un seul conseiller. Pas 40 CV à trier en fin de quart.</p>
-                <a class="tl-btn" href="contact.html" style="margin-top:16px">Parler à un spécialiste</a>
+                <span class="tl-chip orange">Tous secteurs</span>
+                <h3>Un exemple, pas une limite</h3>
+                <p>Un brief clair, une shortlist, un seul conseiller. Pas 40 CV à trier.</p>
+                <a class="tl-btn" href="contact.html" style="margin-top:16px">Parler à un recruteur</a>
               </div></div>
             </div>
           </div>
@@ -779,13 +762,13 @@ art_cards = "".join(
 )
 topics = "".join(f'<li style="margin-bottom:8px">{t}</li>' for t in TOPICS)
 write("blog.html", wrap(
-    "Blog recrutement industriel, RH et manufacturier Québec | Talendus",
-    "Articles SEO sur le recrutement manufacturier, la logistique, les entrepôts et les métiers spécialisés au Québec.",
+    "Blog recrutement, RH et carrières | Talendus",
+    "Articles sur le recrutement : trouver les bons talents, réduire le roulement, clarifier un poste. Tous secteurs.",
     "blog.html",
     page_hero(
-        "Blog", "Recrutement, RH, usine, logistique et carrière.",
-        "Des textes utiles pour les employeurs d'usine et les candidats. Pas de langue de bois.",
-        actions='<a class="tl-btn" href="contact.html">Demander un recrutement</a>',
+        "Blog", "Recrutement, RH et carrière.",
+        "Des textes utiles pour les entreprises et les candidats. Le problème du recrutement, pas une industrie.",
+        actions='<a class="tl-btn" href="contact.html">Parler à un recruteur</a>',
         badges=""
     )
     + f'<section class="tl-section"><div class="container"><div class="tl-grid-3" id="blog-list">{art_cards}</div><h2 class="tl-h2" style="margin-top:48px">Sujets à venir</h2><ul class="tl-muted">{topics}</ul></div></section>'
@@ -811,17 +794,17 @@ for slug, title, cat, img, lead in ARTICLES:
         <section class="tl-section"><div class="container" style="max-width:800px">
           <img src="assets/img/all-images/industry/{img}" alt="{title}" style="width:100%;border-radius:16px;margin-bottom:24px" loading="lazy" decoding="async">
           <p class="tl-lead">{lead}</p>
-          <h2>Ce que nous observons au Québec</h2>
-          <p>Les usines et centres de distribution n'embauchent pas comme un siège de services. Les quarts, la SST, les cartes de compétences et la culture de plancher pèsent autant que le CV. Un poste vacant de 6 semaines coûte souvent plus cher qu'un mandat de recrutement bien cadré.</p>
+          <h2>Ce que nous observons</h2>
+          <p>Les entreprises n'embauchent pas toutes de la même façon. Les compétences, l'expérience, le type de contrat et la localisation pèsent autant que le CV. Un poste vacant trop longtemps coûte souvent plus cher qu'un mandat de recrutement bien cadré.</p>
           <h2>Pistes concrètes</h2>
           <ul>
-            <li>Clarifier le quart, la rémunération réelle et les bonus avant d'approcher le marché.</li>
+            <li>Clarifier le poste, la rémunération réelle et les compétences avant d'approcher le marché.</li>
             <li>Évaluer le savoir-faire (démonstration, mises en situation) plutôt que les seuls diplômes.</li>
             <li>Prévoir l'accueil 30/60/90 jours : c'est là que se joue la rétention.</li>
           </ul>
           <h2>Comment Talendus intervient</h2>
-          <p>On cible des profils industriels, on valide le fit de quart et on présente peu de dossiers — chacun qu'on est prêt à défendre.</p>
-          <p><a href="recrutement-industriel.html">Recrutement industriel</a> · <a href="emplois.html">Offres d'emploi</a> · <a href="entreprises.html">Solutions entreprises</a></p>
+          <p>On cible des profils selon le métier et les compétences, on valide le fit et on présente peu de dossiers — chacun qu'on est prêt à défendre. L'IA viendra plus tard : matching et classement ne sont pas simulés aujourd'hui.</p>
+          <p><a href="secteurs.html">Tous les secteurs</a> · <a href="emplois.html">Offres d'emploi</a> · <a href="entreprises.html">Solutions entreprises</a></p>
           <div class="tl-actions" style="margin-top:28px">
             <a class="tl-btn" href="contact.html">Parler à un spécialiste</a>
             <a class="tl-btn tl-btn-ghost-dark" href="blog.html">Retour au blog</a>
@@ -837,7 +820,7 @@ write("404.html", wrap(
     "Page introuvable | Talendus",
     "La page demandée n'existe pas. Retournez à l'accueil Talendus.",
     "404.html",
-    page_hero("404", "Cette page n'existe pas.", "Le mandat, lui, existe peut-être encore.",
+    page_hero("404", "Cette page n'existe pas.", "Le poste, lui, existe peut-être encore.",
               actions='<a class="tl-btn" href="index.html">Retour à l\'accueil</a><a class="tl-btn tl-btn-ghost" href="contact.html">Nous écrire</a>',
               badges="")
     + '<section class="tl-section"><div class="container"><p class="tl-lead">Vérifiez l\'URL ou reprenez depuis l\'accueil, les offres ou le formulaire de contact.</p></div></section>',
@@ -849,7 +832,7 @@ write("espace.html", wrap(
     "espace.html",
     page_hero(
         "Candidats", "Votre dossier Talendus.",
-        "Profil, CV, candidatures, messages et entretiens. Suivez votre recherche d'emploi en usine.",
+        "Profil, CV, candidatures, messages et entretiens. Suivez votre recherche d'emploi.",
         badges='<span class="tl-badge tl-badge-light">Espace privé</span>'
     )
     + """<section class="tl-section tl-portal-section"><div class="container"><div id="tl-account"></div></div></section>""",
@@ -861,7 +844,7 @@ write("espace-employeur.html", wrap(
     "espace-employeur.html",
     page_hero(
         "Entreprises", "Votre espace employeur.",
-        "Offres, dossiers présentés, pipeline et factures. Suivez vos mandats d'usine.",
+        "Offres, dossiers présentés, pipeline et factures. Suivez vos recrutements.",
         badges='<span class="tl-badge tl-badge-light">Espace privé</span>'
     )
     + """<section class="tl-section tl-portal-section"><div class="container"><div id="tl-account" data-space="employer"></div></div></section>""",
@@ -885,8 +868,8 @@ write("conditions.html", wrap(
     "Conditions d'utilisation | Talendus",
     "Conditions d'utilisation du site talendus.ca.",
     "conditions.html",
-    page_hero("Légal", "Conditions d'utilisation", "Le site talendus.ca présente les services du cabinet Talendus.", badges="")
-    + """<section class="tl-section"><div class="container" style="max-width:800px"><p>Le contenu est fourni à titre informatif. Les mandats font l'objet d'une entente écrite. Les exemples d'offres et statistiques de démonstration peuvent être ajustés selon les données réelles du cabinet.</p><p>L'utilisation du site implique l'acceptation de ces conditions. Pour toute question : info@talendus.ca.</p></div></section>"""
+    page_hero("Légal", "Conditions d'utilisation", "Le site talendus.ca présente les services de Talendus.", badges="")
+    + """<section class="tl-section"><div class="container" style="max-width:800px"><p>Le contenu est fourni à titre informatif. Les mandats font l'objet d'une entente écrite. Les exemples d'offres et statistiques de démonstration peuvent être ajustés selon les données réelles.</p><p>L'utilisation du site implique l'acceptation de ces conditions. Pour toute question : info@talendus.ca.</p></div></section>"""
 ))
 
 simple_page(
@@ -899,10 +882,10 @@ simple_page(
     """
     <section class="tl-section"><div class="container">
       <div class="tl-steps">
-        <div class="tl-step"><span>01</span><h3>Créer son profil</h3><p>Métier, quarts, région, CV. Cinq minutes pour entrer dans le réseau.</p></div>
+        <div class="tl-step"><span>01</span><h3>Créer son profil</h3><p>Métier, compétences, région, CV. Cinq minutes pour entrer dans le réseau.</p></div>
         <div class="tl-step"><span>02</span><h3>Postuler</h3><p>Offres ouvertes ou mandat confidentiel. On filtre avant de vous présenter.</p></div>
         <div class="tl-step"><span>03</span><h3>Suivre ses candidatures</h3><p>Un conseiller Talendus fait le pont. Pas de messages directs employeur–candidat.</p></div>
-        <div class="tl-step"><span>04</span><h3>Être contacté</h3><p>Quand le quart, le salaire et l'usine correspondent, on vous appelle.</p></div>
+        <div class="tl-step"><span>04</span><h3>Être contacté</h3><p>Quand le poste, le salaire et l'environnement correspondent, on vous appelle.</p></div>
       </div>
     </div></section>
     """,
@@ -910,42 +893,42 @@ simple_page(
 )
 
 simple_page(
-    "Publier une offre | Recrutement industriel Talendus",
-    "Publiez une offre d'usine ou d'entrepôt au Québec. Talendus sourcene, filtre et vous présente des dossiers.",
+    "Publier une offre | Recrutement Talendus",
+    "Publiez une offre d'emploi. Talendus sourcene, filtre et vous présente des dossiers. Tous secteurs.",
     "publier-une-offre.html",
     "Entreprises",
     "Décrivez le poste. On ouvre le sourcing.",
-    "Quart, salaire, urgence : plus c'est clair, plus vite on vous envoie des dossiers. Comptez une trentaine de minutes pour le brief.",
+    "Poste, secteur, contrat, urgence : plus c'est clair, plus vite on vous envoie des dossiers. Comptez une trentaine de minutes pour le brief.",
     """
     <section class="tl-section"><div class="container">
       <div class="tl-steps">
-        <div class="tl-step"><span>01</span><h3>Brief</h3><p>30 minutes : poste, quart, SST, salaire réel.</p></div>
+        <div class="tl-step"><span>01</span><h3>Brief</h3><p>30 minutes : poste, secteur, compétences, salaire réel.</p></div>
         <div class="tl-step"><span>02</span><h3>Publication cadrée</h3><p>Offre visible ou mandat confidentiel, selon votre besoin.</p></div>
         <div class="tl-step"><span>03</span><h3>Filtre Talendus</h3><p>Les candidatures passent par notre équipe. Vous voyez les dossiers présentés.</p></div>
         <div class="tl-step"><span>04</span><h3>Shortlist</h3><p>Premiers dossiers visés en 7 jours sur un métier d'opérations.</p></div>
       </div>
     </div></section>
-    """,
+    """ + human_hire_band("fr"),
     actions='<a class="tl-btn" href="espace-employeur.html" data-auth-open="register">Publier une offre</a>',
 )
 
 simple_page(
-    "Solutions RH | Accompagnement recrutement industriel Talendus",
-    "Structurer le recrutement d'usine : descriptifs, grilles salariales, entrevues conjointes et intégration 30/60/90.",
+    "Solutions RH | Accompagnement recrutement Talendus",
+    "Structurer le recrutement : descriptifs, grilles salariales, entrevues conjointes et intégration 30/60/90. Tous secteurs.",
     "solutions-rh.html",
     "Entreprises",
     "Structurer le recrutement, pas seulement combler un trou.",
-    "Descriptions de poste, grilles salariales, entrevues conjointes et suivi d'intégration — pour les usines qui veulent arrêter d'improviser.",
+    "Descriptions de poste, grilles salariales, entrevues conjointes et suivi d'intégration — pour les entreprises qui veulent arrêter d'improviser.",
     """
     <section class="tl-section"><div class="container">
       <div class="tl-grid-3">
-        <div class="tl-card"><div class="body"><h3>Descriptifs industriels</h3><p>Un poste écrit comme un quart se vit : machines, SST, rythme, supervision.</p></div></div>
-        <div class="tl-card"><div class="body"><h3>Grilles salariales</h3><p>Aligner l'offre sur le marché usine du Québec, sans sous-payer un métier rare.</p></div></div>
+        <div class="tl-card"><div class="body"><h3>Descriptifs de poste</h3><p>Un poste écrit comme il se vit : responsabilités, compétences, type de contrat.</p></div></div>
+        <div class="tl-card"><div class="body"><h3>Grilles salariales</h3><p>Aligner l'offre sur le marché, sans sous-payer un métier rare.</p></div></div>
         <div class="tl-card"><div class="body"><h3>Intégration 30/60/90</h3><p>Suivi après la prise de poste. Garantie de remplacement sur les mandats permanents.</p></div></div>
       </div>
     </div></section>
     """,
-    actions='<a class="tl-btn" href="contact.html">Demander un recrutement</a>',
+    actions='<a class="tl-btn" href="contact.html">Parler à un recruteur</a>',
 )
 
 for old, new in [("about.html", "a-propos.html"), ("service.html", "services.html"), ("blog-single.html", "blog.html")]:

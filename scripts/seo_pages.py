@@ -10,21 +10,21 @@ def write_fr(write, wrap, page_hero, cta):
         (
             "recrutement-industriel.html",
             "Recrutement industriel au Québec | Agence Talendus",
-            "Cabinet de recrutement industriel au Québec : production, maintenance, logistique et métiers d'usine. Shortlist filtrée, consultation sur rendez-vous.",
+            "Cabinet de recrutement au Québec. Page exemple : production, maintenance, logistique. Talendus recrute pour toutes les entreprises, tous secteurs. Shortlist filtrée, consultation sur rendez-vous.",
             "Services",
-            "Recrutement industriel au Québec, sans CV au hasard.",
-            "Talendus est une agence de recrutement industriel : on ouvre un mandat, on filtre comme un contremaître, on présente des dossiers que vous pouvez recevoir.",
-            "Confier un recrutement",
+            "Recrutement industriel : un exemple parmi d'autres.",
+            "Talendus est une plateforme de recrutement pour toutes les entreprises. Cette page illustre un secteur — pas une limite. On ouvre un mandat, on filtre, on présente des dossiers que vous pouvez recevoir.",
+            "Parler à un recruteur",
             """
             <section class="tl-section"><div class="container">
               <div class="row g-4">
                 <div class="col-lg-7">
-                  <h2 class="tl-h2">Ce que « industriel » veut dire ici</h2>
-                  <p class="tl-lead">Production, maintenance, entrepôt, logistique, supervision et cadres d'usine. Pas de bureau, pas de TI, pas de vente. C'est ce qui garde le réseau propre.</p>
+                  <h2 class="tl-h2">Un exemple de secteur, pas une spécialisation exclusive</h2>
+                  <p class="tl-lead">Production, maintenance, entrepôt, logistique, supervision. La technologie, la santé, la finance, le commerce et les autres industries sont tout autant concernées. <a href="secteurs.html">Voir tous les secteurs</a>.</p>
                   <h3>Pour qui</h3>
-                  <p>Usines, centres de distribution et entreprises manufacturières qui doivent pourvoir un quart, un métier ou un poste de supervision — souvent dans un délai serré.</p>
+                  <p>Toute entreprise qui doit pourvoir un poste — souvent dans un délai serré. L'industrie n'est qu'un paramètre de recherche.</p>
                   <h3>Comment on travaille</h3>
-                  <p>Brief sur le quart, le salaire réel et la SST. Approche de candidats actifs et passifs. Shortlist courte. Suivi 30/60/90 jours sur les mandats permanents.</p>
+                  <p>Brief sur le poste, le salaire réel et l'urgence. Approche de candidats actifs et passifs. Shortlist courte. Suivi 30/60/90 jours sur les mandats permanents.</p>
                   <p>Voir aussi : <a href="recrutement-manufacturier.html">recrutement manufacturier</a>, <a href="recrutement-technique.html">recrutement technique</a>, <a href="emplois.html">offres d'emploi</a>.</p>
                 </div>
                 <div class="col-lg-5">
@@ -42,10 +42,10 @@ def write_fr(write, wrap, page_hero, cta):
         (
             "recrutement-manufacturier.html",
             "Recrutement manufacturier au Québec | Talendus",
-            "Recrutement manufacturier pour usines québécoises : opérateurs, métiers, superviseurs et cadres de plant. Cabinet spécialisé, pas une agence généraliste.",
+            "Recrutement manufacturier pour les usines québécoises : un exemple parmi d'autres secteurs que Talendus dessert. Pas une spécialisation exclusive.",
             "Manufacturier",
-            "Recrutement manufacturier : des profils qui tiennent une ligne.",
-            "Une usine n'embauche pas comme un siège. Nous évaluons le rythme, les procédures et le fit de quart avant de vous envoyer un dossier.",
+            "Recrutement manufacturier : un secteur parmi d'autres.",
+            "Une usine n'embauche pas comme un siège. Nous évaluons le rythme, les procédures et le fit avant de vous envoyer un dossier. Talendus recrute aussi en santé, finance, technologie, commerce, et bien plus.",
             "Ouvrir un mandat manufacturier",
             """
             <section class="tl-section"><div class="container">
@@ -53,7 +53,7 @@ def write_fr(write, wrap, page_hero, cta):
               <p class="tl-lead">Opérateurs, set-up, qualité, machinistes, soudeurs et supervision de production. Le même cabinet suit le mandat du brief à l'intégration.</p>
               <h3>Ce qui bloque souvent l'embauche</h3>
               <p>Descriptif flou, salaire annoncé trop bas par rapport au marché, ou entrevues trop tardives. On le dit dès l'appel, sans maquiller le diagnostic.</p>
-              <p>Besoin d'un volume d'opérateurs ? D'un machiniste CNC ? D'un superviseur ? <a href="contact.html">Parlez-nous du quart</a>. Lectures utiles : <a href="article-machiniste-cnc.html">recruter un machiniste CNC</a>, <a href="article-roulement-manufacturier.html">réduire le roulement</a>.</p>
+              <p>Besoin d'un volume d'opérateurs ? D'un machiniste CNC ? D'un superviseur ? <a href="contact.html">Parlez-nous du poste</a>. Lectures utiles : <a href="article-machiniste-cnc.html">recruter un machiniste CNC</a>, <a href="article-roulement-manufacturier.html">réduire le roulement</a>. <a href="secteurs.html">Tous les secteurs</a>.</p>
               <div class="tl-actions" style="margin-top:24px">
                 <a class="tl-btn" href="secteur-manufacturier.html">Secteur manufacturier</a>
                 <a class="tl-btn tl-btn-ghost-dark" href="recrutement-industriel-montreal.html">Mandats à Montréal</a>
@@ -206,7 +206,7 @@ def write_fr(write, wrap, page_hero, cta):
         (
             "recrutement-industriel-quebec.html",
             "Recrutement industriel au Québec | Talendus",
-            "Recrutement industriel au Québec : Grand Montréal, Montérégie, Estrie, Centre-du-Québec, Mauricie et région de Québec. Cabinet spécialisé usine.",
+            "Recrutement au Québec : Grand Montréal, Montérégie, Estrie, Centre-du-Québec, Mauricie et région de Québec. Tous secteurs.",
             "Québec",
             "Recrutement industriel au Québec, au-delà d'une seule ville.",
             "Nous menons des mandats là où vos usines sont — y compris en région lorsque le profil l'exige. Un cabinet, un réseau industriel.",
@@ -234,7 +234,7 @@ def write_fr(write, wrap, page_hero, cta):
                     h1,
                     lead,
                     actions=f'<a class="tl-btn" href="contact.html">{cta_label}</a>',
-                    badges='<span class="tl-badge tl-badge-light">Cabinet industriel</span>',
+                    badges='<span class="tl-badge tl-badge-light">Exemple de secteur</span>',
                 )
                 + inner
                 + cta,
@@ -247,17 +247,17 @@ def write_en(write, wrap, page_hero, cta):
         (
             "en/industrial-recruiting.html",
             "Industrial recruiting in Quebec | Talendus",
-            "Industrial recruiting firm in Quebec: production, maintenance, logistics and plant trades. Screened shortlist, call by appointment.",
+            "Recruiting platform in Quebec: production, maintenance, logistics — and every other industry. Screened shortlist, call by appointment.",
             "Services",
-            "Industrial recruiting in Quebec, without random resumes.",
-            "Talendus opens a mandate, screens like a floor supervisor, and presents files you can actually meet.",
+            "Industrial recruiting: one example among others.",
+            "Talendus is a recruiting platform for every company. This page illustrates one industry — not a limit. We open a mandate, screen, and present files you can actually meet.",
             "Request a hire",
             "industrial recruiting Montreal",
             """
             <section class="tl-section"><div class="container">
               <div class="row g-4"><div class="col-lg-7">
               <h2 class="tl-h2">What industrial means here</h2>
-              <p class="tl-lead">Production, maintenance, warehousing, logistics, supervision and plant leadership. No office, IT or sales roles. That's what keeps the network clean.</p>
+              <p class="tl-lead">Production, maintenance, warehousing, logistics, supervision. Technology, healthcare, finance, retail and other industries are equally in scope. <a href="sectors.html">See every industry</a>.</p>
               <p>Also see <a href="manufacturing-recruiting.html">manufacturing recruiting</a>, <a href="technical-recruiting.html">technical recruiting</a> and <a href="jobs.html">open roles</a>.</p>
               </div>
               <div class="col-lg-5"><div class="tl-card"><div class="body">
@@ -270,7 +270,7 @@ def write_en(write, wrap, page_hero, cta):
         (
             "en/manufacturing-recruiting.html",
             "Manufacturing recruiting in Quebec | Talendus",
-            "Manufacturing recruitment for Quebec plants: operators, trades, supervisors and plant leaders. A specialist firm, not a generalist agency.",
+            "Manufacturing recruitment for Quebec plants: one example among the industries Talendus serves. Not an exclusive specialty.",
             "Manufacturing",
             "Manufacturing recruiting: people who can hold a line.",
             "A plant does not hire like a head office. We screen pace, procedures and shift fit before a file reaches you.",
@@ -350,9 +350,9 @@ def write_en(write, wrap, page_hero, cta):
         (
             "en/leadership-recruiting.html",
             "Industrial leadership recruiting | Talendus Quebec",
-            "Leadership recruiting: plant, production, maintenance and logistics managers. Often confidential mandates in Quebec.",
+            "Leadership recruiting: managers and executives. Often confidential mandates in Quebec.",
             "Leadership",
-            "Plant leaders, not head-office executives.",
+            "Leadership recruiting, in every industry.",
             "P&amp;L, Lean, health &amp; safety, shift climate: we validate plant experience, not just the title.",
             "Start a leadership mandate",
             "",
@@ -454,7 +454,7 @@ def write_en(write, wrap, page_hero, cta):
                     h1,
                     lead,
                     actions=f'<a class="tl-btn" href="contact.html">{cta_label}</a>',
-                    badges='<span class="tl-badge tl-badge-light">Industrial firm</span>',
+                    badges='<span class="tl-badge tl-badge-light">Industry example</span>',
                 )
                 + inner
                 + cta,

@@ -1,4 +1,4 @@
-"""Talendus API — back-end de la plateforme de recrutement industriel."""
+"""Talendus API — back-end de la plateforme de recrutement."""
 
 from app.main import app
 

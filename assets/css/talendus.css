@@ -2456,4 +2456,64 @@ body.tl-persona-gateway #formulaire {
   .tl-header-tools .tl-register-link { display: none; }
 }
 
+.tl-sectors-cloud,
+.tl-trades-cloud {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+}
+.tl-sector-chip,
+.tl-trade-chip {
+  display: inline-block;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid var(--tl-line);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--tl-navy);
+  box-shadow: var(--tl-shadow-sm);
+}
+.tl-sector-chip.is-more {
+  background: rgba(255,107,0,.12);
+  color: var(--tl-orange);
+  border-color: transparent;
+}
+.tl-ai-soon .tl-chip {
+  margin-bottom: 8px;
+}
+.tl-ai-hint {
+  margin: 0 0 22px;
+  font-size: 13px;
+}
+.tl-filters-search {
+  grid-template-columns: 1fr;
+  margin-bottom: 10px;
+}
+.tl-filters-search .tl-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.tl-filters-search .tl-filter span {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--tl-steel);
+  letter-spacing: .02em;
+}
+@media (min-width: 900px) {
+  .tl-filters-search {
+    grid-template-columns: 1.5fr repeat(5, minmax(0, 1fr));
+    align-items: end;
+  }
+}
+.tl-gateway-hero .hero2-heading p + p {
+  margin-top: 8px;
+}
+
+
 

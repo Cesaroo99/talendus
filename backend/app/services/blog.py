@@ -246,11 +246,11 @@ def render_post_html(post: BlogPost) -> str:
         '<a class="tl-btn tl-btn-ghost-dark" href="/en/blog.html">Back to the blog</a>'
     )
     related = (
-        '<p><a href="/recrutement-industriel.html">Recrutement industriel</a> · '
+        '<p><a href="/secteurs.html">Tous les secteurs</a> · '
         '<a href="/emplois.html">Offres d’emploi</a> · '
         '<a href="/entreprises.html">Solutions entreprises</a></p>'
         if lang == "fr"
-        else '<p><a href="/en/industrial-recruiting.html">Industrial recruiting</a> · '
+        else '<p><a href="/en/sectors.html">Every industry</a> · '
         '<a href="/en/jobs.html">Job openings</a> · '
         '<a href="/en/employers.html">Employer solutions</a></p>'
     )
