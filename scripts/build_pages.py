@@ -4,7 +4,7 @@ from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from parts import (
-    wrap as wrap_page, page_hero, speed_strip, cta_band, faq_html,
+    wrap as wrap_page, page_hero, speed_strip, cta_band, faq_html, proof_stats,
     FAQ_EMPLOYEURS, FAQ_CANDIDATS,
 )
 from en_pages import build_en
@@ -181,15 +181,6 @@ INDEX_BODY = r"""
         </div>
   </div>
 </div>
-<section class="tl-section-sm">
-  <div class="container">
-    <div class="tl-stats tl-stats-compact">
-      <div class="tl-stat"><b>7 j</b><p>Premiers candidats qualifiés, sur les mandats d’opération</p></div>
-      <div class="tl-stat"><b>92 %</b><p>Des placements encore en poste après la période d’essai</p></div>
-      <div class="tl-stat"><b>100 %</b><p>De nos mandats dans l’industrie, la logistique ou l’entreposage</p></div>
-    </div>
-  </div>
-</section>
 """
 
 write("index.html", wrap(
@@ -226,7 +217,6 @@ simple_page(
       <div class="tl-hero-media" style="height:360px;border-radius:16px;overflow:hidden;margin-bottom:18px">
         <img src="assets/img/all-images/industry/usine-equipe.jpg" alt="Équipe Talendus sur le plancher d'usine">
       </div>
-      <a class="tl-btn tl-btn-lg" href="entreprises.html" data-set-persona="entreprise">Pour les Entreprises</a>
     </div></div>
     </div></section>
     <section class="tl-section tl-ice"><div class="container">
@@ -260,7 +250,7 @@ simple_page(
       </div>
     </div>
     </div></section>
-    """ + CTA_BAND,
+    """,
     actions='<a class="tl-btn" href="candidats.html" data-set-persona="talent">Pour les Talents</a><a class="tl-btn tl-btn-ghost" href="entreprises.html" data-set-persona="entreprise">Pour les Entreprises</a>'
 )
 
@@ -304,13 +294,9 @@ simple_page(
           </div>
         </div>
       </div>
-      <div class="tl-actions" style="margin-top:36px">
-        <a class="tl-btn tl-btn-lg" href="contact.html">Demander un recrutement</a>
-        <a class="tl-btn tl-btn-ghost-dark" href="entreprises.html">Espace entreprises</a>
-      </div>
     </div></section>
-    ''' + CTA_HIRE,
-    actions='<a class="tl-btn" href="contact.html">Demander un recrutement</a><a class="tl-btn tl-btn-ghost" href="publier-une-offre.html">Publier une offre</a>'
+    ''',
+    actions='<a class="tl-btn" href="contact.html">Demander un recrutement</a>'
 )
 
 # Entreprises (URL canonique) + redirection Employeurs
@@ -319,10 +305,10 @@ EMPLOYERS_BODY = (
         "Entreprises",
         "Votre opération n'a pas besoin de 80 CV. Elle a besoin du bon talent, au bon quart.",
         "Consultation gratuite, sur rendez-vous. Présélection industrielle. Garantie de remplacement.",
-        actions='<a class="tl-btn" href="contact.html">Demander un recrutement</a><a class="tl-btn tl-btn-ghost" href="publier-une-offre.html">Publier une offre</a>',
+        actions='<a class="tl-btn" href="contact.html">Demander un recrutement</a>',
         badges='<span class="tl-badge tl-badge-light">Consultation sur rendez-vous</span> <span class="tl-badge tl-badge-light">Partenaire opérationnel</span>'
     )
-    + SPEED_STRIP
+    + proof_stats("fr")
     + """
     <section class="tl-section"><div class="container">
       <div class="tl-grid-3">
@@ -347,8 +333,7 @@ EMPLOYERS_BODY = (
     <section class="tl-section" id="calculateur"><div class="container">
       <div class="row align-items-center g-4">
         <div class="col-lg-5"><h2 class="tl-h2">Calculateur : coût d'une mauvaise embauche</h2>
-        <p class="tl-lead">Estimez l'impact d'un mauvais fit (salaire, formation, heures sup. et perte de productivité). Un mandat Talendus coûte presque toujours moins cher qu'un quart instable.</p>
-        <a class="tl-btn" href="contact.html">Demander un recrutement</a></div>
+        <p class="tl-lead">Estimez l'impact d'un mauvais fit (salaire, formation, heures sup. et perte de productivité). Un mandat Talendus coûte presque toujours moins cher qu'un quart instable.</p></div>
         <div class="col-lg-6 offset-lg-1">
           <div class="tl-calc">
             <label for="tl-salary">Salaire annuel du poste ($)</label>
@@ -405,7 +390,7 @@ EMPLOYERS_BODY = (
         <a class="tl-btn tl-btn-lg" href="contact.html">Demander un recrutement</a>
       </div>
     </div></section>
-    """ + CTA_HIRE
+    """
 )
 write("entreprises.html", wrap(
     "Entreprises | Recrutement manufacturier et industriel au Québec — Talendus",
@@ -429,7 +414,7 @@ write("candidats.html", wrap(
         "Candidats",
         "Des postes d'usine et d'entrepôt, présentés clairement.",
         "Nous travaillons avec des employeurs manufacturiers du Québec — pas des mandats fourre-tout. Accompagnement jusqu'à la prise de poste.",
-        actions='<a class="tl-btn" href="candidats.html#cv">Déposer mon CV</a><a class="tl-btn tl-btn-ghost" href="emplois.html">Consulter les offres</a>',
+        actions='<a class="tl-btn" href="candidats.html#cv">Déposer mon CV</a>',
         badges='<span class="tl-badge tl-badge-light">Sans frais pour vous</span> <span class="tl-badge tl-badge-light">Mandats d’usine réels</span>'
     )
     + """
@@ -447,10 +432,6 @@ write("candidats.html", wrap(
             <li>Suivre ses candidatures avec un conseiller Talendus.</li>
             <li>Être contacté lorsque le quart et le salaire correspondent.</li>
           </ol>
-          <div class="tl-actions" style="margin-top:8px">
-            <a class="tl-btn" href="espace.html" data-auth-open="register">Créer mon profil</a>
-            <a class="tl-btn tl-btn-electric" href="emplois.html">Consulter les offres</a>
-          </div>
         </div>
         <div class="col-lg-6 offset-lg-1">
           <form class="tl-form" action="#" method="post" data-form="contact">
@@ -509,7 +490,7 @@ write("candidats.html", wrap(
       </div>
       """ + faq_html(FAQ_CANDIDATS) + """
     </div></section>
-    """ + CTA_TALENT
+    """
 ))
 
 # Contact
@@ -521,7 +502,7 @@ write("contact.html", wrap(
         "Contact",
         "Dites-nous qui vous êtes. Nous ouvrons le bon parcours.",
         "Consultations sur rendez-vous uniquement. Réponse moyenne sous 30 minutes durant les heures d’ouverture.",
-        actions='<a class="tl-btn" href="tel:+15145550199">Parler à un spécialiste</a><a class="tl-btn tl-btn-ghost" href="#parcours">Choisir mon parcours</a>',
+        actions='',
         badges='<span class="tl-badge tl-badge-light">Sur rendez-vous</span> <span class="tl-badge tl-badge-light">Lun–Ven, 8 h à 17 h</span>'
     )
     + """
@@ -654,7 +635,7 @@ write("emplois.html", wrap(
     page_hero(
         "Offres d'emploi", "Postes industriels ouverts au Québec",
         "Recherchez par métier, ville, salaire, type d’emploi et quart de travail. Candidature en un formulaire.",
-        actions='<a class="tl-btn" href="candidats.html#cv">Déposer mon CV</a><a class="tl-btn tl-btn-ghost" href="espace.html" data-auth-open="register">Créer mon profil</a>',
+        actions='<a class="tl-btn" href="candidats.html#cv">Déposer mon CV</a>',
         badges='<span class="tl-badge tl-badge-light">Banque de talents</span>'
     )
     + f"""
@@ -710,7 +691,7 @@ for slug, title, city, cat, typ, sal, shift, req in JOBS:
         f"emploi-{slug}.html",
         page_hero(
             f"{city} · {typ}", title, f"{sal} · {shift} · Recrutement industriel Talendus",
-            actions='<a class="tl-btn" href="#postuler">Postuler maintenant</a><a class="tl-btn tl-btn-ghost" href="emplois.html">Consulter les offres</a>',
+            actions='<a class="tl-btn" href="#postuler">Postuler maintenant</a>',
             badges='<span class="tl-badge tl-badge-light">Poste industriel</span>'
         )
         + f"""
@@ -764,7 +745,7 @@ for slug, name, title, desc in SECTORS:
         f"secteur-{slug}.html",
         page_hero(
             "Secteur", name, desc,
-            actions='<a class="tl-btn" href="contact.html">Demander un recrutement</a><a class="tl-btn tl-btn-ghost" href="contact.html">Réserver une démonstration</a>'
+            actions='<a class="tl-btn" href="contact.html">Demander un recrutement</a>'
         )
         + f"""
         <section class="tl-section"><div class="container">
@@ -923,13 +904,9 @@ simple_page(
         <div class="tl-step"><span>03</span><h3>Suivre ses candidatures</h3><p>Un conseiller Talendus fait le pont. Pas de messages directs employeur–candidat.</p></div>
         <div class="tl-step"><span>04</span><h3>Être contacté</h3><p>Lorsque le quart, le salaire et l’usine correspondent, on vous appelle.</p></div>
       </div>
-      <div class="tl-actions" style="margin-top:36px">
-        <a class="tl-btn" href="espace.html" data-auth-open="register">Créer mon profil</a>
-        <a class="tl-btn tl-btn-ghost-dark" href="emplois.html">Consulter les offres</a>
-      </div>
     </div></section>
-    """ + CTA_TALENT,
-    actions='<a class="tl-btn" href="espace.html" data-auth-open="register">Créer mon profil</a><a class="tl-btn tl-btn-ghost" href="candidats.html#cv">Déposer mon CV</a>',
+    """,
+    actions='<a class="tl-btn" href="espace.html" data-auth-open="register">Créer mon profil</a>',
 )
 
 simple_page(
@@ -947,13 +924,9 @@ simple_page(
         <div class="tl-step"><span>03</span><h3>Filtre Talendus</h3><p>Les candidatures passent par notre équipe. Vous voyez les dossiers présentés.</p></div>
         <div class="tl-step"><span>04</span><h3>Shortlist</h3><p>Premiers candidats qualifiés à partir de 7 jours sur les métiers d’opération.</p></div>
       </div>
-      <div class="tl-actions" style="margin-top:36px">
-        <a class="tl-btn" href="espace-employeur.html" data-auth-open="register">Publier une offre</a>
-        <a class="tl-btn tl-btn-ghost-dark" href="contact.html">Demander un recrutement</a>
-      </div>
     </div></section>
-    """ + CTA_HIRE,
-    actions='<a class="tl-btn" href="espace-employeur.html" data-auth-open="register">Publier une offre</a><a class="tl-btn tl-btn-ghost" href="contact.html">Réserver une démonstration</a>',
+    """,
+    actions='<a class="tl-btn" href="espace-employeur.html" data-auth-open="register">Publier une offre</a>',
 )
 
 simple_page(
@@ -970,13 +943,9 @@ simple_page(
         <div class="tl-card"><div class="body"><h3>Grilles salariales</h3><p>Aligner l’offre sur le marché usine du Québec, sans sous-payer un métier rare.</p></div></div>
         <div class="tl-card"><div class="body"><h3>Intégration 30/60/90</h3><p>Suivi après la prise de poste. Garantie de remplacement sur les mandats permanents.</p></div></div>
       </div>
-      <div class="tl-actions" style="margin-top:36px">
-        <a class="tl-btn" href="contact.html">Demander un recrutement</a>
-        <a class="tl-btn tl-btn-ghost-dark" href="entreprises.html">Recruter avec Talendus</a>
-      </div>
     </div></section>
-    """ + CTA_HIRE,
-    actions='<a class="tl-btn" href="contact.html">Réserver une démonstration</a><a class="tl-btn tl-btn-ghost" href="entreprises.html">Trouver des talents</a>',
+    """,
+    actions='<a class="tl-btn" href="contact.html">Demander un recrutement</a>',
 )
 
 for old, new in [("about.html", "a-propos.html"), ("service.html", "services.html"), ("blog-single.html", "blog.html")]:

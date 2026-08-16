@@ -1,6 +1,6 @@
 """English pages for Talendus — native copy, not machine-translated chrome."""
 
-from parts import speed_strip, cta_band, faq_html, FAQ_EMPLOYERS_EN, FAQ_CANDIDATES_EN
+from parts import speed_strip, cta_band, faq_html, proof_stats, FAQ_EMPLOYERS_EN, FAQ_CANDIDATES_EN
 from seo_pages import write_en as write_seo_en
 
 A = "../assets/"
@@ -95,15 +95,6 @@ INDEX_EN = rf"""
         </div>
   </div>
 </div>
-<section class="tl-section-sm">
-  <div class="container">
-    <div class="tl-stats tl-stats-compact">
-      <div class="tl-stat"><b>7 d</b><p>Qualified candidates on operations mandates</p></div>
-      <div class="tl-stat"><b>92 %</b><p>Of placements still in post after the probation period</p></div>
-      <div class="tl-stat"><b>100 %</b><p>Of our mandates in industry, logistics or operations</p></div>
-    </div>
-  </div>
-</section>
 """
 
 
@@ -142,7 +133,6 @@ def build_en(write, wrap, page_hero):
       <div class="tl-hero-media" style="height:360px;border-radius:16px;overflow:hidden;margin-bottom:18px">
         <img src="{img('usine-equipe.jpg')}" alt="Talendus team on the plant floor">
       </div>
-      <a class="tl-btn tl-btn-lg" href="employers.html" data-set-persona="entreprise">For employers</a>
     </div></div>
     </div></section>
     <section class="tl-section tl-ice"><div class="container">
@@ -153,7 +143,7 @@ def build_en(write, wrap, page_hero):
       <div class="tl-card"><div class="body"><h3>Word kept</h3><p>Timelines, files, guarantee: what is said is delivered. One contact through to start date.</p></div></div>
     </div>
     </div></section>
-    """ + CTA_GATE,
+    """,
         lang="en",
         alt="a-propos.html",
     ))
@@ -179,13 +169,13 @@ def build_en(write, wrap, page_hero):
             "Services",
             "Services designed for operations, not for a head office.",
             "From labourer to plant manager: one firm, focused on the people who keep industry moving.",
-            actions='<a class="tl-btn" href="contact.html">Start a hire</a><a class="tl-btn tl-btn-ghost" href="employers.html">Employer space</a>',
+            actions='<a class="tl-btn" href="contact.html">Start a hire</a>',
         )
         + f'''
     <section class="tl-section"><div class="container">
       <div class="tl-grid-4">{services_cards}</div>
     </div></section>
-    ''' + CTA,
+    ''',
         lang="en",
         alt="services.html",
     ))
@@ -198,10 +188,10 @@ def build_en(write, wrap, page_hero):
             "Employers",
             "Your operation does not need 80 resumes. It needs the right talent, on the right shift.",
             "Free consultation, by appointment. Industrial screening. Replacement guarantee.",
-            actions='<a class="tl-btn" href="contact.html">Start a hire</a><a class="tl-btn tl-btn-ghost" href="post-a-job.html">Post a job</a>',
+            actions='<a class="tl-btn" href="contact.html">Start a hire</a>',
             badges='<span class="tl-badge tl-badge-light">By appointment</span> <span class="tl-badge tl-badge-light">Operations partner</span>',
         )
-        + SPEED
+        + proof_stats("en")
         + f"""
     <section class="tl-section"><div class="container">
       <div class="tl-grid-3">
@@ -226,8 +216,7 @@ def build_en(write, wrap, page_hero):
     <section class="tl-section" id="calculator"><div class="container">
       <div class="row align-items-center g-4">
         <div class="col-lg-5"><h2 class="tl-h2">Calculator: cost of a bad hire</h2>
-        <p class="tl-lead">Estimate the impact of a poor fit (salary, training, overtime and lost productivity). A Talendus mandate almost always costs less than an unstable shift.</p>
-        <a class="tl-btn" href="contact.html">Start a hire</a></div>
+        <p class="tl-lead">Estimate the impact of a poor fit (salary, training, overtime and lost productivity). A Talendus mandate almost always costs less than an unstable shift.</p></div>
         <div class="col-lg-6 offset-lg-1">
           <div class="tl-calc">
             <label for="tl-salary">Annual salary for the role ($)</label>
@@ -284,7 +273,7 @@ def build_en(write, wrap, page_hero):
         <a class="tl-btn tl-btn-lg" href="contact.html">Start a hire</a>
       </div>
     </div></section>
-    """ + CTA,
+    """,
         lang="en",
         alt="entreprises.html",
     ))
@@ -297,7 +286,7 @@ def build_en(write, wrap, page_hero):
             "Candidates",
             "Plant and warehouse roles, presented clearly.",
             "We work with operational employers in Quebec — not catch-all mandates. Support through to start date.",
-            actions='<a class="tl-btn" href="candidates.html#cv">Submit my resume</a><a class="tl-btn tl-btn-ghost" href="jobs.html">Browse jobs</a>',
+            actions='<a class="tl-btn" href="candidates.html#cv">Submit my resume</a>',
             badges='<span class="tl-badge tl-badge-light">Free for you</span> <span class="tl-badge tl-badge-light">Real plant mandates</span>',
         )
         + f"""
@@ -315,10 +304,6 @@ def build_en(write, wrap, page_hero):
             <li>Track applications with a Talendus consultant.</li>
             <li>Be contacted when the shift and pay match.</li>
           </ol>
-          <div class="tl-actions" style="margin-top:8px">
-            <a class="tl-btn" href="account.html" data-auth-open="register">Create my profile</a>
-            <a class="tl-btn tl-btn-electric" href="jobs.html">Browse jobs</a>
-          </div>
         </div>
         <div class="col-lg-6 offset-lg-1">
           <form class="tl-form" action="#" method="post" data-form="contact">
@@ -369,7 +354,7 @@ def build_en(write, wrap, page_hero):
       </div>
       {faq_html(FAQ_CANDIDATES_EN)}
     </div></section>
-    """ + CTA_TALENT,
+    """,
         lang="en",
         alt="candidats.html",
     ))
@@ -382,7 +367,7 @@ def build_en(write, wrap, page_hero):
             "Contact",
             "Tell us who you are. We open the right path.",
             "Consultations by appointment only. Average response under 30 minutes during business hours.",
-            actions='<a class="tl-btn" href="tel:+15145550199">Call a specialist</a><a class="tl-btn tl-btn-ghost" href="#parcours">Choose my path</a>',
+            actions='',
             badges='<span class="tl-badge tl-badge-light">By appointment</span> <span class="tl-badge tl-badge-light">Mon–Fri, 8 a.m. to 5 p.m.</span>',
         )
         + f"""
@@ -516,7 +501,7 @@ def build_en(write, wrap, page_hero):
         page_hero(
             "Job openings", "Industrial roles open in Quebec",
             "Search by trade, city, salary, job type and shift. Apply in one form.",
-            actions='<a class="tl-btn" href="candidates.html#cv">Submit my resume</a><a class="tl-btn tl-btn-ghost" href="account.html" data-auth-open="register">Create my profile</a>',
+            actions='<a class="tl-btn" href="candidates.html#cv">Submit my resume</a>',
             badges='<span class="tl-badge tl-badge-light">Talent pool</span>',
         )
         + f"""
@@ -574,7 +559,7 @@ def build_en(write, wrap, page_hero):
             f"en/job-{slug}.html",
             page_hero(
                 f"{city} · {typ}", title, f"{sal} · {shift} · Talendus industrial recruiting",
-                actions='<a class="tl-btn" href="#postuler">Apply now</a><a class="tl-btn tl-btn-ghost" href="jobs.html">Browse jobs</a>',
+                actions='<a class="tl-btn" href="#postuler">Apply now</a>',
                 badges='<span class="tl-badge tl-badge-light">Industrial role</span>',
             )
             + f"""
@@ -643,7 +628,7 @@ def build_en(write, wrap, page_hero):
             f"en/sector-{slug}.html",
             page_hero(
                 "Industry", name, desc,
-                actions='<a class="tl-btn" href="contact.html">Start a hire</a><a class="tl-btn tl-btn-ghost" href="contact.html">Book a consultation</a>',
+                actions='<a class="tl-btn" href="contact.html">Start a hire</a>',
             )
             + f"""
         <section class="tl-section"><div class="container">
@@ -799,7 +784,7 @@ def build_en(write, wrap, page_hero):
             "Talent",
             "Four steps, one goal: the right plant role.",
             "No mix with employer recruiting. Here, you are looking for a job.",
-            actions='<a class="tl-btn" href="account.html" data-auth-open="register">Create my profile</a><a class="tl-btn tl-btn-ghost" href="candidates.html#cv">Submit my resume</a>',
+            actions='<a class="tl-btn" href="account.html" data-auth-open="register">Create my profile</a>',
         )
         + """
     <section class="tl-section"><div class="container">
@@ -809,12 +794,8 @@ def build_en(write, wrap, page_hero):
         <div class="tl-step"><span>03</span><h3>Track applications</h3><p>A Talendus consultant is the bridge. No direct employer–candidate messages.</p></div>
         <div class="tl-step"><span>04</span><h3>Get contacted</h3><p>When the shift, pay and plant match, we call you.</p></div>
       </div>
-      <div class="tl-actions" style="margin-top:36px">
-        <a class="tl-btn" href="account.html" data-auth-open="register">Create my profile</a>
-        <a class="tl-btn tl-btn-ghost-dark" href="jobs.html">Browse jobs</a>
-      </div>
     </div></section>
-    """ + CTA_TALENT,
+    """,
         lang="en",
         alt="comment-ca-fonctionne.html",
     ))
@@ -826,7 +807,7 @@ def build_en(write, wrap, page_hero):
             "Employers",
             "Post a job without receiving 80 resumes.",
             "Describe the shift, real pay and urgency. We open industrial sourcing.",
-            actions='<a class="tl-btn" href="account-employer.html" data-auth-open="register">Post a job</a><a class="tl-btn tl-btn-ghost" href="contact.html">Book a demo</a>',
+            actions='<a class="tl-btn" href="account-employer.html" data-auth-open="register">Post a job</a>',
         )
         + """
     <section class="tl-section"><div class="container">
@@ -836,12 +817,8 @@ def build_en(write, wrap, page_hero):
         <div class="tl-step"><span>03</span><h3>Talendus filter</h3><p>Applications go through our team. You see presented files.</p></div>
         <div class="tl-step"><span>04</span><h3>Shortlist</h3><p>Qualified candidates from day 7 on operations roles.</p></div>
       </div>
-      <div class="tl-actions" style="margin-top:36px">
-        <a class="tl-btn" href="account-employer.html" data-auth-open="register">Post a job</a>
-        <a class="tl-btn tl-btn-ghost-dark" href="contact.html">Start a hire</a>
-      </div>
     </div></section>
-    """ + CTA,
+    """,
         lang="en",
         alt="publier-une-offre.html",
     ))
@@ -853,7 +830,7 @@ def build_en(write, wrap, page_hero):
             "Employers",
             "Beyond the posting: a plant HR partner.",
             "Job descriptions, industrial salary grids, joint interviews and onboarding follow-up.",
-            actions='<a class="tl-btn" href="contact.html">Book a demo</a><a class="tl-btn tl-btn-ghost" href="employers.html">Find talent</a>',
+            actions='<a class="tl-btn" href="contact.html">Start a hire</a>',
         )
         + """
     <section class="tl-section"><div class="container">
@@ -862,12 +839,8 @@ def build_en(write, wrap, page_hero):
         <div class="tl-card"><div class="body"><h3>Salary grids</h3><p>Align the offer with Quebec plant pay, without underpaying a scarce trade.</p></div></div>
         <div class="tl-card"><div class="body"><h3>30/60/90 onboarding</h3><p>Follow-up after start date. Replacement guarantee on permanent mandates.</p></div></div>
       </div>
-      <div class="tl-actions" style="margin-top:36px">
-        <a class="tl-btn" href="contact.html">Start a hire</a>
-        <a class="tl-btn tl-btn-ghost-dark" href="employers.html">Hire with Talendus</a>
-      </div>
     </div></section>
-    """ + CTA,
+    """,
         lang="en",
         alt="solutions-rh.html",
     ))
