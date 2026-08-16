@@ -49,6 +49,11 @@ def search_jobs(
     )
 
 
+@router.get("/board")
+def job_board(db: Session = Depends(get_db)):
+    return ok(jobs_service.export_board(db))
+
+
 @router.get("/managed")
 def managed_jobs(
     db: Session = Depends(get_db),

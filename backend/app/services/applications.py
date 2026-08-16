@@ -55,12 +55,16 @@ def apply(db: Session, user: User, data: ApplicationCreateIn, ip: str | None = N
     if existing:
         raise AppError(409, "Une candidature existe déjà pour cette offre.", "APPLICATION_ALREADY_EXISTS")
     resume = _primary_resume(db, candidate, data.resume_id)
+    from app.services.matching import score_pair
+
+    score, _reasons = score_pair(candidate, job)
     application = Application(
         candidate_id=candidate.id,
         job_id=job.id,
         resume_id=resume.id if resume else None,
         status=ApplicationStatus.SUBMITTED,
         cover_note=data.cover_note,
+        match_score=score,
     )
     db.add(application)
     db.flush()
@@ -224,6 +228,7 @@ def serialize_application(row: Application) -> dict:
         "id": row.id,
         "status": row.status.value,
         "cover_note": row.cover_note,
+        "match_score": row.match_score,
         "created_at": row.created_at.isoformat() if row.created_at else None,
         "job": {
             "id": row.job.id,

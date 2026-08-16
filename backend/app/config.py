@@ -39,6 +39,8 @@ class Settings(BaseSettings):
     max_resume_mb: int = 5
     rate_limit_per_minute: int = 80
     seed_password: str = "talendus"
+    linkedin_client_id: str = ""
+    linkedin_client_secret: str = ""
 
     @property
     def cors_origin_list(self) -> list[str]:

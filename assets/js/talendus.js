@@ -124,6 +124,24 @@
       return "";
     }
 
+    var pageSlug = jobSlugFromPage();
+    if (pageSlug && window.TalendusAPI) {
+      window.TalendusAPI.request("/jobs/" + encodeURIComponent(pageSlug)).then(function (payload) {
+        var job = payload && payload.data;
+        var url = job && job.share && (isEn ? job.share.linkedin_en : job.share.linkedin);
+        if (!url) return;
+        var host = document.querySelector(".tl-page-hero .container") || document.querySelector(".tl-section .container");
+        if (!host || host.querySelector(".tl-share-linkedin")) return;
+        var a = document.createElement("a");
+        a.className = "tl-share-linkedin";
+        a.href = url;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        a.textContent = isEn ? "Share this role on LinkedIn" : "Partager cette offre sur LinkedIn";
+        host.appendChild(a);
+      }).catch(function () {});
+    }
+
     function splitName(raw) {
       var parts = String(raw || "").trim().split(/\s+/);
       return { first: parts[0] || "Candidat", last: parts.slice(1).join(" ") };
@@ -273,7 +291,10 @@
           var salary = job.salary_display || "";
           var shiftVal = job.shift || "";
           var hay = [job.title, job.location, job.sector, job.contract_type, salary, shiftVal, job.skills].join(" ");
-          return '<article class="tl-job-card" data-job="' + escapeHtml(hay) + '" data-city="' + escapeHtml(job.location || "") + '" data-cat="' + escapeHtml((job.sector || "").toLowerCase()) + '" data-type="' + escapeHtml(job.contract_type || "") + '" data-shift="' + escapeHtml(shiftVal) + '" data-salary="' + escapeHtml(salary) + '"><div class="body"><span class="tl-chip orange">' + escapeHtml(job.contract_type || "") + '</span><span class="tl-chip">' + escapeHtml(job.location || "") + '</span><h3><a href="' + href + '">' + escapeHtml(job.title) + '</a></h3><p>' + escapeHtml([salary, shiftVal].filter(Boolean).join(" · ")) + '</p><a class="tl-split-cta" href="' + href + '" style="color:var(--tl-orange);margin-top:auto;padding-top:14px">' + (isEn ? "View role →" : "Voir le poste →") + "</a></div></article>";
+          var share = (job.share && job.share.linkedin)
+            ? '<a class="tl-share-linkedin" href="' + escapeHtml(job.share.linkedin) + '" target="_blank" rel="noopener noreferrer">' + (isEn ? "Share on LinkedIn" : "Partager sur LinkedIn") + "</a>"
+            : "";
+          return '<article class="tl-job-card" data-job="' + escapeHtml(hay) + '" data-city="' + escapeHtml(job.location || "") + '" data-cat="' + escapeHtml((job.sector || "").toLowerCase()) + '" data-type="' + escapeHtml(job.contract_type || "") + '" data-shift="' + escapeHtml(shiftVal) + '" data-salary="' + escapeHtml(salary) + '"><div class="body"><span class="tl-chip orange">' + escapeHtml(job.contract_type || "") + '</span><span class="tl-chip">' + escapeHtml(job.location || "") + '</span><h3><a href="' + href + '">' + escapeHtml(job.title) + '</a></h3><p>' + escapeHtml([salary, shiftVal].filter(Boolean).join(" · ")) + "</p>" + share + '<a class="tl-split-cta" href="' + href + '" style="color:var(--tl-orange);margin-top:auto;padding-top:14px">' + (isEn ? "View role →" : "Voir le poste →") + "</a></div></article>";
         }).join("");
         filterJobs();
       }).catch(function () {});

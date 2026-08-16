@@ -863,7 +863,7 @@ def build_en(write, wrap, page_hero):
         "en/account.html",
         page_hero(
             "Candidates", "Your Talendus file.",
-            "Profile, resume, applications and notifications — follow your industrial job search.",
+            "Profile, resume, applications, matches, messages and interviews — follow your industrial job search.",
             badges='<span class="tl-badge tl-badge-light">Private space</span>',
         )
         + """<section class="tl-section"><div class="container"><div id="tl-account"></div></div></section>""",

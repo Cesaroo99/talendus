@@ -967,7 +967,7 @@ write("espace.html", wrap(
     "espace.html",
     page_hero(
         "Candidats", "Votre dossier Talendus.",
-        "Profil, CV, candidatures et notifications — le suivi de votre recherche d'emploi industriel.",
+        "Profil, CV, candidatures, correspondances, messages et entretiens — le suivi de votre recherche d'emploi industriel.",
         badges='<span class="tl-badge tl-badge-light">Espace privé</span>'
     )
     + """<section class="tl-section"><div class="container"><div id="tl-account"></div></div></section>"""

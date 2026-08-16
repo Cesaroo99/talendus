@@ -242,3 +242,156 @@ def test_admin_bootstrap_and_staff_candidate(client):
     cand = register(client, "peek@example.com")
     denied = client.get("/api/candidates", headers=auth_header(cand))
     assert denied.status_code == 403
+
+
+def _publish_job(client, emp_headers, **fields):
+    payload = {"title": "Cariste", "location": "Laval", "sector": "Entrepôt", "skills": "WMS, chariot", "slug": "match-cariste"}
+    payload.update(fields)
+    job = client.post("/api/jobs", headers=emp_headers, json=payload).json()["data"]
+    client.post(f"/api/jobs/{job['id']}/publish", headers=emp_headers)
+    return job
+
+
+def test_matching_scores_and_job_board(client):
+    emp = register(client, "matchco@example.com", "EMPLOYER")
+    emp_h = auth_header(emp)
+    job = _publish_job(client, emp_h)
+    cand = register(client, "forklift@example.com", first_name="Karine")
+    cand_h = auth_header(cand)
+    client.patch(
+        "/api/candidates/me",
+        headers=cand_h,
+        json={"city": "Laval", "sector": "Entrepôt", "skills": "WMS, chariot élévateur", "years_experience": 5},
+    )
+    ranked = client.get("/api/matching/jobs", headers=cand_h)
+    assert ranked.status_code == 200
+    items = ranked.json()["data"]
+    assert items
+    assert items[0]["job"]["id"] == job["id"]
+    assert items[0]["score"] >= 50
+    other = register(client, "office@example.com")
+    denied = client.get(f"/api/matching/jobs/{job['id']}/candidates", headers=auth_header(other))
+    assert denied.status_code == 403
+    staff = _promote_admin(client, "match-admin@example.com")
+    matches = client.get(f"/api/matching/jobs/{job['id']}/candidates", headers=auth_header(staff))
+    assert matches.status_code == 200
+    board = client.get("/api/job-board")
+    assert board.status_code == 200
+    slugs = [j["slug"] for j in board.json()["data"]["jobs"]]
+    assert "match-cariste" in slugs
+    linkedin = client.get("/api/integrations/linkedin")
+    assert linkedin.status_code == 200
+    assert linkedin.json()["data"]["share_enabled"] is True
+    assert linkedin.json()["data"]["posting_enabled"] is False
+    share = client.get("/api/jobs/match-cariste")
+    assert "linkedin" in share.json()["data"]["share"]
+
+
+def test_messaging_idor_and_staff_thread(client):
+    admin = _promote_admin(client, "msg-admin@example.com")
+    admin_h = auth_header(admin)
+    a = register(client, "msg-a@example.com", first_name="Aline")
+    b = register(client, "msg-b@example.com", first_name="Bruno")
+    a_h = auth_header(a)
+    b_h = auth_header(b)
+    forbidden = client.post(
+        "/api/messages",
+        headers=a_h,
+        json={"recipient_id": b["user"]["id"], "body": "Salut"},
+    )
+    assert forbidden.status_code == 403
+    sent = client.post(
+        "/api/messages",
+        headers=a_h,
+        json={"recipient_id": admin["user"]["id"], "body": "Bonjour, je cherche un quart de jour."},
+    )
+    assert sent.status_code == 200
+    sneak = client.get(f"/api/messages/{a['user']['id']}", headers=b_h)
+    assert sneak.status_code == 403
+    admin_as_b = client.get(f"/api/messages/{admin['user']['id']}", headers=b_h)
+    assert admin_as_b.status_code == 200
+    assert all("quart de jour" not in m["body"] for m in admin_as_b.json()["data"])
+    thread = client.get(f"/api/messages/{admin['user']['id']}", headers=a_h)
+    assert thread.status_code == 200
+    assert any("quart de jour" in m["body"] for m in thread.json()["data"])
+    inbox = client.get("/api/messages", headers=admin_h)
+    assert inbox.status_code == 200
+    assert any(t["user_id"] == a["user"]["id"] for t in inbox.json()["data"])
+
+
+def test_interview_invoice_contract_and_email_body(client):
+    admin = _promote_admin(client, "ops-admin@example.com")
+    admin_h = auth_header(admin)
+    emp = register(client, "ops-emp@example.com", "EMPLOYER", first_name="Jean")
+    emp_h = auth_header(emp)
+    job = _publish_job(client, emp_h, slug="ops-cariste", title="Cariste")
+    cand = register(client, "ops-cand@example.com", first_name="Hugo")
+    cand_h = auth_header(cand)
+    applied = client.post("/api/applications", headers=cand_h, json={"job_id": job["id"]}).json()["data"]
+    profile = client.get("/api/candidates/me", headers=cand_h).json()["data"]
+
+    denied_int = client.post(
+        "/api/interviews",
+        headers=cand_h,
+        json={"candidate_id": profile["id"], "scheduled_at": "2026-08-20T10:00:00+00:00", "location": "Visio"},
+    )
+    assert denied_int.status_code == 403
+    created_int = client.post(
+        "/api/interviews",
+        headers=admin_h,
+        json={
+            "candidate_id": profile["id"],
+            "application_id": applied["id"],
+            "scheduled_at": "2026-08-20T10:00:00+00:00",
+            "location": "Visio",
+            "type": "TALENDUS",
+        },
+    )
+    assert created_int.status_code == 200
+    interview_id = created_int.json()["data"]["id"]
+    mine = client.get("/api/interviews", headers=cand_h)
+    assert any(i["id"] == interview_id for i in mine.json()["data"])
+    confirm = client.post(f"/api/interviews/{interview_id}/status", headers=cand_h, json={"status": "CONFIRMED"})
+    assert confirm.status_code == 200
+    assert confirm.json()["data"]["status"] == "CONFIRMED"
+
+    company = client.get("/api/companies/me", headers=emp_h).json()["data"]
+    denied_inv = client.post("/api/invoices", headers=cand_h, json={"company_id": company["id"], "amount": 5000})
+    assert denied_inv.status_code == 403
+    invoice = client.post(
+        "/api/invoices",
+        headers=admin_h,
+        json={"company_id": company["id"], "amount": 5000, "due_date": "2026-09-15"},
+    )
+    assert invoice.status_code == 200
+    inv_id = invoice.json()["data"]["id"]
+    assert invoice.json()["data"]["number"].startswith("F-")
+    sent = client.post(f"/api/invoices/{inv_id}/send", headers=admin_h)
+    assert sent.json()["data"]["status"] == "SENT"
+    paid = client.post(f"/api/invoices/{inv_id}/payments", headers=admin_h, json={"amount": 5000, "method": "TRANSFER"})
+    assert paid.json()["data"]["status"] == "PAID"
+
+    from app.database import SessionLocal
+    from app.models import Contract
+    from app.models.enums import ContractStatus
+
+    db = SessionLocal()
+    contract = Contract(company_id=company["id"], type="Succès", terms="16 % au succès.", status=ContractStatus.ACTIVE, document_name="mandat.pdf")
+    db.add(contract)
+    db.commit()
+    cid = contract.id
+    db.close()
+    signed = client.post(
+        f"/api/contracts/{cid}/sign",
+        headers=emp_h,
+        json={"signer_name": "Jean Rivest", "accepted": True},
+    )
+    assert signed.status_code == 200
+    assert signed.json()["data"]["signed"] is True
+    assert len(signed.json()["data"]["signature"]["document_hash"]) == 64
+    again = client.post(f"/api/contracts/{cid}/sign", headers=emp_h, json={"signer_name": "Jean Rivest", "accepted": True})
+    assert again.status_code == 409
+
+    emails = client.get("/api/emails", headers=admin_h)
+    assert emails.status_code == 200
+    assert any(row.get("subject") for row in emails.json()["data"])

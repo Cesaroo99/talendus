@@ -52,6 +52,7 @@ class Application(Base):
     resume_id: Mapped[str | None] = mapped_column(ForeignKey("resumes.id"))
     status: Mapped[ApplicationStatus] = mapped_column(Enum(ApplicationStatus), default=ApplicationStatus.SUBMITTED, index=True)
     cover_note: Mapped[str | None] = mapped_column(Text)
+    match_score: Mapped[int | None] = mapped_column(Integer)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
 

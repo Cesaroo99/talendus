@@ -21,6 +21,13 @@ PERMISSIONS: dict[str, set[UserRole]] = {
     "finance:read": {UserRole.ADMIN, UserRole.FINANCE},
     "content:manage": {UserRole.ADMIN, UserRole.EDITOR},
     "notifications:self": set(UserRole),
+    "messages:use": set(UserRole),
+    "interviews:manage": {UserRole.RECRUITER, UserRole.ADMIN},
+    "interviews:own": {UserRole.CANDIDATE, UserRole.EMPLOYER, UserRole.RECRUITER, UserRole.ADMIN},
+    "invoices:manage": {UserRole.ADMIN, UserRole.FINANCE},
+    "invoices:read": {UserRole.ADMIN, UserRole.FINANCE, UserRole.EMPLOYER, UserRole.RECRUITER},
+    "contracts:sign": {UserRole.EMPLOYER, UserRole.ADMIN, UserRole.RECRUITER},
+    "matching:read": {UserRole.CANDIDATE, UserRole.EMPLOYER, UserRole.RECRUITER, UserRole.ADMIN},
 }
 
 

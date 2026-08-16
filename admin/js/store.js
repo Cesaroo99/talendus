@@ -203,7 +203,7 @@
         var json = await window.TalendusAPI.bootstrap();
         var d = json && json.data;
         if (!d) return false;
-        ["candidates", "clients", "jobs", "missions", "contracts", "notes", "notifications", "activities"].forEach(function (key) {
+        ["candidates", "clients", "jobs", "missions", "contracts", "notes", "notifications", "activities", "interviews", "invoices", "payments", "jobMatches"].forEach(function (key) {
           if (Array.isArray(d[key])) state[key] = d[key];
         });
         if (Array.isArray(d.users) && d.users.length) {

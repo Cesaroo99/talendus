@@ -31,6 +31,7 @@ Toutes les valeurs sensibles sont lues depuis l’environnement (fichier `.env` 
 | `STORAGE_DIR` | Répertoire des CV |
 | `MAX_RESUME_MB` | Taille max d’un CV |
 | `SEED_PASSWORD` | Mot de passe des comptes de démonstration |
+| `LINKEDIN_CLIENT_ID` / `LINKEDIN_CLIENT_SECRET` | Optionnel — publication LinkedIn (le partage d’URL fonctionne sans) |
 
 Voir `.env.example`.
 
@@ -136,11 +137,18 @@ Erreur :
 | POST | `/auth/forgot-password` `/auth/reset-password` `/auth/change-password` `/auth/verify-email` | mixte |
 | GET/PATCH | `/users/me` | oui |
 | GET/PATCH | `/candidates/me` + expériences, formation, certifications, CV | candidat |
-| GET | `/jobs` `/jobs/{slug}` | public |
+| GET | `/jobs` `/jobs/{slug}` `/jobs/board` `/job-board` | public |
 | POST | `/jobs` + publish/pause/close/archive | employeur / recruteur / admin |
 | POST | `/applications` `/applications/public` | candidat / public |
 | GET | `/applications/me` | candidat |
 | POST | `/applications/{id}/status` | staff |
+| GET | `/matching/jobs` | candidat |
+| GET | `/matching/jobs/{id}/candidates` | staff / employeur |
+| GET/POST | `/messages` `/messages/directory` `/messages/{user_id}` | oui |
+| GET/POST | `/interviews` + `/interviews/{id}/status` | mixte |
+| GET/POST | `/invoices` + send + payments | finance / admin (lecture recruteur / employeur) |
+| GET/POST | `/contracts` `/contracts/{id}/sign` | mixte |
+| GET | `/integrations/linkedin` | public |
 | GET | `/notifications` `/notifications/unread` | oui |
 | GET | `/admin/bootstrap` `/admin/users` `/admin/audit` `/admin/stats` `/emails` | staff / admin |
 | POST | `/admin/candidates` | recruteur / admin |
@@ -150,9 +158,9 @@ La documentation interactive liste tous les schémas.
 
 ## Notifications et e-mails
 
-Les événements (compte créé, candidature, changement de statut, CV, entretien) créent une notification en base. Les templates texte sont dans `app/emails/templates/`. Chaque envoi est d’abord journalisé (`QUEUED`) puis traité par un worker en arrière-plan lorsque SMTP est activé. Un échec d’envoi n’annule pas la candidature.
+Les événements (compte créé, candidature, changement de statut, CV, entretien, message) créent une notification en base. Les templates texte sont dans `app/emails/templates/`. Chaque envoi est d’abord journalisé (`QUEUED`, corps persisté) puis traité par un worker qui relit la file en base lorsque SMTP est activé. Un échec d’envoi n’annule pas la candidature. Redis / Celery restent optionnels plus tard.
 
-Espace candidat public : `/espace.html` (EN : `/en/account.html`). Le back-office `/admin/` hydrate candidats, clients, offres, missions et notifications depuis `GET /api/admin/bootstrap`.
+Espace candidat public : `/espace.html` (EN : `/en/account.html`) — profil, CV, correspondances, candidatures, entretiens, messages, notifications. Le back-office `/admin/` hydrate aussi factures, paiements et entretiens depuis `GET /api/admin/bootstrap`.
 
 ## Sécurité
 
@@ -169,7 +177,16 @@ cd backend
 pytest -q
 ```
 
-Couvrent inscription, connexion, permissions, publication d’offre, candidature, doublon, statut, notifications et accès interdit.
+Couvrent inscription, connexion, permissions, publication d’offre, candidature, doublon, statut, notifications, matching, messagerie, entretiens, factures, signature interne et accès interdit.
+
+## Modules opérationnels
+
+- **Matching** : score déterministe 0–100 (compétences, ville, secteur, expérience, salaire). Pas d’IA générative. Le score est aussi stocké sur la candidature.
+- **Messagerie** : fils REST candidat ↔ recruteur / employeur, avec contrôle d’accès. Pas de WebSocket.
+- **Entretiens** : CRUD lié à une candidature, confirmation candidat, notification + e-mail.
+- **Signature interne** : nom, date, IP, empreinte SHA-256 du mandat. Ce n’est pas DocuSign ni une valeur légale tierce.
+- **Facturation** : factures et paiements en base (finance / admin). Pas de Stripe sans clés.
+- **Job board** : `GET /api/job-board` (JSON). Partage LinkedIn via URL officielle. Publication automatique seulement si `LINKEDIN_CLIENT_ID` / `LINKEDIN_CLIENT_SECRET` sont définis (`posting_enabled`).
 
 ## Déploiement
 
@@ -180,6 +197,6 @@ Couvrent inscription, connexion, permissions, publication d’offre, candidature
 5. Volume persistant pour `STORAGE_DIR`
 6. Le front existant appelle `/api` ; en production, servir l’API et le site sous le même domaine ou ajuster `CORS_ORIGINS`
 
-## Évolutions prévues (non implémentées)
+## Non livré volontairement
 
-Matching / scoring, messagerie, calendrier d’entretiens, signature, facturation CRM, intégrations job boards. Les modèles (`RecruitmentMission`, `Contract`, `InternalNote`, `Role` / `Permission`) sont déjà en place pour le back-office.
+Matching LLM, WebSockets, visioconférence Zoom, DocuSign, encaissement Stripe, Redis/Celery obligatoire, publication LinkedIn sans identifiants OAuth.

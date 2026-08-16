@@ -82,5 +82,38 @@ class EmailStatus(str, Enum):
     FAILED = "FAILED"
 
 
+class InterviewType(str, Enum):
+    TALENDUS = "TALENDUS"
+    CLIENT = "CLIENT"
+    PHONE = "PHONE"
+    VIDEO = "VIDEO"
+    ONSITE = "ONSITE"
+    OFFER = "OFFER"
+
+
+class InterviewStatus(str, Enum):
+    SCHEDULED = "SCHEDULED"
+    CONFIRMED = "CONFIRMED"
+    COMPLETED = "COMPLETED"
+    CANCELLED = "CANCELLED"
+    NO_SHOW = "NO_SHOW"
+
+
+class InvoiceStatus(str, Enum):
+    DRAFT = "DRAFT"
+    SENT = "SENT"
+    PENDING = "PENDING"
+    PAID = "PAID"
+    OVERDUE = "OVERDUE"
+    CANCELLED = "CANCELLED"
+
+
+class PaymentMethod(str, Enum):
+    TRANSFER = "TRANSFER"
+    CHEQUE = "CHEQUE"
+    CARD = "CARD"
+    OTHER = "OTHER"
+
+
 OPEN_JOB_STATUSES = {JobStatus.PUBLISHED}
 PUBLIC_JOB_STATUSES = {JobStatus.PUBLISHED, JobStatus.PAUSED}

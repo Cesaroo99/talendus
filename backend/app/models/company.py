@@ -46,6 +46,7 @@ class Contract(Base):
     document_name: Mapped[str | None] = mapped_column(String(255))
 
     company: Mapped[Company] = relationship(back_populates="contracts")
+    signatures: Mapped[list["ContractSignature"]] = relationship(back_populates="contract")
 
 
 class RecruitmentMission(Base):

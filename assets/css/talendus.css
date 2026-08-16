@@ -1628,6 +1628,35 @@ table, .tl-job-card p, .tl-card .body p { color: var(--tl-navy); }
   background: #fff;
 }
 .tl-account-notif.is-unread { border-color: var(--tl-orange); }
+.tl-account-notif[data-open-thread] {
+  display: block;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+.tl-match-score {
+  display: inline-block;
+  background: var(--tl-navy);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 4px 10px;
+  margin: 0 6px 8px 0;
+}
+.tl-msg-layout { display: grid; gap: 20px; }
+@media (min-width: 900px) {
+  .tl-msg-layout { grid-template-columns: 1fr 1.2fr; align-items: start; }
+}
+.tl-share-linkedin {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  color: var(--tl-navy);
+  margin-top: 12px;
+}
+.tl-share-linkedin:hover { color: var(--tl-orange); }
 @media (max-width: 1199px) {
   .tl-header-tools .tl-account-link { display: none; }
 }

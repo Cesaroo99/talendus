@@ -1,8 +1,9 @@
-from datetime import datetime
+from urllib.parse import quote
 
 from sqlalchemy import Select, case, func, or_, select
 from sqlalchemy.orm import Session, joinedload
 
+from app.config import get_settings
 from app.deps import slugify
 from app.errors import AppError
 from app.models import Company, JobOffer, User
@@ -24,7 +25,20 @@ def _unique_slug(db: Session, base: str, ignore_id: str | None = None) -> str:
         i += 1
 
 
+def public_job_url(job: JobOffer, lang: str = "fr") -> str:
+    base = get_settings().frontend_url.rstrip("/")
+    if lang == "en":
+        return f"{base}/en/job-{job.slug}.html"
+    return f"{base}/emploi-{job.slug}.html"
+
+
+def linkedin_share_url(url: str) -> str:
+    return "https://www.linkedin.com/sharing/share-offsite/?url=" + quote(url, safe="")
+
+
 def serialize_job(job: JobOffer) -> dict:
+    url_fr = public_job_url(job, "fr")
+    url_en = public_job_url(job, "en")
     return {
         "id": job.id,
         "slug": job.slug,
@@ -50,6 +64,39 @@ def serialize_job(job: JobOffer) -> dict:
         "company_id": job.company_id,
         "company_name": job.company.name if job.company else None,
         "url": f"emploi-{job.slug}.html",
+        "public_url": url_fr,
+        "share": {
+            "linkedin": linkedin_share_url(url_fr),
+            "linkedin_en": linkedin_share_url(url_en),
+        },
+    }
+
+
+def export_board(db: Session) -> dict:
+    items, _total = search_jobs(db, public_only=True, page=1, page_size=50, sort="published_at")
+    return {
+        "source": "Talendus",
+        "url": get_settings().frontend_url,
+        "updated_at": utcnow().isoformat(),
+        "jobs": [
+            {
+                "id": job.id,
+                "slug": job.slug,
+                "title": job.title,
+                "description": job.description,
+                "location": job.location,
+                "sector": job.sector,
+                "employment_type": job.contract_type,
+                "salary": job.salary_display,
+                "skills": job.skills,
+                "date_posted": job.published_at.isoformat() if job.published_at else None,
+                "valid_through": job.expires_at.isoformat() if job.expires_at else None,
+                "url": public_job_url(job),
+                "company": job.company.name if job.company else "Talendus",
+            }
+            for job in items
+            if job.status.value == "PUBLISHED"
+        ],
     }
 
 

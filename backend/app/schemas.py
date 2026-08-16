@@ -3,7 +3,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
-from app.models.enums import ApplicationStatus, JobStatus, UserRole
+from app.models.enums import ApplicationStatus, InterviewStatus, InterviewType, InvoiceStatus, JobStatus, PaymentMethod, UserRole
 
 
 class ORMModel(BaseModel):
@@ -268,3 +268,61 @@ class AdminCandidateIn(BaseModel):
     title: str | None = None
     sector: str | None = None
     password: str | None = Field(default=None, min_length=8, max_length=128)
+
+
+class MessageIn(BaseModel):
+    recipient_id: str
+    body: str = Field(min_length=1, max_length=4000)
+    application_id: str | None = None
+
+
+class InterviewIn(BaseModel):
+    candidate_id: str
+    application_id: str | None = None
+    job_id: str | None = None
+    company_id: str | None = None
+    scheduled_at: str
+    duration_minutes: int | None = Field(default=30, ge=10, le=240)
+    location: str | None = None
+    type: InterviewType | None = None
+    notes: str | None = None
+
+
+class InterviewPatchIn(BaseModel):
+    scheduled_at: str | None = None
+    duration_minutes: int | None = Field(default=None, ge=10, le=240)
+    location: str | None = None
+    type: InterviewType | None = None
+    notes: str | None = None
+    status: InterviewStatus | None = None
+
+
+class InterviewStatusIn(BaseModel):
+    status: InterviewStatus
+
+
+class InvoiceIn(BaseModel):
+    company_id: str
+    mission_id: str | None = None
+    amount: int = Field(ge=1)
+    currency: str | None = "CAD"
+    issued_at: str | None = None
+    due_date: str | None = None
+    notes: str | None = None
+
+
+class InvoiceStatusIn(BaseModel):
+    status: InvoiceStatus
+
+
+class PaymentIn(BaseModel):
+    amount: int = Field(ge=1)
+    method: PaymentMethod | None = None
+    paid_at: str | None = None
+    reference: str | None = None
+
+
+class ContractSignIn(BaseModel):
+    signer_name: str = Field(min_length=2, max_length=160)
+    signer_email: EmailStr | None = None
+    accepted: bool = True

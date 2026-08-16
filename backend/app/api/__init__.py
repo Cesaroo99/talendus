@@ -1,4 +1,20 @@
-from app.api import admin, applications, auth, candidates, companies, jobs, notifications, public, recruiters, users
+from app.api import (
+    admin,
+    applications,
+    auth,
+    candidates,
+    companies,
+    contracts,
+    interviews,
+    invoices,
+    jobs,
+    matching,
+    messages,
+    notifications,
+    public,
+    recruiters,
+    users,
+)
 
 __all__ = [
     "admin",
@@ -6,7 +22,12 @@ __all__ = [
     "auth",
     "candidates",
     "companies",
+    "contracts",
+    "interviews",
+    "invoices",
     "jobs",
+    "matching",
+    "messages",
     "notifications",
     "public",
     "recruiters",

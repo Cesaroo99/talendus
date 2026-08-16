@@ -23,6 +23,9 @@
       apps: "Applications",
       notifs: "Notifications",
       cv: "Resume",
+      matches: "Matches",
+      messages: "Messages",
+      interviews: "Interviews",
       save: "Save",
       city: "City",
       title: "Target role",
@@ -32,12 +35,21 @@
       upload: "Upload a PDF, DOC or DOCX",
       emptyApps: "No applications yet.",
       emptyNotifs: "No notifications.",
+      emptyMatches: "No matching roles yet — complete your skills and city.",
+      emptyMsgs: "No messages yet.",
+      emptyInts: "No interviews scheduled.",
       markAll: "Mark all as read",
       welcome: "Your industrial file",
       guest: "Sign in to follow your applications.",
       err: "Something went wrong.",
       saved: "Profile updated.",
-      uploaded: "Resume saved."
+      uploaded: "Resume saved.",
+      send: "Send",
+      confirm: "Confirm",
+      cancel: "Cancel",
+      to: "To",
+      write: "Your message",
+      score: "Match"
     } : {
       login: "Connexion",
       register: "Créer un compte",
@@ -52,6 +64,9 @@
       apps: "Candidatures",
       notifs: "Notifications",
       cv: "CV",
+      matches: "Correspondances",
+      messages: "Messages",
+      interviews: "Entretiens",
       save: "Enregistrer",
       city: "Ville",
       title: "Métier visé",
@@ -61,12 +76,21 @@
       upload: "Téléverser un PDF, DOC ou DOCX",
       emptyApps: "Aucune candidature pour le moment.",
       emptyNotifs: "Aucune notification.",
+      emptyMatches: "Aucune offre correspondant encore à votre profil — complétez ville et compétences.",
+      emptyMsgs: "Aucun message pour le moment.",
+      emptyInts: "Aucun entretien planifié.",
       markAll: "Tout marquer comme lu",
       welcome: "Votre dossier industriel",
       guest: "Connectez-vous pour suivre vos candidatures.",
       err: "Une erreur s’est produite.",
       saved: "Profil mis à jour.",
-      uploaded: "CV enregistré."
+      uploaded: "CV enregistré.",
+      send: "Envoyer",
+      confirm: "Confirmer",
+      cancel: "Annuler",
+      to: "Destinataire",
+      write: "Votre message",
+      score: "Score"
     };
 
     function esc(v) {
@@ -82,7 +106,12 @@
         INTERVIEW: isEn ? "Interview" : "Entretien",
         REJECTED: isEn ? "Declined" : "Refusée",
         HIRED: isEn ? "Hired" : "Embauché",
-        WITHDRAWN: isEn ? "Withdrawn" : "Retirée"
+        WITHDRAWN: isEn ? "Withdrawn" : "Retirée",
+        SCHEDULED: isEn ? "Scheduled" : "Planifié",
+        CONFIRMED: isEn ? "Confirmed" : "Confirmé",
+        COMPLETED: isEn ? "Completed" : "Terminé",
+        CANCELLED: isEn ? "Cancelled" : "Annulé",
+        NO_SHOW: isEn ? "No-show" : "Absent"
       };
       return map[s] || s;
     }
@@ -126,14 +155,18 @@
       });
     }
 
-    function renderApp(user, profile, apps, notifs) {
+    function renderApp(user, profile, apps, notifs, matches, threads, directory, interviews) {
       var unread = (notifs || []).filter(function (n) { return !n.is_read; }).length;
+      var unreadMsg = (threads || []).reduce(function (s, th) { return s + (th.unread || 0); }, 0);
       root.innerHTML = '<div class="tl-account-head"><div><div class="tl-kicker">' + esc(user.email) + "</div>" +
         '<h2 class="tl-h2">' + esc((user.first_name || "") + " " + (user.last_name || "")) + "</h2></div>" +
         '<button class="tl-btn tl-btn-ghost" type="button" id="acc-logout">' + esc(t.logout) + "</button></div>" +
         '<div class="tl-account-tabs" role="tablist">' +
         '<button type="button" class="is-active" data-tab="profile">' + esc(t.profile) + "</button>" +
+        '<button type="button" data-tab="matches">' + esc(t.matches) + "</button>" +
         '<button type="button" data-tab="apps">' + esc(t.apps) + " (" + (apps || []).length + ")</button>" +
+        '<button type="button" data-tab="interviews">' + esc(t.interviews) + "</button>" +
+        '<button type="button" data-tab="messages">' + esc(t.messages) + (unreadMsg ? " · " + unreadMsg : "") + "</button>" +
         '<button type="button" data-tab="notifs">' + esc(t.notifs) + (unread ? " · " + unread : "") + "</button>" +
         '<button type="button" data-tab="cv">' + esc(t.cv) + "</button></div>" +
         '<div class="tl-account-panel" data-panel="profile">' +
@@ -144,7 +177,10 @@
         "<label>" + esc(t.sector) + '</label><input name="sector" value="' + esc(profile.sector || "") + '">' +
         "<label>" + esc(t.skills) + '</label><input name="skills" value="' + esc(profile.skills || "") + '">' +
         '<button class="tl-btn" type="submit">' + esc(t.save) + '</button><div class="tl-success"></div></form></div>' +
+        '<div class="tl-account-panel" data-panel="matches" hidden>' + renderMatches(matches) + "</div>" +
         '<div class="tl-account-panel" data-panel="apps" hidden>' + renderApps(apps) + "</div>" +
+        '<div class="tl-account-panel" data-panel="interviews" hidden>' + renderInterviews(interviews) + "</div>" +
+        '<div class="tl-account-panel" data-panel="messages" hidden>' + renderMessages(threads, directory) + "</div>" +
         '<div class="tl-account-panel" data-panel="notifs" hidden>' + renderNotifs(notifs) + "</div>" +
         '<div class="tl-account-panel" data-panel="cv" hidden><form class="tl-form" id="acc-cv">' +
         "<label>" + esc(t.upload) + '</label><input name="file" type="file" accept=".pdf,.doc,.docx,application/pdf" required>' +
@@ -192,6 +228,8 @@
       });
       var mark = document.getElementById("acc-readall");
       if (mark) mark.onclick = function () { api.request("/notifications/read-all", { method: "POST" }).then(boot); };
+      bindMessages();
+      bindInterviews();
     }
 
     function renderApps(apps) {
@@ -199,11 +237,97 @@
       return '<div class="tl-grid-2">' + apps.map(function (a) {
         var job = a.job || {};
         var href = (isEn ? "job-" : "emploi-") + (job.slug || "") + ".html";
-        return '<article class="tl-job-card"><div class="body"><span class="tl-chip orange">' + esc(statusLabel(a.status)) + "</span>" +
+        var score = a.match_score != null ? '<span class="tl-match-score">' + esc(t.score) + " " + a.match_score + " %</span>" : "";
+        return '<article class="tl-job-card"><div class="body"><span class="tl-chip orange">' + esc(statusLabel(a.status)) + "</span>" + score +
           "<h3>" + esc(job.title || "") + "</h3><p>" + esc(job.company_name || "") + " · " + esc(job.location || "") + "</p>" +
           (job.slug ? '<a class="tl-split-cta" href="' + href + '" style="color:var(--tl-orange);margin-top:auto;padding-top:14px">' + (isEn ? "View role →" : "Voir le poste →") + "</a>" : "") +
           "</div></article>";
       }).join("") + "</div>";
+    }
+
+    function renderMatches(matches) {
+      if (!matches || !matches.length) return "<p>" + esc(t.emptyMatches) + "</p>";
+      return '<div class="tl-grid-2">' + matches.map(function (m) {
+        var job = m.job || {};
+        var href = (isEn ? "job-" : "emploi-") + (job.slug || "") + ".html";
+        var reasons = (m.reasons || []).slice(0, 3).map(function (r) { return esc(r); }).join(" · ");
+        return '<article class="tl-job-card"><div class="body"><span class="tl-match-score">' + (m.score || 0) + " %</span>" +
+          "<h3>" + esc(job.title || "") + "</h3><p>" + esc(job.company_name || "") + " · " + esc(job.location || "") + "</p>" +
+          "<p>" + reasons + "</p>" +
+          (job.slug ? '<a class="tl-split-cta" href="' + href + '" style="color:var(--tl-orange);margin-top:auto;padding-top:14px">' + (isEn ? "View role →" : "Voir le poste →") + "</a>" : "") +
+          "</div></article>";
+      }).join("") + "</div>";
+    }
+
+    function renderInterviews(items) {
+      if (!items || !items.length) return "<p>" + esc(t.emptyInts) + "</p>";
+      return "<div class='tl-account-notifs'>" + items.map(function (i) {
+        var when = (i.scheduled_at || "").replace("T", " ").slice(0, 16);
+        var actions = "";
+        if (i.status === "SCHEDULED") {
+          actions = '<p><button type="button" class="tl-btn tl-btn-ghost" data-int-status="CONFIRMED" data-int-id="' + esc(i.id) + '">' + esc(t.confirm) +
+            '</button> <button type="button" class="tl-btn tl-btn-ghost" data-int-status="CANCELLED" data-int-id="' + esc(i.id) + '">' + esc(t.cancel) + "</button></p>";
+        }
+        return '<div class="tl-account-notif"><b>' + esc(i.type_label || i.type) + " · " + esc(statusLabel(i.status)) + "</b>" +
+          "<p>" + esc(when) + " · " + esc(i.location || "") + (i.job_title ? " · " + esc(i.job_title) : "") + "</p>" + actions + "</div>";
+      }).join("") + "</div>";
+    }
+
+    function renderMessages(threads, directory) {
+      var opts = (directory || []).map(function (p) {
+        return '<option value="' + esc(p.id) + '">' + esc((p.first_name || "") + " " + (p.last_name || "") + " — " + (p.role || "")) + "</option>";
+      }).join("");
+      var list = (!threads || !threads.length) ? "<p>" + esc(t.emptyMsgs) + "</p>" : threads.map(function (th) {
+        return '<button type="button" class="tl-account-notif' + (th.unread ? " is-unread" : "") + '" data-open-thread="' + esc(th.user_id) + '"><b>' +
+          esc((th.first_name || "") + " " + (th.last_name || "")) + "</b><p>" + esc(th.last_message || "") + "</p></button>";
+      }).join("");
+      return '<div class="tl-msg-layout"><div>' + list + "</div>" +
+        '<form class="tl-form" id="acc-msg"><label>' + esc(t.to) + '</label><select name="recipient_id" required>' + opts + "</select>" +
+        "<label>" + esc(t.write) + '</label><textarea name="body" rows="4" required maxlength="4000"></textarea>' +
+        '<button class="tl-btn" type="submit">' + esc(t.send) + '</button><div class="tl-success"></div>' +
+        '<div id="acc-thread"></div></form></div>';
+    }
+
+    function bindMessages() {
+      var form = document.getElementById("acc-msg");
+      if (form) {
+        form.addEventListener("submit", function (e) {
+          e.preventDefault();
+          var d = Object.fromEntries(new FormData(form).entries());
+          api.request("/messages", { method: "POST", body: { recipient_id: d.recipient_id, body: d.body } }).then(function () {
+            boot();
+          }).catch(function (err) {
+            var box = form.querySelector(".tl-success");
+            box.style.display = "block";
+            box.textContent = (err && err.message) || t.err;
+          });
+        });
+      }
+      root.querySelectorAll("[data-open-thread]").forEach(function (btn) {
+        btn.onclick = function () {
+          var id = btn.getAttribute("data-open-thread");
+          var select = root.querySelector("#acc-msg [name=recipient_id]");
+          if (select) select.value = id;
+          api.request("/messages/" + id).then(function (json) {
+            var box = document.getElementById("acc-thread");
+            if (!box) return;
+            box.innerHTML = (json.data || []).map(function (m) {
+              return "<p><b>" + esc(m.sender_name || "") + "</b> — " + esc(m.body) + "</p>";
+            }).join("");
+          }).catch(function () {});
+        };
+      });
+    }
+
+    function bindInterviews() {
+      root.querySelectorAll("[data-int-status]").forEach(function (btn) {
+        btn.onclick = function () {
+          api.request("/interviews/" + btn.getAttribute("data-int-id") + "/status", {
+            method: "POST",
+            body: { status: btn.getAttribute("data-int-status") }
+          }).then(boot).catch(function () {});
+        };
+      });
     }
 
     function renderNotifs(notifs) {
@@ -228,9 +352,13 @@
         api.me().then(function (j) { return j.data; }),
         api.request("/candidates/me").then(function (j) { return j.data; }).catch(function () { return {}; }),
         api.myApplications().then(function (j) { return j.data || []; }).catch(function () { return []; }),
-        api.notifications().then(function (j) { return j.data || []; }).catch(function () { return []; })
+        api.notifications().then(function (j) { return j.data || []; }).catch(function () { return []; }),
+        api.request("/matching/jobs").then(function (j) { return j.data || []; }).catch(function () { return []; }),
+        api.request("/messages").then(function (j) { return j.data || []; }).catch(function () { return []; }),
+        api.request("/messages/directory").then(function (j) { return j.data || []; }).catch(function () { return []; }),
+        api.request("/interviews").then(function (j) { return j.data || []; }).catch(function () { return []; })
       ]).then(function (rows) {
-        renderApp(rows[0], rows[1] || {}, rows[2], rows[3]);
+        renderApp(rows[0], rows[1] || {}, rows[2], rows[3], rows[4], rows[5], rows[6], rows[7]);
       }).catch(function () { renderGuest(); });
     }
 

@@ -10,6 +10,7 @@ from app.models.company import Company, Contract, RecruitmentMission
 from app.models.enums import *  # noqa: F401,F403
 from app.models.identity import EmailToken, PasswordHistory, Recruiter, RefreshToken, User
 from app.models.job import Application, ApplicationStatusHistory, JobOffer
+from app.models.ops import ContractSignature, Interview, Invoice, Message, Payment
 from app.models.rbac import Permission, Role
 
 __all__ = [
@@ -31,4 +32,9 @@ __all__ = [
     "AuditLog",
     "Role",
     "Permission",
+    "Message",
+    "Interview",
+    "Invoice",
+    "Payment",
+    "ContractSignature",
 ]

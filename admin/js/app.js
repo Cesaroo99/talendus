@@ -521,7 +521,12 @@
           <h3 style="margin-top:16px">Contacts</h3>
           <p><b>${U.esc(c.contact)}</b><br>${U.esc(c.email)}<br>${U.esc(c.phone)}</p>
         </div>
-        <div class="card card-pad"><h3>Contrats</h3>${contracts.map(function (ct) { return "<p><b>" + U.esc(ct.type) + "</b> · " + U.badge(ct.status) + "<br>Commission " + ct.commission + " % · " + U.dateFr(ct.start) + " → " + U.dateFr(ct.end) + "<br><span style='color:var(--steel)'>" + U.esc(ct.terms) + "</span></p>"; }).join("") || "<p>Aucun contrat.</p>"}</div>
+        <div class="card card-pad"><h3>Contrats</h3>${contracts.map(function (ct) {
+          var signBtn = ct.signed
+            ? "<p style='color:var(--steel);font-size:12px'>Signé " + U.esc(ct.signedAt || "") + " · " + U.esc(ct.signerName || "") + (ct.documentHash ? "<br>Hash " + U.esc(ct.documentHash.slice(0, 12)) + "…" : "") + "</p>"
+            : '<button class="btn btn-ghost btn-sm" data-sign-contract="' + ct.id + '">Enregistrer la signature</button>';
+          return "<p><b>" + U.esc(ct.type) + "</b> · " + U.badge(ct.status) + "<br>Commission " + ct.commission + " % · " + U.dateFr(ct.start) + " → " + U.dateFr(ct.end) + "<br><span style='color:var(--steel)'>" + U.esc(ct.terms) + "</span></p>" + signBtn;
+        }).join("") || "<p>Aucun contrat.</p>"}</div>
       </div>
       <div class="grid grid-2" style="margin-top:16px">
         <div class="card card-pad"><h3>Missions</h3>${missions.map(function (m) { return '<p><a href="#/missions/' + m.id + '">' + U.esc(m.title) + "</a> " + U.badge(m.status) + "</p>"; }).join("") || "<p>—</p>"}</div>
@@ -589,6 +594,13 @@
           <div class="row"><span>Expiration</span><b>${U.dateFr(j.expiresAt)}</b></div>
           <div class="row"><span>Candidatures</span><b>${j.applications}</b></div>
         </div>
+      </div>
+      <div class="card card-pad" style="margin-top:16px"><h3>Candidats correspondants (score déterministe)</h3>
+        ${(S().jobMatches || []).filter(function (m) { return m.jobId === id; }).map(function (m) {
+          var c = TLStore.candidate(m.candidateId);
+          if (!c) return "";
+          return '<p><a href="#/candidates/' + c.id + '">' + U.esc(c.firstName + " " + c.lastName) + "</a> — " + m.score + " % · " + U.esc((m.reasons || []).slice(0, 2).join(" · ")) + "</p>";
+        }).join("") || "<p>Aucun profil au-dessus du seuil pour le moment.</p>"}
       </div>`;
   }
 
@@ -851,6 +863,18 @@
               render();
               return;
             }
+            if (type === "invoice" && window.TalendusAPI) {
+              await window.TalendusAPI.createInvoice({
+                company_id: d.clientId,
+                mission_id: d.missionId || null,
+                amount: Number(d.amount) || 0
+              });
+              await TLStore.hydrateFromApi();
+              close();
+              U.toast("Facture créée dans l’API.", "ok");
+              render();
+              return;
+            }
           } catch (err) {
             U.toast((err && err.message) || "Enregistrement API impossible, repli local.", "err");
           }
@@ -1057,10 +1081,69 @@
       if (t.closest("[data-fake-upload]")) U.toast("Téléversement simulé — brancher le stockage fichiers ensuite.", "ok");
       var addInt = t.closest("[data-add-int]");
       if (addInt) {
-        TLStore.update(function (st) {
-          st.interviews.push({ id: TLStore.nid("i"), candidateId: addInt.getAttribute("data-add-int"), clientId: "", type: "Talendus", at: "2026-08-20 10:00", location: "Visio", recruiterId: TLStore.me().id });
+        var cid = addInt.getAttribute("data-add-int");
+        U.modal({
+          title: "Planifier un entretien",
+          body: '<form id="int-form" class="form-grid">' +
+            U.field("Date et heure", "scheduled_at", "2026-08-20T10:00", "datetime-local") +
+            U.field("Lieu", "location", "Visio") +
+            U.field("Type", "type", { options: [{ v: "TALENDUS", l: "Talendus" }, { v: "CLIENT", l: "Client" }, { v: "VIDEO", l: "Visio" }, { v: "PHONE", l: "Téléphone" }, { v: "ONSITE", l: "Sur place" }], selected: "TALENDUS" }, "select") +
+            "</form>",
+          footer: '<button class="btn btn-ghost" data-close>Annuler</button><button class="btn btn-orange" id="save">Planifier</button>',
+          onMount: function (box, close) {
+            box.querySelector("#save").onclick = async function () {
+              var d = U.formData(box.querySelector("#int-form"));
+              try {
+                if (window.TalendusAPI) {
+                  await window.TalendusAPI.createInterview({
+                    candidate_id: cid,
+                    scheduled_at: d.scheduled_at,
+                    location: d.location,
+                    type: d.type
+                  });
+                  await TLStore.hydrateFromApi();
+                  close();
+                  U.toast("Entretien enregistré.", "ok");
+                  render();
+                  return;
+                }
+              } catch (err) {
+                U.toast((err && err.message) || "API indisponible, repli local.", "err");
+              }
+              TLStore.update(function (st) {
+                st.interviews.push({ id: TLStore.nid("i"), candidateId: cid, clientId: "", type: "Talendus", at: d.scheduled_at || "2026-08-20 10:00", location: d.location || "Visio", recruiterId: TLStore.me().id });
+              });
+              close();
+              U.toast("Entretien planifié.", "ok");
+              render();
+            };
+          }
         });
-        U.toast("Entretien planifié.", "ok"); render();
+        return;
+      }
+      var signCt = t.closest("[data-sign-contract]");
+      if (signCt) {
+        var contractId = signCt.getAttribute("data-sign-contract");
+        U.modal({
+          title: "Signature interne du mandat",
+          body: '<form id="sg-form">' + U.field("Nom du signataire", "signer_name", TLStore.me().firstName + " " + TLStore.me().lastName) + "<p>Trace interne : nom, date, IP et empreinte du document. Ce n’est pas une signature notariale ni DocuSign.</p></form>",
+          footer: '<button class="btn btn-ghost" data-close>Annuler</button><button class="btn btn-orange" id="save">Signer</button>',
+          onMount: function (box, close) {
+            box.querySelector("#save").onclick = async function () {
+              var d = U.formData(box.querySelector("#sg-form"));
+              try {
+                await window.TalendusAPI.signContract(contractId, { signer_name: d.signer_name, accepted: true });
+                await TLStore.hydrateFromApi();
+                close();
+                U.toast("Signature enregistrée.", "ok");
+                render();
+              } catch (err) {
+                U.toast((err && err.message) || "Signature impossible.", "err");
+              }
+            };
+          }
+        });
+        return;
       }
       var addCt = t.closest("[data-add-contract]");
       if (addCt) {

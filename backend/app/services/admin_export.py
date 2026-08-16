@@ -9,12 +9,15 @@ from app.models import (
     Company,
     Contract,
     InternalNote,
+    Interview,
+    Invoice,
     JobOffer,
     Notification,
+    Payment,
     RecruitmentMission,
     User,
 )
-from app.models.enums import ApplicationStatus, JobStatus, MissionStatus
+from app.models.enums import ApplicationStatus, InvoiceStatus, JobStatus, MissionStatus
 
 APP_STATUS = {
     ApplicationStatus.SUBMITTED: "nouveau",
@@ -41,6 +44,24 @@ MISSION_STATUS = {
     MissionStatus.CANCELLED: "annulee",
 }
 
+INVOICE_STATUS = {
+    InvoiceStatus.DRAFT: "brouillon",
+    InvoiceStatus.SENT: "envoyee",
+    InvoiceStatus.PENDING: "en-attente",
+    InvoiceStatus.PAID: "payee",
+    InvoiceStatus.OVERDUE: "en-retard",
+    InvoiceStatus.CANCELLED: "annulee",
+}
+
+INTERVIEW_TYPE = {
+    "TALENDUS": "Talendus",
+    "CLIENT": "Client",
+    "PHONE": "Téléphone",
+    "VIDEO": "Visio",
+    "ONSITE": "Sur place",
+    "OFFER": "Offre",
+}
+
 ROLE = {
     "ADMIN": "admin",
     "RECRUITER": "recruiter",
@@ -64,12 +85,39 @@ def bootstrap(db: Session) -> dict:
         )
     ).unique().all()
     missions = db.scalars(select(RecruitmentMission).order_by(RecruitmentMission.created_at.desc())).all()
-    contracts = db.scalars(select(Contract)).all()
+    contracts = db.scalars(select(Contract).options(selectinload(Contract.signatures))).all()
     notes = db.scalars(select(InternalNote).order_by(InternalNote.created_at.desc()).limit(200)).all()
     notifications = db.scalars(select(Notification).order_by(Notification.created_at.desc()).limit(100)).all()
     applications = db.scalars(
         select(Application).options(joinedload(Application.job), joinedload(Application.candidate)).order_by(Application.created_at.desc())
     ).unique().all()
+    interviews = db.scalars(
+        select(Interview).options(joinedload(Interview.candidate).joinedload(Candidate.user)).order_by(Interview.scheduled_at.asc())
+    ).unique().all()
+    invoices = db.scalars(
+        select(Invoice).options(joinedload(Invoice.company), joinedload(Invoice.mission)).order_by(Invoice.created_at.desc())
+    ).unique().all()
+    payments = db.scalars(select(Payment).options(joinedload(Payment.invoice)).order_by(Payment.created_at.desc())).unique().all()
+
+    from app.services.matching import score_pair
+
+    job_matches = []
+    for job in jobs[:12]:
+        ranked = []
+        for cand in candidates:
+            score, reasons = score_pair(cand, job)
+            if score >= 35:
+                ranked.append((score, cand, reasons))
+        ranked.sort(key=lambda x: x[0], reverse=True)
+        for score, cand, reasons in ranked[:5]:
+            job_matches.append(
+                {
+                    "jobId": job.id,
+                    "candidateId": cand.id,
+                    "score": score,
+                    "reasons": reasons,
+                }
+            )
 
     return {
         "users": [_user(u) for u in users if u.role.value in ROLE],
@@ -80,6 +128,10 @@ def bootstrap(db: Session) -> dict:
         "contracts": [_contract(c) for c in contracts],
         "notes": [_note(n) for n in notes],
         "notifications": [_notification(n) for n in notifications],
+        "interviews": [_interview(i) for i in interviews],
+        "invoices": [_invoice(i) for i in invoices],
+        "payments": [_payment(p) for p in payments],
+        "jobMatches": job_matches,
         "activities": [
             {
                 "id": a.id,
@@ -198,6 +250,7 @@ def _mission(m: RecruitmentMission) -> dict:
 
 
 def _contract(c: Contract) -> dict:
+    latest = c.signatures[-1] if getattr(c, "signatures", None) else None
     return {
         "id": c.id,
         "clientId": c.company_id,
@@ -208,6 +261,51 @@ def _contract(c: Contract) -> dict:
         "terms": c.terms or "",
         "status": c.status.value if c.status else "",
         "document": c.document_name or "",
+        "signed": bool(latest),
+        "signedAt": latest.signed_at.strftime("%Y-%m-%d %H:%M") if latest and latest.signed_at else "",
+        "signerName": latest.signer_name if latest else "",
+        "documentHash": latest.document_hash if latest else "",
+    }
+
+
+def _interview(i: Interview) -> dict:
+    when = i.scheduled_at.strftime("%Y-%m-%d %H:%M") if i.scheduled_at else ""
+    return {
+        "id": i.id,
+        "candidateId": i.candidate_id,
+        "clientId": i.company_id or "",
+        "type": INTERVIEW_TYPE.get(i.type.value if i.type else "", i.type.value if i.type else "Talendus"),
+        "at": when,
+        "location": i.location or "",
+        "recruiterId": i.recruiter_id or "",
+        "status": i.status.value if i.status else "SCHEDULED",
+        "jobId": i.job_id or "",
+    }
+
+
+def _invoice(i: Invoice) -> dict:
+    return {
+        "id": i.number,
+        "apiId": i.id,
+        "clientId": i.company_id,
+        "missionId": i.mission_id or "",
+        "amount": i.amount,
+        "date": i.issued_at or "",
+        "due": i.due_date or "",
+        "status": INVOICE_STATUS.get(i.status, "brouillon"),
+    }
+
+
+def _payment(p: Payment) -> dict:
+    method = {"TRANSFER": "Virement", "CHEQUE": "Chèque", "CARD": "Carte", "OTHER": "Autre"}.get(
+        p.method.value if p.method else "", "Virement"
+    )
+    return {
+        "id": p.id,
+        "invoiceId": p.invoice.number if p.invoice else p.invoice_id,
+        "amount": p.amount,
+        "date": p.paid_at or "",
+        "method": method,
     }
 
 

@@ -20,7 +20,11 @@ from app.models import (
     Company,
     Contract,
     InternalNote,
+    Interview,
+    Invoice,
     JobOffer,
+    Message,
+    Payment,
     Permission,
     Recruiter,
     RecruitmentMission,
@@ -32,8 +36,12 @@ from app.models.enums import (
     ApplicationStatus,
     CompanyStatus,
     ContractStatus,
+    InterviewStatus,
+    InterviewType,
+    InvoiceStatus,
     JobStatus,
     MissionStatus,
+    PaymentMethod,
     UserRole,
     utcnow,
 )
@@ -205,22 +213,24 @@ def _seed(db: Session) -> None:
         db.flush()
         jobs[slug] = job
 
-    db.add(
-        RecruitmentMission(
-            company_id=companies["LogiCentre Laval"].id,
-            job_id=jobs["cariste"].id,
-            recruiter_id=marc.id,
-            title="Caristes — pic saisonnier",
-            seats=8,
-            status=MissionStatus.IN_PROGRESS,
-            value=72000,
-            commission=11520,
-            progress=62,
-            start_date="2026-07-15",
-            due_date="2026-09-01",
-        )
+    mission = RecruitmentMission(
+        company_id=companies["LogiCentre Laval"].id,
+        job_id=jobs["cariste"].id,
+        recruiter_id=marc.id,
+        title="Caristes — pic saisonnier",
+        seats=8,
+        status=MissionStatus.IN_PROGRESS,
+        value=72000,
+        commission=11520,
+        progress=62,
+        start_date="2026-07-15",
+        due_date="2026-09-01",
     )
+    db.add(mission)
+    db.flush()
 
+    candidates: dict[str, Candidate] = {}
+    applications: dict[str, Application] = {}
     for email, first, last, title, city, sector, years, skills in CANDIDATES:
         user = User(
             email=email,
@@ -244,6 +254,7 @@ def _seed(db: Session) -> None:
         )
         db.add(cand)
         db.flush()
+        candidates[email] = cand
         db.add(CandidateExperience(candidate_id=cand.id, company="Usine partenaire", role=title, years="2021 — 2026"))
         db.add(CandidateEducation(candidate_id=cand.id, school="Formation professionnelle", diploma="DEP", year="2018"))
         db.add(CandidateCertification(candidate_id=cand.id, name="SST", issuer="CNESST", year="2024"))
@@ -268,9 +279,11 @@ def _seed(db: Session) -> None:
             resume_id=resume.id,
             status=ApplicationStatus.UNDER_REVIEW,
             cover_note="Profil issu de la banque Talendus.",
+            match_score=72,
         )
         db.add(application)
         db.flush()
+        applications[email] = application
         db.add(
             ApplicationStatusHistory(
                 application_id=application.id,
@@ -296,6 +309,63 @@ def _seed(db: Session) -> None:
                 text="Dossier seed — à qualifier selon le quart demandé.",
             )
         )
+
+    karine = candidates["karine.lavoie@email.ca"]
+    hugo = candidates["hugo.belanger@email.ca"]
+    db.add(
+        Interview(
+            candidate_id=hugo.id,
+            application_id=applications["hugo.belanger@email.ca"].id,
+            job_id=jobs["operateur-production"].id,
+            company_id=companies["Alimor"].id,
+            recruiter_id=marc.id,
+            scheduled_at=utcnow() + timedelta(days=2),
+            duration_minutes=30,
+            location="Visio",
+            type=InterviewType.TALENDUS,
+            status=InterviewStatus.SCHEDULED,
+        )
+    )
+    invoice = Invoice(
+        number="F-2026-014",
+        company_id=companies["Alimor"].id,
+        mission_id=mission.id,
+        amount=13260,
+        status=InvoiceStatus.PAID,
+        issued_at="2026-07-02",
+        due_date="2026-08-01",
+    )
+    db.add(invoice)
+    db.flush()
+    db.add(
+        Payment(
+            invoice_id=invoice.id,
+            amount=13260,
+            method=PaymentMethod.TRANSFER,
+            paid_at="2026-07-28",
+            reference="VIR-ALIMOR",
+            recorded_by=users["nathalie.finance@talendus.ca"].id,
+        )
+    )
+    db.add(
+        Invoice(
+            number="F-2026-018",
+            company_id=companies["LogiCentre Laval"].id,
+            mission_id=mission.id,
+            amount=8640,
+            status=InvoiceStatus.PENDING,
+            issued_at="2026-07-28",
+            due_date="2026-08-27",
+        )
+    )
+    db.add(
+        Message(
+            sender_id=marc.id,
+            recipient_id=karine.user_id,
+            application_id=applications["karine.lavoie@email.ca"].id,
+            body="Bonjour Karine, merci pour votre dossier cariste. On se parle sous peu pour le quart de jour à Laval.",
+        )
+    )
 
 
 if __name__ == "__main__":

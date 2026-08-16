@@ -55,7 +55,23 @@ def create_app() -> FastAPI:
     application.add_exception_handler(RequestValidationError, validation_handler)
     application.add_exception_handler(Exception, unhandled_handler)
 
-    from app.api import admin, applications, auth, candidates, companies, jobs, notifications, public, recruiters, users
+    from app.api import (
+        admin,
+        applications,
+        auth,
+        candidates,
+        companies,
+        contracts,
+        interviews,
+        invoices,
+        jobs,
+        matching,
+        messages,
+        notifications,
+        public,
+        recruiters,
+        users,
+    )
 
     application.include_router(public.router, prefix="/api")
     application.include_router(public.emails_router, prefix="/api")
@@ -67,6 +83,11 @@ def create_app() -> FastAPI:
     application.include_router(jobs.router, prefix="/api")
     application.include_router(applications.router, prefix="/api")
     application.include_router(notifications.router, prefix="/api")
+    application.include_router(messages.router, prefix="/api")
+    application.include_router(interviews.router, prefix="/api")
+    application.include_router(invoices.router, prefix="/api")
+    application.include_router(contracts.router, prefix="/api")
+    application.include_router(matching.router, prefix="/api")
     application.include_router(admin.router, prefix="/api")
 
     if SITE_ROOT.joinpath("index.html").exists() and settings.app_env != "test":

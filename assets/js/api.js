@@ -101,6 +101,9 @@
     applyPublic: function (body) { return request("/applications/public", { method: "POST", body: body }); },
     myApplications: function () { return request("/applications/me"); },
     notifications: function (unread) { return request("/notifications" + (unread ? "?unread=true" : "")); },
-    contact: function (body) { return request("/contact", { method: "POST", body: body }); }
+    contact: function (body) { return request("/contact", { method: "POST", body: body }); },
+    createInvoice: function (body) { return request("/invoices", { method: "POST", body: body }); },
+    createInterview: function (body) { return request("/interviews", { method: "POST", body: body }); },
+    signContract: function (id, body) { return request("/contracts/" + id + "/sign", { method: "POST", body: body }); }
   };
 })(window);
