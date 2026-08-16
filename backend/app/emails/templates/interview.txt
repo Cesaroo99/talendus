@@ -1,0 +1,5 @@
+Subject: Invitation à un entretien — {{job_title}}
+{{name}},
+
+Vous êtes invité(e) à un entretien pour le poste « {{job_title}} ».
+{{comment}}

@@ -318,7 +318,7 @@ INDEX_EN = rf"""
         </div>
       </div>
       <div class="col-lg-6 offset-lg-1">
-        <form class="tl-form" action="#" method="post">
+        <form class="tl-form" action="#" method="post" data-form="contact">
           <label for="nom">Name</label>
           <input id="nom" name="nom" required placeholder="Your name">
           <label for="courriel">Email</label>
@@ -533,7 +533,7 @@ def build_en(write, wrap, page_hero):
           </div>
         </div>
         <div class="col-lg-6 offset-lg-1">
-          <form class="tl-form" action="#" method="post">
+          <form class="tl-form" action="#" method="post" data-form="contact">
             <label>Name</label><input required name="nom">
             <label>Email</label><input type="email" required name="courriel">
             <label>Phone</label><input name="tel">
@@ -617,7 +617,7 @@ def build_en(write, wrap, page_hero):
           <div class="tl-kicker">Form</div>
           <h2 class="tl-h2">Describe the role or your profile</h2>
           <p class="tl-lead">Employer: open a mandate. Candidate: submit your resume. An industrial consultant comes back — on average under 30 minutes during business hours.</p>
-          <form class="tl-form" action="#" method="post">
+          <form class="tl-form" action="#" method="post" data-form="contact">
             <label>Name</label><input required name="nom">
             <label>Company (optional)</label><input name="entreprise">
             <label>Email</label><input type="email" required name="courriel">
@@ -739,10 +739,10 @@ def build_en(write, wrap, page_hero):
             </div>
             <div class="col-lg-4 offset-lg-1" id="postuler">
               <h3>Apply</h3>
-              <form class="tl-form"><label>Name</label><input required>
-              <label>Email</label><input type="email" required>
-              <label>Phone</label><input>
-              <label>Resume link</label><input placeholder="https://">
+              <form class="tl-form" data-form="apply" data-job-slug="{slug}"><label>Name</label><input name="name" required>
+              <label>Email</label><input type="email" name="email" required>
+              <label>Phone</label><input name="phone">
+              <label>Resume link</label><input name="resume" placeholder="https://">
               <button class="tl-btn tl-btn-lg" type="submit">Submit my resume</button>
               <div class="tl-success"></div></form>
             </div>

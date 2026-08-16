@@ -1,0 +1,303 @@
+"""Données de démonstration alignées sur le site public et le back-office."""
+
+from __future__ import annotations
+
+import logging
+from datetime import timedelta
+
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from app.config import get_settings
+from app.database import SessionLocal, init_db
+from app.models import (
+    Application,
+    ApplicationStatusHistory,
+    Candidate,
+    CandidateCertification,
+    CandidateEducation,
+    CandidateExperience,
+    Company,
+    Contract,
+    InternalNote,
+    JobOffer,
+    Permission,
+    Recruiter,
+    RecruitmentMission,
+    Resume,
+    Role,
+    User,
+)
+from app.models.enums import (
+    ApplicationStatus,
+    CompanyStatus,
+    ContractStatus,
+    JobStatus,
+    MissionStatus,
+    UserRole,
+    utcnow,
+)
+from app.rbac import PERMISSIONS
+from app.security import hash_password
+
+logger = logging.getLogger("talendus.seed")
+settings = get_settings()
+
+STAFF = [
+    ("sophie.admin@talendus.ca", "Sophie", "Tremblay", UserRole.ADMIN, "Directrice générale", "ST", None),
+    ("marc.recruiter@talendus.ca", "Marc", "Gagnon", UserRole.RECRUITER, "Recruteur senior", "MG", "Métiers d'usine"),
+    ("camille.recruiter@talendus.ca", "Camille", "Bouchard", UserRole.RECRUITER, "Recruteuse industrielle", "CB", "CNC / plasturgie"),
+    ("nathalie.finance@talendus.ca", "Nathalie", "Roy", UserRole.FINANCE, "Contrôleure financière", "NR", None),
+    ("alex.editeur@talendus.ca", "Alexandre", "Fortin", UserRole.EDITOR, "Éditeur de contenu", "AF", None),
+]
+
+COMPANIES = [
+    ("Métalco", "Métallurgie", "Drummondville", "Jean Rivest", "j.rivest@metalco.ca", "819 555-2001", 180, "metalco.example", CompanyStatus.ACTIVE),
+    ("LogiCentre Laval", "Entrepôt", "Laval", "Amélie Fortin", "a.fortin@logicentre.ca", "450 555-2002", 95, "logicentre.example", CompanyStatus.ACTIVE),
+    ("Alimor", "Transformation alimentaire", "Longueuil", "Maude Lavoie", "m.lavoie@alimor.ca", "450 555-2003", 240, "alimor.example", CompanyStatus.ACTIVE),
+    ("Plastika", "Plasturgie", "Saint-Jérôme", "Benoit Gauthier", "b.gauthier@plastika.ca", "450 555-2004", 70, "plastika.example", CompanyStatus.ACTIVE),
+    ("TransQuébec", "Transport", "Anjou", "David Chen", "d.chen@transquebec.ca", "514 555-2005", 130, "transquebec.example", CompanyStatus.ACTIVE),
+    ("Usine Nordique", "Manufacturier", "Québec", "Sylvie Paquet", "s.paquet@nordique.ca", "418 555-2006", 310, "nordique.example", CompanyStatus.ACTIVE),
+    ("Forge Mauricie", "Métallurgie", "Trois-Rivières", "Luc Tremblay", "l.tremblay@forgemauricie.ca", "819 555-2007", 55, "forge.example", CompanyStatus.PROSPECT),
+    ("Distro Plus", "Distribution", "Boucherville", "Cathy Nguyen", "c.nguyen@distroplus.ca", "450 555-2008", 88, "distroplus.example", CompanyStatus.ACTIVE),
+]
+
+JOBS = [
+    ("cariste", "Cariste", "LogiCentre Laval", "Laval", "Entrepôt", "Permanent", 22, 26, "22 à 26 $/h", "Permis chariot, WMS", "1 an", "Quart de jour", JobStatus.PUBLISHED),
+    ("operateur-production", "Opérateur de production", "Alimor", "Longueuil", "Production", "Permanent", 20, 24, "20 à 24 $/h", "Procédures, équipe", "Expérience d'usine", "Quarts rotatifs", JobStatus.PUBLISHED),
+    ("soudeur", "Soudeur-monteur", "Métalco", "Drummondville", "Métallurgie", "Permanent", 28, 34, "28 à 34 $/h", "MIG/TIG, plans", "3 ans", "Quart de jour", JobStatus.PUBLISHED),
+    ("machiniste-cnc", "Machiniste CNC", "Plastika", "Saint-Jérôme", "Manufacturier", "Permanent", 30, 38, "30 à 38 $/h", "Set-up, dessins", "3 ans", "Quart de jour", JobStatus.PUBLISHED),
+    ("electromecanicien", "Électromécanicien", "Usine Nordique", "Montréal", "Maintenance", "Permanent", 32, 40, "32 à 40 $/h", "Hydraulique, électricité", "5 ans", "Quarts rotatifs", JobStatus.PUBLISHED),
+    ("mecanicien-industriel", "Mécanicien industriel", "Forge Mauricie", "Sherbrooke", "Maintenance", "Permanent", 30, 36, "30 à 36 $/h", "Préventif, convoyeurs", "3 ans", "Quart de jour", JobStatus.DRAFT),
+    ("journalier-usine", "Journalier d'usine", "Distro Plus", "Boucherville", "Production", "Permanent", 18, 21, "18 à 21 $/h", "Manutention", "Aucune", "Quart de soir", JobStatus.PUBLISHED),
+    ("superviseur-production", "Superviseur de production", "Alimor", "Trois-Rivières", "Supervision", "Permanent", 70000, 85000, "70 000 à 85 000 $", "Lean, KPI", "5 ans", "Quart de jour", JobStatus.ARCHIVED),
+    ("coordonnateur-logistique", "Coordonnateur logistique", "TransQuébec", "Anjou", "Logistique", "Permanent", 55000, 68000, "55 000 à 68 000 $", "WMS, anglais", "3 ans", "Quart de jour", JobStatus.PUBLISHED),
+    ("directeur-usine", "Directeur d'usine", "Usine Nordique", "Québec", "Cadres", "Permanent", 120000, 150000, "120 000 à 150 000 $", "P&L, Lean", "10 ans", "Quart de jour", JobStatus.PAUSED),
+]
+
+CANDIDATES = [
+    ("karine.lavoie@email.ca", "Karine", "Lavoie", "Cariste", "Laval", "Entrepôt", 6, "Chariot élévateur classe I-IV, WMS, SST"),
+    ("hugo.belanger@email.ca", "Hugo", "Bélanger", "Opérateur de production", "Longueuil", "Production", 4, "Ligne d'assemblage, Contrôle qualité, 5S"),
+    ("nadia.cote@email.ca", "Nadia", "Côté", "Soudeuse-monteuse", "Drummondville", "Métallurgie", 8, "MIG, TIG, Lecture de plans"),
+]
+
+
+def seed_rbac(db: Session) -> None:
+    if db.scalar(select(Role).limit(1)):
+        return
+    perms: dict[str, Permission] = {}
+    for code in PERMISSIONS:
+        perm = Permission(code=code, name=code.replace(":", " ").title())
+        db.add(perm)
+        perms[code] = perm
+    db.flush()
+    labels = {
+        UserRole.CANDIDATE: "Candidat",
+        UserRole.EMPLOYER: "Employeur",
+        UserRole.RECRUITER: "Recruteur",
+        UserRole.ADMIN: "Administrateur",
+        UserRole.FINANCE: "Finance",
+        UserRole.EDITOR: "Éditeur",
+    }
+    for role_enum, label in labels.items():
+        role = Role(code=role_enum.value, name=label)
+        for perm_code, allowed in PERMISSIONS.items():
+            if role_enum == UserRole.ADMIN or role_enum in allowed:
+                role.permissions.append(perms[perm_code])
+        db.add(role)
+
+
+def seed_if_empty() -> None:
+    init_db()
+    db = SessionLocal()
+    try:
+        if db.scalar(select(User).limit(1)):
+            seed_rbac(db)
+            db.commit()
+            return
+        _seed(db)
+        db.commit()
+        logger.info("Base Talendus initialisée (seed).")
+    except Exception:
+        db.rollback()
+        logger.exception("Échec du seed")
+        raise
+    finally:
+        db.close()
+
+
+def _seed(db: Session) -> None:
+    seed_rbac(db)
+    password = hash_password(settings.seed_password)
+    users: dict[str, User] = {}
+    for email, first, last, role, title, initials, specialty in STAFF:
+        user = User(
+            email=email,
+            password_hash=password,
+            first_name=first,
+            last_name=last,
+            role=role,
+            title=title,
+            is_active=True,
+            is_email_verified=True,
+            email_verified_at=utcnow(),
+        )
+        db.add(user)
+        db.flush()
+        if role == UserRole.RECRUITER:
+            db.add(Recruiter(user_id=user.id, initials=initials, specialty=specialty))
+        users[email] = user
+
+    marc = users["marc.recruiter@talendus.ca"]
+    companies: dict[str, Company] = {}
+    for name, sector, city, contact, email, phone, employees, website, status in COMPANIES:
+        company = Company(
+            name=name,
+            sector=sector,
+            city=city,
+            contact_name=contact,
+            email=email,
+            phone=phone,
+            employees=employees,
+            website=website,
+            status=status,
+            assigned_recruiter_id=marc.id,
+        )
+        db.add(company)
+        db.flush()
+        companies[name] = company
+
+    db.add(
+        Contract(
+            company_id=companies["Métalco"].id,
+            type="Retainer + succès",
+            start_date="2026-01-01",
+            end_date="2026-12-31",
+            commission_percent=18,
+            terms="18 % du salaire annuel, garantie 90 jours.",
+            status=ContractStatus.ACTIVE,
+            document_name="contrat-metalco-2026.pdf",
+        )
+    )
+
+    jobs: dict[str, JobOffer] = {}
+    now = utcnow()
+    for slug, title, company_name, city, sector, contract, smin, smax, display, skills, exp, shift, status in JOBS:
+        job = JobOffer(
+            company_id=companies[company_name].id,
+            recruiter_id=marc.id,
+            slug=slug,
+            title=title,
+            description=f"Poste de {title} à {city}. Recrutement industriel Talendus.",
+            location=city,
+            sector=sector,
+            contract_type=contract,
+            salary_min=smin,
+            salary_max=smax,
+            salary_display=display,
+            skills=skills,
+            experience_level=exp,
+            shift=shift,
+            status=status,
+            published_at=now - timedelta(days=10) if status != JobStatus.DRAFT else None,
+        )
+        db.add(job)
+        db.flush()
+        jobs[slug] = job
+
+    db.add(
+        RecruitmentMission(
+            company_id=companies["LogiCentre Laval"].id,
+            job_id=jobs["cariste"].id,
+            recruiter_id=marc.id,
+            title="Caristes — pic saisonnier",
+            seats=8,
+            status=MissionStatus.IN_PROGRESS,
+            value=72000,
+            commission=11520,
+            progress=62,
+            start_date="2026-07-15",
+            due_date="2026-09-01",
+        )
+    )
+
+    for email, first, last, title, city, sector, years, skills in CANDIDATES:
+        user = User(
+            email=email,
+            password_hash=password,
+            first_name=first,
+            last_name=last,
+            role=UserRole.CANDIDATE,
+            is_active=True,
+            is_email_verified=True,
+        )
+        db.add(user)
+        db.flush()
+        cand = Candidate(
+            user_id=user.id,
+            title=title,
+            city=city,
+            sector=sector,
+            years_experience=years,
+            skills=skills,
+            assigned_recruiter_id=marc.id,
+        )
+        db.add(cand)
+        db.flush()
+        db.add(CandidateExperience(candidate_id=cand.id, company="Usine partenaire", role=title, years="2021 — 2026"))
+        db.add(CandidateEducation(candidate_id=cand.id, school="Formation professionnelle", diploma="DEP", year="2018"))
+        db.add(CandidateCertification(candidate_id=cand.id, name="SST", issuer="CNESST", year="2024"))
+        resume = Resume(
+            candidate_id=cand.id,
+            original_name=f"CV_{first}_{last}.pdf",
+            stored_name="seed-placeholder.pdf",
+            mime_type="application/pdf",
+            size_bytes=1024,
+            is_primary=True,
+        )
+        db.add(resume)
+        db.flush()
+        slug = {
+            "Cariste": "cariste",
+            "Opérateur de production": "operateur-production",
+            "Soudeuse-monteuse": "soudeur",
+        }[title]
+        application = Application(
+            candidate_id=cand.id,
+            job_id=jobs[slug].id,
+            resume_id=resume.id,
+            status=ApplicationStatus.UNDER_REVIEW,
+            cover_note="Profil issu de la banque Talendus.",
+        )
+        db.add(application)
+        db.flush()
+        db.add(
+            ApplicationStatusHistory(
+                application_id=application.id,
+                old_status=None,
+                new_status=ApplicationStatus.SUBMITTED.value,
+                actor_id=user.id,
+            )
+        )
+        db.add(
+            ApplicationStatusHistory(
+                application_id=application.id,
+                old_status=ApplicationStatus.SUBMITTED.value,
+                new_status=ApplicationStatus.UNDER_REVIEW.value,
+                actor_id=marc.id,
+                comment="Qualification initiale.",
+            )
+        )
+        db.add(
+            InternalNote(
+                entity_type="candidate",
+                entity_id=cand.id,
+                author_id=marc.id,
+                text="Dossier seed — à qualifier selon le quart demandé.",
+            )
+        )
+
+
+if __name__ == "__main__":
+    seed_if_empty()
+    print("Seed Talendus terminé.")

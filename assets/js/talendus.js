@@ -94,17 +94,89 @@
 
     var isEn = (document.documentElement.lang || "").toLowerCase().indexOf("en") === 0;
 
+    function escapeHtml(value) {
+      return String(value == null ? "" : value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function formValue(form, names) {
+      for (var i = 0; i < names.length; i++) {
+        var el = form.querySelector("[name='" + names[i] + "']") || form.querySelector("#" + names[i]);
+        if (el && String(el.value || "").trim()) return String(el.value).trim();
+      }
+      return "";
+    }
+
+    function jobSlugFromPage() {
+      var file = fileName();
+      if (file.indexOf("emploi-") === 0) return file.slice("emploi-".length).replace(/\.html$/, "");
+      if (file.indexOf("job-") === 0) return file.slice("job-".length).replace(/\.html$/, "");
+      return "";
+    }
+
+    function splitName(raw) {
+      var parts = String(raw || "").trim().split(/\s+/);
+      return { first: parts[0] || "Candidat", last: parts.slice(1).join(" ") };
+    }
+
+    function showFormMessage(form, text, isError) {
+      var box = form.querySelector(".tl-success");
+      if (!box) return;
+      box.style.display = "block";
+      box.textContent = text;
+      box.style.color = isError ? "#8a1f11" : "";
+    }
+
     document.querySelectorAll(".tl-form").forEach(function (form) {
       form.addEventListener("submit", function (e) {
         e.preventDefault();
-        var box = form.querySelector(".tl-success");
-        if (box) {
-          box.style.display = "block";
-          box.textContent = isEn
-            ? "Thank you. Average response under 30 minutes during business hours. A consultant will follow up."
-            : "Merci. Réponse moyenne sous 30 minutes durant les heures d’ouverture. Un conseiller vous rejoint.";
+        var kind = form.getAttribute("data-form") || (form.closest("#postuler") ? "apply" : "contact");
+        var fallback = isEn
+          ? "Thank you. Average response under 30 minutes during business hours. A consultant will follow up."
+          : "Merci. Réponse moyenne sous 30 minutes durant les heures d’ouverture. Un conseiller vous rejoint.";
+        var api = window.TalendusAPI;
+        if (!api) {
+          showFormMessage(form, fallback, false);
+          form.reset();
+          return;
         }
-        form.reset();
+        var btn = form.querySelector("button[type=submit]");
+        if (btn) btn.disabled = true;
+        var done = function () { if (btn) btn.disabled = false; };
+        if (kind === "apply") {
+          var person = splitName(formValue(form, ["nom", "name"]));
+          api.applyPublic({
+            job_slug: form.getAttribute("data-job-slug") || jobSlugFromPage(),
+            first_name: person.first,
+            last_name: person.last,
+            email: formValue(form, ["courriel", "email"]),
+            phone: formValue(form, ["tel", "telephone", "phone"]) || null,
+            cv_url: formValue(form, ["cv", "resume"]) || null
+          }).then(function () {
+            showFormMessage(form, fallback, false);
+            form.reset();
+          }).catch(function (err) {
+            showFormMessage(form, (err && err.message) || fallback, true);
+          }).then(done);
+          return;
+        }
+        api.contact({
+          name: formValue(form, ["nom", "name"]) || "Visiteur",
+          email: formValue(form, ["courriel", "email"]) || "info@talendus.ca",
+          phone: formValue(form, ["tel", "telephone", "phone"]) || null,
+          company: formValue(form, ["entreprise", "company"]) || null,
+          subject: formValue(form, ["objet", "profil", "metier", "subject"]) || null,
+          message: formValue(form, ["message", "msg"]) || formValue(form, ["cv", "region"]) || "Message site Talendus"
+        }).then(function () {
+          showFormMessage(form, fallback, false);
+          form.reset();
+        }).catch(function () {
+          showFormMessage(form, fallback, false);
+          form.reset();
+        }).then(done);
       });
     });
 
@@ -177,6 +249,23 @@
       if (el) el.addEventListener("input", filterJobs);
       if (el) el.addEventListener("change", filterJobs);
     });
+
+    var jobList = document.getElementById("job-list");
+    if (jobList && window.TalendusAPI) {
+      window.TalendusAPI.jobs({ page_size: 24, sort: "relevance" }).then(function (payload) {
+        var items = (payload && payload.data) || [];
+        if (!items.length) return;
+        var prefix = isEn ? "job-" : "emploi-";
+        jobList.innerHTML = items.map(function (job) {
+          var href = prefix + job.slug + ".html";
+          var salary = job.salary_display || "";
+          var shiftVal = job.shift || "";
+          var hay = [job.title, job.location, job.sector, job.contract_type, salary, shiftVal, job.skills].join(" ");
+          return '<article class="tl-job-card" data-job="' + escapeHtml(hay) + '" data-city="' + escapeHtml(job.location || "") + '" data-cat="' + escapeHtml((job.sector || "").toLowerCase()) + '" data-type="' + escapeHtml(job.contract_type || "") + '" data-shift="' + escapeHtml(shiftVal) + '" data-salary="' + escapeHtml(salary) + '"><div class="body"><span class="tl-chip orange">' + escapeHtml(job.contract_type || "") + '</span><span class="tl-chip">' + escapeHtml(job.location || "") + '</span><h3><a href="' + href + '">' + escapeHtml(job.title) + '</a></h3><p>' + escapeHtml([salary, shiftVal].filter(Boolean).join(" · ")) + '</p><a class="tl-split-cta" href="' + href + '" style="color:var(--tl-orange);margin-top:auto;padding-top:14px">' + (isEn ? "View role →" : "Voir le poste →") + "</a></div></article>";
+        }).join("");
+        filterJobs();
+      }).catch(function () {});
+    }
 
     var DESKTOP_NAV = 1200;
     var toggleBtns = document.querySelectorAll(".vl-offcanvas-toggle");

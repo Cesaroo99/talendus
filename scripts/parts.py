@@ -460,6 +460,7 @@ def footer(lang="fr"):
 <script src="{a}assets/js/plugins/slick-slider.js"></script>
 <script src="{a}assets/js/plugins/circle-progress.js"></script>
 <script src="{a}assets/js/main.js"></script>
+<script src="{a}assets/js/api.js"></script>
 <script src="{a}assets/js/talendus.js"></script>
 </body>
 </html>

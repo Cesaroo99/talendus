@@ -88,10 +88,10 @@
           </div>
         </section>
       </div>`;
-    $("#login-form").onsubmit = function (e) {
+    $("#login-form").onsubmit = async function (e) {
       e.preventDefault();
       var d = U.formData(e.target);
-      var u = TLStore.login(d.email, d.password);
+      var u = await TLStore.login(d.email, d.password);
       if (!u) { U.toast("Identifiants incorrects.", "err"); return; }
       U.toast("Bienvenue " + u.firstName + ".", "ok");
       go("#/" + firstModule());

@@ -1,0 +1,6 @@
+Subject: Bienvenue chez Talendus
+{{name}},
+
+Votre compte Talendus a été créé. Les talents qui font tourner l'industrie.
+
+Connectez-vous : {{link}}

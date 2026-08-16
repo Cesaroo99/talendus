@@ -3,3 +3,11 @@ __MACOSX/
 *.zip
 __pycache__/
 *.pyc
+.env
+.venv/
+backend/.venv/
+backend/data/*
+!backend/data/.gitkeep
+backend/storage/resumes/*
+!backend/storage/resumes/.gitkeep
+*.db

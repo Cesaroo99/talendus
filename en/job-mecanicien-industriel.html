@@ -163,10 +163,10 @@
             </div>
             <div class="col-lg-4 offset-lg-1" id="postuler">
               <h3>Apply</h3>
-              <form class="tl-form"><label>Name</label><input required>
-              <label>Email</label><input type="email" required>
-              <label>Phone</label><input>
-              <label>Resume link</label><input placeholder="https://">
+              <form class="tl-form" data-form="apply" data-job-slug="mecanicien-industriel"><label>Name</label><input name="name" required>
+              <label>Email</label><input type="email" name="email" required>
+              <label>Phone</label><input name="phone">
+              <label>Resume link</label><input name="resume" placeholder="https://">
               <button class="tl-btn tl-btn-lg" type="submit">Submit my resume</button>
               <div class="tl-success"></div></form>
             </div>
@@ -252,6 +252,7 @@
 <script src="../assets/js/plugins/slick-slider.js"></script>
 <script src="../assets/js/plugins/circle-progress.js"></script>
 <script src="../assets/js/main.js"></script>
+<script src="../assets/js/api.js"></script>
 <script src="../assets/js/talendus.js"></script>
 </body>
 </html>

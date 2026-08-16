@@ -198,7 +198,35 @@
       persist();
     },
     subscribe: function (fn) { listeners.push(fn); },
-    login: function (email, password) {
+    login: async function (email, password) {
+      if (window.TalendusAPI) {
+        try {
+          var json = await window.TalendusAPI.login(email, password);
+          var apiUser = json && json.data && json.data.user;
+          if (apiUser) {
+            var staffMap = { ADMIN: "admin", RECRUITER: "recruiter", FINANCE: "finance", EDITOR: "editor" };
+            var mapped = staffMap[apiUser.role];
+            if (!mapped) throw new Error("not-staff");
+            var local = state.users.find(function (x) { return x.email === email; });
+            if (local) {
+              sessionStorage.setItem(SESSION, JSON.stringify({ id: local.id, role: local.role, access_token: json.data.access_token }));
+              return local;
+            }
+            var created = {
+              id: apiUser.id,
+              firstName: apiUser.first_name,
+              lastName: apiUser.last_name,
+              email: apiUser.email,
+              role: mapped,
+              title: apiUser.title || "",
+              initials: ((apiUser.first_name || "?").charAt(0) + (apiUser.last_name || "?").charAt(0)).toUpperCase()
+            };
+            state.users.push(created);
+            sessionStorage.setItem(SESSION, JSON.stringify({ id: created.id, role: created.role, access_token: json.data.access_token }));
+            return created;
+          }
+        } catch (e) {}
+      }
       var u = state.users.find(function (x) { return x.email === email && x.password === password; });
       if (!u) return null;
       var session = { id: u.id, role: u.role };

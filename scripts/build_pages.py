@@ -371,7 +371,7 @@ INDEX_BODY = r"""
         </div>
       </div>
       <div class="col-lg-6 offset-lg-1">
-        <form class="tl-form" action="#" method="post">
+        <form class="tl-form" action="#" method="post" data-form="contact">
           <label for="nom">Nom</label>
           <input id="nom" name="nom" required placeholder="Votre nom">
           <label for="courriel">Courriel</label>
@@ -633,7 +633,7 @@ write("candidats.html", wrap(
           </div>
         </div>
         <div class="col-lg-6 offset-lg-1">
-          <form class="tl-form" action="#" method="post">
+          <form class="tl-form" action="#" method="post" data-form="contact">
             <label>Nom</label><input required name="nom">
             <label>Courriel</label><input type="email" required name="courriel">
             <label>Téléphone</label><input name="tel">
@@ -724,7 +724,7 @@ write("contact.html", wrap(
           <div class="tl-kicker">Formulaire</div>
           <h2 class="tl-h2">Décrivez le poste ou votre profil</h2>
           <p class="tl-lead">Employeur : ouvrez un mandat. Candidat : déposez votre CV. Un conseiller industriel vous revient — en moyenne sous 30 minutes durant les heures d’ouverture.</p>
-          <form class="tl-form" action="#" method="post">
+          <form class="tl-form" action="#" method="post" data-form="contact">
             <label>Nom</label><input required name="nom">
             <label>Entreprise (optionnel)</label><input name="entreprise">
             <label>Courriel</label><input type="email" required name="courriel">
@@ -843,10 +843,10 @@ for slug, title, city, cat, typ, sal, shift, req in JOBS:
             </div>
             <div class="col-lg-4 offset-lg-1" id="postuler">
               <h3>Postuler</h3>
-              <form class="tl-form"><label>Nom</label><input required>
-              <label>Courriel</label><input type="email" required>
-              <label>Téléphone</label><input>
-              <label>Lien CV</label><input placeholder="https://">
+              <form class="tl-form" data-form="apply" data-job-slug="{slug}"><label>Nom</label><input name="nom" required>
+              <label>Courriel</label><input type="email" name="courriel" required>
+              <label>Téléphone</label><input name="tel">
+              <label>Lien CV</label><input name="cv" placeholder="https://">
               <button class="tl-btn tl-btn-lg" type="submit">Déposer mon CV</button>
               <div class="tl-success"></div></form>
             </div>

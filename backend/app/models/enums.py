@@ -1,0 +1,86 @@
+from datetime import datetime, timezone
+from enum import Enum
+
+
+def utcnow() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+class UserRole(str, Enum):
+    CANDIDATE = "CANDIDATE"
+    EMPLOYER = "EMPLOYER"
+    RECRUITER = "RECRUITER"
+    ADMIN = "ADMIN"
+    FINANCE = "FINANCE"
+    EDITOR = "EDITOR"
+
+
+class JobStatus(str, Enum):
+    DRAFT = "DRAFT"
+    PUBLISHED = "PUBLISHED"
+    PAUSED = "PAUSED"
+    CLOSED = "CLOSED"
+    ARCHIVED = "ARCHIVED"
+
+
+class ApplicationStatus(str, Enum):
+    SUBMITTED = "SUBMITTED"
+    UNDER_REVIEW = "UNDER_REVIEW"
+    SHORTLISTED = "SHORTLISTED"
+    INTERVIEW = "INTERVIEW"
+    REJECTED = "REJECTED"
+    HIRED = "HIRED"
+    WITHDRAWN = "WITHDRAWN"
+
+
+class CompanyStatus(str, Enum):
+    ACTIVE = "ACTIVE"
+    PROSPECT = "PROSPECT"
+    INACTIVE = "INACTIVE"
+
+
+class MissionStatus(str, Enum):
+    OPEN = "OPEN"
+    IN_PROGRESS = "IN_PROGRESS"
+    FILLED = "FILLED"
+    CANCELLED = "CANCELLED"
+
+
+class ContractStatus(str, Enum):
+    ACTIVE = "ACTIVE"
+    EXPIRED = "EXPIRED"
+    DRAFT = "DRAFT"
+
+
+class NotificationType(str, Enum):
+    APPLICATION_NEW = "APPLICATION_NEW"
+    APPLICATION_STATUS = "APPLICATION_STATUS"
+    JOB_MATCH = "JOB_MATCH"
+    INTERVIEW_INVITE = "INTERVIEW_INVITE"
+    ACCOUNT_CREATED = "ACCOUNT_CREATED"
+    RESUME_UPDATED = "RESUME_UPDATED"
+    APPLICATION_ACCEPTED = "APPLICATION_ACCEPTED"
+    APPLICATION_REJECTED = "APPLICATION_REJECTED"
+    ADMIN = "ADMIN"
+    MESSAGE = "MESSAGE"
+
+
+class EmailType(str, Enum):
+    WELCOME = "WELCOME"
+    VERIFY_EMAIL = "VERIFY_EMAIL"
+    PASSWORD_RESET = "PASSWORD_RESET"
+    APPLICATION_CONFIRMATION = "APPLICATION_CONFIRMATION"
+    APPLICATION_STATUS = "APPLICATION_STATUS"
+    INTERVIEW_INVITE = "INTERVIEW_INVITE"
+    NEW_APPLICATION_RECRUITER = "NEW_APPLICATION_RECRUITER"
+    ADMIN = "ADMIN"
+
+
+class EmailStatus(str, Enum):
+    QUEUED = "QUEUED"
+    SENT = "SENT"
+    FAILED = "FAILED"
+
+
+OPEN_JOB_STATUSES = {JobStatus.PUBLISHED}
+PUBLIC_JOB_STATUSES = {JobStatus.PUBLISHED, JobStatus.PAUSED}

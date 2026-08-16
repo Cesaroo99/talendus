@@ -1,0 +1,179 @@
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from app.errors import AppError
+from app.models import Company, InternalNote, Recruiter, RecruitmentMission, User
+from app.models.enums import UserRole
+from app.schemas import CompanyIn, NoteIn
+from app.services.audit import audit
+
+
+def create_company(db: Session, user: User, data: CompanyIn) -> Company:
+    if user.role == UserRole.EMPLOYER:
+        existing = db.scalar(select(Company).where(Company.owner_user_id == user.id))
+        if existing:
+            return update_company(db, user, existing.id, data)
+    company = Company(
+        name=data.name,
+        sector=data.sector,
+        city=data.city,
+        contact_name=data.contact_name or user.full_name,
+        email=str(data.email) if data.email else user.email,
+        phone=data.phone,
+        website=data.website,
+        employees=data.employees,
+        owner_user_id=user.id if user.role == UserRole.EMPLOYER else None,
+    )
+    db.add(company)
+    db.flush()
+    audit(db, "company.create", user, "company", company.id)
+    db.commit()
+    db.refresh(company)
+    return company
+
+
+def list_companies(db: Session, user: User) -> list[Company]:
+    if user.role == UserRole.EMPLOYER:
+        company = db.scalar(select(Company).where(Company.owner_user_id == user.id))
+        return [company] if company else []
+    if user.role not in {UserRole.RECRUITER, UserRole.ADMIN}:
+        raise AppError(403, "Permission insuffisante.", "FORBIDDEN")
+    return list(db.scalars(select(Company).order_by(Company.name.asc())).all())
+
+
+def invite_recruiter(db: Session, user: User, data) -> Recruiter:
+    from app.models import Recruiter
+    from app.security import hash_password, random_password
+
+    existing = db.scalar(select(User).where(User.email == data.email.lower()))
+    if existing:
+        raise AppError(409, "Un compte existe déjà avec ce courriel.", "EMAIL_TAKEN")
+    password = data.password or random_password()
+    recruiter_user = User(
+        email=data.email.lower(),
+        password_hash=hash_password(password),
+        first_name=data.first_name.strip(),
+        last_name=data.last_name.strip(),
+        role=UserRole.RECRUITER,
+        title=data.title,
+    )
+    db.add(recruiter_user)
+    db.flush()
+    recruiter = Recruiter(user_id=recruiter_user.id, specialty=data.specialty)
+    db.add(recruiter)
+    audit(db, "recruiter.invite", user, "user", recruiter_user.id)
+    db.commit()
+    db.refresh(recruiter)
+    return recruiter
+
+
+def create_mission(db: Session, user: User, data) -> RecruitmentMission:
+    if user.role not in {UserRole.RECRUITER, UserRole.ADMIN, UserRole.EMPLOYER}:
+        raise AppError(403, "Permission insuffisante.", "FORBIDDEN")
+    company = db.get(Company, data.company_id)
+    if not company:
+        raise AppError(404, "Entreprise introuvable.", "COMPANY_NOT_FOUND")
+    if user.role == UserRole.EMPLOYER and company.owner_user_id != user.id:
+        raise AppError(403, "Vous n'avez pas accès à cette entreprise.", "FORBIDDEN")
+    mission = RecruitmentMission(
+        company_id=data.company_id,
+        job_id=data.job_id,
+        recruiter_id=data.recruiter_id,
+        title=data.title,
+        seats=data.seats,
+        value=data.value,
+        commission=data.commission,
+        start_date=data.start_date,
+        due_date=data.due_date,
+    )
+    db.add(mission)
+    db.flush()
+    audit(db, "mission.create", user, "mission", mission.id)
+    db.commit()
+    db.refresh(mission)
+    return mission
+
+
+def list_missions(db: Session, user: User) -> list[RecruitmentMission]:
+    stmt = select(RecruitmentMission)
+    if user.role == UserRole.EMPLOYER:
+        company = db.scalar(select(Company).where(Company.owner_user_id == user.id))
+        if not company:
+            return []
+        stmt = stmt.where(RecruitmentMission.company_id == company.id)
+    elif user.role == UserRole.RECRUITER:
+        stmt = stmt.where(RecruitmentMission.recruiter_id == user.id)
+    elif user.role not in {UserRole.ADMIN}:
+        raise AppError(403, "Permission insuffisante.", "FORBIDDEN")
+    return list(db.scalars(stmt.order_by(RecruitmentMission.created_at.desc())).all())
+
+
+def company_for_employer(db: Session, user: User) -> Company:
+    company = db.scalar(select(Company).where(Company.owner_user_id == user.id))
+    if not company:
+        raise AppError(404, "Aucune entreprise associée.", "NO_COMPANY")
+    return company
+
+
+def update_company(db: Session, user: User, company_id: str, data: CompanyIn) -> Company:
+    company = db.get(Company, company_id)
+    if not company:
+        raise AppError(404, "Entreprise introuvable.", "COMPANY_NOT_FOUND")
+    if user.role == UserRole.EMPLOYER and company.owner_user_id != user.id:
+        raise AppError(403, "Vous n'avez pas accès à cette entreprise.", "FORBIDDEN")
+    if user.role not in {UserRole.EMPLOYER, UserRole.RECRUITER, UserRole.ADMIN}:
+        raise AppError(403, "Permission insuffisante.", "FORBIDDEN")
+    for key, value in data.model_dump(exclude_unset=True).items():
+        setattr(company, key, value)
+    audit(db, "company.update", user, "company", company.id)
+    db.commit()
+    db.refresh(company)
+    return company
+
+
+def add_note(db: Session, user: User, data: NoteIn) -> InternalNote:
+    if user.role not in {UserRole.RECRUITER, UserRole.ADMIN}:
+        raise AppError(403, "Seuls les recruteurs peuvent ajouter une note interne.", "FORBIDDEN")
+    note = InternalNote(
+        entity_type=data.entity_type,
+        entity_id=data.entity_id,
+        author_id=user.id,
+        text=data.text,
+    )
+    db.add(note)
+    audit(db, "note.create", user, data.entity_type, data.entity_id)
+    db.commit()
+    db.refresh(note)
+    return note
+
+
+def serialize_company(c: Company) -> dict:
+    return {
+        "id": c.id,
+        "name": c.name,
+        "sector": c.sector,
+        "city": c.city,
+        "contact_name": c.contact_name,
+        "email": c.email,
+        "phone": c.phone,
+        "website": c.website,
+        "employees": c.employees,
+        "status": c.status.value if c.status else None,
+    }
+
+
+def serialize_mission(m: RecruitmentMission) -> dict:
+    return {
+        "id": m.id,
+        "title": m.title,
+        "company_id": m.company_id,
+        "job_id": m.job_id,
+        "recruiter_id": m.recruiter_id,
+        "seats": m.seats,
+        "status": m.status.value,
+        "progress": m.progress,
+        "value": m.value,
+        "commission": m.commission,
+        "start_date": m.start_date,
+        "due_date": m.due_date,
+    }

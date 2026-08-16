@@ -1,0 +1,5 @@
+Subject: Mise à jour de votre candidature — {{job_title}}
+{{name}},
+
+Le statut de votre candidature pour « {{job_title}} » est maintenant : {{status}}.
+{{comment}}

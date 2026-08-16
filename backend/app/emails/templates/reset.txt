@@ -1,0 +1,7 @@
+Subject: Réinitialisation de votre mot de passe Talendus
+{{name}},
+
+Réinitialisez votre mot de passe via ce lien (valide 2 h) :
+{{link}}
+
+Si vous n'êtes pas à l'origine de cette demande, ignorez ce message.
