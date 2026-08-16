@@ -13,14 +13,14 @@ def write_fr(write, wrap, page_hero, cta):
             "Cabinet de recrutement industriel au Québec : production, maintenance, logistique et métiers d'usine. Shortlist filtrée, consultation sur rendez-vous.",
             "Services",
             "Recrutement industriel au Québec, sans CV au hasard.",
-            "Talendus est une agence de recrutement industriel : on ouvre un mandat, on filtre comme un contremaître, on présente des dossiers défendables.",
+            "Talendus est une agence de recrutement industriel : on ouvre un mandat, on filtre comme un contremaître, on présente des dossiers que vous pouvez recevoir.",
             "Confier un recrutement",
             """
             <section class="tl-section"><div class="container">
               <div class="row g-4">
                 <div class="col-lg-7">
                   <h2 class="tl-h2">Ce que « industriel » veut dire ici</h2>
-                  <p class="tl-lead">Production, maintenance, entrepôt, logistique, supervision et cadres d'usine. Pas de bureau, pas de TI, pas de vente. C'est ce qui protège le vivier.</p>
+                  <p class="tl-lead">Production, maintenance, entrepôt, logistique, supervision et cadres d'usine. Pas de bureau, pas de TI, pas de vente. C'est ce qui garde le réseau propre.</p>
                   <h3>Pour qui</h3>
                   <p>Usines, centres de distribution et entreprises manufacturières qui doivent pourvoir un quart, un métier ou un poste de supervision — souvent dans un délai serré.</p>
                   <h3>Comment on travaille</h3>
@@ -32,7 +32,7 @@ def write_fr(write, wrap, page_hero, cta):
                     <span class="tl-chip orange">Québec</span>
                     <h3>Grand Montréal et régions</h3>
                     <p>Nous recrutons à <a href="recrutement-industriel-montreal.html">Montréal</a>, <a href="recrutement-industriel-laval.html">Laval</a>, <a href="recrutement-industriel-longueuil.html">Longueuil</a> et partout au <a href="recrutement-industriel-quebec.html">Québec</a> lorsque le profil l'exige.</p>
-                    <a class="tl-btn" href="contact.html" style="margin-top:16px">Réserver une consultation</a>
+                    <a class="tl-btn" href="contact.html" style="margin-top:16px">Réserver un appel</a>
                   </div></div>
                 </div>
               </div>
@@ -52,7 +52,7 @@ def write_fr(write, wrap, page_hero, cta):
               <h2 class="tl-h2">Usines de fabrication, assemblage et sous-traitance</h2>
               <p class="tl-lead">Opérateurs, set-up, qualité, machinistes, soudeurs et supervision de production. Le même cabinet suit le mandat du brief à l'intégration.</p>
               <h3>Ce qui bloque souvent l'embauche</h3>
-              <p>Descriptif flou, salaire annoncé trop bas par rapport au marché, ou entrevues trop tardives. Nous le disons dès la consultation — sans cosmétique.</p>
+              <p>Descriptif flou, salaire annoncé trop bas par rapport au marché, ou entrevues trop tardives. On le dit dès l'appel, sans maquiller le diagnostic.</p>
               <p>Besoin d'un volume d'opérateurs ? D'un machiniste CNC ? D'un superviseur ? <a href="contact.html">Parlez-nous du quart</a>. Lectures utiles : <a href="article-machiniste-cnc.html">recruter un machiniste CNC</a>, <a href="article-roulement-manufacturier.html">réduire le roulement</a>.</p>
               <div class="tl-actions" style="margin-top:24px">
                 <a class="tl-btn" href="secteur-manufacturier.html">Secteur manufacturier</a>
@@ -72,7 +72,7 @@ def write_fr(write, wrap, page_hero, cta):
             """
             <section class="tl-section"><div class="container">
               <h2 class="tl-h2">Travailleurs qualifiés, pas des profils génériques</h2>
-              <p>Électromécanique, mécanique industrielle, soudure, usinage, plasturgie, maintenance. Une part importante du vivier est passive : déjà en poste, approchée discrètement.</p>
+              <p>Électromécanique, mécanique industrielle, soudure, usinage, plasturgie, maintenance. Beaucoup de candidats sont déjà en poste : on les approche discrètement.</p>
               <h3>Évaluation</h3>
               <p>Mises en situation, lecture de plans, outils et cartes SST. Votre contremaître ne devrait pas découvrir l'écart en entrevue finale.</p>
               <p><a href="chasse-de-tetes.html">Chasse de têtes</a> pour les profils rares · <a href="emplois.html">Postes ouverts</a> · <a href="secteur-maintenance.html">Maintenance industrielle</a></p>
@@ -102,7 +102,7 @@ def write_fr(write, wrap, page_hero, cta):
             "Recrutement temporaire et renforts d'usine | Talendus",
             "Recrutement temporaire industriel au Québec : renforts de quart, pics d'entrepôt et continuité de production. Shortlist filtrée, pas une pile de CV.",
             "Temporaire",
-            "Recrutement temporaire : tenir le quart sans diluer la qualité.",
+            "Recrutement temporaire : tenir le quart sans baisser la barre.",
             "Un pic saisonnier ou un arrêt maladie ne justifie pas d'envoyer n'importe qui sur le plancher. On filtre encore le fit SST et l'horaire.",
             "Demander un renfort",
             """
@@ -143,7 +143,7 @@ def write_fr(write, wrap, page_hero, cta):
             "Confier un mandat cadre",
             """
             <section class="tl-section"><div class="container">
-              <h2 class="tl-h2">Direction, supervision et continuity of operations</h2>
+              <h2 class="tl-h2">Direction, supervision et continuité d'usine</h2>
               <p>Directeurs d'usine, responsables production, maintenance et logistique. Entrevues structurées, références industrielles, discrétion.</p>
               <h3>Lien avec la chasse de têtes</h3>
               <p>La plupart des mandats cadres passent par une <a href="chasse-de-tetes.html">approche directe</a>. Pour un superviseur de quart, voir aussi <a href="article-superviseur-production.html">ce que nous validons sur le terrain</a>.</p>
@@ -209,14 +209,14 @@ def write_fr(write, wrap, page_hero, cta):
             "Recrutement industriel au Québec : Grand Montréal, Montérégie, Estrie, Centre-du-Québec, Mauricie et région de Québec. Cabinet spécialisé usine.",
             "Québec",
             "Recrutement industriel au Québec, au-delà d'une seule ville.",
-            "Nous menons des mandats là où vos usines sont — y compris en région lorsque le profil l'exige. Un cabinet, un vivier industriel.",
+            "Nous menons des mandats là où vos usines sont — y compris en région lorsque le profil l'exige. Un cabinet, un réseau industriel.",
             "Parler d'un mandat au Québec",
             """
             <section class="tl-section"><div class="container">
               <h2 class="tl-h2">Une couverture provinciale, des mandats locaux</h2>
               <p>Grand Montréal, Laval, Rive-Sud, Montérégie, Estrie, Centre-du-Québec, Mauricie, région de Québec. Chaque site a son salaire réel et sa rareté de métier : nous ne recyclons pas une page unique.</p>
               <h3>Pages locales déjà utiles</h3>
-              <p>Nous n'avons créé que les territoires où Talendus intervient réellement : <a href="recrutement-industriel-montreal.html">Montréal</a>, <a href="recrutement-industriel-laval.html">Laval</a>, <a href="recrutement-industriel-longueuil.html">Longueuil</a>. D'autres villes viendront si l'activité le justifie — pas des clones automatiques.</p>
+              <p>Nous n'avons créé que les territoires où Talendus intervient réellement : <a href="recrutement-industriel-montreal.html">Montréal</a>, <a href="recrutement-industriel-laval.html">Laval</a>, <a href="recrutement-industriel-longueuil.html">Longueuil</a>. D'autres villes viendront si l'activité le justifie. Pas des pages clones.</p>
               <p><a href="secteurs.html">Secteurs desservis</a> · <a href="a-propos.html">Le cabinet</a></p>
             </div></section>
             """,
@@ -247,17 +247,17 @@ def write_en(write, wrap, page_hero, cta):
         (
             "en/industrial-recruiting.html",
             "Industrial recruiting in Quebec | Talendus",
-            "Industrial recruiting firm in Quebec: production, maintenance, logistics and plant trades. Screened shortlist, consultation by appointment.",
+            "Industrial recruiting firm in Quebec: production, maintenance, logistics and plant trades. Screened shortlist, call by appointment.",
             "Services",
             "Industrial recruiting in Quebec, without random resumes.",
-            "Talendus opens a mandate, screens like a floor supervisor, and presents files you can defend.",
-            "Start a hire",
+            "Talendus opens a mandate, screens like a floor supervisor, and presents files you can actually meet.",
+            "Request a hire",
             "industrial recruiting Montreal",
             """
             <section class="tl-section"><div class="container">
               <div class="row g-4"><div class="col-lg-7">
               <h2 class="tl-h2">What industrial means here</h2>
-              <p class="tl-lead">Production, maintenance, warehousing, logistics, supervision and plant leadership. No office, IT or sales roles. That is what protects the talent pool.</p>
+              <p class="tl-lead">Production, maintenance, warehousing, logistics, supervision and plant leadership. No office, IT or sales roles. That's what keeps the network clean.</p>
               <p>Also see <a href="manufacturing-recruiting.html">manufacturing recruiting</a>, <a href="technical-recruiting.html">technical recruiting</a> and <a href="jobs.html">open roles</a>.</p>
               </div>
               <div class="col-lg-5"><div class="tl-card"><div class="body">
