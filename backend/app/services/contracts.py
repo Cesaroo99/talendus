@@ -6,7 +6,9 @@ from sqlalchemy.orm import Session, joinedload, selectinload
 from app.errors import AppError
 from app.models import Company, Contract, ContractSignature, User
 from app.models.enums import UserRole, utcnow
+from app.rbac import ADMINS
 from app.schemas import ContractSignIn
+from app.services.access import company_ids_for_employer
 from app.services.audit import audit
 
 
@@ -41,22 +43,21 @@ def serialize_contract(row: Contract) -> dict:
 
 
 def _can_access(db: Session, user: User, contract: Contract) -> bool:
-    if user.role in {UserRole.ADMIN, UserRole.RECRUITER, UserRole.FINANCE}:
+    if user.role in {UserRole.RECRUITER, UserRole.FINANCE} | ADMINS:
         return True
     if user.role == UserRole.EMPLOYER:
-        company = db.scalar(select(Company).where(Company.owner_user_id == user.id))
-        return bool(company and company.id == contract.company_id)
+        return contract.company_id in company_ids_for_employer(db, user)
     return False
 
 
 def list_contracts(db: Session, user: User) -> list[Contract]:
     stmt = select(Contract).options(selectinload(Contract.signatures), joinedload(Contract.company))
     if user.role == UserRole.EMPLOYER:
-        company = db.scalar(select(Company).where(Company.owner_user_id == user.id))
-        if not company:
+        ids = company_ids_for_employer(db, user)
+        if not ids:
             return []
-        stmt = stmt.where(Contract.company_id == company.id)
-    elif user.role not in {UserRole.ADMIN, UserRole.RECRUITER, UserRole.FINANCE}:
+        stmt = stmt.where(Contract.company_id.in_(ids))
+    elif user.role not in {UserRole.RECRUITER, UserRole.FINANCE} | ADMINS:
         raise AppError(403, "Vous n'avez pas accès aux contrats.", "FORBIDDEN")
     return list(db.scalars(stmt).unique().all())
 
@@ -74,7 +75,7 @@ def get_contract(db: Session, user: User, contract_id: str) -> Contract:
 
 def sign_contract(db: Session, user: User, contract_id: str, data: ContractSignIn, ip: str | None) -> Contract:
     row = get_contract(db, user, contract_id)
-    if user.role not in {UserRole.EMPLOYER, UserRole.ADMIN}:
+    if user.role not in {UserRole.EMPLOYER} | ADMINS:
         raise AppError(403, "Seuls le client ou un administrateur peuvent signer.", "FORBIDDEN")
     if user.role == UserRole.EMPLOYER and not data.accepted:
         raise AppError(400, "Vous devez accepter les conditions pour signer.", "NOT_ACCEPTED")

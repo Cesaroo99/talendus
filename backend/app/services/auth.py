@@ -5,8 +5,8 @@ from sqlalchemy.orm import Session
 
 from app.config import get_settings
 from app.errors import AppError
-from app.models import Candidate, Company, EmailToken, Recruiter, RefreshToken, User
-from app.models.enums import EmailType, NotificationType, UserRole, utcnow
+from app.models import Candidate, Company, CompanyMembership, EmailToken, Recruiter, RefreshToken, User, UserPreference
+from app.models.enums import AccountStatus, CompanyMemberRole, EmailType, NotificationType, UserRole, utcnow
 from app.schemas import LoginIn, RegisterIn
 from app.security import (
     create_access_token,
@@ -72,10 +72,23 @@ def register(db: Session, data: RegisterIn, ip: str | None = None) -> tuple[User
     )
     db.add(user)
     db.flush()
+    db.add(UserPreference(user_id=user.id))
     if user.role == UserRole.CANDIDATE:
         db.add(Candidate(user_id=user.id))
     elif user.role == UserRole.EMPLOYER:
-        db.add(Company(name=f"{user.last_name} Inc.", owner_user_id=user.id, contact_name=user.full_name, email=user.email))
+        company = Company(
+            name=f"{user.last_name} Inc.",
+            legal_name=f"{user.last_name} Inc.",
+            trade_name=f"{user.last_name} Inc.",
+            owner_user_id=user.id,
+            contact_name=user.full_name,
+            email=user.email,
+            province="Québec",
+            country="Canada",
+        )
+        db.add(company)
+        db.flush()
+        db.add(CompanyMembership(company_id=company.id, user_id=user.id, member_role=CompanyMemberRole.OWNER))
     elif user.role == UserRole.RECRUITER:
         db.add(Recruiter(user_id=user.id))
     token = _make_email_token(db, user, "verify", 24)
@@ -99,7 +112,7 @@ def login(db: Session, data: LoginIn, ip: str | None = None) -> tuple[User, dict
     user = db.scalar(select(User).where(User.email == data.email.lower()))
     if not user or not verify_password(data.password, user.password_hash):
         raise AppError(401, "Identifiants incorrects.", "INVALID_CREDENTIALS")
-    if not user.is_active:
+    if not user.is_active or user.account_status in {AccountStatus.SUSPENDED, AccountStatus.DEACTIVATED}:
         raise AppError(403, "Ce compte est désactivé.", "ACCOUNT_DISABLED")
     user.last_login_at = utcnow()
     tokens = _issue_tokens(db, user)
@@ -113,7 +126,7 @@ def refresh(db: Session, raw: str) -> dict:
     if not row or row.revoked or token_expired(row.expires_at):
         raise AppError(401, "Session expirée. Reconnectez-vous.", "INVALID_REFRESH")
     user = db.get(User, row.user_id)
-    if not user or not user.is_active:
+    if not user or not user.is_active or user.account_status in {AccountStatus.SUSPENDED, AccountStatus.DEACTIVATED}:
         raise AppError(401, "Compte indisponible.", "ACCOUNT_DISABLED")
     row.revoked = True
     tokens = _issue_tokens(db, user)

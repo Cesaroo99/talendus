@@ -22,7 +22,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 def _token_payload(user: User, tokens: dict) -> dict:
-    return ok({**tokens, "user": UserPublic.model_validate(user).model_dump()})
+    return ok({**tokens, "user": UserPublic.model_validate(user).model_dump(mode="json")})
 
 
 @router.post("/register")

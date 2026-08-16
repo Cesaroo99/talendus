@@ -19,8 +19,9 @@ from app.models import (
 )
 from app.models.enums import UserRole
 from app.rbac import PERMISSIONS
-from app.schemas import AdminCandidateIn, UserUpdateIn
+from app.schemas import AdminCandidateIn, SystemSettingIn, UserUpdateIn
 from app.services import admin_export, candidates as cand_svc
+from app.services.settings import list_settings, serialize_setting, upsert_setting
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -140,6 +141,8 @@ def audit_logs(
                 "entity_type": r.entity_type,
                 "entity_id": r.entity_id,
                 "ip_address": r.ip_address,
+                "old_value": r.old_value,
+                "new_value": r.new_value,
                 "created_at": r.created_at.isoformat() if r.created_at else None,
             }
             for r in rows
@@ -157,3 +160,18 @@ def permissions(db: Session = Depends(get_db), _: User = Depends(_admin_user)):
     if not catalog:
         catalog = {code: sorted(r.value for r in allowed) for code, allowed in PERMISSIONS.items()}
     return ok(catalog)
+
+
+@router.get("/settings")
+def get_settings(db: Session = Depends(get_db), _: User = Depends(_admin_user)):
+    return ok([serialize_setting(row) for row in list_settings(db)])
+
+
+@router.patch("/settings")
+def patch_setting(
+    payload: SystemSettingIn,
+    db: Session = Depends(get_db),
+    admin: User = Depends(_admin_user),
+):
+    row = upsert_setting(db, admin, payload.key, payload.value, payload.label)
+    return ok(serialize_setting(row))

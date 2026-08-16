@@ -10,7 +10,7 @@ from app.database import get_db
 from app.errors import AppError
 from app.models import User
 from app.models.enums import UserRole
-from app.rbac import can
+from app.rbac import can, is_admin
 from app.security import decode_access_token
 
 logger = logging.getLogger("talendus")
@@ -30,6 +30,8 @@ def get_current_user_optional(
     user = db.get(User, payload.get("sub"))
     if not user or not user.is_active:
         return None
+    if user.account_status and user.account_status.value in {"SUSPENDED", "DEACTIVATED"}:
+        return None
     return user
 
 
@@ -41,7 +43,7 @@ def get_current_user(user: User | None = Depends(get_current_user_optional)) -> 
 
 def require_roles(*roles: UserRole):
     def _dep(user: User = Depends(get_current_user)) -> User:
-        if user.role not in roles and user.role != UserRole.ADMIN:
+        if user.role not in roles and not is_admin(user):
             raise AppError(403, "Vous n'avez pas accès à cette ressource.", "FORBIDDEN")
         return user
 

@@ -18,40 +18,51 @@ from app.models import (
     CandidateEducation,
     CandidateExperience,
     Company,
+    CompanyMembership,
     Contract,
+    Conversation,
+    ConversationParticipant,
     InternalNote,
     Interview,
     Invoice,
+    InvoiceLine,
     JobOffer,
     Message,
+    Notification,
     Payment,
     Permission,
     Recruiter,
     RecruitmentMission,
     Resume,
     Role,
+    SystemSetting,
     User,
+    UserPreference,
 )
 from app.models.enums import (
     ApplicationStatus,
+    CompanyMemberRole,
     CompanyStatus,
     ContractStatus,
     InterviewStatus,
     InterviewType,
     InvoiceStatus,
+    JobSearchStatus,
     JobStatus,
     MissionStatus,
+    NotificationType,
     PaymentMethod,
     UserRole,
     utcnow,
 )
-from app.rbac import PERMISSIONS
+from app.rbac import ADMINS, PERMISSIONS
 from app.security import hash_password
 
 logger = logging.getLogger("talendus.seed")
 settings = get_settings()
 
 STAFF = [
+    ("lea.super@talendus.ca", "Léa", "Morin", UserRole.SUPER_ADMIN, "Super administratrice", "LM", None),
     ("sophie.admin@talendus.ca", "Sophie", "Tremblay", UserRole.ADMIN, "Directrice générale", "ST", None),
     ("marc.recruiter@talendus.ca", "Marc", "Gagnon", UserRole.RECRUITER, "Recruteur senior", "MG", "Métiers d'usine"),
     ("camille.recruiter@talendus.ca", "Camille", "Bouchard", UserRole.RECRUITER, "Recruteuse industrielle", "CB", "CNC / plasturgie"),
@@ -104,13 +115,14 @@ def seed_rbac(db: Session) -> None:
         UserRole.EMPLOYER: "Employeur",
         UserRole.RECRUITER: "Recruteur",
         UserRole.ADMIN: "Administrateur",
+        UserRole.SUPER_ADMIN: "Super administrateur",
         UserRole.FINANCE: "Finance",
         UserRole.EDITOR: "Éditeur",
     }
     for role_enum, label in labels.items():
         role = Role(code=role_enum.value, name=label)
         for perm_code, allowed in PERMISSIONS.items():
-            if role_enum == UserRole.ADMIN or role_enum in allowed:
+            if role_enum in ADMINS or role_enum in allowed:
                 role.permissions.append(perms[perm_code])
         db.add(role)
 
@@ -152,6 +164,7 @@ def _seed(db: Session) -> None:
         )
         db.add(user)
         db.flush()
+        db.add(UserPreference(user_id=user.id, locale="fr-CA"))
         if role == UserRole.RECRUITER:
             db.add(Recruiter(user_id=user.id, initials=initials, specialty=specialty))
         users[email] = user
@@ -161,12 +174,19 @@ def _seed(db: Session) -> None:
     for name, sector, city, contact, email, phone, employees, website, status in COMPANIES:
         company = Company(
             name=name,
+            legal_name=f"{name} inc.",
+            trade_name=name,
+            description=f"Entreprise {sector.lower()} basée à {city}.",
             sector=sector,
             city=city,
+            address="100, rue Industrielle",
+            province="Québec",
+            country="Canada",
             contact_name=contact,
             email=email,
             phone=phone,
             employees=employees,
+            size_label="PME" if employees < 200 else "Grande entreprise",
             website=website,
             status=status,
             assigned_recruiter_id=marc.id,
@@ -174,6 +194,22 @@ def _seed(db: Session) -> None:
         db.add(company)
         db.flush()
         companies[name] = company
+        employer = User(
+            email=email,
+            password_hash=password,
+            first_name=contact.split(" ", 1)[0],
+            last_name=contact.split(" ", 1)[-1],
+            role=UserRole.EMPLOYER,
+            title="Directrice / directeur des opérations" if name != "Métalco" else "Directeur d'usine",
+            is_active=True,
+            is_email_verified=True,
+        )
+        db.add(employer)
+        db.flush()
+        db.add(UserPreference(user_id=employer.id, locale="fr-CA"))
+        company.owner_user_id = employer.id
+        db.add(CompanyMembership(company_id=company.id, user_id=employer.id, member_role=CompanyMemberRole.OWNER))
+        users[email] = employer
 
     db.add(
         Contract(
@@ -228,6 +264,7 @@ def _seed(db: Session) -> None:
     )
     db.add(mission)
     db.flush()
+    mission.linked_jobs.append(jobs["cariste"])
 
     candidates: dict[str, Candidate] = {}
     applications: dict[str, Application] = {}
@@ -243,6 +280,7 @@ def _seed(db: Session) -> None:
         )
         db.add(user)
         db.flush()
+        db.add(UserPreference(user_id=user.id, locale="fr-CA", notify_match=True))
         cand = Candidate(
             user_id=user.id,
             title=title,
@@ -250,6 +288,10 @@ def _seed(db: Session) -> None:
             sector=sector,
             years_experience=years,
             skills=skills,
+            education_level="DEP",
+            job_search_status=JobSearchStatus.ACTIVE,
+            work_preferences="Quart de jour, équipe d'usine",
+            availability="Immédiate",
             assigned_recruiter_id=marc.id,
         )
         db.add(cand)
@@ -262,6 +304,7 @@ def _seed(db: Session) -> None:
             candidate_id=cand.id,
             original_name=f"CV_{first}_{last}.pdf",
             stored_name="seed-placeholder.pdf",
+            storage_url="resumes/seed-placeholder.pdf",
             mime_type="application/pdf",
             size_bytes=1024,
             is_primary=True,
@@ -279,6 +322,8 @@ def _seed(db: Session) -> None:
             resume_id=resume.id,
             status=ApplicationStatus.UNDER_REVIEW,
             cover_note="Profil issu de la banque Talendus.",
+            source="seed",
+            staff_notes="Note interne seed — ne jamais exposer au candidat.",
             match_score=72,
         )
         db.add(application)
@@ -331,12 +376,29 @@ def _seed(db: Session) -> None:
         company_id=companies["Alimor"].id,
         mission_id=mission.id,
         amount=13260,
+        amount_ht=11540,
+        tax_amount=1720,
+        amount_total=13260,
+        tax_rate_bp=14975,
+        currency="CAD",
         status=InvoiceStatus.PAID,
         issued_at="2026-07-02",
         due_date="2026-08-01",
+        paid_at="2026-07-28",
     )
     db.add(invoice)
     db.flush()
+    db.add(
+        InvoiceLine(
+            invoice_id=invoice.id,
+            description="Honoraires de recrutement — opérateur de production",
+            quantity=1,
+            unit_price=11540,
+            amount=11540,
+            reference="MISS-ALIMOR",
+            mission_id=mission.id,
+        )
+    )
     db.add(
         Payment(
             invoice_id=invoice.id,
@@ -347,25 +409,78 @@ def _seed(db: Session) -> None:
             recorded_by=users["nathalie.finance@talendus.ca"].id,
         )
     )
+    pending = Invoice(
+        number="F-2026-018",
+        company_id=companies["LogiCentre Laval"].id,
+        mission_id=mission.id,
+        amount=8640,
+        amount_ht=7520,
+        tax_amount=1120,
+        amount_total=8640,
+        tax_rate_bp=14975,
+        currency="CAD",
+        status=InvoiceStatus.PENDING,
+        issued_at="2026-07-28",
+        due_date="2026-08-27",
+    )
+    db.add(pending)
+    db.flush()
     db.add(
-        Invoice(
-            number="F-2026-018",
-            company_id=companies["LogiCentre Laval"].id,
+        InvoiceLine(
+            invoice_id=pending.id,
+            description="Acompte mission caristes — pic saisonnier",
+            quantity=1,
+            unit_price=7520,
+            amount=7520,
+            reference="MISS-LOGI",
             mission_id=mission.id,
-            amount=8640,
-            status=InvoiceStatus.PENDING,
-            issued_at="2026-07-28",
-            due_date="2026-08-27",
+            job_id=jobs["cariste"].id,
         )
     )
+    conversation = Conversation(
+        application_id=applications["karine.lavoie@email.ca"].id,
+        subject="Suivi candidature cariste",
+    )
+    db.add(conversation)
+    db.flush()
+    db.add(ConversationParticipant(conversation_id=conversation.id, user_id=marc.id))
+    db.add(ConversationParticipant(conversation_id=conversation.id, user_id=karine.user_id))
     db.add(
         Message(
+            conversation_id=conversation.id,
             sender_id=marc.id,
             recipient_id=karine.user_id,
             application_id=applications["karine.lavoie@email.ca"].id,
             body="Bonjour Karine, merci pour votre dossier cariste. On se parle sous peu pour le quart de jour à Laval.",
         )
     )
+    db.add(
+        Notification(
+            user_id=karine.user_id,
+            type=NotificationType.MESSAGE,
+            title="Nouveau message",
+            message="Marc Gagnon vous a écrit au sujet du poste de cariste.",
+            href="/espace.html",
+        )
+    )
+    db.add(
+        Notification(
+            user_id=marc.id,
+            type=NotificationType.APPLICATION_NEW,
+            title="Nouvelle candidature",
+            message="Karine Lavoie a postulé pour Cariste.",
+            href="/admin/#/jobs",
+        )
+    )
+    settings_rows = [
+        ("platform.locale", "fr-CA", "Langue par défaut"),
+        ("billing.currency", "CAD", "Devise de facturation"),
+        ("billing.tax_rate_bp", "14975", "Taux de taxes (points de base)"),
+        ("jobs.auto_expire_days", "60", "Expiration automatique des offres (jours)"),
+        ("storage.backend", "local", "Backend de stockage des fichiers"),
+    ]
+    for key, value, label in settings_rows:
+        db.add(SystemSetting(key=key, value=value, label=label, updated_by=users["sophie.admin@talendus.ca"].id))
 
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
-from app.models.enums import ApplicationStatus, InterviewStatus, InterviewType, InvoiceStatus, JobStatus, PaymentMethod, UserRole
+from app.models.enums import ApplicationStatus, InterviewStatus, InterviewType, InvoiceStatus, JobSearchStatus, JobStatus, PaymentMethod, UserRole
 
 
 class ORMModel(BaseModel):
@@ -64,6 +64,9 @@ class UserPublic(ORMModel):
     title: str | None
     is_active: bool
     is_email_verified: bool
+    account_status: str | None = None
+    last_login_at: datetime | None = None
+    avatar_path: str | None = None
 
 
 class UserUpdateIn(BaseModel):
@@ -88,6 +91,9 @@ class CandidateProfileIn(BaseModel):
     languages: str | None = None
     skills: str | None = None
     bio: str | None = None
+    education_level: str | None = None
+    job_search_status: JobSearchStatus | None = None
+    work_preferences: str | None = None
 
 
 class ExperienceIn(BaseModel):
@@ -118,6 +124,13 @@ class CompanyIn(BaseModel):
     phone: str | None = None
     website: str | None = None
     employees: int | None = None
+    legal_name: str | None = None
+    trade_name: str | None = None
+    description: str | None = None
+    address: str | None = None
+    province: str | None = None
+    country: str | None = None
+    size_label: str | None = None
 
 
 class JobIn(BaseModel):
@@ -139,6 +152,8 @@ class JobIn(BaseModel):
     responsibilities: str | None = None
     qualifications: str | None = None
     slug: str | None = None
+    currency: str | None = "CAD"
+    openings: int | None = Field(default=1, ge=1, le=500)
 
 
 class JobPatchIn(BaseModel):
@@ -159,6 +174,8 @@ class JobPatchIn(BaseModel):
     responsibilities: str | None = None
     qualifications: str | None = None
     slug: str | None = None
+    currency: str | None = None
+    openings: int | None = Field(default=None, ge=1, le=500)
 
 
 class JobOut(ORMModel):
@@ -301,14 +318,28 @@ class InterviewStatusIn(BaseModel):
     status: InterviewStatus
 
 
+class InvoiceLineIn(BaseModel):
+    description: str = Field(min_length=1, max_length=255)
+    quantity: int = Field(default=1, ge=1, le=10000)
+    unit_price: int = Field(ge=0)
+    reference: str | None = None
+    job_id: str | None = None
+    mission_id: str | None = None
+
+
 class InvoiceIn(BaseModel):
     company_id: str
     mission_id: str | None = None
+    client_user_id: str | None = None
     amount: int = Field(ge=1)
+    amount_ht: int | None = Field(default=None, ge=0)
+    tax_amount: int | None = Field(default=None, ge=0)
+    tax_rate_bp: int | None = Field(default=None, ge=0, le=100000)
     currency: str | None = "CAD"
     issued_at: str | None = None
     due_date: str | None = None
     notes: str | None = None
+    lines: list[InvoiceLineIn] | None = None
 
 
 class InvoiceStatusIn(BaseModel):
@@ -326,3 +357,20 @@ class ContractSignIn(BaseModel):
     signer_name: str = Field(min_length=2, max_length=160)
     signer_email: EmailStr | None = None
     accepted: bool = True
+
+
+class UserPreferenceIn(BaseModel):
+    locale: str | None = Field(default=None, max_length=12)
+    notify_email: bool | None = None
+    notify_in_app: bool | None = None
+    notify_application: bool | None = None
+    notify_message: bool | None = None
+    notify_match: bool | None = None
+    notify_interview: bool | None = None
+    privacy_profile_public: bool | None = None
+
+
+class SystemSettingIn(BaseModel):
+    key: str = Field(min_length=1, max_length=80)
+    value: str = ""
+    label: str | None = None

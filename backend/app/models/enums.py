@@ -11,12 +11,34 @@ class UserRole(str, Enum):
     EMPLOYER = "EMPLOYER"
     RECRUITER = "RECRUITER"
     ADMIN = "ADMIN"
+    SUPER_ADMIN = "SUPER_ADMIN"
     FINANCE = "FINANCE"
     EDITOR = "EDITOR"
 
 
+class AccountStatus(str, Enum):
+    ACTIVE = "ACTIVE"
+    PENDING = "PENDING"
+    SUSPENDED = "SUSPENDED"
+    DEACTIVATED = "DEACTIVATED"
+
+
+class JobSearchStatus(str, Enum):
+    ACTIVE = "ACTIVE"
+    PASSIVE = "PASSIVE"
+    NOT_LOOKING = "NOT_LOOKING"
+    HIRED = "HIRED"
+
+
+class CompanyMemberRole(str, Enum):
+    OWNER = "OWNER"
+    MEMBER = "MEMBER"
+    BILLING = "BILLING"
+
+
 class JobStatus(str, Enum):
     DRAFT = "DRAFT"
+    PENDING_VALIDATION = "PENDING_VALIDATION"
     PUBLISHED = "PUBLISHED"
     PAUSED = "PAUSED"
     CLOSED = "CLOSED"
@@ -25,9 +47,12 @@ class JobStatus(str, Enum):
 
 class ApplicationStatus(str, Enum):
     SUBMITTED = "SUBMITTED"
+    RECEIVED = "RECEIVED"
     UNDER_REVIEW = "UNDER_REVIEW"
     SHORTLISTED = "SHORTLISTED"
     INTERVIEW = "INTERVIEW"
+    SECOND_INTERVIEW = "SECOND_INTERVIEW"
+    OFFER_SENT = "OFFER_SENT"
     REJECTED = "REJECTED"
     HIRED = "HIRED"
     WITHDRAWN = "WITHDRAWN"
@@ -63,6 +88,8 @@ class NotificationType(str, Enum):
     APPLICATION_REJECTED = "APPLICATION_REJECTED"
     ADMIN = "ADMIN"
     MESSAGE = "MESSAGE"
+    DOCUMENT_ADDED = "DOCUMENT_ADDED"
+    SYSTEM = "SYSTEM"
 
 
 class EmailType(str, Enum):

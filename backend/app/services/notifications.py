@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models import Notification, User
-from app.models.enums import NotificationType
+from app.models.enums import NotificationType, utcnow
 
 logger = logging.getLogger("talendus.notify")
 
@@ -34,6 +34,7 @@ def serialize_notification(row: Notification) -> dict:
         "message": row.message,
         "href": row.href,
         "is_read": row.is_read,
+        "read_at": row.read_at.isoformat() if row.read_at else None,
         "created_at": row.created_at.isoformat() if row.created_at else None,
     }
 
@@ -52,6 +53,7 @@ def mark_read(db: Session, user: User, notification_id: str) -> Notification:
     if not row or row.user_id != user.id:
         raise AppError(404, "Notification introuvable.", "NOTIFICATION_NOT_FOUND")
     row.is_read = True
+    row.read_at = utcnow()
     db.commit()
     db.refresh(row)
     return row
@@ -61,5 +63,6 @@ def mark_all_read(db: Session, user: User) -> int:
     rows = list_for_user(db, user, unread_only=True)
     for row in rows:
         row.is_read = True
+        row.read_at = utcnow()
     db.commit()
     return len(rows)

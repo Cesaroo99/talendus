@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Index, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -8,19 +8,66 @@ from app.models.enums import InterviewStatus, InterviewType, InvoiceStatus, Paym
 from app.models.identity import uid
 
 
-class Message(Base):
-    __tablename__ = "messages"
+class Conversation(Base):
+    __tablename__ = "conversations"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    application_id: Mapped[str | None] = mapped_column(ForeignKey("applications.id"))
+    subject: Mapped[str | None] = mapped_column(String(180))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+    participants: Mapped[list["ConversationParticipant"]] = relationship(back_populates="conversation", cascade="all, delete-orphan")
+    messages: Mapped[list["Message"]] = relationship(back_populates="conversation")
+
+
+class ConversationParticipant(Base):
+    __tablename__ = "conversation_participants"
+    __table_args__ = (UniqueConstraint("conversation_id", "user_id", name="uq_conversation_participant"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    conversation_id: Mapped[str] = mapped_column(ForeignKey("conversations.id", ondelete="CASCADE"), index=True, nullable=False)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
+    last_read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    conversation: Mapped[Conversation] = relationship(back_populates="participants")
+    user = relationship("User")
+
+
+class Message(Base):
+    __tablename__ = "messages"
+    __table_args__ = (Index("ix_messages_conversation_created", "conversation_id", "created_at"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    conversation_id: Mapped[str | None] = mapped_column(ForeignKey("conversations.id"), index=True)
     sender_id: Mapped[str] = mapped_column(ForeignKey("users.id"), index=True, nullable=False)
     recipient_id: Mapped[str] = mapped_column(ForeignKey("users.id"), index=True, nullable=False)
     application_id: Mapped[str | None] = mapped_column(ForeignKey("applications.id"))
     body: Mapped[str] = mapped_column(Text, nullable=False)
     is_read: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+    read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
 
+    conversation: Mapped[Conversation | None] = relationship(back_populates="messages")
     sender = relationship("User", foreign_keys=[sender_id])
     recipient = relationship("User", foreign_keys=[recipient_id])
+    attachments: Mapped[list["MessageAttachment"]] = relationship(back_populates="message", cascade="all, delete-orphan")
+
+
+class MessageAttachment(Base):
+    __tablename__ = "message_attachments"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    message_id: Mapped[str] = mapped_column(ForeignKey("messages.id", ondelete="CASCADE"), index=True, nullable=False)
+    original_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    stored_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    storage_url: Mapped[str | None] = mapped_column(String(500))
+    mime_type: Mapped[str] = mapped_column(String(80), default="application/octet-stream")
+    size_bytes: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    message: Mapped[Message] = relationship(back_populates="attachments")
 
 
 class Interview(Base):
@@ -56,10 +103,17 @@ class Invoice(Base):
     company_id: Mapped[str] = mapped_column(ForeignKey("companies.id"), index=True, nullable=False)
     mission_id: Mapped[str | None] = mapped_column(ForeignKey("recruitment_missions.id"))
     amount: Mapped[int] = mapped_column(Integer, nullable=False)
+    amount_ht: Mapped[int | None] = mapped_column(Integer)
+    tax_amount: Mapped[int | None] = mapped_column(Integer)
+    amount_total: Mapped[int | None] = mapped_column(Integer)
+    tax_rate_bp: Mapped[int | None] = mapped_column(Integer)
     currency: Mapped[str] = mapped_column(String(8), default="CAD")
     status: Mapped[InvoiceStatus] = mapped_column(Enum(InvoiceStatus), default=InvoiceStatus.DRAFT, index=True)
     issued_at: Mapped[str | None] = mapped_column(String(16))
     due_date: Mapped[str | None] = mapped_column(String(16))
+    paid_at: Mapped[str | None] = mapped_column(String(16))
+    stripe_payment_intent_id: Mapped[str | None] = mapped_column(String(80))
+    client_user_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"))
     notes: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
@@ -67,6 +121,23 @@ class Invoice(Base):
     company = relationship("Company")
     mission = relationship("RecruitmentMission")
     payments: Mapped[list["Payment"]] = relationship(back_populates="invoice", cascade="all, delete-orphan")
+    lines: Mapped[list["InvoiceLine"]] = relationship(back_populates="invoice", cascade="all, delete-orphan")
+
+
+class InvoiceLine(Base):
+    __tablename__ = "invoice_lines"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    invoice_id: Mapped[str] = mapped_column(ForeignKey("invoices.id", ondelete="CASCADE"), index=True, nullable=False)
+    description: Mapped[str] = mapped_column(String(255), nullable=False)
+    quantity: Mapped[int] = mapped_column(Integer, default=1)
+    unit_price: Mapped[int] = mapped_column(Integer, default=0)
+    amount: Mapped[int] = mapped_column(Integer, default=0)
+    reference: Mapped[str | None] = mapped_column(String(80))
+    job_id: Mapped[str | None] = mapped_column(ForeignKey("job_offers.id"))
+    mission_id: Mapped[str | None] = mapped_column(ForeignKey("recruitment_missions.id"))
+
+    invoice: Mapped[Invoice] = relationship(back_populates="lines")
 
 
 class Payment(Base):

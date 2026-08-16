@@ -28,9 +28,13 @@ Toutes les valeurs sensibles sont lues depuis l’environnement (fichier `.env` 
 | `CORS_ORIGINS` | Origines autorisées |
 | `EMAIL_SERVER` / `EMAIL_USERNAME` / `EMAIL_PASSWORD` | SMTP |
 | `EMAIL_ENABLED` | `false` = log sans envoi réel |
-| `STORAGE_DIR` | Répertoire des CV |
+| `STORAGE_DIR` | Répertoire local des CV |
+| `STORAGE_BACKEND` | `local` (défaut) ou `s3` — la base stocke les métadonnées, pas le binaire |
+| `S3_BUCKET` / `S3_REGION` / `S3_ENDPOINT_URL` / `S3_ACCESS_KEY` / `S3_SECRET_KEY` | Stockage objet optionnel |
 | `MAX_RESUME_MB` | Taille max d’un CV |
-| `SEED_PASSWORD` | Mot de passe des comptes de démonstration |
+| `SEED_PASSWORD` | Mot de passe des comptes de démonstration (jamais en production réelle) |
+| `DEFAULT_CURRENCY` | Devise par défaut (`CAD`) |
+| `DEFAULT_TAX_RATE_BP` | Taxes en points de base (14975 ≈ TPS+TVQ) |
 | `LINKEDIN_CLIENT_ID` / `LINKEDIN_CLIENT_SECRET` | Optionnel — publication LinkedIn (le partage d’URL fonctionne sans) |
 
 Voir `.env.example`.
@@ -51,32 +55,64 @@ L’API est préfixée par `/api`. Le site statique du dépôt est aussi servi �
 
 ## Base de données et seed
 
-Au démarrage, l’application crée les tables (`create_all`) puis insère un jeu de données s’il n’existe aucun utilisateur.
+Au démarrage, l’application crée les tables (`create_all`) puis insère un jeu de **données de démonstration** s’il n’existe aucun utilisateur. Ce seed ne s’exécute pas en production déjà peuplée.
 
-Migrations Alembic (recommandé hors SQLite de démo) :
+ORM : **SQLAlchemy 2**. Moteur : **SQLite** en développement / tests, **PostgreSQL** recommandé en production via `DATABASE_URL`.
+
+### Lancer la base
 
 ```bash
+cd backend
+cp .env.example .env   # puis éditer DATABASE_URL, JWT_SECRET, SECRET_KEY
+alembic upgrade head
+python -m app.seed     # no-op si des utilisateurs existent déjà
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+PostgreSQL local :
+
+```bash
+createdb talendus
+# DATABASE_URL=postgresql+psycopg://USER:PASSWORD@localhost:5432/talendus
 cd backend
 alembic upgrade head
 python -m app.seed
 ```
 
-```bash
-python -m app.seed
-```
+Migrations versionnées :
+
+- `0001_initial` — schéma de base
+- `0002_ops` — messages, entretiens, factures, signatures
+- `0003_platform` — memberships, conversations, lignes de facture, préférences, paramètres, index, nouveaux rôles / statuts
+
+### Tables principales
+
+`users` → `candidates` (profils) → `resumes` → `applications` → `application_status_history`
+
+`users` → `company_memberships` → `companies` → `recruitment_missions` / `contracts` → `job_offers` → `applications`
+
+`users` → `conversations` → `messages` (+ `message_attachments`)
+
+`companies` → `invoices` → `invoice_lines` / `payments`
+
+`users` → `notifications` · `user_preferences`
+
+`system_settings` · `audit_logs`
+
+Autres : `recruiters`, `refresh_tokens`, `email_tokens`, `candidate_experiences`, `candidate_education`, `candidate_certifications`, `interviews`, `internal_notes`, `email_logs`, `roles`, `permissions`, `mission_jobs`, `contract_signatures`.
+
+Les CV ne sont **pas** stockés en binaire dans PostgreSQL : métadonnées + `storage_url` / chemin fichier (`STORAGE_DIR` ou S3 plus tard).
 
 Comptes de démonstration (mot de passe `talendus` sauf si `SEED_PASSWORD` est modifié) :
 
+- `lea.super@talendus.ca` — SUPER_ADMIN
 - `sophie.admin@talendus.ca` — ADMIN
 - `marc.recruiter@talendus.ca` — RECRUITER
 - `camille.recruiter@talendus.ca` — RECRUITER
 - `nathalie.finance@talendus.ca` — FINANCE
 - `alex.editeur@talendus.ca` — EDITOR
 - `karine.lavoie@email.ca` — CANDIDATE
-
-Les slugs d’offres (`cariste`, `soudeur`, …) correspondent aux pages HTML publiques.
-
-Pour PostgreSQL, créez la base puis pointez `DATABASE_URL`. Appliquez `alembic upgrade head`. Le schéma est porté par les modèles SQLAlchemy ; `create_all` reste un filet de sécurité au démarrage.
+- employeurs liés aux entreprises seed (`j.rivest@metalco.ca`, etc.)
 
 ## Architecture
 
@@ -109,10 +145,11 @@ Header : `Authorization: Bearer <access_token>`
 
 | Rôle | Accès principal |
 | --- | --- |
-| CANDIDATE | profil, CV, offres publiques, candidatures personnelles |
-| EMPLOYER | entreprise, offres, candidatures reçues |
+| CANDIDATE | profil, CV, offres publiques, candidatures personnelles (sans notes internes) |
+| EMPLOYER | entreprise(s) via membership, offres, candidatures reçues |
 | RECRUITER | missions, candidats, notes internes, statuts |
-| ADMIN | tout le système, utilisateurs, logs, e-mails |
+| ADMIN | vue globale, utilisateurs, logs, e-mails, paramètres |
+| SUPER_ADMIN | mêmes droits admin, rôle maximal (évolutif) |
 | FINANCE / EDITOR | modules back-office (finance / contenu) |
 
 Un candidat ne peut pas lire le dossier d’un autre candidat ni une candidature qui n’est pas la sienne (contrôle IDOR dans les services).
@@ -135,7 +172,7 @@ Erreur :
 | --- | --- | --- |
 | POST | `/auth/register` `/auth/login` `/auth/refresh` `/auth/logout` | mixte |
 | POST | `/auth/forgot-password` `/auth/reset-password` `/auth/change-password` `/auth/verify-email` | mixte |
-| GET/PATCH | `/users/me` | oui |
+| GET/PATCH | `/users/me` `/users/me/preferences` | oui |
 | GET/PATCH | `/candidates/me` + expériences, formation, certifications, CV | candidat |
 | GET | `/jobs` `/jobs/{slug}` `/jobs/board` `/job-board` | public |
 | POST | `/jobs` + publish/pause/close/archive | employeur / recruteur / admin |
@@ -150,7 +187,7 @@ Erreur :
 | GET/POST | `/contracts` `/contracts/{id}/sign` | mixte |
 | GET | `/integrations/linkedin` | public |
 | GET | `/notifications` `/notifications/unread` | oui |
-| GET | `/admin/bootstrap` `/admin/users` `/admin/audit` `/admin/stats` `/emails` | staff / admin |
+| GET | `/admin/bootstrap` `/admin/users` `/admin/audit` `/admin/stats` `/admin/settings` `/emails` | staff / admin |
 | POST | `/admin/candidates` | recruteur / admin |
 | POST | `/contact` | public |
 

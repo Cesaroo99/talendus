@@ -6,12 +6,23 @@ from app.models.candidate import (
     Resume,
 )
 from app.models.comms import AuditLog, EmailLog, InternalNote, Notification
-from app.models.company import Company, Contract, RecruitmentMission
+from app.models.company import Company, CompanyMembership, Contract, RecruitmentMission
 from app.models.enums import *  # noqa: F401,F403
 from app.models.identity import EmailToken, PasswordHistory, Recruiter, RefreshToken, User
 from app.models.job import Application, ApplicationStatusHistory, JobOffer
-from app.models.ops import ContractSignature, Interview, Invoice, Message, Payment
+from app.models.ops import (
+    ContractSignature,
+    Conversation,
+    ConversationParticipant,
+    Interview,
+    Invoice,
+    InvoiceLine,
+    Message,
+    MessageAttachment,
+    Payment,
+)
 from app.models.rbac import Permission, Role
+from app.models.settings import SystemSetting, UserPreference
 
 __all__ = [
     "User",
@@ -21,6 +32,7 @@ __all__ = [
     "Candidate",
     "Resume",
     "Company",
+    "CompanyMembership",
     "Contract",
     "RecruitmentMission",
     "JobOffer",
@@ -33,8 +45,14 @@ __all__ = [
     "Role",
     "Permission",
     "Message",
+    "MessageAttachment",
+    "Conversation",
+    "ConversationParticipant",
     "Interview",
     "Invoice",
+    "InvoiceLine",
     "Payment",
     "ContractSignature",
+    "UserPreference",
+    "SystemSetting",
 ]

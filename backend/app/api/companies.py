@@ -3,11 +3,12 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.deps import get_current_user, require_roles
-from app.errors import ok
-from app.models import User
+from app.errors import AppError, ok
+from app.models import Company, User
 from app.models.enums import UserRole
 from app.schemas import CompanyIn, RecruiterInviteIn
 from app.services import companies as companies_service
+from app.services.access import user_belongs_to_company
 
 router = APIRouter(prefix="/companies", tags=["companies"])
 
@@ -45,13 +46,10 @@ def get_company(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    from app.errors import AppError
-    from app.models import Company
-
     company = db.get(Company, company_id)
     if not company:
         raise AppError(404, "Entreprise introuvable.", "COMPANY_NOT_FOUND")
-    if user.role == UserRole.EMPLOYER and company.owner_user_id != user.id:
+    if user.role == UserRole.EMPLOYER and not user_belongs_to_company(db, user, company.id):
         raise AppError(403, "Accès refusé à cette entreprise.", "FORBIDDEN")
     if user.role not in {UserRole.EMPLOYER, UserRole.RECRUITER, UserRole.ADMIN}:
         raise AppError(403, "Accès refusé à cette entreprise.", "FORBIDDEN")
@@ -76,13 +74,10 @@ def invite_recruiter(
     db: Session = Depends(get_db),
     user: User = Depends(require_roles(UserRole.EMPLOYER, UserRole.ADMIN)),
 ):
-    from app.errors import AppError
-    from app.models import Company
-
     company = db.get(Company, company_id)
     if not company:
         raise AppError(404, "Entreprise introuvable.", "COMPANY_NOT_FOUND")
-    if user.role == UserRole.EMPLOYER and company.owner_user_id != user.id:
+    if user.role == UserRole.EMPLOYER and not user_belongs_to_company(db, user, company.id):
         raise AppError(403, "Accès refusé à cette entreprise.", "FORBIDDEN")
     recruiter = companies_service.invite_recruiter(db, user, payload)
     return ok({"id": recruiter.id, "user_id": recruiter.user_id})

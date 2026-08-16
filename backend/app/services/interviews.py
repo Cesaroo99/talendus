@@ -6,7 +6,9 @@ from sqlalchemy.orm import Session, joinedload
 from app.errors import AppError
 from app.models import Application, Candidate, Company, Interview, JobOffer, User
 from app.models.enums import EmailType, InterviewStatus, InterviewType, NotificationType, UserRole
+from app.rbac import ADMINS
 from app.schemas import InterviewIn, InterviewPatchIn
+from app.services.access import company_ids_for_employer
 from app.services.audit import audit
 from app.services.auth import ensure_candidate
 from app.services.email import send_email
@@ -59,14 +61,13 @@ def serialize_interview(row: Interview) -> dict:
 
 
 def _visible(db: Session, user: User, row: Interview) -> bool:
-    if user.role in {UserRole.RECRUITER, UserRole.ADMIN}:
+    if user.role in {UserRole.RECRUITER} | ADMINS:
         return True
     if user.role == UserRole.CANDIDATE:
         cand = ensure_candidate(db, user)
         return row.candidate_id == cand.id
     if user.role == UserRole.EMPLOYER:
-        company = db.scalar(select(Company).where(Company.owner_user_id == user.id))
-        return bool(company and row.company_id == company.id)
+        return bool(row.company_id and row.company_id in company_ids_for_employer(db, user))
     return False
 
 
@@ -80,11 +81,11 @@ def list_interviews(db: Session, user: User) -> list[Interview]:
         cand = ensure_candidate(db, user)
         stmt = stmt.where(Interview.candidate_id == cand.id)
     elif user.role == UserRole.EMPLOYER:
-        company = db.scalar(select(Company).where(Company.owner_user_id == user.id))
-        if not company:
+        ids = company_ids_for_employer(db, user)
+        if not ids:
             return []
-        stmt = stmt.where(Interview.company_id == company.id)
-    elif user.role not in {UserRole.RECRUITER, UserRole.ADMIN}:
+        stmt = stmt.where(Interview.company_id.in_(ids))
+    elif user.role not in {UserRole.RECRUITER} | ADMINS:
         raise AppError(403, "Vous n'avez pas accès aux entretiens.", "FORBIDDEN")
     return list(db.scalars(stmt.order_by(Interview.scheduled_at.asc())).unique().all())
 
@@ -107,7 +108,7 @@ def get_interview(db: Session, user: User, interview_id: str) -> Interview:
 
 
 def create_interview(db: Session, user: User, data: InterviewIn, ip: str | None) -> Interview:
-    if user.role not in {UserRole.RECRUITER, UserRole.ADMIN}:
+    if user.role not in {UserRole.RECRUITER} | ADMINS:
         raise AppError(403, "Seuls les recruteurs peuvent planifier un entretien.", "FORBIDDEN")
     candidate = db.get(Candidate, data.candidate_id)
     if not candidate:
@@ -173,7 +174,7 @@ def create_interview(db: Session, user: User, data: InterviewIn, ip: str | None)
 
 def patch_interview(db: Session, user: User, interview_id: str, data: InterviewPatchIn) -> Interview:
     row = get_interview(db, user, interview_id)
-    if user.role not in {UserRole.RECRUITER, UserRole.ADMIN}:
+    if user.role not in {UserRole.RECRUITER} | ADMINS:
         raise AppError(403, "Modification réservée à l'équipe Talendus.", "FORBIDDEN")
     payload = data.model_dump(exclude_unset=True)
     if "scheduled_at" in payload and payload["scheduled_at"]:

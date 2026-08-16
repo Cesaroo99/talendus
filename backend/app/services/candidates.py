@@ -10,7 +10,8 @@ from app.models import (
     Resume,
     User,
 )
-from app.models.enums import NotificationType
+from app.models.enums import EmailType, NotificationType, UserRole
+from app.rbac import is_admin
 from app.schemas import CandidateProfileIn, CertificationIn, EducationIn, ExperienceIn
 from app.services.audit import audit
 from app.services.auth import ensure_candidate
@@ -19,7 +20,7 @@ from app.services.storage import save_resume
 
 
 def create_staff_candidate(db: Session, actor: User, data) -> Candidate:
-    from app.models.enums import EmailType, NotificationType, UserRole
+    from app.models import UserPreference
     from app.security import hash_password, random_password
     from app.services.email import send_email
     from app.services.notifications import notify
@@ -38,6 +39,7 @@ def create_staff_candidate(db: Session, actor: User, data) -> Candidate:
     )
     db.add(user)
     db.flush()
+    db.add(UserPreference(user_id=user.id))
     profile = Candidate(
         user_id=user.id,
         city=data.city,
@@ -117,6 +119,7 @@ def upload_cv(db: Session, user: User, data: bytes, filename: str) -> Resume:
         candidate_id=profile.id,
         original_name=original,
         stored_name=stored,
+        storage_url=f"resumes/{stored}",
         mime_type=mime,
         size_bytes=size,
         is_primary=True,
@@ -156,6 +159,9 @@ def serialize_candidate(profile: Candidate, include_private: bool = True) -> dic
             "contract_type": profile.contract_type,
             "shift_preference": profile.shift_preference,
             "bio": profile.bio,
+            "education_level": profile.education_level,
+            "job_search_status": profile.job_search_status.value if profile.job_search_status else None,
+            "work_preferences": profile.work_preferences,
             "experiences": [
                 {"id": e.id, "company": e.company, "role": e.role, "years": e.years, "description": e.description}
                 for e in profile.experiences
@@ -169,7 +175,7 @@ def serialize_candidate(profile: Candidate, include_private: bool = True) -> dic
                 for c in profile.certifications
             ],
             "resumes": [
-                {"id": r.id, "original_name": r.original_name, "is_primary": r.is_primary, "size_bytes": r.size_bytes}
+                {"id": r.id, "original_name": r.original_name, "is_primary": r.is_primary, "size_bytes": r.size_bytes, "storage_url": r.storage_url, "parse_status": r.parse_status}
                 for r in profile.resumes
             ],
         }
@@ -181,17 +187,18 @@ def get_resume_for_user(db: Session, user: User, resume_id: str) -> Resume:
     resume = db.get(Resume, resume_id)
     if not resume:
         raise AppError(404, "CV introuvable.", "RESUME_NOT_FOUND")
-    if user.role.value in {"RECRUITER", "ADMIN"}:
+    if is_admin(user) or user.role.value == "RECRUITER":
         return resume
     if user.role.value == "EMPLOYER":
-        from app.models import Application, Company, JobOffer
+        from app.models import Application, JobOffer
+        from app.services.access import company_ids_for_employer
 
-        company = db.scalar(select(Company).where(Company.owner_user_id == user.id))
-        if company:
+        ids = company_ids_for_employer(db, user)
+        if ids:
             linked = db.scalar(
                 select(Application)
                 .join(JobOffer, Application.job_id == JobOffer.id)
-                .where(Application.resume_id == resume.id, JobOffer.company_id == company.id)
+                .where(Application.resume_id == resume.id, JobOffer.company_id.in_(ids))
             )
             if linked:
                 return resume

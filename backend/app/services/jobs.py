@@ -8,7 +8,9 @@ from app.deps import slugify
 from app.errors import AppError
 from app.models import Company, JobOffer, User
 from app.models.enums import JobStatus, OPEN_JOB_STATUSES, PUBLIC_JOB_STATUSES, UserRole, utcnow
+from app.rbac import ADMINS
 from app.schemas import JobIn, JobPatchIn
+from app.services.access import company_ids_for_employer, first_employer_company, user_belongs_to_company
 from app.services.audit import audit
 
 
@@ -52,6 +54,8 @@ def serialize_job(job: JobOffer) -> dict:
         "salary_display": job.salary_display,
         "salary_min": job.salary_min,
         "salary_max": job.salary_max,
+        "currency": job.currency,
+        "openings": job.openings,
         "skills": job.skills,
         "experience_level": job.experience_level,
         "education_required": job.education_required,
@@ -184,7 +188,14 @@ def assert_job_open(job: JobOffer) -> None:
 
 def _company_for_user(db: Session, user: User, company_id: str | None) -> Company:
     if user.role == UserRole.EMPLOYER:
-        company = db.scalar(select(Company).where(Company.owner_user_id == user.id))
+        if company_id:
+            if not user_belongs_to_company(db, user, company_id):
+                raise AppError(403, "Vous n'avez pas accès à cette entreprise.", "FORBIDDEN")
+            company = db.get(Company, company_id)
+            if not company:
+                raise AppError(404, "Entreprise introuvable.", "COMPANY_NOT_FOUND")
+            return company
+        company = first_employer_company(db, user)
         if not company:
             raise AppError(400, "Aucune entreprise associée à ce compte.", "NO_COMPANY")
         return company
@@ -200,7 +211,7 @@ def create_job(db: Session, user: User, data: JobIn, ip: str | None = None) -> J
     company = _company_for_user(db, user, data.company_id)
     job = JobOffer(
         company_id=company.id,
-        recruiter_id=user.id if user.role in {UserRole.RECRUITER, UserRole.ADMIN} else None,
+        recruiter_id=user.id if user.role in {UserRole.RECRUITER} | ADMINS else None,
         slug=_unique_slug(db, data.slug or data.title),
         title=data.title,
         description=data.description,
@@ -218,6 +229,8 @@ def create_job(db: Session, user: User, data: JobIn, ip: str | None = None) -> J
         certifications=data.certifications,
         shift=data.shift,
         benefits=data.benefits,
+        currency=getattr(data, "currency", None) or "CAD",
+        openings=getattr(data, "openings", None) or 1,
         status=JobStatus.DRAFT,
     )
     db.add(job)
@@ -261,10 +274,10 @@ def set_job_status(db: Session, user: User, job_id: str, status: JobStatus) -> J
 def list_managed(db: Session, user: User) -> list[JobOffer]:
     stmt = select(JobOffer).options(joinedload(JobOffer.company))
     if user.role == UserRole.EMPLOYER:
-        company = db.scalar(select(Company).where(Company.owner_user_id == user.id))
-        if not company:
+        ids = company_ids_for_employer(db, user)
+        if not ids:
             return []
-        stmt = stmt.where(JobOffer.company_id == company.id)
+        stmt = stmt.where(JobOffer.company_id.in_(ids))
     return list(db.scalars(stmt.order_by(JobOffer.updated_at.desc())).unique().all())
 
 
@@ -277,10 +290,9 @@ def get_managed_job(db: Session, user: User, job_id: str) -> JobOffer:
 
 
 def _assert_can_manage(db: Session, user: User, job: JobOffer) -> None:
-    if user.role in {UserRole.ADMIN, UserRole.RECRUITER}:
+    if user.role in {UserRole.RECRUITER} | ADMINS:
         return
     if user.role == UserRole.EMPLOYER:
-        company = db.scalar(select(Company).where(Company.owner_user_id == user.id))
-        if company and company.id == job.company_id:
+        if user_belongs_to_company(db, user, job.company_id):
             return
     raise AppError(403, "Vous ne pouvez pas modifier cette offre.", "FORBIDDEN")

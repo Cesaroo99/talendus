@@ -36,9 +36,17 @@ class Settings(BaseSettings):
     email_use_tls: bool = True
 
     storage_dir: str = str(BACKEND_ROOT / "storage")
+    storage_backend: str = "local"
+    s3_bucket: str = ""
+    s3_region: str = ""
+    s3_endpoint_url: str = ""
+    s3_access_key: str = ""
+    s3_secret_key: str = ""
     max_resume_mb: int = 5
     rate_limit_per_minute: int = 80
     seed_password: str = "talendus"
+    default_currency: str = "CAD"
+    default_tax_rate_bp: int = 14975
     linkedin_client_id: str = ""
     linkedin_client_secret: str = ""
 

@@ -395,3 +395,119 @@ def test_interview_invoice_contract_and_email_body(client):
     emails = client.get("/api/emails", headers=admin_h)
     assert emails.status_code == 200
     assert any(row.get("subject") for row in emails.json()["data"])
+
+
+def test_schema_tables_and_constraints(client):
+    from sqlalchemy import inspect
+
+    from app.database import engine
+
+    tables = set(inspect(engine).get_table_names())
+    expected = {
+        "users",
+        "candidates",
+        "resumes",
+        "companies",
+        "company_memberships",
+        "job_offers",
+        "applications",
+        "application_status_history",
+        "conversations",
+        "conversation_participants",
+        "messages",
+        "message_attachments",
+        "notifications",
+        "invoices",
+        "invoice_lines",
+        "payments",
+        "contracts",
+        "recruitment_missions",
+        "mission_jobs",
+        "user_preferences",
+        "system_settings",
+        "audit_logs",
+    }
+    assert expected.issubset(tables)
+    uniques = {u["name"] for u in inspect(engine).get_unique_constraints("applications")}
+    assert "uq_application_candidate_job" in uniques
+
+
+def test_staff_notes_hidden_from_candidate(client):
+    emp = register(client, "notes-emp@example.com", "EMPLOYER")
+    emp_h = auth_header(emp)
+    job = _publish_job(client, emp_h, slug="notes-cariste", title="Cariste")
+    cand = register(client, "notes-cand@example.com", first_name="Karine")
+    cand_h = auth_header(cand)
+    applied = client.post("/api/applications", headers=cand_h, json={"job_id": job["id"]}).json()["data"]
+    from app.database import SessionLocal
+    from app.models import Application
+
+    db = SessionLocal()
+    row = db.get(Application, applied["id"])
+    row.staff_notes = "Salaire négocié — interne seulement."
+    db.commit()
+    db.close()
+    mine = client.get(f"/api/applications/{applied['id']}", headers=cand_h).json()["data"]
+    assert "staff_notes" not in mine
+    inbox = client.get("/api/applications", headers=emp_h).json()["data"]
+    assert any(item["id"] == applied["id"] and item.get("staff_notes") == "Salaire négocié — interne seulement." for item in inbox)
+
+
+def test_suspended_account_cannot_login(client):
+    data = register(client, "suspended@example.com")
+    from app.database import SessionLocal
+    from app.models import User
+    from app.models.enums import AccountStatus
+
+    db = SessionLocal()
+    user = db.get(User, data["user"]["id"])
+    user.account_status = AccountStatus.SUSPENDED
+    db.commit()
+    db.close()
+    res = client.post("/api/auth/login", json={"email": "suspended@example.com", "password": "Password1!"})
+    assert res.status_code == 403
+    assert res.json()["code"] == "ACCOUNT_DISABLED"
+
+
+def test_super_admin_preferences_settings_and_conversation(client):
+    admin = _promote_admin(client, "schema-admin@example.com")
+    from app.database import SessionLocal
+    from app.models import User
+    from app.models.enums import UserRole
+
+    db = SessionLocal()
+    user = db.get(User, admin["user"]["id"])
+    user.role = UserRole.SUPER_ADMIN
+    db.commit()
+    db.close()
+    res = client.post("/api/auth/login", json={"email": "schema-admin@example.com", "password": "Password1!"})
+    tokens = res.json()["data"]
+    headers = auth_header(tokens)
+    boot = client.get("/api/admin/bootstrap", headers=headers)
+    assert boot.status_code == 200
+    prefs = client.get("/api/users/me/preferences", headers=headers)
+    assert prefs.status_code == 200
+    assert prefs.json()["data"]["locale"] == "fr-CA"
+    patched = client.patch("/api/users/me/preferences", headers=headers, json={"locale": "en-CA", "notify_match": False})
+    assert patched.status_code == 200
+    assert patched.json()["data"]["locale"] == "en-CA"
+    setting = client.patch(
+        "/api/admin/settings",
+        headers=headers,
+        json={"key": "billing.currency", "value": "CAD", "label": "Devise"},
+    )
+    assert setting.status_code == 200
+    listed = client.get("/api/admin/settings", headers=headers)
+    assert any(row["key"] == "billing.currency" for row in listed.json()["data"])
+    cand = register(client, "conv-cand@example.com", first_name="Nadia")
+    sent = client.post(
+        "/api/messages",
+        headers=auth_header(cand),
+        json={"recipient_id": tokens["user"]["id"], "body": "Bonjour, je postule en usine."},
+    )
+    assert sent.status_code == 200
+    assert sent.json()["data"]["conversation_id"]
+    emp = register(client, "member-emp@example.com", "EMPLOYER")
+    company = client.get("/api/companies/me", headers=auth_header(emp))
+    assert company.status_code == 200
+    assert company.json()["data"]["province"] == "Québec"

@@ -1,27 +1,47 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Integer, String, Text
+from sqlalchemy import Column, DateTime, Enum, ForeignKey, Index, Integer, String, Table, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
-from app.models.enums import CompanyStatus, ContractStatus, MissionStatus, utcnow
+from app.models.enums import CompanyMemberRole, CompanyStatus, ContractStatus, MissionStatus, utcnow
 from app.models.identity import uid
+
+
+mission_jobs = Table(
+    "mission_jobs",
+    Base.metadata,
+    Column("mission_id", ForeignKey("recruitment_missions.id", ondelete="CASCADE"), primary_key=True),
+    Column("job_id", ForeignKey("job_offers.id", ondelete="CASCADE"), primary_key=True),
+)
 
 
 class Company(Base):
     __tablename__ = "companies"
+    __table_args__ = (
+        Index("ix_companies_sector", "sector"),
+        Index("ix_companies_city", "city"),
+    )
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
     name: Mapped[str] = mapped_column(String(160), nullable=False, index=True)
+    legal_name: Mapped[str | None] = mapped_column(String(160))
+    trade_name: Mapped[str | None] = mapped_column(String(160))
+    logo_path: Mapped[str | None] = mapped_column(String(255))
+    description: Mapped[str | None] = mapped_column(Text)
     sector: Mapped[str | None] = mapped_column(String(80))
     city: Mapped[str | None] = mapped_column(String(80))
+    address: Mapped[str | None] = mapped_column(String(255))
+    province: Mapped[str | None] = mapped_column(String(80), default="Québec")
+    country: Mapped[str | None] = mapped_column(String(80), default="Canada")
     contact_name: Mapped[str | None] = mapped_column(String(120))
     email: Mapped[str | None] = mapped_column(String(255))
     phone: Mapped[str | None] = mapped_column(String(40))
     website: Mapped[str | None] = mapped_column(String(160))
     employees: Mapped[int | None] = mapped_column(Integer)
-    status: Mapped[CompanyStatus] = mapped_column(Enum(CompanyStatus), default=CompanyStatus.ACTIVE)
-    owner_user_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"))
+    size_label: Mapped[str | None] = mapped_column(String(40))
+    status: Mapped[CompanyStatus] = mapped_column(Enum(CompanyStatus), default=CompanyStatus.ACTIVE, index=True)
+    owner_user_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"), index=True)
     assigned_recruiter_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
@@ -30,6 +50,21 @@ class Company(Base):
     jobs: Mapped[list["JobOffer"]] = relationship(back_populates="company")
     contracts: Mapped[list["Contract"]] = relationship(back_populates="company")
     missions: Mapped[list["RecruitmentMission"]] = relationship(back_populates="company")
+    memberships: Mapped[list["CompanyMembership"]] = relationship(back_populates="company", cascade="all, delete-orphan")
+
+
+class CompanyMembership(Base):
+    __tablename__ = "company_memberships"
+    __table_args__ = (UniqueConstraint("company_id", "user_id", name="uq_company_membership"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    company_id: Mapped[str] = mapped_column(ForeignKey("companies.id", ondelete="CASCADE"), index=True, nullable=False)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
+    member_role: Mapped[CompanyMemberRole] = mapped_column(Enum(CompanyMemberRole), default=CompanyMemberRole.MEMBER)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    company: Mapped[Company] = relationship(back_populates="memberships")
+    user = relationship("User", back_populates="company_memberships")
 
 
 class Contract(Base):
@@ -44,6 +79,11 @@ class Contract(Base):
     terms: Mapped[str | None] = mapped_column(Text)
     status: Mapped[ContractStatus] = mapped_column(Enum(ContractStatus), default=ContractStatus.ACTIVE)
     document_name: Mapped[str | None] = mapped_column(String(255))
+    document_path: Mapped[str | None] = mapped_column(String(255))
+    recruiter_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"))
+    notes: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
 
     company: Mapped[Company] = relationship(back_populates="contracts")
     signatures: Mapped[list["ContractSignature"]] = relationship(back_populates="contract")
@@ -64,7 +104,10 @@ class RecruitmentMission(Base):
     progress: Mapped[int] = mapped_column(Integer, default=0)
     start_date: Mapped[str | None] = mapped_column(String(16))
     due_date: Mapped[str | None] = mapped_column(String(16))
+    notes: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
 
     company: Mapped[Company] = relationship(back_populates="missions")
-    job = relationship("JobOffer", back_populates="missions")
+    job = relationship("JobOffer", back_populates="missions", foreign_keys=[job_id])
+    linked_jobs: Mapped[list] = relationship("JobOffer", secondary=mission_jobs, back_populates="linked_missions")

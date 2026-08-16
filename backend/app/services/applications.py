@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.errors import AppError
 from app.models import Application, ApplicationStatusHistory, Candidate, JobOffer, Resume, User
+from app.rbac import ADMINS
 from app.models.enums import (
     ApplicationStatus,
     EmailType,
@@ -64,6 +65,7 @@ def apply(db: Session, user: User, data: ApplicationCreateIn, ip: str | None = N
         resume_id=resume.id if resume else None,
         status=ApplicationStatus.SUBMITTED,
         cover_note=data.cover_note,
+        source="site",
         match_score=score,
     )
     db.add(application)
@@ -120,6 +122,9 @@ def apply_public(db: Session, data: PublicApplyIn, ip: str | None = None) -> App
         )
         db.add(user)
         db.flush()
+        from app.models import UserPreference
+
+        db.add(UserPreference(user_id=user.id))
         db.add(Candidate(user_id=user.id, city=None, title=None))
         send_email(db, user.email, EmailType.WELCOME, "welcome", name=user.first_name, link=f"{job.title}")
     payload = ApplicationCreateIn(job_slug=data.job_slug, cover_note=data.cover_note or data.cv_url)
@@ -155,11 +160,11 @@ def get_application(db: Session, user: User, application_id: str) -> Application
         if app_row.candidate_id != cand.id:
             raise AppError(403, "Vous n'avez pas accès à cette candidature.", "FORBIDDEN")
     elif user.role == UserRole.EMPLOYER:
-        from app.models import Company
-        company = db.scalar(select(Company).where(Company.owner_user_id == user.id))
-        if not company or app_row.job.company_id != company.id:
+        from app.services.access import user_belongs_to_company
+
+        if not user_belongs_to_company(db, user, app_row.job.company_id):
             raise AppError(403, "Vous n'avez pas accès à cette candidature.", "FORBIDDEN")
-    elif user.role not in {UserRole.RECRUITER, UserRole.ADMIN}:
+    elif user.role not in {UserRole.RECRUITER} | ADMINS:
         raise AppError(403, "Vous n'avez pas accès à cette candidature.", "FORBIDDEN")
     return app_row
 
@@ -193,7 +198,16 @@ def change_status(db: Session, user: User, application_id: str, status: Applicat
         template,
         name=candidate_user.first_name, job_title=application.job.title, status=status.value, comment=comment or "",
     )
-    audit(db, "application.status", user, "application", application.id, metadata={"from": old, "to": status.value})
+    audit(
+        db,
+        "application.status",
+        user,
+        "application",
+        application.id,
+        metadata={"from": old, "to": status.value},
+        old_value=old,
+        new_value=status.value,
+    )
     db.commit()
     db.refresh(application)
     return application
@@ -210,26 +224,29 @@ def list_inbox(db: Session, user: User, job_id: str | None = None) -> list[Appli
         .join(JobOffer)
     )
     if user.role == UserRole.EMPLOYER:
-        from app.models import Company
+        from app.services.access import company_ids_for_employer
 
-        company = db.scalar(select(Company).where(Company.owner_user_id == user.id))
-        if not company:
+        ids = company_ids_for_employer(db, user)
+        if not ids:
             return []
-        stmt = stmt.where(JobOffer.company_id == company.id)
-    elif user.role not in {UserRole.RECRUITER, UserRole.ADMIN}:
+        stmt = stmt.where(JobOffer.company_id.in_(ids))
+    elif user.role not in {UserRole.RECRUITER} | ADMINS:
         raise AppError(403, "Vous n'avez pas accès aux candidatures.", "FORBIDDEN")
     if job_id:
         stmt = stmt.where(Application.job_id == job_id)
     return list(db.scalars(stmt.order_by(Application.created_at.desc())).unique().all())
 
 
-def serialize_application(row: Application) -> dict:
-    return {
+def serialize_application(row: Application, viewer: User | None = None) -> dict:
+    include_staff = viewer is not None and viewer.role != UserRole.CANDIDATE
+    payload = {
         "id": row.id,
         "status": row.status.value,
         "cover_note": row.cover_note,
+        "source": row.source,
         "match_score": row.match_score,
         "created_at": row.created_at.isoformat() if row.created_at else None,
+        "updated_at": row.updated_at.isoformat() if row.updated_at else None,
         "job": {
             "id": row.job.id,
             "slug": row.job.slug,
@@ -249,3 +266,13 @@ def serialize_application(row: Application) -> dict:
             for h in (row.history or [])
         ],
     }
+    if include_staff:
+        payload["staff_notes"] = row.staff_notes
+        if row.candidate and row.candidate.user:
+            payload["candidate"] = {
+                "id": row.candidate.id,
+                "first_name": row.candidate.user.first_name,
+                "last_name": row.candidate.user.last_name,
+                "email": row.candidate.user.email,
+            }
+    return payload

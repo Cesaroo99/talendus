@@ -8,6 +8,7 @@ from app.deps import get_current_user, require_roles
 from app.errors import ok
 from app.models import Candidate, User
 from app.models.enums import UserRole
+from app.rbac import is_admin
 from app.schemas import CandidateProfileIn, CertificationIn, EducationIn, ExperienceIn
 from app.services import candidates as cand_svc
 from app.services.auth import ensure_candidate
@@ -73,7 +74,7 @@ def list_candidates(
     user: User = Depends(require_roles(UserRole.RECRUITER, UserRole.ADMIN)),
     db: Session = Depends(get_db),
 ):
-    private = user.role in {UserRole.RECRUITER, UserRole.ADMIN}
+    private = is_admin(user) or user.role == UserRole.RECRUITER
     return ok([cand_svc.serialize_candidate(c, include_private=private) for c in cand_svc.list_for_staff(db)])
 
 
@@ -104,5 +105,5 @@ def get_candidate(
     if not profile:
         from app.errors import AppError
         raise AppError(404, "Candidat introuvable.", "CANDIDATE_NOT_FOUND")
-    private = user.role in {UserRole.RECRUITER, UserRole.ADMIN}
+    private = is_admin(user) or user.role == UserRole.RECRUITER
     return ok(cand_svc.serialize_candidate(profile, include_private=private))

@@ -18,6 +18,7 @@ class Notification(Base):
     message: Mapped[str] = mapped_column(Text, default="")
     href: Mapped[str | None] = mapped_column(String(255))
     is_read: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+    read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
@@ -56,5 +57,7 @@ class AuditLog(Base):
     entity_type: Mapped[str | None] = mapped_column(String(40))
     entity_id: Mapped[str | None] = mapped_column(String(36))
     ip_address: Mapped[str | None] = mapped_column(String(64))
+    old_value: Mapped[str | None] = mapped_column(Text)
+    new_value: Mapped[str | None] = mapped_column(Text)
     metadata_json: Mapped[str | None] = mapped_column(Text)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
