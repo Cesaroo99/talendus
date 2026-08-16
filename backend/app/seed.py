@@ -557,7 +557,7 @@ def _seed(db: Session) -> None:
             type=NotificationType.MESSAGE,
             title="Nouveau message",
             message="Marc Gagnon vous a écrit au sujet du poste de cariste.",
-            href="/espace.html",
+            href="/espace.html#/messages",
         )
     )
     db.add(

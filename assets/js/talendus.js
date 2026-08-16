@@ -10,6 +10,9 @@
   }
 
   function navKey(file) {
+    var path = (window.location.pathname || "").toLowerCase();
+    if (path.indexOf("/candidate") !== -1 || file === "espace.html" || file === "account.html") return "candidats";
+    if (path.indexOf("/employer") !== -1 || file === "espace-employeur.html" || file === "account-employer.html") return "employeurs";
     if (!file || file === "index.html") return "home";
     if (
       file === "employeurs.html" ||
@@ -32,8 +35,6 @@
     if (file === "a-propos.html" || file === "about.html") return "about";
     if (file === "blog.html" || file.indexOf("article-") === 0 || file === "blog-single.html" || (window.location.pathname || "").indexOf("/blog/") === 0) return "blog";
     if (file === "contact.html") return "contact";
-    if (file === "espace.html" || file === "account.html") return "candidats";
-    if (file === "espace-employeur.html" || file === "account-employer.html") return "employeurs";
     return "";
   }
 
@@ -49,11 +50,12 @@
     setTimeout(markActiveNav, 250);
     var apiUser = window.TalendusAPI && window.TalendusAPI.currentUser && window.TalendusAPI.currentUser();
     if (apiUser && apiUser.first_name) {
-      var isEn = (document.documentElement.lang || "").toLowerCase().indexOf("en") === 0;
-      var href = isEn ? "account.html" : "espace.html";
-      if (apiUser.role === "EMPLOYER") href = isEn ? "account-employer.html" : "espace-employeur.html";
+      var isEnNav = (document.documentElement.lang || "").toLowerCase().indexOf("en") === 0;
+      var root = isEnNav ? "/en/" : "/";
+      var href = root + (isEnNav ? "account.html" : "espace.html") + "#/dashboard";
+      if (apiUser.role === "EMPLOYER") href = root + (isEnNav ? "account-employer.html" : "espace-employeur.html") + "#/dashboard";
       else if (["ADMIN", "SUPER_ADMIN", "RECRUITER", "FINANCE", "EDITOR"].indexOf(apiUser.role) !== -1) {
-        href = (isEn ? "../" : "") + "admin/";
+        href = "/admin/";
       }
       document.querySelectorAll("[data-account-link]").forEach(function (el) {
         el.textContent = apiUser.first_name;
@@ -197,6 +199,9 @@
             showFormMessage(form, fallback, false);
             form.reset();
             if (window.TalendusTrack) window.TalendusTrack.apply({ content_name: slug || "job" });
+            if (user && user.role === "CANDIDATE") {
+              window.location.href = (isEn ? "/en/account.html" : "/espace.html") + "#/apps";
+            }
           }).catch(function (err) {
             showFormMessage(form, (err && err.message) || fallback, true);
           }).then(done);
@@ -308,7 +313,7 @@
       window.TalendusAPI.jobs({ page_size: 24, sort: "relevance" }).then(function (payload) {
         var items = (payload && payload.data) || [];
         if (!items.length) return;
-        var prefix = isEn ? "job-" : "emploi-";
+        var prefix = isEn ? "/en/job-" : "/emploi-";
         jobList.innerHTML = items.map(function (job) {
           var href = prefix + job.slug + ".html";
           var salary = job.salary_display || "";

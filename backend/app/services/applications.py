@@ -2,7 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
 from app.errors import AppError
-from app.models import Application, ApplicationStatusHistory, Candidate, JobOffer, Resume, User
+from app.models import Application, ApplicationStatusHistory, Candidate, CompanyMembership, JobOffer, Resume, User
 from app.rbac import ADMINS
 from app.models.enums import (
     ApplicationStatus,
@@ -16,8 +16,55 @@ from app.services.audit import audit
 from app.services.auth import ensure_candidate
 from app.services.email import send_email
 from app.services.jobs import assert_job_open, get_public_job
-from app.services.notifications import notify
+from app.services.notifications import notify, portal_href
 from app.services.pipeline import stage_for
+
+
+def _company_recipients(db: Session, job: JobOffer) -> list[User]:
+    if not job.company_id:
+        return []
+    members = list(
+        db.scalars(
+            select(CompanyMembership)
+            .options(joinedload(CompanyMembership.user))
+            .where(CompanyMembership.company_id == job.company_id)
+        ).all()
+    )
+    people = [m.user for m in members if m.user]
+    company = job.company
+    owner_id = company.owner_user_id if company else None
+    if owner_id and owner_id not in {p.id for p in people}:
+        owner = db.get(User, owner_id)
+        if owner:
+            people.append(owner)
+    return people
+
+
+def _notify_new_application(db: Session, job: JobOffer, applicant: User) -> None:
+    seen: set[str] = set()
+    staff = db.get(User, job.recruiter_id) if job.recruiter_id else None
+    if staff:
+        notify(
+            db,
+            staff,
+            NotificationType.APPLICATION_NEW,
+            "Nouvelle candidature",
+            f"{applicant.full_name} a postulé pour {job.title}.",
+            href=portal_href(staff, "jobs", job.id),
+        )
+        seen.add(staff.id)
+    for person in _company_recipients(db, job):
+        if person.id in seen or person.role != UserRole.EMPLOYER:
+            continue
+        notify(
+            db,
+            person,
+            NotificationType.APPLICATION_NEW,
+            "Nouvelle candidature",
+            f"{applicant.full_name} a postulé pour {job.title}.",
+            href=portal_href(person, "inbox"),
+        )
+        seen.add(person.id)
 
 
 def _history(db: Session, application: Application, old: str | None, new: str, actor: User | None, comment: str | None = None) -> None:
@@ -45,9 +92,9 @@ def apply(db: Session, user: User, data: ApplicationCreateIn, ip: str | None = N
     candidate = ensure_candidate(db, user)
     job = None
     if data.job_id:
-        job = db.get(JobOffer, data.job_id)
+        job = db.scalar(select(JobOffer).options(joinedload(JobOffer.company)).where(JobOffer.id == data.job_id))
     elif data.job_slug:
-        job = db.scalar(select(JobOffer).where(JobOffer.slug == data.job_slug))
+        job = db.scalar(select(JobOffer).options(joinedload(JobOffer.company)).where(JobOffer.slug == data.job_slug))
     if not job:
         raise AppError(404, "Offre introuvable.", "JOB_NOT_FOUND")
     assert_job_open(job)
@@ -72,15 +119,8 @@ def apply(db: Session, user: User, data: ApplicationCreateIn, ip: str | None = N
     db.add(application)
     db.flush()
     _history(db, application, None, ApplicationStatus.SUBMITTED.value, user)
-    staff = None
-    if job.recruiter_id:
-        staff = db.get(User, job.recruiter_id)
-    notify(
-        db, staff, NotificationType.APPLICATION_NEW,
-        "Nouvelle candidature",
-        f"{user.full_name} a postulé pour {job.title}.",
-        href=f"/admin/#/jobs/{job.id}",
-    )
+    staff = db.get(User, job.recruiter_id) if job.recruiter_id else None
+    _notify_new_application(db, job, user)
     if staff:
         send_email(
             db, staff.email, EmailType.NEW_APPLICATION_RECRUITER, "new_application",
@@ -103,7 +143,14 @@ def apply(db: Session, user: User, data: ApplicationCreateIn, ip: str | None = N
             template="employer_notice",
             variables={"candidate": user.full_name, "job": job.title},
         )
-    notify(db, user, NotificationType.APPLICATION_NEW, "Candidature envoyée", f"Votre candidature pour {job.title} a été transmise.", href="/espace.html#/applications")
+    notify(
+        db,
+        user,
+        NotificationType.APPLICATION_NEW,
+        "Candidature envoyée",
+        f"Votre candidature pour {job.title} a été transmise.",
+        href=portal_href(user, "apps"),
+    )
     audit(db, "application.create", user, "application", application.id, ip, {"job_id": job.id})
     db.commit()
     db.refresh(application)
@@ -203,7 +250,7 @@ def change_status(db: Session, user: User, application_id: str, status: Applicat
         db, candidate_user, ntype,
         "Mise à jour de candidature",
         f"{application.job.title} : {status.value}",
-        href="/espace.html#/applications/" + application.id,
+        href=portal_href(candidate_user, "application", application.id),
     )
     template = "interview" if status == ApplicationStatus.INTERVIEW else "application_status"
     send_email(

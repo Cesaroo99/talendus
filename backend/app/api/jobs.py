@@ -109,9 +109,12 @@ def remove_bookmark(
 
 
 @router.get("/{slug}")
-def get_job(slug: str, db: Session = Depends(get_db)):
+def get_job(slug: str, db: Session = Depends(get_db), user: User | None = Depends(get_current_user_optional)):
     job = jobs_service.get_public_job(db, slug)
-    return ok(jobs_service.serialize_job(job))
+    payload = jobs_service.serialize_job(job)
+    if user and user.role == UserRole.CANDIDATE:
+        payload["saved"] = job.id in saved_job_ids(db, user, [job.id])
+    return ok(payload)
 
 
 @router.post("")

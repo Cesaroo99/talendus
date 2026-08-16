@@ -133,7 +133,12 @@
         HR: isEn ? "HR" : "RH",
         RECRUITER: isEn ? "Recruiter" : "Recruteur",
         MEMBER: isEn ? "Member" : "Membre",
-        BILLING: isEn ? "Billing" : "Facturation"
+        BILLING: isEn ? "Billing" : "Facturation",
+        SENT: isEn ? "Sent" : "Envoyée",
+        PENDING: isEn ? "Pending" : "En attente",
+        PAID: isEn ? "Paid" : "Payée",
+        OVERDUE: isEn ? "Overdue" : "En retard",
+        REFUNDED: isEn ? "Refunded" : "Remboursée"
       };
       return map[s] || s;
     }
@@ -164,13 +169,33 @@
     function staffRole(role) {
       return ["ADMIN", "SUPER_ADMIN", "RECRUITER", "FINANCE", "EDITOR"].indexOf(role) !== -1;
     }
+    function siteRoot() {
+      return isEn ? "/en/" : "/";
+    }
     function accountHref(role) {
-      if (staffRole(role)) return (isEn ? "../" : "") + "admin/";
-      if (role === "EMPLOYER") return isEn ? "account-employer.html" : "espace-employeur.html";
-      return isEn ? "account.html" : "espace.html";
+      if (staffRole(role)) return "/admin/";
+      if (role === "EMPLOYER") return siteRoot() + (isEn ? "account-employer.html" : "espace-employeur.html") + "#/dashboard";
+      return siteRoot() + (isEn ? "account.html" : "espace.html") + "#/dashboard";
+    }
+    function localizeHref(href) {
+      if (!href) return "";
+      if (!isEn) return href;
+      return String(href)
+        .replace("/espace-employeur.html", "/en/account-employer.html")
+        .replace("/espace.html", "/en/account.html");
     }
     function pathMode() {
       return /\/(candidate|employer)(\/|$)/.test(location.pathname);
+    }
+    function normalizeRoute(name, id) {
+      if (isEmployerSpace() && (name === "applications" || name === "apps" || name === "candidatures")) {
+        return { name: "inbox", id: id || "" };
+      }
+      if (name === "applications" || name === "candidatures" || name === "apps") {
+        return id ? { name: "application", id: id } : { name: "apps", id: "" };
+      }
+      if (name === "job" && !id) return { name: "jobs", id: "" };
+      return { name: name || "dashboard", id: id || "" };
     }
     function currentRoute() {
       var parts = location.pathname.replace(/\/+$/, "").split("/").filter(Boolean);
@@ -181,7 +206,7 @@
         var hash = (location.hash || "").replace(/^#\/?/, "");
         rest = hash ? hash.split("/") : ["dashboard"];
       }
-      return { name: rest[0] || "dashboard", id: rest[1] || "" };
+      return normalizeRoute(rest[0] || "dashboard", rest[1] || "");
     }
     function go(name, id) {
       var suffix = name + (id ? "/" + id : "");
@@ -210,8 +235,9 @@
       if (isEmployerSpace()) {
         return [
           ["dashboard", t.dashboard], ["company", t.company], ["jobs", t.jobs], ["inbox", t.inbox],
-          ["candidates", t.candidates], ["interviews", t.interviews], ["messages", t.messages, unreadM],
-          ["documents", t.documents], ["notifs", t.notifs, unreadN], ["settings", t.settings]
+          ["pipeline", t.pipeline], ["candidates", t.candidates], ["interviews", t.interviews],
+          ["messages", t.messages, unreadM], ["invoices", t.invoices], ["documents", t.documents],
+          ["notifs", t.notifs, unreadN], ["settings", t.settings]
         ];
       }
       return [
@@ -275,7 +301,7 @@
 
     function jobCard(job, extra) {
       job = job || {};
-      var href = (isEn ? "job-" : "emploi-") + (job.slug || "") + ".html";
+      var href = (isEn ? "/en/job-" : "/emploi-") + (job.slug || "") + ".html";
       return '<article class="tl-list-card"><span class="tl-chip orange">' + esc(statusLabel(job.status || "PUBLISHED")) + "</span>" +
         (job.saved ? '<span class="tl-match-score">' + esc(t.unbookmark) + "</span>" : "") +
         "<h3>" + esc(job.title || "") + "</h3><p class=\"tl-meta\">" + esc(job.company_name || "") + " · " + esc(job.location || "") +
@@ -394,16 +420,20 @@
     function renderJobsSearch(payload) {
       var items = (payload && payload.data) || payload || [];
       var meta = (payload && payload.meta) || {};
-      var q = currentRoute().id;
+      var f = state.jobFilters || {};
+      function fv(name) { return esc(f[name] || ""); }
+      var sort = f.sort || "relevance";
       var html = '<form class="tl-filters" id="acc-job-filters">' +
-        '<div><label>' + esc(t.search) + '</label><input name="q" value=""></div>' +
-        "<div><label>" + esc(t.title) + '</label><input name="q2" placeholder=""></div>' +
-        "<div><label>" + esc(t.location) + '</label><input name="location"></div>' +
-        "<div><label>" + esc(t.sector) + '</label><input name="sector"></div>' +
-        "<div><label>" + esc(t.contract) + '</label><input name="contract_type"></div>' +
-        "<div><label>" + esc(t.salary) + '</label><input name="salary_min" type="number"></div>' +
-        "<div><label>" + esc(t.experience) + '</label><input name="experience"></div>' +
-        "<div><label>" + esc(t.sort) + '</label><select name="sort"><option value="relevance">Pertinence</option><option value="published_at">Date</option><option value="salary">Salaire</option></select></div>' +
+        '<div><label>' + esc(t.search) + '</label><input name="q" value="' + fv("q") + '"></div>' +
+        "<div><label>" + esc(t.location) + '</label><input name="location" value="' + fv("location") + '"></div>' +
+        "<div><label>" + esc(t.sector) + '</label><input name="sector" value="' + fv("sector") + '"></div>' +
+        "<div><label>" + esc(t.contract) + '</label><input name="contract_type" value="' + fv("contract_type") + '"></div>' +
+        "<div><label>" + esc(t.salary) + '</label><input name="salary_min" type="number" value="' + fv("salary_min") + '"></div>' +
+        "<div><label>" + esc(t.experience) + '</label><input name="experience" value="' + fv("experience") + '"></div>' +
+        "<div><label>" + esc(t.sort) + '</label><select name="sort">' +
+        [["relevance", isEn ? "Relevance" : "Pertinence"], ["published_at", isEn ? "Date" : "Date"], ["salary", isEn ? "Salary" : "Salaire"]].map(function (opt) {
+          return '<option value="' + opt[0] + '"' + (sort === opt[0] ? " selected" : "") + ">" + esc(opt[1]) + "</option>";
+        }).join("") + "</select></div>" +
         '<div><button class="tl-btn" type="submit">' + esc(t.search) + "</button></div></form>";
       if (!items.length) html += empty(t.noResults);
       else html += '<div class="tl-list-cards">' + items.map(function (j) { return jobCard(j); }).join("") + "</div>";
@@ -418,14 +448,16 @@
 
     function bindJobsSearch() {
       var form = document.getElementById("acc-job-filters");
+      if (!form && !document.getElementById("acc-saved-jobs")) return;
       function load(page) {
-        var d = form ? Object.fromEntries(new FormData(form).entries()) : {};
+        var d = form ? Object.fromEntries(new FormData(form).entries()) : (state.jobFilters || {});
         var params = new URLSearchParams();
         ["q", "location", "sector", "contract_type", "experience", "salary_min", "sort"].forEach(function (k) {
-          var v = d[k] || (k === "q" ? d.q2 : "");
+          var v = d[k];
           if (v) params.set(k, v);
         });
-        params.set("page", page || 1);
+        params.set("page", page || d.page || 1);
+        state.jobFilters = Object.assign({}, d, { page: page || d.page || 1 });
         api.request("/jobs?" + params.toString()).then(function (json) {
           state.jobs = json;
           go("jobs");
@@ -433,6 +465,7 @@
       }
       if (form) form.addEventListener("submit", function (e) { e.preventDefault(); load(1); });
       root.querySelectorAll("[data-page]").forEach(function (b) { b.onclick = function () { load(b.getAttribute("data-page")); }; });
+      if (!document.getElementById("acc-saved-jobs")) return;
       api.request("/jobs/saved").then(function (json) {
         var box = document.getElementById("acc-saved-jobs");
         if (!box) return;
@@ -499,7 +532,8 @@
       if (!notifs || !notifs.length) return empty(t.emptyNotifs);
       return '<p><button type="button" class="tl-btn tl-btn-ghost" id="acc-readall">' + esc(t.markAll) + "</button></p><div class=\"tl-account-notifs\">" +
         notifs.map(function (n) {
-          return '<div class="tl-account-notif' + (n.is_read ? "" : " is-unread") + '"><b>' + esc(n.title) + "</b><p>" + esc(n.message) +
+          var href = localizeHref(n.href);
+          return '<div class="tl-account-notif' + (n.is_read ? "" : " is-unread") + (href ? " is-clickable" : "") + '" data-open-notif="' + esc(n.id) + '" data-href="' + esc(href) + '"><b>' + esc(n.title) + "</b><p>" + esc(n.message) +
             "</p><p class=\"tl-meta\">" + esc(fmtDate(n.created_at)) + (n.is_read ? "" : ' · <button type="button" class="tl-btn tl-btn-ghost" data-read="' + esc(n.id) + '">' + esc(t.markRead) + "</button>") + "</p></div>";
         }).join("") + "</div>";
     }
@@ -643,7 +677,9 @@
         [["active_jobs", t.activeJobs], ["applications", t.inbox], ["shortlisted", t.shortlisted], ["interviews", t.interviews], ["hired", t.hired]].map(function (row) {
           return '<div class="tl-stat-card"><b>' + esc(s[row[0]] || 0) + "</b><span>" + esc(row[1]) + "</span></div>";
         }).join("") + "</div><div class=\"tl-quick-actions\"><button type=\"button\" class=\"tl-btn\" data-nav=\"job-new\">" +
-        esc(t.createJob) + "</button><button type=\"button\" class=\"tl-btn tl-btn-ghost\" data-nav=\"inbox\">" + esc(t.inbox) + "</button></div>";
+        esc(t.createJob) + "</button><button type=\"button\" class=\"tl-btn tl-btn-ghost\" data-nav=\"inbox\">" + esc(t.inbox) +
+        "</button><button type=\"button\" class=\"tl-btn tl-btn-ghost\" data-nav=\"pipeline\">" + esc(t.pipeline) +
+        "</button><button type=\"button\" class=\"tl-btn tl-btn-ghost\" data-nav=\"invoices\">" + esc(t.invoices) + "</button></div>";
     }
 
     function companyForm(company) {
@@ -711,6 +747,58 @@
       }).join("") + "</tbody></table></div>";
     }
 
+    function money(amount) {
+      var n = Number(amount) || 0;
+      try {
+        return new Intl.NumberFormat(isEn ? "en-CA" : "fr-CA", { style: "currency", currency: "CAD", maximumFractionDigits: 0 }).format(n);
+      } catch (e) {
+        return n + " $";
+      }
+    }
+
+    function renderInvoices(rows) {
+      if (!rows || !rows.length) return empty(t.emptyInvoices);
+      var payable = { SENT: 1, PENDING: 1, OVERDUE: 1 };
+      return '<div class="tl-table-wrap"><table class="tl-portal-table"><thead><tr><th>' + esc(t.invoices) + "</th><th>" + esc(t.salary) +
+        "</th><th></th><th></th></tr></thead><tbody>" + rows.map(function (inv) {
+        var pay = payable[inv.status] ? '<button type="button" class="tl-btn" data-pay="' + esc(inv.id) + '">' + esc(t.pay) + "</button>" : "";
+        return "<tr><td data-label=\"" + esc(t.invoices) + "\">" + esc(inv.number || inv.id) +
+          "</td><td data-label=\"" + esc(t.salary) + "\">" + esc(money(inv.amount_total || inv.amount)) +
+          "</td><td><span class=\"tl-chip\">" + esc(statusLabel(inv.status)) + "</span></td><td>" + pay + "</td></tr>";
+      }).join("") + "</tbody></table></div><div class=\"tl-success\" id=\"acc-inv-msg\"></div>";
+    }
+
+    function renderPipeline(apps) {
+      var stages = [
+        ["nouveaux", t.sent], ["preselection", t.review], ["presentation", t.preselect],
+        ["entretien-talendus", t.interview], ["entretien-client", isEn ? "Client interview" : "Entretien client"],
+        ["offre", isEn ? "Offer" : "Offre"], ["placement", t.hired]
+      ];
+      var opts = ["SUBMITTED", "UNDER_REVIEW", "SHORTLISTED", "INTERVIEW", "SECOND_INTERVIEW", "OFFER_SENT", "HIRED", "REJECTED"];
+      var grouped = {};
+      stages.forEach(function (st) { grouped[st[0]] = []; });
+      (apps || []).forEach(function (a) {
+        var key = a.pipeline_stage || "nouveaux";
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push(a);
+      });
+      return '<div class="tl-pipeline">' + stages.map(function (st) {
+        var cards = (grouped[st[0]] || []).map(function (a) {
+          var c = a.candidate || {};
+          var job = a.job || {};
+          return '<article class="tl-pipe-card"><b>' + esc((c.first_name || "") + " " + (c.last_name || "")) +
+            "</b><p class=\"tl-meta\">" + esc(job.title || "") + "</p>" +
+            '<select data-app-status="' + esc(a.id) + '">' + opts.map(function (s) {
+              return '<option value="' + s + '"' + (a.status === s ? " selected" : "") + ">" + esc(statusLabel(s)) + "</option>";
+            }).join("") + "</select>" +
+            (c.id ? '<p><button type="button" class="tl-btn tl-btn-ghost" data-nav="candidate" data-id="' + esc(c.id) + '">' + esc(t.candidates) + "</button></p>" : "") +
+            "</article>";
+        }).join("");
+        return '<section class="tl-pipe-col"><h4>' + esc(st[1]) + " <span>" + (grouped[st[0]] || []).length + "</span></h4>" +
+          (cards || '<p class="tl-meta">—</p>') + "</section>";
+      }).join("") + "</div>";
+    }
+
     function renderMembers(members) {
       var rows = (members || []).map(function (m) {
         return "<tr><td data-label=\"" + esc(t.first) + "\">" + esc((m.first_name || "") + " " + (m.last_name || "")) +
@@ -725,20 +813,55 @@
         '</button><div class="tl-success"></div></form>';
     }
 
-    var state = { user: null, unreadN: 0, unreadM: 0 };
+    var state = { user: null, unreadN: 0, unreadM: 0, jobFilters: {} };
 
     function bindCommon() {
       var mark = document.getElementById("acc-readall");
       if (mark) mark.onclick = function () { api.request("/notifications/read-all", { method: "POST" }).then(function () { go("notifs"); }); };
       root.querySelectorAll("[data-read]").forEach(function (b) {
-        b.onclick = function () { api.request("/notifications/" + b.getAttribute("data-read") + "/read", { method: "POST" }).then(function () { go("notifs"); }); };
+        b.onclick = function (ev) {
+          ev.stopPropagation();
+          api.request("/notifications/" + b.getAttribute("data-read") + "/read", { method: "POST" }).then(function () { go("notifs"); });
+        };
       });
       root.querySelectorAll("[data-job-pub]").forEach(function (b) { b.onclick = function () { api.request("/jobs/" + b.getAttribute("data-job-pub") + "/publish", { method: "POST" }).then(function () { go("jobs"); }); }; });
       root.querySelectorAll("[data-job-pause]").forEach(function (b) { b.onclick = function () { api.request("/jobs/" + b.getAttribute("data-job-pause") + "/pause", { method: "POST" }).then(function () { go("jobs"); }); }; });
       root.querySelectorAll("[data-job-arch]").forEach(function (b) { b.onclick = function () { api.request("/jobs/" + b.getAttribute("data-job-arch") + "/archive", { method: "POST" }).then(function () { go("jobs"); }); }; });
       root.querySelectorAll("[data-app-status]").forEach(function (sel) {
         sel.onchange = function () {
-          api.request("/applications/" + sel.getAttribute("data-app-status") + "/status", { method: "POST", body: { status: sel.value } }).then(function () { go("inbox"); });
+          var dest = currentRoute().name === "pipeline" ? "pipeline" : "inbox";
+          api.request("/applications/" + sel.getAttribute("data-app-status") + "/status", { method: "POST", body: { status: sel.value } }).then(function () { go(dest); });
+        };
+      });
+      root.querySelectorAll("[data-open-notif]").forEach(function (el) {
+        el.onclick = function (ev) {
+          if (ev.target && ev.target.closest && ev.target.closest("[data-read]")) return;
+          var href = el.getAttribute("data-href") || "";
+          var id = el.getAttribute("data-open-notif");
+          var open = function () {
+            if (!href) return;
+            var hash = href.split("#")[1] || "";
+            var parts = hash.replace(/^\//, "").split("/");
+            if (parts[0] && (href.indexOf("espace") !== -1 || href.indexOf("account") !== -1 || href.indexOf("/candidate") !== -1 || href.indexOf("/employer") !== -1)) {
+              var mapped = normalizeRoute(parts[0], parts[1] || "");
+              go(mapped.name, mapped.id);
+              return;
+            }
+            window.location.href = href;
+          };
+          if (id) api.request("/notifications/" + id + "/read", { method: "POST" }).then(open).catch(open);
+          else open();
+        };
+      });
+      root.querySelectorAll("[data-pay]").forEach(function (btn) {
+        btn.onclick = function () {
+          api.request("/invoices/" + btn.getAttribute("data-pay") + "/checkout", { method: "POST" }).then(function (json) {
+            var url = json && json.data && json.data.checkout_url;
+            if (url) window.location.href = url;
+            else flash(document.getElementById("acc-inv-msg"), t.success, true);
+          }).catch(function (err) {
+            flash(document.getElementById("acc-inv-msg"), (err && err.message) || t.err, false);
+          });
         };
       });
       root.querySelectorAll("[data-int-status]").forEach(function (btn) {
@@ -749,7 +872,7 @@
       var apply = document.getElementById("acc-apply");
       if (apply && state.job) apply.onclick = function () {
         api.request("/applications", { method: "POST", body: { job_id: state.job.id, job_slug: state.job.slug } })
-          .then(function () { flash(document.getElementById("acc-job-msg"), t.success, true); })
+          .then(function () { go("apps"); })
           .catch(function (err) { flash(document.getElementById("acc-job-msg"), (err && err.message) || t.err, false); });
       };
       var saveBtn = document.getElementById("acc-save-job");
@@ -867,6 +990,8 @@
           else if (route.name === "job-new") p = Promise.resolve(jobForm({}));
           else if (route.name === "job-edit") p = unwrap(api.request("/jobs/managed/" + route.id)).then(function (j) { state.editJob = j; return jobForm(j); });
           else if (route.name === "inbox" || route.name === "candidates") p = unwrap(api.request("/applications")).then(renderInbox);
+          else if (route.name === "pipeline") p = unwrap(api.request("/applications")).then(renderPipeline);
+          else if (route.name === "invoices") p = unwrap(api.request("/invoices")).then(renderInvoices);
           else if (route.name === "candidate") p = unwrap(api.request("/candidates/" + route.id)).then(function (c) {
             return "<h3>" + esc((c.first_name || "") + " " + (c.last_name || "")) + "</h3><p>" + esc(c.title || "") + " · " + esc(c.city || "") +
               "</p><p>" + esc(c.skills || "") + "</p>" + ((c.resumes || []).map(function (r) {
@@ -917,6 +1042,9 @@
     }
 
     function boot() {
+      if (isEmployerSpace() && /[?&]paid=/.test(location.search || "")) {
+        if (!(location.hash || "").replace("#", "")) location.hash = "#/invoices";
+      }
       var user = api.currentUser();
       if (user && staffRole(user.role)) { window.location.replace(accountHref(user.role)); return; }
       if (user && user.role === "EMPLOYER" && !isEmployerSpace()) { window.location.replace(accountHref("EMPLOYER")); return; }

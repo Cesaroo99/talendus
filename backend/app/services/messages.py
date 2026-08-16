@@ -7,7 +7,7 @@ from app.models.enums import NotificationType, UserRole, utcnow
 from app.rbac import ADMINS
 from app.services.access import company_ids_for_employer
 from app.services.audit import audit
-from app.services.notifications import notify
+from app.services.notifications import notify, portal_href
 
 
 def _is_staff(user: User) -> bool:
@@ -92,7 +92,7 @@ def send_message(db: Session, sender: User, recipient_id: str, body: str, applic
         NotificationType.MESSAGE,
         "Nouveau message",
         f"{sender.full_name} vous a écrit.",
-        href="/espace.html#/messages" if recipient.role == UserRole.CANDIDATE else "/espace-employeur.html#/messages",
+        href=portal_href(recipient, "messages"),
     )
     audit(db, "message.send", sender, "message", None, ip, {"to": recipient.id})
     db.commit()

@@ -1,11 +1,10 @@
 import logging
-from pathlib import Path
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models import Notification, User, UserPreference
-from app.models.enums import NotificationType, utcnow
+from app.models.enums import NotificationType, UserRole, utcnow
 
 logger = logging.getLogger("talendus.notify")
 
@@ -15,6 +14,47 @@ _APPLICATION_TYPES = {
     NotificationType.APPLICATION_ACCEPTED,
     NotificationType.APPLICATION_REJECTED,
 }
+
+_CANDIDATE_ROUTES = {
+    "applications": "apps",
+    "apps": "apps",
+    "application": "application",
+    "interviews": "interviews",
+    "messages": "messages",
+    "jobs": "jobs",
+    "dashboard": "dashboard",
+    "documents": "documents",
+    "notifs": "notifs",
+}
+_EMPLOYER_ROUTES = {
+    "applications": "inbox",
+    "inbox": "inbox",
+    "interviews": "interviews",
+    "messages": "messages",
+    "invoices": "invoices",
+    "pipeline": "pipeline",
+    "jobs": "jobs",
+    "dashboard": "dashboard",
+    "documents": "documents",
+    "notifs": "notifs",
+}
+
+
+def portal_href(user: User | None, section: str, item_id: str | None = None) -> str:
+    """Lien de notification vers le bon portail (candidat, employeur ou admin)."""
+    role = user.role if user else UserRole.CANDIDATE
+    item = f"/{item_id}" if item_id else ""
+    if role == UserRole.CANDIDATE:
+        name = _CANDIDATE_ROUTES.get(section, section)
+        if section in {"applications", "apps", "application"} and item_id:
+            name = "application"
+        return f"/espace.html#/{name}{item}"
+    if role == UserRole.EMPLOYER:
+        name = _EMPLOYER_ROUTES.get(section, section)
+        return f"/espace-employeur.html#/{name}{item}"
+    if section in {"jobs", "job"}:
+        return f"/admin/#/jobs{item}"
+    return f"/admin/#/{section}{item}"
 
 
 def _pref_allows(db: Session, user: User, ntype: NotificationType) -> bool:

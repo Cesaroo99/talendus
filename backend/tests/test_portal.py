@@ -156,3 +156,38 @@ def test_portal_routes_exist(client):
     assert res.status_code in {200, 404}
     if res.status_code == 200:
         assert "noindex" in res.headers.get("x-robots-tag", "").lower()
+
+
+def test_job_detail_includes_saved_flag(client):
+    emp = register(client, "save-detail@example.com", "EMPLOYER")
+    job = _publish_job(client, auth_header(emp), slug="soudeur-detail")
+    cand = register(client, "save-detail-cand@example.com")
+    headers = auth_header(cand)
+    client.post(f"/api/jobs/{job['id']}/save", headers=headers)
+    detail = client.get(f"/api/jobs/{job['slug']}", headers=headers)
+    assert detail.status_code == 200
+    assert detail.json()["data"]["saved"] is True
+    guest = client.get(f"/api/jobs/{job['slug']}")
+    assert guest.status_code == 200
+    assert guest.json()["data"].get("saved") in (None, False)
+
+
+def test_application_notifies_employer_inbox_and_candidate_apps(client):
+    emp = register(client, "notify-boss@example.com", "EMPLOYER")
+    _publish_job(client, auth_header(emp), slug="notify-inbox")
+    cand = register(client, "notify-worker@example.com")
+    applied = client.post("/api/applications", headers=auth_header(cand), json={"job_slug": "notify-inbox"})
+    assert applied.status_code == 200
+    app_id = applied.json()["data"]["id"]
+    cand_notes = client.get("/api/notifications", headers=auth_header(cand)).json()["data"]
+    assert any((n.get("href") or "").endswith("#/apps") for n in cand_notes)
+    emp_notes = client.get("/api/notifications", headers=auth_header(emp)).json()["data"]
+    assert any("/espace-employeur.html#/inbox" in (n.get("href") or "") for n in emp_notes)
+    changed = client.post(
+        f"/api/applications/{app_id}/status",
+        headers=auth_header(emp),
+        json={"status": "SHORTLISTED"},
+    )
+    assert changed.status_code == 200
+    after = client.get("/api/notifications", headers=auth_header(cand)).json()["data"]
+    assert any(f"#/application/{app_id}" in (n.get("href") or "") for n in after)

@@ -12,7 +12,7 @@ from app.services.access import company_ids_for_employer
 from app.services.audit import audit
 from app.services.auth import ensure_candidate
 from app.services.email import send_email
-from app.services.notifications import notify
+from app.services.notifications import notify, portal_href
 
 TYPE_LABEL = {
     InterviewType.TALENDUS: "Talendus",
@@ -163,7 +163,7 @@ def create_interview(db: Session, user: User, data: InterviewIn, ip: str | None)
         NotificationType.INTERVIEW_INVITE,
         "Entretien planifié",
         f"{TYPE_LABEL.get(row.type, row.type.value)} le {when_label} — {row.location or ''}".strip(),
-        href="/espace.html#/interviews",
+        href=portal_href(cand_user, "interviews"),
     )
     if cand_user:
         send_email(
@@ -250,7 +250,7 @@ def set_status(db: Session, user: User, interview_id: str, status: InterviewStat
             NotificationType.INTERVIEW_INVITE,
             "Entretien mis à jour",
             f"Statut : {status.value}",
-            href="/espace.html#/interviews",
+            href=portal_href(cand_user, "interviews"),
         )
         from app.integrations.hooks import maybe_send_whatsapp
 

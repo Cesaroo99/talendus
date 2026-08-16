@@ -58,8 +58,8 @@ def create_checkout(db: Session, user: User, invoice_id: str) -> dict:
                 "quantity": 1,
             }
         ],
-        success_url=f"{base}/espace-employeur.html?paid=1",
-        cancel_url=f"{base}/espace-employeur.html?paid=0",
+        success_url=f"{base}/espace-employeur.html?paid=1#/invoices",
+        cancel_url=f"{base}/espace-employeur.html?paid=0#/invoices",
         client_reference_id=row.id,
         metadata={"invoice_id": row.id, "invoice_number": row.number},
     )

@@ -169,7 +169,10 @@ def get_candidate(
         if not linked:
             raise AppError(403, "Vous n'avez pas accès à ce candidat.", "FORBIDDEN")
         private = False
-    return ok(cand_svc.serialize_candidate(profile, include_private=private))
+    payload = cand_svc.serialize_candidate(profile, include_private=private)
+    if user.role == UserRole.EMPLOYER and profile.user:
+        payload["last_name"] = profile.user.last_name
+    return ok(payload)
 
 
 @router.post("/{candidate_id}/ai")

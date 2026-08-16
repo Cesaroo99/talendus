@@ -1898,3 +1898,38 @@ table, .tl-job-card p, .tl-card .body p { color: var(--tl-navy); }
 .tl-form .tl-row-2 { display: grid; gap: 12px; }
 @media (min-width: 700px) { .tl-form .tl-row-2 { grid-template-columns: 1fr 1fr; } }
 .tl-disabled, .tl-btn:disabled { opacity: .55; cursor: not-allowed; }
+.tl-account-notif.is-clickable { cursor: pointer; }
+.tl-account-notif.is-clickable:hover { border-color: var(--tl-orange); }
+.tl-pipeline {
+  display: grid;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+@media (min-width: 960px) {
+  .tl-pipeline { grid-template-columns: repeat(7, minmax(150px, 1fr)); }
+}
+.tl-pipe-col {
+  background: var(--tl-ice);
+  border: 1px solid var(--tl-line);
+  border-radius: var(--tl-radius);
+  padding: 10px;
+  min-width: 160px;
+}
+.tl-pipe-col h4 {
+  margin: 0 0 10px;
+  font-size: 13px;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.tl-pipe-col h4 span { color: var(--tl-steel); font-weight: 600; }
+.tl-pipe-card {
+  background: #fff;
+  border: 1px solid var(--tl-line);
+  border-radius: 10px;
+  padding: 10px;
+  margin: 0 0 8px;
+}
+.tl-pipe-card b { display: block; margin-bottom: 4px; }
+.tl-pipe-card select { width: 100%; margin: 6px 0; }
