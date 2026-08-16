@@ -218,6 +218,13 @@ def catalog() -> list[dict]:
     return [provider_status(p.name) for p in PROVIDERS]
 
 
+def is_active(name: str) -> bool:
+    try:
+        return provider_status(name)["state"] == "active"
+    except IntegrationError:
+        return False
+
+
 def require_configured(name: str) -> dict:
     status = provider_status(name)
     if not status["configured"]:

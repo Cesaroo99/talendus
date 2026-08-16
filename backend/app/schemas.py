@@ -353,6 +353,11 @@ class PaymentIn(BaseModel):
     reference: str | None = None
 
 
+class RefundIn(BaseModel):
+    amount: int | None = Field(default=None, ge=1)
+    provider: str = "stripe"
+
+
 class ContractSignIn(BaseModel):
     signer_name: str = Field(min_length=2, max_length=160)
     signer_email: EmailStr | None = None

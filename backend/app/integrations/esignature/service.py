@@ -36,3 +36,28 @@ class ESignatureService:
     def cancel(self, envelope_id: str) -> dict:
         require_active(self.name)
         raise IntegrationError("L'annulation d'enveloppe n'est pas branchée.", "INTEGRATION_NOT_IMPLEMENTED", provider=self.name)
+
+
+def apply_esignature_event(db, payload: bytes) -> None:
+    import json
+
+    from sqlalchemy import select
+
+    from app.models import Contract
+
+    try:
+        body = json.loads((payload or b"{}").decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return
+    if not isinstance(body, dict):
+        return
+    envelope_id = body.get("envelopeId") or body.get("envelope_id") or body.get("id")
+    status = body.get("status") or body.get("event")
+    if not envelope_id:
+        return
+    row = db.scalar(select(Contract).where(Contract.esign_envelope_id == str(envelope_id)))
+    if not row:
+        return
+    if status:
+        row.esign_status = str(status)[:32]
+    db.commit()

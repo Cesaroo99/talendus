@@ -133,6 +133,7 @@ class InvoiceStatus(str, Enum):
     PAID = "PAID"
     OVERDUE = "OVERDUE"
     CANCELLED = "CANCELLED"
+    REFUNDED = "REFUNDED"
 
 
 class PaymentMethod(str, Enum):

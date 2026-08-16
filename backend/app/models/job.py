@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Index, Integer, String, Text, UniqueConstraint
+from sqlalchemy import DateTime, Enum, Float, ForeignKey, Index, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -24,6 +24,9 @@ class JobOffer(Base):
     responsibilities: Mapped[str | None] = mapped_column(Text)
     qualifications: Mapped[str | None] = mapped_column(Text)
     location: Mapped[str | None] = mapped_column(String(80), index=True)
+    lat: Mapped[float | None] = mapped_column(Float)
+    lng: Mapped[float | None] = mapped_column(Float)
+    place_id: Mapped[str | None] = mapped_column(String(128))
     sector: Mapped[str | None] = mapped_column(String(80), index=True)
     contract_type: Mapped[str | None] = mapped_column(String(40))
     salary_min: Mapped[int | None] = mapped_column(Integer)

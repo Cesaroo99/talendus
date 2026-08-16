@@ -16,6 +16,7 @@ ADMIN_STATUS = {
     InvoiceStatus.PAID: "payee",
     InvoiceStatus.OVERDUE: "en-retard",
     InvoiceStatus.CANCELLED: "annulee",
+    InvoiceStatus.REFUNDED: "remboursee",
 }
 
 
@@ -57,6 +58,8 @@ def serialize_invoice(row: Invoice) -> dict:
         "due_date": row.due_date,
         "paid_at": row.paid_at,
         "stripe_payment_intent_id": row.stripe_payment_intent_id,
+        "paypal_order_id": row.paypal_order_id,
+        "paypal_capture_id": row.paypal_capture_id,
         "notes": row.notes,
         "paid_amount": paid,
         "company_name": row.company.name if row.company else None,
@@ -273,4 +276,90 @@ def stats(db: Session) -> dict:
         "pending": _sum(InvoiceStatus.PENDING) + _sum(InvoiceStatus.SENT),
         "overdue": _sum(InvoiceStatus.OVERDUE),
         "draft": _sum(InvoiceStatus.DRAFT),
+        "refunded": _sum(InvoiceStatus.REFUNDED),
+    }
+
+
+def paypal_checkout(db: Session, user: User, invoice_id: str) -> dict:
+    from app.integrations.payments.paypal import PayPalService
+
+    row = get_invoice(db, user, invoice_id)
+    if row.status in {InvoiceStatus.PAID, InvoiceStatus.CANCELLED, InvoiceStatus.REFUNDED}:
+        raise AppError(409, "Cette facture ne peut pas être payée.", "INVOICE_NOT_PAYABLE")
+    total = row.amount_total if row.amount_total is not None else row.amount
+    result = PayPalService().create_payment(amount=int(total), currency=row.currency or "CAD", invoice_id=row.id)
+    row.paypal_order_id = result.reference
+    audit(db, "invoice.paypal.checkout", user, "invoice", row.id, metadata={"order_id": result.reference})
+    db.commit()
+    return {
+        "provider": "paypal",
+        "checkout_url": result.checkout_url,
+        "reference": result.reference,
+        "invoice": serialize_invoice(get_invoice(db, user, row.id)),
+    }
+
+
+def paypal_capture(db: Session, user: User, invoice_id: str) -> dict:
+    from app.integrations.payments.paypal import PayPalService
+
+    row = get_invoice(db, user, invoice_id)
+    if not row.paypal_order_id:
+        raise AppError(409, "Aucune commande PayPal à capturer.", "PAYPAL_CAPTURE_UNAVAILABLE")
+    result = PayPalService().capture_payment(row.paypal_order_id)
+    capture_id = (result.extra or {}).get("capture_id")
+    if capture_id:
+        row.paypal_capture_id = str(capture_id)
+    if row.status != InvoiceStatus.PAID:
+        total = row.amount_total if row.amount_total is not None else row.amount
+        db.add(
+            Payment(
+                invoice_id=row.id,
+                amount=total,
+                method=PaymentMethod.CARD,
+                paid_at=utcnow().date().isoformat(),
+                reference=row.paypal_capture_id or row.paypal_order_id,
+                recorded_by=user.id,
+            )
+        )
+        row.status = InvoiceStatus.PAID
+        row.paid_at = utcnow().date().isoformat()
+    audit(db, "invoice.paypal.capture", user, "invoice", row.id)
+    db.commit()
+    return {
+        "provider": "paypal",
+        "status": result.status,
+        "reference": result.reference,
+        "invoice": serialize_invoice(get_invoice(db, user, row.id)),
+    }
+
+
+def paypal_refund(db: Session, user: User, invoice_id: str, amount: int | None = None) -> dict:
+    from app.integrations.payments.paypal import PayPalService
+
+    _finance(user)
+    row = get_invoice(db, user, invoice_id)
+    if not row.paypal_capture_id:
+        raise AppError(409, "Aucun capture PayPal à rembourser.", "PAYPAL_REFUND_UNAVAILABLE")
+    total = row.amount_total if row.amount_total is not None else row.amount
+    dollars = int(amount) if amount is not None else int(total)
+    result = PayPalService().refund(row.paypal_capture_id, dollars)
+    db.add(
+        Payment(
+            invoice_id=row.id,
+            amount=-abs(dollars),
+            method=PaymentMethod.CARD,
+            paid_at=utcnow().date().isoformat(),
+            reference=result.reference,
+            recorded_by=user.id,
+        )
+    )
+    row.status = InvoiceStatus.REFUNDED
+    audit(db, "invoice.refund", user, "invoice", row.id, metadata={"amount": dollars, "provider": "paypal"})
+    db.commit()
+    return {
+        "provider": "paypal",
+        "status": result.status,
+        "amount": dollars,
+        "reference": result.reference,
+        "invoice": serialize_invoice(get_invoice(db, user, row.id)),
     }

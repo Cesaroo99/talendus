@@ -85,6 +85,7 @@ class Interview(Base):
     type: Mapped[InterviewType] = mapped_column(Enum(InterviewType), default=InterviewType.TALENDUS)
     status: Mapped[InterviewStatus] = mapped_column(Enum(InterviewStatus), default=InterviewStatus.SCHEDULED, index=True)
     notes: Mapped[str | None] = mapped_column(Text)
+    reminder_sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
 
@@ -113,6 +114,8 @@ class Invoice(Base):
     due_date: Mapped[str | None] = mapped_column(String(16))
     paid_at: Mapped[str | None] = mapped_column(String(16))
     stripe_payment_intent_id: Mapped[str | None] = mapped_column(String(80))
+    paypal_order_id: Mapped[str | None] = mapped_column(String(80))
+    paypal_capture_id: Mapped[str | None] = mapped_column(String(80))
     client_user_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"))
     notes: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

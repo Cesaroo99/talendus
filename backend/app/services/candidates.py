@@ -231,3 +231,48 @@ def get_resume_for_user(db: Session, user: User, resume_id: str) -> Resume:
             raise AppError(403, "Vous n'avez pas accès à ce fichier.", "FORBIDDEN")
         return resume
     raise AppError(403, "Vous n'avez pas accès à ce fichier.", "FORBIDDEN")
+
+
+def analyze_with_ai(db: Session, user: User, candidate_id: str, purpose: str) -> dict:
+    from app.integrations.ai.openai import ALLOWED_PURPOSES, OpenAIService
+    from app.rbac import ADMINS
+
+    if user.role not in {UserRole.RECRUITER} | ADMINS:
+        raise AppError(403, "Analyse IA réservée à l'équipe Talendus.", "FORBIDDEN")
+    if purpose not in ALLOWED_PURPOSES:
+        raise AppError(400, "Usage OpenAI non autorisé.", "INTEGRATION_INVALID_REQUEST")
+    profile = db.scalar(
+        select(Candidate)
+        .options(joinedload(Candidate.user), joinedload(Candidate.resumes))
+        .where(Candidate.id == candidate_id)
+    )
+    if not profile:
+        raise AppError(404, "Candidat introuvable.", "CANDIDATE_NOT_FOUND")
+    resume_text = ""
+    for resume in profile.resumes or []:
+        if resume.parse_json:
+            resume_text = resume.parse_json
+            break
+    blob = " ".join(
+        part
+        for part in [
+            profile.user.full_name if profile.user else "",
+            profile.title or "",
+            profile.skills or "",
+            profile.bio or "",
+            resume_text,
+        ]
+        if part
+    ).strip()
+    if not blob:
+        raise AppError(400, "Pas assez de contenu pour une analyse IA.", "VALIDATION_ERROR")
+    service = OpenAIService()
+    if purpose == "skill_extraction":
+        return service.extract_skills(blob)
+    if purpose == "profile_classification":
+        return service.classify_profile(blob)
+    if purpose == "matching_suggestion":
+        return service.suggest_match(blob, profile.title or "")
+    if purpose == "job_description":
+        return service.improve_job_description(blob)
+    return service.analyze_resume(blob)

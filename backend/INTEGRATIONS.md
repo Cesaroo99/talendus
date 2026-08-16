@@ -44,6 +44,23 @@ Activer un fournisseur :
 
 Sans identifiants, l’API répond **503** `INTEGRATION_NOT_CONFIGURED` et **n’invente pas** de succès.
 
+## Hooks métier (déjà branchés)
+
+Ces accroches n’appellent un fournisseur **que** s’il est `active`. Sinon : no-op (candidature, entretien, entreprise restent valides).
+
+| Événement | Canal |
+| --- | --- |
+| Candidature créée | WhatsApp `application_confirm` + `employer_notice` |
+| Statut de candidature | WhatsApp `application_status` ou `interview_invite` |
+| Entretien créé / reporté | WhatsApp `interview_invite` |
+| Entretien confirmé / annulé | WhatsApp `candidate_notice` |
+| `POST /api/interviews/reminders` | e-mail + WhatsApp `interview_reminder` (fenêtre 24 h) |
+| Création / MAJ entreprise ou offre | géocodage Google Maps → `lat` / `lng` |
+| Recherche d’offres `radius_km` | bounding box si coordonnées (géocode `location` si Maps actif) |
+| Facture | Stripe refund + webhook `charge.refunded` ; PayPal order/capture/refund |
+| `POST /api/candidates/{id}/ai` | OpenAI **explicite** (jamais à l’upload CV) |
+| `POST /api/contracts/{id}/esign` | e-sign tierce (503/501) — signature interne SHA-256 inchangée |
+
 ## Endpoints internes
 
 Préfixe `/api`. Réponse succès : `{ "success": true, "data": … }`.
@@ -63,7 +80,13 @@ Préfixe `/api`. Réponse succès : `{ "success": true, "data": … }`.
 | POST | `/integrations/esignature/envelopes` | staff | 501/503 |
 | POST | `/integrations/paypal/checkout` | staff | Order PayPal |
 | POST | `/invoices/{id}/checkout` | employeur | Stripe (existant) |
-| POST | `/webhooks/stripe` | signature Stripe | Paiement |
+| POST | `/invoices/{id}/paypal` | employeur | Order PayPal (503 si non actif) |
+| POST | `/invoices/{id}/paypal/capture` | employeur | Capture PayPal |
+| POST | `/invoices/{id}/refund` | finance | Stripe (défaut) ou PayPal |
+| POST | `/interviews/reminders` | staff | Rappels d’entretien |
+| POST | `/candidates/{id}/ai` | staff | Analyse IA explicite |
+| POST | `/contracts/{id}/esign` | staff | Enveloppe e-sign (501/503) |
+| POST | `/webhooks/stripe` | signature Stripe | Paiement + remboursement |
 | POST | `/webhooks/paypal` | secret | Idempotent |
 | GET/POST | `/webhooks/whatsapp` | verify token / HMAC | Meta |
 | POST | `/webhooks/esignature` | HMAC | Signature |

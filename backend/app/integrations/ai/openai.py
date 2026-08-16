@@ -60,3 +60,21 @@ class OpenAIService:
             "model": data.get("model") or settings.openai_model,
             "usage": {"prompt_tokens": usage.get("prompt_tokens"), "completion_tokens": usage.get("completion_tokens")},
         }
+
+    def analyze_resume(self, text: str) -> dict:
+        return self.complete(purpose="resume_analysis", prompt=f"Analyse ce CV (recrutement industriel Québec) :\n{text}")
+
+    def extract_skills(self, text: str) -> dict:
+        return self.complete(purpose="skill_extraction", prompt=f"Extrais les compétences industrielles, une par ligne :\n{text}")
+
+    def classify_profile(self, text: str) -> dict:
+        return self.complete(purpose="profile_classification", prompt=f"Classe ce profil (métier, niveau, secteur) :\n{text}")
+
+    def improve_job_description(self, text: str) -> dict:
+        return self.complete(purpose="job_description", prompt=f"Améliore cette description d'emploi sans inventer :\n{text}")
+
+    def suggest_match(self, candidate_text: str, job_text: str) -> dict:
+        return self.complete(
+            purpose="matching_suggestion",
+            prompt=f"Points de correspondance candidat/offre :\nCandidat:\n{candidate_text}\n\nOffre:\n{job_text}",
+        )

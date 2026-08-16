@@ -90,6 +90,19 @@ def apply(db: Session, user: User, data: ApplicationCreateIn, ip: str | None = N
         db, user.email, EmailType.APPLICATION_CONFIRMATION, "application_confirm",
         name=user.first_name, job_title=job.title,
     )
+    from app.integrations.hooks import maybe_send_whatsapp
+
+    maybe_send_whatsapp(
+        recipient=user.phone,
+        template="application_confirm",
+        variables={"name": user.first_name or "", "job": job.title},
+    )
+    if staff:
+        maybe_send_whatsapp(
+            recipient=staff.phone,
+            template="employer_notice",
+            variables={"candidate": user.full_name, "job": job.title},
+        )
     notify(db, user, NotificationType.APPLICATION_NEW, "Candidature envoyée", f"Votre candidature pour {job.title} a été transmise.")
     audit(db, "application.create", user, "application", application.id, ip, {"job_id": job.id})
     db.commit()
@@ -198,6 +211,14 @@ def change_status(db: Session, user: User, application_id: str, status: Applicat
         EmailType.INTERVIEW_INVITE if status == ApplicationStatus.INTERVIEW else EmailType.APPLICATION_STATUS,
         template,
         name=candidate_user.first_name, job_title=application.job.title, status=status.value, comment=comment or "",
+    )
+    from app.integrations.hooks import maybe_send_whatsapp
+
+    wa_template = "interview_invite" if status == ApplicationStatus.INTERVIEW else "application_status"
+    maybe_send_whatsapp(
+        recipient=candidate_user.phone,
+        template=wa_template,
+        variables={"name": candidate_user.first_name or "", "job": application.job.title, "status": status.value},
     )
     audit(
         db,

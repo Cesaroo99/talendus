@@ -284,3 +284,158 @@ def test_schema_includes_integration_tables(client):
     assert {"external_jobs", "webhook_events", "integration_calls"} <= tables
     uniques = {u["name"] for u in inspect(engine).get_unique_constraints("external_jobs")}
     assert "uq_external_job_source_id" in uniques
+
+
+def test_hooks_are_noop_when_not_active():
+    from app.integrations.hooks import maybe_geocode, maybe_send_whatsapp
+
+    assert maybe_send_whatsapp(recipient="+15145550100", template="application_confirm") is None
+    assert maybe_geocode("Montréal, QC") is None
+
+
+def test_invoice_refund_and_paypal_unconfigured(client):
+    admin = _promote_admin(client, "pay-admin@example.com")
+    h = auth_header(admin)
+    emp = register(client, "pay-emp@example.com", "EMPLOYER")
+    company = client.get("/api/companies/me", headers=auth_header(emp)).json()["data"]
+    invoice = client.post("/api/invoices", headers=h, json={"company_id": company["id"], "amount": 2500})
+    inv_id = invoice.json()["data"]["id"]
+    refund = client.post(f"/api/invoices/{inv_id}/refund", headers=h, json={})
+    assert refund.status_code == 503
+    assert refund.json()["code"] == "STRIPE_NOT_CONFIGURED"
+    paypal = client.post(f"/api/invoices/{inv_id}/paypal", headers=auth_header(emp))
+    assert paypal.status_code == 503
+    assert paypal.json()["code"] == "INTEGRATION_NOT_CONFIGURED"
+
+
+def test_candidate_ai_and_contract_esign_not_configured(client):
+    admin = _promote_admin(client, "ai2-admin@example.com")
+    h = auth_header(admin)
+    cand = register(client, "ai2-cand@example.com", first_name="Luc")
+    profile = client.get("/api/candidates/me", headers=auth_header(cand)).json()["data"]
+    ai = client.post(f"/api/candidates/{profile['id']}/ai", headers=h, json={"purpose": "skill_extraction"})
+    assert ai.status_code == 503
+    emp = register(client, "esign-emp@example.com", "EMPLOYER")
+    company = client.get("/api/companies/me", headers=auth_header(emp)).json()["data"]
+    from app.database import SessionLocal
+    from app.models import Contract
+    from app.models.enums import ContractStatus
+
+    db = SessionLocal()
+    contract = Contract(company_id=company["id"], type="Succès", terms="ok", status=ContractStatus.ACTIVE, document_name="mandat.pdf")
+    db.add(contract)
+    db.commit()
+    cid = contract.id
+    db.close()
+    esign = client.post(f"/api/contracts/{cid}/esign", headers=h)
+    assert esign.status_code == 503
+
+
+def test_interview_reminders_without_whatsapp(client):
+    from datetime import datetime, timedelta, timezone
+
+    admin = _promote_admin(client, "rem-admin@example.com")
+    h = auth_header(admin)
+    cand = register(client, "rem-cand@example.com", first_name="Eve")
+    cand_h = auth_header(cand)
+    emp = register(client, "rem-emp@example.com", "EMPLOYER")
+    job = client.post(
+        "/api/jobs",
+        headers=auth_header(emp),
+        json={"title": "Soudeur rappel", "location": "Tracy", "description": "Poste usine"},
+    )
+    assert job.status_code == 200
+    client.post(f"/api/jobs/{job.json()['data']['id']}/publish", headers=auth_header(emp))
+    applied = client.post("/api/applications", headers=cand_h, json={"job_id": job.json()["data"]["id"]})
+    profile = client.get("/api/candidates/me", headers=cand_h).json()["data"]
+    when = (datetime.now(timezone.utc) + timedelta(hours=2)).isoformat()
+    created = client.post(
+        "/api/interviews",
+        headers=h,
+        json={
+            "candidate_id": profile["id"],
+            "application_id": applied.json()["data"]["id"],
+            "scheduled_at": when,
+            "location": "Visio",
+        },
+    )
+    assert created.status_code == 200
+    reminders = client.post("/api/interviews/reminders?hours=24", headers=h)
+    assert reminders.status_code == 200
+    assert reminders.json()["data"]["sent"] >= 1
+    again = client.post("/api/interviews/reminders?hours=24", headers=h)
+    assert again.json()["data"]["sent"] == 0
+
+
+def test_geocode_on_company_update_when_maps_active(client, monkeypatch):
+    settings = get_settings()
+    monkeypatch.setattr(settings, "google_maps_enabled", True)
+    monkeypatch.setattr(settings, "google_maps_api_key", "maps-key")
+
+    def handler(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            json={
+                "status": "OK",
+                "results": [
+                    {
+                        "formatted_address": "Drummondville, QC",
+                        "place_id": "place-1",
+                        "geometry": {"location": {"lat": 45.88, "lng": -72.48}},
+                    }
+                ],
+            },
+        )
+
+    emp = register(client, "geo-emp@example.com", "EMPLOYER")
+    emp_h = auth_header(emp)
+    company = client.get("/api/companies/me", headers=emp_h).json()["data"]
+    with httpx.Client(transport=httpx.MockTransport(handler)) as http_client:
+        with override_client(http_client):
+            updated = client.patch(
+                f"/api/companies/{company['id']}",
+                headers=emp_h,
+                json={"name": company["name"], "email": "geo-emp@example.com", "city": "Drummondville", "address": "100 rue Industrielle"},
+            )
+    assert updated.status_code == 200
+    assert updated.json()["data"]["lat"] == 45.88
+    assert updated.json()["data"]["lng"] == -72.48
+
+
+def test_stripe_refund_event_updates_invoice(client):
+    from app.database import SessionLocal
+    from app.models import Invoice, Payment
+    from app.models.enums import InvoiceStatus, PaymentMethod
+    from app.services.stripe_billing import apply_event
+
+    admin = _promote_admin(client, "rewe-admin@example.com")
+    emp = register(client, "rewe-emp@example.com", "EMPLOYER")
+    company = client.get("/api/companies/me", headers=auth_header(emp)).json()["data"]
+    invoice = client.post(
+        "/api/invoices",
+        headers=auth_header(admin),
+        json={"company_id": company["id"], "amount": 1000},
+    )
+    inv_id = invoice.json()["data"]["id"]
+    db = SessionLocal()
+    row = db.get(Invoice, inv_id)
+    row.status = InvoiceStatus.PAID
+    row.stripe_payment_intent_id = "pi_test_1"
+    db.add(Payment(invoice_id=inv_id, amount=1000, method=PaymentMethod.CARD, reference="pi_test_1"))
+    db.commit()
+    apply_event(
+        db,
+        {
+            "type": "charge.refunded",
+            "data": {
+                "object": {
+                    "payment_intent": "pi_test_1",
+                    "amount_refunded": 100000,
+                    "refunds": {"data": [{"id": "re_test_1", "amount": 100000}]},
+                }
+            },
+        },
+    )
+    db.close()
+    shown = client.get(f"/api/invoices/{inv_id}", headers=auth_header(admin)).json()["data"]
+    assert shown["status"] == "REFUNDED"

@@ -9,6 +9,7 @@ from app.errors import ok
 from app.models import Candidate, User
 from app.models.enums import UserRole
 from app.rbac import is_admin
+from app.integrations.schemas import AiPurposeIn
 from app.schemas import CandidateProfileIn, CertificationIn, EducationIn, ExperienceIn
 from app.services import candidates as cand_svc
 from app.services.auth import ensure_candidate
@@ -109,3 +110,13 @@ def get_candidate(
         raise AppError(404, "Candidat introuvable.", "CANDIDATE_NOT_FOUND")
     private = is_admin(user) or user.role == UserRole.RECRUITER
     return ok(cand_svc.serialize_candidate(profile, include_private=private))
+
+
+@router.post("/{candidate_id}/ai")
+def analyze_candidate_ai(
+    candidate_id: str,
+    payload: AiPurposeIn,
+    user: User = Depends(require_roles(UserRole.RECRUITER, UserRole.ADMIN)),
+    db: Session = Depends(get_db),
+):
+    return ok(cand_svc.analyze_with_ai(db, user, candidate_id, payload.purpose))

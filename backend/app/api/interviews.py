@@ -28,6 +28,15 @@ def create_interview(
     return ok(interviews_service.serialize_interview(row), message="Entretien planifié.")
 
 
+@router.post("/reminders")
+def send_reminders(
+    db: Session = Depends(get_db),
+    _: User = Depends(require_roles(UserRole.RECRUITER, UserRole.ADMIN)),
+    hours: int = 24,
+):
+    return ok(interviews_service.dispatch_due_reminders(db, hours=hours), message="Rappels traités.")
+
+
 @router.get("/{interview_id}")
 def get_interview(interview_id: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     return ok(interviews_service.serialize_interview(interviews_service.get_interview(db, user, interview_id)))

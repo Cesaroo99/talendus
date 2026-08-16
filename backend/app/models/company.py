@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Column, DateTime, Enum, ForeignKey, Index, Integer, String, Table, Text, UniqueConstraint
+from sqlalchemy import Column, DateTime, Enum, Float, ForeignKey, Index, Integer, String, Table, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -34,6 +34,9 @@ class Company(Base):
     address: Mapped[str | None] = mapped_column(String(255))
     province: Mapped[str | None] = mapped_column(String(80), default="Québec")
     country: Mapped[str | None] = mapped_column(String(80), default="Canada")
+    lat: Mapped[float | None] = mapped_column(Float)
+    lng: Mapped[float | None] = mapped_column(Float)
+    place_id: Mapped[str | None] = mapped_column(String(128))
     contact_name: Mapped[str | None] = mapped_column(String(120))
     email: Mapped[str | None] = mapped_column(String(255))
     phone: Mapped[str | None] = mapped_column(String(40))
@@ -80,6 +83,8 @@ class Contract(Base):
     status: Mapped[ContractStatus] = mapped_column(Enum(ContractStatus), default=ContractStatus.ACTIVE)
     document_name: Mapped[str | None] = mapped_column(String(255))
     document_path: Mapped[str | None] = mapped_column(String(255))
+    esign_envelope_id: Mapped[str | None] = mapped_column(String(80))
+    esign_status: Mapped[str | None] = mapped_column(String(32))
     recruiter_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"))
     notes: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

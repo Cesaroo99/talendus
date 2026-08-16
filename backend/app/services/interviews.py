@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
@@ -54,6 +54,7 @@ def serialize_interview(row: Interview) -> dict:
         "type_label": TYPE_LABEL.get(row.type, row.type.value),
         "status": row.status.value,
         "notes": row.notes,
+        "reminder_sent_at": row.reminder_sent_at.isoformat() if row.reminder_sent_at else None,
         "candidate_name": user.full_name if user else None,
         "job_title": row.job.title if row.job else None,
         "company_name": row.company.name if row.company else None,
@@ -166,6 +167,18 @@ def create_interview(db: Session, user: User, data: InterviewIn, ip: str | None)
             status=when_label,
             comment=row.location or "",
         )
+        from app.integrations.hooks import maybe_send_whatsapp
+
+        maybe_send_whatsapp(
+            recipient=cand_user.phone,
+            template="interview_invite",
+            variables={
+                "name": cand_user.first_name or "",
+                "job": job.title if job else "Talendus",
+                "when": when_label,
+                "location": row.location or "",
+            },
+        )
     audit(db, "interview.create", user, "interview", row.id, ip)
     db.commit()
     db.refresh(row)
@@ -177,11 +190,35 @@ def patch_interview(db: Session, user: User, interview_id: str, data: InterviewP
     if user.role not in {UserRole.RECRUITER} | ADMINS:
         raise AppError(403, "Modification réservée à l'équipe Talendus.", "FORBIDDEN")
     payload = data.model_dump(exclude_unset=True)
+    rescheduled = False
     if "scheduled_at" in payload and payload["scheduled_at"]:
         row.scheduled_at = _parse_when(payload.pop("scheduled_at"))
+        row.reminder_sent_at = None
+        rescheduled = True
     for key, value in payload.items():
         setattr(row, key, value)
     audit(db, "interview.update", user, "interview", row.id)
+    if rescheduled:
+        cand_user = row.candidate.user if row.candidate else None
+        when_label = row.scheduled_at.strftime("%Y-%m-%d %H:%M") if row.scheduled_at else ""
+        if cand_user:
+            send_email(
+                db,
+                cand_user.email,
+                EmailType.INTERVIEW_INVITE,
+                "interview",
+                name=cand_user.first_name,
+                job_title=(row.job.title if row.job else "Talendus"),
+                status=when_label,
+                comment=row.location or "",
+            )
+            from app.integrations.hooks import maybe_send_whatsapp
+
+            maybe_send_whatsapp(
+                recipient=cand_user.phone,
+                template="interview_invite",
+                variables={"name": cand_user.first_name or "", "when": when_label, "location": row.location or ""},
+            )
     db.commit()
     return get_interview(db, user, row.id)
 
@@ -194,5 +231,75 @@ def set_status(db: Session, user: User, interview_id: str, status: InterviewStat
         raise AppError(403, "Statut non autorisé.", "FORBIDDEN")
     row.status = status
     audit(db, "interview.status", user, "interview", row.id, metadata={"status": status.value})
+    cand_user = row.candidate.user if row.candidate else None
+    if cand_user and status in {InterviewStatus.CONFIRMED, InterviewStatus.CANCELLED}:
+        notify(
+            db,
+            cand_user,
+            NotificationType.INTERVIEW_INVITE,
+            "Entretien mis à jour",
+            f"Statut : {status.value}",
+            href="/espace.html",
+        )
+        from app.integrations.hooks import maybe_send_whatsapp
+
+        maybe_send_whatsapp(
+            recipient=cand_user.phone,
+            template="candidate_notice",
+            variables={"status": status.value, "when": row.scheduled_at.strftime("%Y-%m-%d %H:%M") if row.scheduled_at else ""},
+        )
     db.commit()
     return get_interview(db, user, row.id)
+
+
+def dispatch_due_reminders(db: Session, *, hours: int = 24) -> dict:
+    """Envoie e-mail (toujours journalisé) et WhatsApp (si actif) pour les entretiens à venir."""
+    from app.integrations.hooks import maybe_send_whatsapp
+    from app.models.enums import utcnow
+
+    now = utcnow()
+    until = now + timedelta(hours=max(1, min(hours, 72)))
+    rows = list(
+        db.scalars(
+            select(Interview)
+            .options(
+                joinedload(Interview.candidate).joinedload(Candidate.user),
+                joinedload(Interview.job),
+            )
+            .where(
+                Interview.status.in_([InterviewStatus.SCHEDULED, InterviewStatus.CONFIRMED]),
+                Interview.reminder_sent_at.is_(None),
+                Interview.scheduled_at >= now,
+                Interview.scheduled_at <= until,
+            )
+        )
+        .unique()
+        .all()
+    )
+    sent = skipped = 0
+    for row in rows:
+        cand_user = row.candidate.user if row.candidate else None
+        if not cand_user:
+            skipped += 1
+            continue
+        when_label = row.scheduled_at.strftime("%Y-%m-%d %H:%M") if row.scheduled_at else ""
+        send_email(
+            db,
+            cand_user.email,
+            EmailType.INTERVIEW_INVITE,
+            "interview",
+            name=cand_user.first_name,
+            job_title=(row.job.title if row.job else "Talendus"),
+            status=when_label,
+            comment=row.location or "Rappel",
+        )
+        maybe_send_whatsapp(
+            recipient=cand_user.phone,
+            template="interview_reminder",
+            variables={"name": cand_user.first_name or "", "when": when_label, "location": row.location or ""},
+        )
+        row.reminder_sent_at = now
+        sent += 1
+    if rows:
+        db.commit()
+    return {"sent": sent, "skipped": skipped, "hours": hours}

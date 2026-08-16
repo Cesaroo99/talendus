@@ -32,3 +32,12 @@ def sign_contract(
 ):
     row = contracts_service.sign_contract(db, user, contract_id, payload, client_ip(request))
     return ok(contracts_service.serialize_contract(row), message="Contrat signé.")
+
+
+@router.post("/{contract_id}/esign")
+def request_esign(
+    contract_id: str,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_roles(UserRole.RECRUITER, UserRole.ADMIN, UserRole.FINANCE)),
+):
+    return ok(contracts_service.request_esignature(db, user, contract_id))

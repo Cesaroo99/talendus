@@ -22,6 +22,9 @@ def search_jobs(
     company: str | None = None,
     salary_min: int | None = Query(default=None, ge=0),
     salary_max: int | None = Query(default=None, ge=0),
+    lat: float | None = Query(default=None),
+    lng: float | None = Query(default=None),
+    radius_km: float | None = Query(default=None, ge=1, le=500),
     sort: str = "relevance",
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=12, ge=1, le=50),
@@ -41,6 +44,9 @@ def search_jobs(
         page=page,
         page_size=page_size,
         public_only=True,
+        lat=lat,
+        lng=lng,
+        radius_km=radius_km,
     )
     pages = max(1, (total + page_size - 1) // page_size) if total else 0
     return ok(

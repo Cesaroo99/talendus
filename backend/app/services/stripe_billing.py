@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
@@ -75,6 +75,35 @@ def create_checkout(db: Session, user: User, invoice_id: str) -> dict:
     }
 
 
+def _refund_id(obj: dict) -> str | None:
+    if obj.get("id") and str(obj.get("object") or "").startswith("refund"):
+        return str(obj.get("id"))
+    refunds = (obj.get("refunds") or {}).get("data") or []
+    if refunds:
+        return str(refunds[0].get("id") or "")
+    return None
+
+
+def _record_refund(db: Session, row: Invoice, *, dollars: int, reference: str | None) -> None:
+    if reference:
+        existing = db.scalar(select(Payment).where(Payment.invoice_id == row.id, Payment.reference == reference))
+        if existing:
+            return
+    db.add(
+        Payment(
+            invoice_id=row.id,
+            amount=-abs(int(dollars)),
+            method=PaymentMethod.CARD,
+            paid_at=utcnow().date().isoformat(),
+            reference=reference,
+        )
+    )
+    db.flush()
+    paid = int(db.scalar(select(func.coalesce(func.sum(Payment.amount), 0)).where(Payment.invoice_id == row.id)) or 0)
+    if paid <= 0:
+        row.status = InvoiceStatus.REFUNDED
+
+
 def apply_event(db: Session, event: dict) -> None:
     etype = event.get("type") or ""
     data = (event.get("data") or {}).get("object") or {}
@@ -92,6 +121,20 @@ def apply_event(db: Session, event: dict) -> None:
             found = db.scalar(select(Invoice).where(Invoice.stripe_payment_intent_id == payment_intent))
             if found:
                 invoice_id = found.id
+    elif etype in {"charge.refunded", "charge.refund.updated", "refund.updated", "refund.created"}:
+        payment_intent = data.get("payment_intent")
+        if payment_intent is not None and not isinstance(payment_intent, str):
+            payment_intent = getattr(payment_intent, "id", str(payment_intent))
+        found = None
+        if payment_intent:
+            found = db.scalar(select(Invoice).where(Invoice.stripe_payment_intent_id == str(payment_intent)))
+        amount_cents = data.get("amount_refunded") if data.get("amount_refunded") is not None else data.get("amount")
+        if found and amount_cents:
+            dollars = int(round(int(amount_cents) / 100))
+            _record_refund(db, found, dollars=dollars, reference=(_refund_id(data) or f"re_{found.id}")[:80])
+            db.commit()
+            logger.info("invoice %s refund recorded via Stripe", found.number)
+        return
     else:
         return
     if not invoice_id:
@@ -120,6 +163,36 @@ def apply_event(db: Session, event: dict) -> None:
     row.paid_at = utcnow().date().isoformat()
     db.commit()
     logger.info("invoice %s marked paid via Stripe", row.number)
+
+
+def refund_invoice(db: Session, user: User, invoice_id: str, amount: int | None = None) -> dict:
+    row = get_invoice(db, user, invoice_id)
+    secret = _require_secret()
+    if not row.stripe_payment_intent_id:
+        raise AppError(409, "Aucun paiement Stripe à rembourser.", "STRIPE_REFUND_UNAVAILABLE")
+    if row.status not in {InvoiceStatus.PAID, InvoiceStatus.REFUNDED}:
+        raise AppError(409, "Cette facture n'est pas remboursable via Stripe.", "INVOICE_NOT_REFUNDABLE")
+    total = row.amount_total if row.amount_total is not None else row.amount
+    dollars = int(amount) if amount is not None else int(total)
+    if dollars <= 0 or dollars > int(total):
+        raise AppError(400, "Montant de remboursement invalide.", "INVOICE_AMOUNT_INVALID")
+    stripe = _stripe()
+    stripe.api_key = secret
+    refund = stripe.Refund.create(
+        payment_intent=row.stripe_payment_intent_id,
+        amount=int(round(dollars * 100)),
+    )
+    refund_id = refund.get("id") if isinstance(refund, dict) else getattr(refund, "id", None)
+    _record_refund(db, row, dollars=dollars, reference=str(refund_id or "")[:80] or None)
+    audit(db, "invoice.refund", user, "invoice", row.id, metadata={"amount": dollars, "provider": "stripe"})
+    db.commit()
+    return {
+        "provider": "stripe",
+        "status": "refunded" if row.status == InvoiceStatus.REFUNDED else "partial",
+        "amount": dollars,
+        "reference": row.stripe_payment_intent_id,
+        "invoice": serialize_invoice(get_invoice(db, user, row.id)),
+    }
 
 
 def construct_event(payload: bytes, signature: str) -> dict:

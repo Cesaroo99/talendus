@@ -39,6 +39,12 @@ def create_company(db: Session, user: User, data: CompanyIn) -> Company:
     if user.role == UserRole.EMPLOYER:
         db.add(CompanyMembership(company_id=company.id, user_id=user.id, member_role=CompanyMemberRole.OWNER))
     audit(db, "company.create", user, "company", company.id)
+    from app.integrations.hooks import apply_coordinates, company_address, maybe_geocode
+
+    apply_coordinates(
+        company,
+        maybe_geocode(company_address(company.address, company.city, company.province, company.country)),
+    )
     db.commit()
     db.refresh(company)
     return company
@@ -140,6 +146,12 @@ def update_company(db: Session, user: User, company_id: str, data: CompanyIn) ->
         raise AppError(403, "Permission insuffisante.", "FORBIDDEN")
     for key, value in data.model_dump(exclude_unset=True).items():
         setattr(company, key, value)
+    from app.integrations.hooks import apply_coordinates, company_address, maybe_geocode
+
+    apply_coordinates(
+        company,
+        maybe_geocode(company_address(company.address, company.city, company.province, company.country)),
+    )
     audit(db, "company.update", user, "company", company.id)
     db.commit()
     db.refresh(company)
@@ -174,6 +186,9 @@ def serialize_company(c: Company) -> dict:
         "address": c.address,
         "province": c.province,
         "country": c.country,
+        "lat": c.lat,
+        "lng": c.lng,
+        "place_id": c.place_id,
         "contact_name": c.contact_name,
         "email": c.email,
         "phone": c.phone,

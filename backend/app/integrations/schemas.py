@@ -45,6 +45,10 @@ class AiCompleteIn(BaseModel):
     max_tokens: int = Field(default=400, ge=16, le=1200)
 
 
+class AiPurposeIn(BaseModel):
+    purpose: str = Field(default="resume_analysis", min_length=3, max_length=64)
+
+
 class EnvelopeIn(BaseModel):
     title: str = Field(min_length=2, max_length=180)
     file_url: str | None = None

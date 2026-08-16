@@ -7,6 +7,8 @@ from app.database import get_db
 from app.errors import ok
 from app.integrations.errors import IntegrationError
 from app.integrations.inbound import ingest, require_webhook_secret, verify_hmac
+from app.integrations.esignature.service import apply_esignature_event
+from app.integrations.payments.paypal import apply_paypal_event
 from app.services import stripe_billing
 
 router = APIRouter(prefix="/webhooks", tags=["webhooks"])
@@ -37,6 +39,7 @@ async def paypal_webhook(request: Request, db: Session = Depends(get_db)):
         event_type=request.headers.get("paypal-auth-algo"),
         payload=payload,
     )
+    apply_paypal_event(db, payload)
     return ok({"received": True})
 
 
@@ -73,4 +76,5 @@ async def esignature_webhook(request: Request, db: Session = Depends(get_db)):
     signature = request.headers.get("x-talendus-signature") or request.headers.get("x-docusign-signature-1") or ""
     verify_hmac(settings.esignature_webhook_secret, payload, signature)
     ingest(db, provider="esignature", event_id="", event_type="esignature", payload=payload)
+    apply_esignature_event(db, payload)
     return ok({"received": True})

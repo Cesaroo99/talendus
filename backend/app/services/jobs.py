@@ -49,6 +49,9 @@ def serialize_job(job: JobOffer) -> dict:
         "responsibilities": job.responsibilities,
         "qualifications": job.qualifications,
         "location": job.location,
+        "lat": job.lat,
+        "lng": job.lng,
+        "place_id": job.place_id,
         "sector": job.sector,
         "contract_type": job.contract_type,
         "salary_display": job.salary_display,
@@ -120,6 +123,9 @@ def search_jobs(
     page: int = 1,
     page_size: int = 12,
     sort: str = "published_at",
+    lat: float | None = None,
+    lng: float | None = None,
+    radius_km: float | None = None,
 ) -> tuple[list[JobOffer], int]:
     stmt: Select = select(JobOffer).options(joinedload(JobOffer.company))
     if public_only:
@@ -141,7 +147,24 @@ def search_jobs(
     if sector:
         stmt = stmt.where(JobOffer.sector.ilike(f"%{sector}%"))
     if location:
-        stmt = stmt.where(JobOffer.location.ilike(f"%{location}%"))
+        from app.integrations.hooks import maybe_geocode
+        from app.integrations.registry import is_active
+
+        if radius_km and lat is None and lng is None and is_active("google_maps"):
+            geo = maybe_geocode(location)
+            if geo and geo.get("lat") is not None and geo.get("lng") is not None:
+                lat = float(geo["lat"])
+                lng = float(geo["lng"])
+        if lat is None:
+            stmt = stmt.where(JobOffer.location.ilike(f"%{location}%"))
+    if lat is not None and lng is not None and radius_km:
+        delta = max(float(radius_km), 1.0) / 111.0
+        stmt = stmt.where(
+            JobOffer.lat.is_not(None),
+            JobOffer.lng.is_not(None),
+            JobOffer.lat.between(lat - delta, lat + delta),
+            JobOffer.lng.between(lng - delta, lng + delta),
+        )
     if contract_type:
         stmt = stmt.where(JobOffer.contract_type.ilike(f"%{contract_type}%"))
     if experience:
@@ -235,6 +258,9 @@ def create_job(db: Session, user: User, data: JobIn, ip: str | None = None) -> J
     )
     db.add(job)
     db.flush()
+    from app.integrations.hooks import apply_coordinates, maybe_geocode
+
+    apply_coordinates(job, maybe_geocode(job.location))
     audit(db, "job.create", user, "job", job.id, ip)
     db.commit()
     db.refresh(job)
@@ -251,6 +277,10 @@ def update_job(db: Session, user: User, job_id: str, data: JobIn | JobPatchIn) -
         setattr(job, key, value)
     if data.slug:
         job.slug = _unique_slug(db, data.slug, job.id)
+    from app.integrations.hooks import apply_coordinates, maybe_geocode
+
+    if "location" in payload:
+        apply_coordinates(job, maybe_geocode(job.location))
     audit(db, "job.update", user, "job", job.id)
     db.commit()
     db.refresh(job)

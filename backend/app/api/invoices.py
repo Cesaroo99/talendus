@@ -6,7 +6,7 @@ from app.deps import client_ip, get_current_user, require_roles
 from app.errors import ok
 from app.models import User
 from app.models.enums import UserRole
-from app.schemas import InvoiceIn, PaymentIn
+from app.schemas import InvoiceIn, PaymentIn, RefundIn
 from app.services import invoices as invoices_service
 from app.services import stripe_billing
 
@@ -67,3 +67,26 @@ def add_payment(
 @router.post("/{invoice_id}/checkout")
 def checkout_invoice(invoice_id: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     return ok(stripe_billing.create_checkout(db, user, invoice_id))
+
+
+@router.post("/{invoice_id}/paypal")
+def paypal_checkout(invoice_id: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    return ok(invoices_service.paypal_checkout(db, user, invoice_id))
+
+
+@router.post("/{invoice_id}/paypal/capture")
+def paypal_capture(invoice_id: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    return ok(invoices_service.paypal_capture(db, user, invoice_id))
+
+
+@router.post("/{invoice_id}/refund")
+def refund_invoice(
+    invoice_id: str,
+    payload: RefundIn | None = None,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_roles(UserRole.ADMIN, UserRole.FINANCE)),
+):
+    data = payload or RefundIn()
+    if data.provider == "paypal":
+        return ok(invoices_service.paypal_refund(db, user, invoice_id, data.amount))
+    return ok(stripe_billing.refund_invoice(db, user, invoice_id, data.amount))

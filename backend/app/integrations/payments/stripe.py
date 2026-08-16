@@ -28,12 +28,22 @@ class StripeService:
 
     def refund(self, reference: str, amount: int | None = None) -> PaymentResult:
         require_active(self.name)
-        from app.integrations.errors import IntegrationError
+        from app.services.stripe_billing import _require_secret, _stripe
 
-        raise IntegrationError(
-            "Les remboursements Stripe ne sont pas encore branchés.",
-            "INTEGRATION_NOT_IMPLEMENTED",
+        secret = _require_secret()
+        stripe = _stripe()
+        stripe.api_key = secret
+        kwargs: dict = {"payment_intent": reference}
+        if amount is not None:
+            kwargs["amount"] = int(round(int(amount) * 100))
+        refund = stripe.Refund.create(**kwargs)
+        refund_id = refund.get("id") if isinstance(refund, dict) else getattr(refund, "id", reference)
+        return PaymentResult(
             provider=self.name,
+            status="refunded",
+            amount=int(amount or 0),
+            currency="CAD",
+            reference=str(refund_id),
         )
 
     def status(self, reference: str) -> PaymentResult:

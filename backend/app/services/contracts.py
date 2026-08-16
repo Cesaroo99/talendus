@@ -37,6 +37,8 @@ def serialize_contract(row: Contract) -> dict:
         "terms": row.terms,
         "status": row.status.value if row.status else None,
         "document_name": row.document_name,
+        "esign_envelope_id": row.esign_envelope_id,
+        "esign_status": row.esign_status,
         "signed": bool(latest),
         "signature": serialize_signature(latest) if latest else None,
     }
@@ -104,3 +106,18 @@ def sign_contract(db: Session, user: User, contract_id: str, data: ContractSignI
     db.commit()
     db.expire_all()
     return get_contract(db, user, row.id)
+
+
+def request_esignature(db: Session, user: User, contract_id: str) -> dict:
+    from app.integrations.esignature.service import ESignatureService
+
+    row = get_contract(db, user, contract_id)
+    if user.role not in {UserRole.RECRUITER, UserRole.FINANCE} | ADMINS:
+        raise AppError(403, "Envoi pour signature électronique réservé à l'équipe Talendus.", "FORBIDDEN")
+    result = ESignatureService().create_document(title=row.document_name or row.type or "Contrat Talendus")
+    envelope_id = result.get("id") or result.get("envelope_id")
+    if envelope_id:
+        row.esign_envelope_id = str(envelope_id)[:80]
+        row.esign_status = str(result.get("status") or "created")[:32]
+        db.commit()
+    return result

@@ -182,6 +182,10 @@ Erreur :
 | GET | `/applications/me` | candidat |
 | POST | `/applications/{id}/status` | staff / employeur |
 | POST | `/invoices/{id}/checkout` | employeur / finance |
+| POST | `/invoices/{id}/paypal` `/invoices/{id}/paypal/capture` `/invoices/{id}/refund` | mixte / finance |
+| POST | `/interviews/reminders` | staff |
+| POST | `/candidates/{id}/ai` | staff |
+| POST | `/contracts/{id}/esign` | staff |
 | POST | `/webhooks/stripe` | Stripe (signature, sans JWT) |
 | GET | `/matching/jobs` | candidat |
 | GET | `/matching/jobs/{id}/candidates` | staff / employeur |
@@ -233,10 +237,10 @@ Couvrent inscription, connexion, permissions, publication d’offre, candidature
 - **Messagerie** : fils REST candidat ↔ recruteur / employeur, avec contrôle d’accès. Pas de WebSocket.
 - **Entretiens** : CRUD lié à une candidature, confirmation candidat, notification + e-mail.
 - **Signature interne** : nom, date, IP, empreinte SHA-256 du mandat. Ce n’est pas DocuSign ni une valeur légale tierce.
-- **Facturation** : factures et paiements en base (finance / admin). Checkout Stripe (`POST /api/invoices/{id}/checkout`) si `STRIPE_SECRET_KEY` est défini ; webhook `POST /api/webhooks/stripe` pose `stripe_payment_intent_id` et marque la facture payée. Sans clé : 503 `STRIPE_NOT_CONFIGURED`.
+- **Facturation** : factures et paiements en base (finance / admin). Checkout Stripe (`POST /api/invoices/{id}/checkout`) si `STRIPE_SECRET_KEY` est défini ; webhook `POST /api/webhooks/stripe` pose `stripe_payment_intent_id` et marque la facture payée. Remboursement `POST /api/invoices/{id}/refund` (finance) + événement `charge.refunded`. PayPal : order / capture / refund si configuré. Sans clé : 503.
 - **Job board** : `GET /api/job-board` (JSON). Partage LinkedIn via URL officielle. Publication automatique seulement si `LINKEDIN_CLIENT_ID` / `LINKEDIN_CLIENT_SECRET` sont définis (`posting_enabled`).
 - **Stockage CV** : local ou S3 (`STORAGE_BACKEND=s3`). Téléchargement authentifié (URL présignée S3 ou fichier local).
-- **Intégrations** : couche `app/integrations/` (un module par fournisseur). Catalogue `GET /api/integrations`. Sans identifiants : 503 `INTEGRATION_NOT_CONFIGURED`, aucun appel simulé. Détail : [`INTEGRATIONS.md`](INTEGRATIONS.md).
+- **Intégrations** : couche `app/integrations/` (un module par fournisseur). Catalogue `GET /api/integrations`. Sans identifiants : 503 `INTEGRATION_NOT_CONFIGURED`, aucun appel simulé. Hooks métier (WhatsApp, Maps) en no-op si le fournisseur n’est pas `active`. Détail : [`INTEGRATIONS.md`](INTEGRATIONS.md).
 
 ## Déploiement
 
