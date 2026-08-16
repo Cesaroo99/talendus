@@ -1,0 +1,19 @@
+/* Talendus branding overrides */
+.vl-logo img,
+.vl-offcanvas-logo img,
+.footer-logo-area img {
+  width: 186px !important;
+  height: 36px !important;
+  object-fit: contain;
+}
+
+.vl-offcanvas .vl-offcanvas-logo {
+  width: 186px !important;
+  height: 50px;
+}
+
+#loading-icon img {
+  width: 70px;
+  height: 70px;
+  object-fit: contain;
+}
