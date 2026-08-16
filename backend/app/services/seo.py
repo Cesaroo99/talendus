@@ -56,6 +56,9 @@ STATIC_PAIRS = [
     ("recrutement-industriel-laval.html", "en/industrial-recruiting-laval.html"),
     ("recrutement-industriel-longueuil.html", "en/industrial-recruiting-longueuil.html"),
     ("recrutement-industriel-quebec.html", "en/industrial-recruiting-quebec.html"),
+    ("comment-ca-fonctionne.html", "en/how-it-works.html"),
+    ("publier-une-offre.html", "en/post-a-job.html"),
+    ("solutions-rh.html", "en/hr-solutions.html"),
 ]
 
 

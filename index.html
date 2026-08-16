@@ -48,7 +48,7 @@ gtag('consent', 'default', {
     <script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebSite", "name": "Talendus", "url": "https://talendus.ca", "inLanguage": ["fr-CA", "en-CA"], "publisher": {"@type": "Organization", "name": "Talendus", "url": "https://talendus.ca"}}</script>
     
 </head>
-<body class="">
+<body class="tl-persona-gateway" data-persona="gateway">
 
 <div class="preloader tl-preloader" role="status" aria-label="Chargement Talendus">
   <div class="tl-preloader-stage">
@@ -80,39 +80,27 @@ gtag('consent', 'default', {
                       <ul>
 
                               <li data-nav="home"><a href="index.html">Accueil</a></li>
-                              <li class="has-dropdown" data-nav="employeurs">
-                                <a href="entreprises.html">Entreprises <span class="tl-nav-caret" aria-hidden="true"><i class="fa-solid fa-angle-down"></i></span></a>
-                                  <ul class="sub-menu">
-                                      <li><a href="entreprises.html">Pourquoi Talendus</a></li>
-                                      <li><a href="services.html">Services de recrutement</a></li>
-                                      <li><a href="secteurs.html">Secteurs desservis</a></li>
-                                      <li><a href="entreprises.html#calculateur">Calculateur d'embauche</a></li>
-                                      <li><a href="espace-employeur.html">Espace employeur</a></li>
-                                  </ul>
-                              </li>
                               <li class="has-dropdown" data-nav="candidats">
-                                <a href="candidats.html">Candidats <span class="tl-nav-caret" aria-hidden="true"><i class="fa-solid fa-angle-down"></i></span></a>
+                                <a href="candidats.html" data-set-persona="talent">Pour les Talents <span class="tl-nav-caret" aria-hidden="true"><i class="fa-solid fa-angle-down"></i></span></a>
                                   <ul class="sub-menu">
-                                      <li><a href="emplois.html">Offres d'emploi</a></li>
-                                      <li><a href="candidats.html#cv">Dépôt de CV</a></li>
-                                      <li><a href="candidats.html#processus">Processus</a></li>
-                                      <li><a href="espace.html">Connexion</a></li>
+                                      <li><a href="emplois.html" data-set-persona="talent">Offres d'emploi</a></li>
+                                      <li><a href="candidats.html#cv" data-set-persona="talent">Déposer son CV</a></li>
+                                      <li><a href="comment-ca-fonctionne.html" data-set-persona="talent">Comment ça fonctionne</a></li>
+                                      <li><a href="candidats.html#faq" data-set-persona="talent">FAQ talents</a></li>
                                   </ul>
                               </li>
-                              <li class="has-dropdown" data-nav="services">
-                                <a href="services.html">Services <span class="tl-nav-caret" aria-hidden="true"><i class="fa-solid fa-angle-down"></i></span></a>
+                              <li class="has-dropdown" data-nav="employeurs">
+                                <a href="entreprises.html" data-set-persona="entreprise">Pour les Entreprises <span class="tl-nav-caret" aria-hidden="true"><i class="fa-solid fa-angle-down"></i></span></a>
                                   <ul class="sub-menu">
-                                      <li><a href="recrutement-industriel.html">Recrutement industriel</a></li>
-                                      <li><a href="recrutement-manufacturier.html">Recrutement manufacturier</a></li>
-                                      <li><a href="recrutement-technique.html">Recrutement technique</a></li>
-                                      <li><a href="recrutement-permanent.html">Recrutement permanent</a></li>
-                                      <li><a href="recrutement-temporaire.html">Recrutement temporaire</a></li>
-                                      <li><a href="chasse-de-tetes.html">Chasse de têtes</a></li>
-                                      <li><a href="recrutement-cadres.html">Recrutement de cadres</a></li>
+                                      <li><a href="entreprises.html" data-set-persona="entreprise">Recruter avec Talendus</a></li>
+                                      <li><a href="publier-une-offre.html" data-set-persona="entreprise">Publier une offre</a></li>
+                                      <li><a href="chasse-de-tetes.html" data-set-persona="entreprise">Chasse de têtes</a></li>
+                                      <li><a href="solutions-rh.html" data-set-persona="entreprise">Solutions RH</a></li>
+                                      <li><a href="services.html" data-set-persona="entreprise">Services de recrutement</a></li>
                                   </ul>
                               </li>
+                              <li data-nav="jobs"><a href="emplois.html" data-set-persona="talent">Offres d'emploi</a></li>
                               <li data-nav="about"><a href="a-propos.html">À propos</a></li>
-                              <li data-nav="blog"><a href="blog.html">Blog</a></li>
                               <li data-nav="contact"><a href="contact.html">Contact</a></li>
 
                       </ul>
@@ -124,8 +112,10 @@ gtag('consent', 'default', {
                     <a class="" href="en/" lang="en" hreflang="en-CA">EN</a>
                   </nav>
                 <a href="espace.html" class="tl-account-link" data-account-link data-auth-open="login">Connexion</a>
+                <a href="espace.html" class="tl-account-link tl-register-link" data-auth-open="register">Inscription</a>
                 <div class="hero-btn1">
-                  <a href="contact.html" class="vl-btn2 tl-header-cta">Confier un recrutement <span><i class="fa-solid fa-arrow-right"></i></span></a>
+                  <a href="emplois.html" class="vl-btn2 tl-header-cta" data-persona-cta="talent">Consulter les offres <span><i class="fa-solid fa-arrow-right"></i></span></a>
+                  <a href="contact.html" class="vl-btn2 tl-header-cta" data-persona-cta="entreprise">Demander un recrutement <span><i class="fa-solid fa-arrow-right"></i></span></a>
                 </div>
               </div>
               <div class="tl-mobile-tools">
@@ -164,8 +154,13 @@ gtag('consent', 'default', {
             <p class="tl-offcanvas-note">Réponse moyenne sous 30 minutes durant les heures d’ouverture.</p>
             <div class="vl-offcanvas-cta">
               <a href="espace.html" class="tl-btn tl-btn-ghost" data-account-link data-auth-open="login">Connexion</a>
-              <a href="contact.html" class="tl-btn">Confier un recrutement</a>
-              <a href="candidats.html#cv" class="tl-btn tl-btn-electric">Déposer mon CV</a>
+              <a href="espace.html" class="tl-btn tl-btn-ghost" data-auth-open="register">Inscription</a>
+              <a href="candidats.html" class="tl-btn" data-persona-cta="gateway" data-set-persona="talent">Trouver un emploi</a>
+              <a href="entreprises.html" class="tl-btn tl-btn-electric" data-persona-cta="gateway" data-set-persona="entreprise">Je recrute</a>
+              <a href="emplois.html" class="tl-btn" data-persona-cta="talent">Consulter les offres</a>
+              <a href="candidats.html#cv" class="tl-btn tl-btn-electric" data-persona-cta="talent">Déposer mon CV</a>
+              <a href="publier-une-offre.html" class="tl-btn" data-persona-cta="entreprise">Publier une offre</a>
+              <a href="contact.html" class="tl-btn tl-btn-electric" data-persona-cta="entreprise">Réserver une démonstration</a>
             </div>
         </div>
     </div>
@@ -173,314 +168,40 @@ gtag('consent', 'default', {
   <div class="vl-offcanvas-overlay"></div>
 </div>
 
-<div class="hero2-arrow-hero">
-    <div class="hero-main-slider">
-      <div class="hero2-slider-area">
+<div class="hero2-arrow-hero tl-gateway-hero">
+  <div class="hero2-slider-area">
         <div class="img1"><img src="assets/img/all-images/industry/usine-equipe.jpg" alt="Équipe de production dans une usine québécoise" fetchpriority="high" decoding="async"></div>
         <div class="container">
-            <div class="row">
-                <div class="col-lg-8">
-                    <div class="hero2-heading tl-hero-lock">
-                        <h5>Les talents qui font tourner l'industrie.</h5>
-                        <div class="space16"></div>
-                        <h1>Premiers candidats qualifiés à partir de 7 jours.</h1>
-                        <div class="space16"></div>
-                        <p>Partenaire de recrutement pour les entreprises opérationnelles du Québec — production, maintenance, logistique, supervision et continuité des activités.</p>
-                        <div class="space32"></div>
-                        <div class="btn-area1">
-                            <a href="contact.html" class="vl-btn2">Confier un recrutement <span><i class="fa-solid fa-arrow-right"></i></span></a>
-                            <a href="candidats.html#cv" class="vl-btn2 btn2">Déposer mon CV <span><i class="fa-solid fa-arrow-right"></i></span></a>
-                        </div>
-                        <div class="tl-hero-badges">
-                          <span class="tl-badge tl-badge-light">Opérations · Québec</span>
-                          <span class="tl-badge tl-badge-light">Consultation sur rendez-vous</span>
-                        </div>
-                    </div>
-                </div>
+            <div class="hero2-heading tl-hero-lock">
+                <h5>Les talents qui font tourner l'industrie.</h5>
+                <div class="space16"></div>
+                <h1>Vous êtes au bon endroit.</h1>
+                <div class="space16"></div>
+                <p>Choisissez votre parcours. Chaque univers n’affiche que ce qui vous concerne — emploi ou recrutement, jamais les deux à la fois.</p>
+            </div>
+            <div class="tl-persona-cards">
+              <a class="tl-persona-card is-talent" href="candidats.html" data-set-persona="talent">
+                <span class="tl-kicker">Je recherche un emploi</span>
+                <h2>Trouver mon prochain poste</h2>
+                <p>Offres d’usine, dépôt de CV et suivi de candidature — sans frais, présenté aux employeurs industriels du Québec.</p>
+                <span class="tl-persona-go">Trouver mon prochain poste <i class="fa-solid fa-arrow-right"></i></span>
+              </a>
+              <a class="tl-persona-card is-hire" href="entreprises.html" data-set-persona="entreprise">
+                <span class="tl-kicker">Je recrute</span>
+                <h2>Trouver les meilleurs talents</h2>
+                <p>Publier une offre, consulter des profils présentés et confier un mandat RH — un cabinet calé sur vos quarts.</p>
+                <span class="tl-persona-go">Trouver les meilleurs talents <i class="fa-solid fa-arrow-right"></i></span>
+              </a>
             </div>
         </div>
-    </div>
-    <div class="hero2-slider-area">
-        <div class="img1"><img src="assets/img/all-images/industry/entrepot-logistique.jpg" alt="Entrepôt logistique et caristes au Québec" loading="lazy" decoding="async"></div>
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-8">
-                    <div class="hero2-heading tl-hero-lock">
-                        <h5>Emplois industriels · Québec</h5>
-                        <div class="space16"></div>
-                        <h1>Trouvez un emploi d’usine au Québec, présenté aux bons employeurs.</h1>
-                        <div class="space16"></div>
-                        <p>Opérateur, cariste, soudeur, CNC, maintenance, supervision : on vous oriente vers des usines qui recrutent vraiment.</p>
-                        <div class="space32"></div>
-                        <div class="btn-area1">
-                            <a href="emplois.html" class="vl-btn2">Trouver un emploi <span><i class="fa-solid fa-arrow-right"></i></span></a>
-                            <a href="candidats.html#cv" class="vl-btn2 btn2">Déposer mon CV <span><i class="fa-solid fa-arrow-right"></i></span></a>
-                        </div>
-                        <div class="tl-hero-badges">
-                          <span class="tl-badge tl-badge-light">Sans frais pour le candidat</span>
-                          <span class="tl-badge tl-badge-light">Mandats d’usine réels</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    </div>
-    <div class="testimonial-arrow">
-     <div class="prev-arrow-hero">
-        <button type="button" aria-label="Slide suivante"><i class="fa-solid fa-arrow-right"></i></button>
-        </div>
-        <div class="next-arrow-hero">
-        <button type="button" aria-label="Slide précédente"><i class="fa-solid fa-arrow-left"></i></button>
-        </div>
-    </div>
+  </div>
 </div>
-
 <section class="tl-section-sm">
   <div class="container">
-    <div class="tl-split">
-      <a class="employeurs" href="entreprises.html">
-        <div class="tl-kicker" style="color:#ffb37a">Entreprises</div>
-        <h3>Besoin d’un talent qui tient la production, la logistique ou la maintenance ?</h3>
-        <p>Consultation gratuite, sur rendez-vous. Présélection calée sur votre quart — pas 80 CV à trier en fin de shift.</p>
-        <span class="tl-split-cta">Confier un recrutement →</span>
-      </a>
-      <a class="candidats" href="candidats.html">
-        <div class="tl-kicker" style="color:#cfe0ff">Candidats</div>
-        <h3>Un poste en production, en logistique ou en maintenance ?</h3>
-        <p>Déposez votre CV. Nous vous présentons aux employeurs opérationnels du Québec — pas à des mandats fourre-tout.</p>
-        <span class="tl-split-cta">Déposer mon CV →</span>
-      </a>
-    </div>
-  </div>
-</section>
-
-<section class="tl-section tl-ice">
-  <div class="container">
-    <div class="tl-center" style="max-width:720px;margin:0 auto 36px">
-      <div class="tl-kicker">Chiffres clés</div>
-      <h2 class="tl-h2">Un cabinet calibré pour la réalité des usines québécoises</h2>
-    </div>
-    <div class="tl-stats">
-      <div class="tl-stat"><b>7 j</b><p>Premiers candidats qualifiés à partir de 7 jours, sur les mandats d’opération</p></div>
+    <div class="tl-stats tl-stats-compact">
+      <div class="tl-stat"><b>7 j</b><p>Premiers candidats qualifiés, sur les mandats d’opération</p></div>
       <div class="tl-stat"><b>92 %</b><p>Des placements encore en poste après la période d’essai</p></div>
       <div class="tl-stat"><b>100 %</b><p>De nos mandats dans l’industrie, la logistique ou l’entreposage</p></div>
-      <div class="tl-stat"><b>1 200+</b><p>Talents industriels actifs dans notre réseau au Québec</p></div>
-    </div>
-  </div>
-</section>
-
-<section class="tl-section">
-  <div class="container">
-    <div class="row align-items-center g-4">
-      <div class="col-lg-6">
-        <div class="tl-kicker">Pourquoi Talendus</div>
-        <h2 class="tl-h2">Le partenaire d’acquisition de talents pour l’industrie québécoise</h2>
-        <p class="tl-lead">Quand une ligne, un quai ou un quart s’arrête, le coût n’est pas un poste vacant : c’est de la production perdue. Nous parlons opérations, maintenance, logistique et supervision — pas un jargon RH générique.</p>
-        <div class="space24"></div>
-        <ul class="tl-muted">
-          <li>Spécialisation : production, manufacturier, logistique, maintenance, transport et supervision.</li>
-          <li>Évaluation terrain : compétences, quart de travail, culture opérationnelle.</li>
-          <li>Garantie de remplacement sur les mandats permanents.</li>
-        </ul>
-        <div class="space32"></div>
-        <div class="tl-actions">
-          <a href="contact.html" class="tl-btn">Confier un recrutement</a>
-          <a href="a-propos.html" class="tl-btn tl-btn-ghost-dark">Notre approche</a>
-        </div>
-      </div>
-      <div class="col-lg-6">
-        <div class="tl-hero-media" style="height:420px;border-radius:18px;overflow:hidden">
-          <img src="assets/img/all-images/industry/cnc-machiniste.jpg" alt="Machiniste CNC dans une usine au Québec">
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="tl-section tl-ice">
-  <div class="container">
-    <div class="tl-center" style="max-width:760px;margin:0 auto 36px">
-      <div class="tl-kicker">Secteurs desservis</div>
-      <h2 class="tl-h2">Nous recrutons là où le Québec produit, transforme, expédie et maintient</h2>
-    </div>
-    <div class="tl-grid-4">
-      <a class="tl-card" href="secteur-manufacturier.html"><div class="body"><h3>Manufacturier</h3><p>Usines de fabrication, assemblage et sous-traitance industrielle.</p></div></a>
-      <a class="tl-card" href="secteur-production.html"><div class="body"><h3>Production</h3><p>Opérations, méthodes, qualité et supervision de ligne.</p></div></a>
-      <a class="tl-card" href="secteur-entrepot.html"><div class="body"><h3>Entrepôt</h3><p>Manutention, caristes, préparation de commandes et WMS.</p></div></a>
-      <a class="tl-card" href="secteur-logistique.html"><div class="body"><h3>Logistique</h3><p>Distribution, transport interne et chaîne d’approvisionnement.</p></div></a>
-      <a class="tl-card" href="secteur-transformation-alimentaire.html"><div class="body"><h3>Alimentaire</h3><p>Transformation, emballage et normes d’hygiène en usine.</p></div></a>
-      <a class="tl-card" href="secteur-metallurgie.html"><div class="body"><h3>Métallurgie</h3><p>Soudure, usinage, fabrication métallique et chaudronnerie.</p></div></a>
-      <a class="tl-card" href="secteur-plasturgie.html"><div class="body"><h3>Plasturgie</h3><p>Injection, extrusion et opération de presses.</p></div></a>
-      <a class="tl-card" href="secteur-maintenance.html"><div class="body"><h3>Maintenance</h3><p>Électromécanique, mécanique industrielle et fiabilité.</p></div></a>
-    </div>
-  </div>
-</section>
-
-<section class="tl-section">
-  <div class="container">
-    <div class="tl-center" style="max-width:760px;margin:0 auto 36px">
-      <div class="tl-kicker">Métiers recrutés</div>
-      <h2 class="tl-h2">Du journalier d’usine au directeur de plant</h2>
-    </div>
-    <div class="tl-grid-3">
-      <div class="tl-card"><div class="body"><span class="tl-chip orange">Production</span><h3>Métiers d’usine</h3><p>Journalier, opérateur, assembleur, emballeur, préposé à la ligne.</p></div></div>
-      <div class="tl-card"><div class="body"><span class="tl-chip orange">Spécialisés</span><h3>Métiers techniques</h3><p>Soudeur, machiniste CNC, électromécanicien, mécanicien industriel.</p></div></div>
-      <div class="tl-card"><div class="body"><span class="tl-chip orange">Logistique</span><h3>Entrepôt &amp; distribution</h3><p>Cariste, commis, coordonnateur logistique, superviseur d’entrepôt.</p></div></div>
-      <div class="tl-card"><div class="body"><span class="tl-chip orange">Supervision</span><h3>Encadrement</h3><p>Superviseur de production, contremaître, chef d’équipe de quart.</p></div></div>
-      <div class="tl-card"><div class="body"><span class="tl-chip orange">Cadres</span><h3>Gestion manufacturière</h3><p>Directeur d’usine, directeur de production, responsable maintenance.</p></div></div>
-      <div class="tl-card"><div class="body"><span class="tl-chip orange">Urgent</span><h3>Renforts de quart</h3><p>Mandats accélérés quand un quart critique doit être comblé — sans diluer le filtre technique.</p></div></div>
-    </div>
-    <div class="tl-center" style="margin-top:28px"><a class="tl-btn" href="emplois.html">Trouver un emploi</a></div>
-  </div>
-</section>
-
-<section class="tl-section tl-dark">
-  <div class="container">
-    <div class="tl-center" style="max-width:760px;margin:0 auto 36px">
-      <div class="tl-kicker">Méthodologie</div>
-      <h2 class="tl-h2">Un processus en 5 étapes, calé sur vos délais de production</h2>
-    </div>
-    <div class="tl-steps">
-      <div class="tl-step"><span>01</span><h3>Diagnostic d’usine</h3><p>Quart, compétences, SST, culture et urgence réelle du mandat.</p></div>
-      <div class="tl-step"><span>02</span><h3>Ciblage industriel</h3><p>Réseau passif, références d’usine et approche directe.</p></div>
-      <div class="tl-step"><span>03</span><h3>Évaluation terrain</h3><p>Entrevues techniques, validations et tests de compétences.</p></div>
-      <div class="tl-step"><span>04</span><h3>Présentation</h3><p>Dossiers comparables, recommandation claire. Premiers candidats qualifiés à partir de 7 jours.</p></div>
-      <div class="tl-step"><span>05</span><h3>Intégration</h3><p>Suivi 30/60/90 jours et garantie de remplacement.</p></div>
-    </div>
-  </div>
-</section>
-
-<section class="tl-section">
-  <div class="container">
-    <div class="tl-center" style="max-width:760px;margin:0 auto 36px">
-      <div class="tl-kicker">Études de cas</div>
-      <h2 class="tl-h2">Des mandats industriels menés jusqu’à la prise de poste</h2>
-    </div>
-    <div class="tl-grid-3">
-      <article class="tl-case">
-        <div class="tl-hero-media" style="height:200px"><img src="assets/img/all-images/industry/soudeur-atelier.jpg" alt="Mandat de recrutement de soudeurs"></div>
-        <div class="body">
-          <span class="tl-chip">Métallurgie · Drummondville</span>
-          <h3>3 soudeurs-monteurs pour un deuxième quart</h3>
-          <p>Une PME en croissance devait ouvrir un quart sans arrêter la ligne. Présélection technique, démarrage cadré.</p>
-        </div>
-      </article>
-      <article class="tl-case">
-        <div class="tl-hero-media" style="height:200px"><img src="assets/img/all-images/industry/entrepot-logistique.jpg" alt="Recrutement en centre de distribution"></div>
-        <div class="body">
-          <span class="tl-chip">Entrepôt · Laval</span>
-          <h3>Superviseur de quart + 8 caristes</h3>
-          <p>Pic saisonnier absorbé en 4 semaines, avec une rétention supérieure à la moyenne du site.</p>
-        </div>
-      </article>
-      <article class="tl-case">
-        <div class="tl-hero-media" style="height:200px"><img src="assets/img/all-images/industry/maintenance-tech.jpg" alt="Recrutement d'un directeur d'usine"></div>
-        <div class="body">
-          <span class="tl-chip">Cadre · Montérégie</span>
-          <h3>Directeur d’usine confidentiel</h3>
-          <p>Chasse de têtes discrète. Prise de poste en 9 semaines, sans perturbation interne.</p>
-        </div>
-      </article>
-    </div>
-  </div>
-</section>
-
-<section class="tl-section tl-ice">
-  <div class="container">
-    <div class="tl-center" style="max-width:720px;margin:0 auto 36px">
-      <div class="tl-kicker">Témoignages</div>
-      <h2 class="tl-h2">Ce que disent les usines et les candidats</h2>
-      <p class="tl-lead">Des retours d’employeurs manufacturiers et de professionnels placés au Québec — pas des citations génériques.</p>
-    </div>
-    <div class="tl-grid-3 tl-quotes">
-      <blockquote class="tl-quote">
-        <div class="tl-quote-mark" aria-hidden="true">“</div>
-        <p>Ils ont compris nos quarts rotatifs dès le premier appel. Le superviseur présenté connaissait déjà un environnement Lean comparable.</p>
-        <footer><strong>M.L.</strong><span>Directrice des opérations · usine alimentaire, Rive-Sud</span></footer>
-      </blockquote>
-      <blockquote class="tl-quote">
-        <div class="tl-quote-mark" aria-hidden="true">“</div>
-        <p>Pas une agence qui envoie 40 CV. Trois dossiers solides, un électromécanicien en poste, et un suivi après l’embauche.</p>
-        <footer><strong>J.R.</strong><span>Directeur maintenance · métallurgie, Mauricie</span></footer>
-      </blockquote>
-      <blockquote class="tl-quote">
-        <div class="tl-quote-mark" aria-hidden="true">“</div>
-        <p>J’étais cariste de nuit. Talendus m’a présenté un poste de coordonnateur logistique à Laval. Entrevue claire, conditions nettes.</p>
-        <footer><strong>A.D.</strong><span>Candidate placée · Laval</span></footer>
-      </blockquote>
-    </div>
-  </div>
-</section>
-
-<section class="tl-section">
-  <div class="container">
-    <div class="tl-center" style="max-width:720px;margin:0 auto 36px">
-      <div class="tl-kicker">FAQ</div>
-      <h2 class="tl-h2">Avant d’ouvrir un mandat ou de déposer un CV</h2>
-      <p class="tl-lead">Les questions que se posent les RH, les directeurs d’usine et les candidats — réponses franches.</p>
-    </div>
-    <div class="tl-faq"><details open><summary>Talendus est-il une agence de placement généraliste ?</summary><p>Non. Nous ne recrutons pas en bureau, en TI, en vente ou en service à la clientèle. Talendus est le partenaire de recrutement des entreprises opérationnelles du Québec : production, maintenance, logistique, supervision et continuité des activités.</p></details><details><summary>À partir de quand recevons-nous les premiers candidats ?</summary><p>Sur les mandats d’opération, de cariste et plusieurs métiers d’usine, les premiers candidats qualifiés arrivent à partir de 7 jours. Ce délai correspond à une shortlist filtrée — pas à une pile de CV. Un machiniste CNC rare ou un directeur d’usine prend davantage de temps : nous l’annonçons dès le brief.</p></details><details><summary>Dans quelles régions du Québec recrutez-vous ?</summary><p>Grand Montréal, Laval, Rive-Sud, Montérégie, Estrie, Centre-du-Québec, Mauricie et région de Québec. Nous menons aussi des mandats en région lorsque le profil l’exige.</p></details><details><summary>Comment se passe une consultation ?</summary><p>Les consultations sont sur rendez-vous uniquement. Un appel de 30 minutes suffit pour comprendre le quart, le salaire réel, la SST et l’urgence. Réponse moyenne sous 30 minutes durant les heures d’ouverture (lun.–ven., 8 h à 17 h).</p></details><details><summary>Offrez-vous une garantie de remplacement ?</summary><p>Oui, sur les mandats permanents. La durée est confirmée à l’ouverture du dossier, par écrit. Le suivi 30/60/90 jours fait partie du mandat, pas d’une option.</p></details><details><summary>Travaillez-vous avec des candidats en recherche active seulement ?</summary><p>Non. Une part importante de notre vivier est passive : opérateurs, métiers et cadres déjà en poste que nous approchons discrètement. C’est souvent là que se trouvent les profils qui restent.</p></details><details><summary>Puis-je déposer un CV même s’il n’y a pas d’offre affichée ?</summary><p>Oui. Plusieurs mandats sont confidentiels. Nous qualifions votre métier, vos quarts et votre mobilité, puis nous vous présentons lorsqu’un employeur opérationnel correspond.</p></details><details><summary>Comment facturez-vous les employeurs ?</summary><p>Honoraires au succès, calculés sur le salaire annuel du candidat placé. Aucun frais si le mandat n’aboutit pas, selon les conditions de l’entente. La consultation initiale est gratuite.</p></details></div>
-  </div>
-</section>
-
-<section class="tl-section tl-ice" id="contact-rapide">
-  <div class="container">
-    <div class="row align-items-center g-4">
-      <div class="col-lg-5">
-        <div class="tl-kicker">Contact</div>
-        <h2 class="tl-h2">Parlez-nous de votre mandat ou de votre CV</h2>
-        <p class="tl-lead">Consultations sur rendez-vous uniquement. Réponse moyenne sous 30 minutes durant les heures d’ouverture.</p>
-        <div class="tl-notice">Lun–Ven, 8 h à 17 h · Rencontres planifiées selon vos disponibilités.</div>
-            <p><a href="tel:+15145550199">514 555-0199</a><br><a href="mailto:info@talendus.ca">info@talendus.ca</a><br><a href="https://wa.me/15145550199?text=Bonjour%20Talendus%2C%20je%20souhaite%20discuter%20d%27un%20besoin%20de%20recrutement." target="_blank" rel="noopener noreferrer">WhatsApp</a></p>
-            <div class="tl-actions" style="margin-top:18px">
-              <a class="tl-btn" href="contact.html">Confier un recrutement</a>
-        </div>
-      </div>
-      <div class="col-lg-6 offset-lg-1">
-        <form class="tl-form" action="#" method="post" data-form="contact">
-          <label for="nom">Nom</label>
-          <input id="nom" name="nom" required placeholder="Votre nom">
-          <label for="courriel">Courriel</label>
-          <input id="courriel" type="email" name="courriel" required placeholder="prenom@entreprise.ca">
-          <label for="profil">Vous êtes</label>
-          <select id="profil" name="profil">
-            <option>Employeur — je recrute</option>
-            <option>Candidat — je cherche un poste</option>
-          </select>
-          <label for="msg">Message</label>
-          <textarea id="msg" name="message" placeholder="Poste, ville, urgence ou métier visé"></textarea>
-          <button class="tl-btn tl-btn-lg" type="submit">Obtenir une consultation gratuite</button>
-          <div class="tl-success" role="status"></div>
-        </form>
-      </div>
-    </div>
-  </div>
-</section>
-
-
-<section class="tl-cta-band">
-  <div class="container">
-    <span class="tl-badge tl-badge-light">Cabinet industriel</span>
-    <h2 class="tl-h2">Votre usine n’a pas besoin d’une agence généraliste.</h2>
-    <p>Un interlocuteur qui parle production, quarts et SST. Consultation gratuite, sur rendez-vous. Réponse moyenne sous 30 minutes durant les heures d’ouverture.</p>
-    <div class="tl-actions">
-      <a class="tl-btn tl-btn-lg" href="contact.html">Confier un recrutement</a>
-      <a class="tl-btn tl-btn-ghost" href="candidats.html#cv">Déposer mon CV</a>
-    </div>
-  </div>
-</section>
-
-<section class="tl-section">
-  <div class="container">
-    <div class="tl-center" style="max-width:760px;margin:0 auto 36px">
-      <div class="tl-kicker">Blog</div>
-      <h2 class="tl-h2">Ressources recrutement, RH et industrie au Québec</h2>
-    </div>
-    <div class="tl-grid-3">
-      <a class="tl-card" href="article-mauvaise-embauche.html"><div class="tl-hero-media" style="height:180px"><img src="assets/img/all-images/industry/usine-equipe.jpg" alt="Équipe d'usine au Québec" loading="lazy" decoding="async"></div><div class="body"><span class="tl-chip">RH</span><h3>Combien coûte une mauvaise embauche en usine ?</h3></div></a>
-      <a class="tl-card" href="article-machiniste-cnc.html"><div class="tl-hero-media" style="height:180px"><img src="assets/img/all-images/industry/cnc-machiniste.jpg" alt="Machiniste CNC" loading="lazy" decoding="async"></div><div class="body"><span class="tl-chip">Manufacturier</span><h3>Recruter un machiniste CNC au Québec</h3></div></a>
-      <a class="tl-card" href="article-caristes-entrepot.html"><div class="tl-hero-media" style="height:180px"><img src="assets/img/all-images/industry/entrepot-logistique.jpg" alt="Caristes en entrepôt" loading="lazy" decoding="async"></div><div class="body"><span class="tl-chip">Logistique</span><h3>Pénurie de caristes : stratégies d’entrepôt</h3></div></a>
     </div>
   </div>
 </section>
@@ -489,8 +210,18 @@ gtag('consent', 'default', {
   <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M19.11 17.47c-.29-.15-1.73-.85-2-.95-.27-.1-.46-.15-.66.15s-.76.95-.93 1.15c-.17.2-.34.22-.63.07-.29-.15-1.22-.45-2.33-1.43-.86-.77-1.44-1.72-1.61-2.01-.17-.29-.02-.45.13-.6.13-.13.29-.34.43-.51.15-.17.2-.29.29-.48.1-.2.05-.36-.02-.51-.07-.15-.66-1.59-.9-2.18-.24-.57-.48-.49-.66-.5h-.56c-.2 0-.51.07-.78.36-.27.29-1.02.99-1.02 2.42s1.05 2.81 1.19 3 .07.15 2.06 3.15c1.64 1.41 2.96 1.85 3.58 2.06.54.17 1.04.15 1.43.09.44-.06 1.73-.71 1.97-1.39.24-.68.24-1.27.17-1.39-.07-.12-.26-.2-.55-.35zM16.03 4.05C9.41 4.05 4.05 9.4 4.05 16.03c0 2.11.55 4.17 1.6 5.99L4 28l6.12-1.6a11.94 11.94 0 0 0 5.91 1.51h.01c6.62 0 11.98-5.36 11.98-11.98 0-3.2-1.25-6.21-3.51-8.47a11.9 11.9 0 0 0-8.48-3.51zm0 21.86h-.01a9.94 9.94 0 0 1-5.06-1.38l-.36-.22-3.63.95.97-3.54-.23-.37a9.93 9.93 0 0 1-1.52-5.32c0-5.48 4.46-9.94 9.95-9.94 2.66 0 5.15 1.04 7.03 2.92a9.87 9.87 0 0 1 2.91 7.02c0 5.49-4.47 9.95-9.95 9.95z"/></svg>
 </a>
 <div class="tl-sticky">
-  <a href="contact.html">Confier un recrutement</a>
-  <a class="alt" href="candidats.html#cv">Déposer mon CV</a>
+  <div class="tl-sticky-persona" data-persona-bar="gateway">
+    <a href="candidats.html" data-set-persona="talent">Trouver un emploi</a>
+    <a class="alt" href="entreprises.html" data-set-persona="entreprise">Je recrute</a>
+  </div>
+  <div class="tl-sticky-persona" data-persona-bar="talent">
+    <a href="emplois.html">Consulter les offres</a>
+    <a class="alt" href="candidats.html#cv">Déposer mon CV</a>
+  </div>
+  <div class="tl-sticky-persona" data-persona-bar="entreprise">
+    <a href="publier-une-offre.html">Publier une offre</a>
+    <a class="alt" href="contact.html">Réserver une démonstration</a>
+  </div>
 </div>
 <div class="vl-footer2-section-area">
   <div class="container">
@@ -521,8 +252,8 @@ gtag('consent', 'default', {
         <div class="footer-widget-area foot-padding2">
           <h3>Recrutement</h3>
           <ul>
-            <li><a href="entreprises.html">Entreprises</a></li>
-            <li><a href="candidats.html">Candidats</a></li>
+            <li><a href="entreprises.html">Pour les Entreprises</a></li>
+            <li><a href="candidats.html">Pour les Talents</a></li>
             <li><a href="emplois.html">Offres d'emploi</a></li>
             <li><a href="recrutement-permanent.html">Recrutement permanent</a></li>
             <li><a href="chasse-de-tetes.html">Chasse de têtes</a></li>
@@ -573,6 +304,7 @@ gtag('consent', 'default', {
 <script src="assets/js/main.js" defer></script>
 <script src="assets/js/api.js" defer></script>
 <script src="assets/js/talendus.js" defer></script>
+<script src="assets/js/persona.js" defer></script>
 <script src="assets/js/auth-gate.js" defer></script>
 <script src="assets/js/account.js" defer></script>
 <script src="assets/js/consent.js" defer></script>
