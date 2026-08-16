@@ -177,5 +177,47 @@
       if (el) el.addEventListener("input", filterJobs);
       if (el) el.addEventListener("change", filterJobs);
     });
+
+    var DESKTOP_NAV = 1200;
+    var toggleBtns = document.querySelectorAll(".vl-offcanvas-toggle");
+
+    function setMenuOpen(open) {
+      document.body.classList.toggle("tl-menu-open", open);
+      toggleBtns.forEach(function (btn) {
+        btn.setAttribute("aria-expanded", open ? "true" : "false");
+      });
+    }
+
+    function closeMenu() {
+      var canvas = document.querySelector(".vl-offcanvas");
+      var overlay = document.querySelector(".vl-offcanvas-overlay");
+      if (canvas) canvas.classList.remove("vl-offcanvas-open");
+      if (overlay) overlay.classList.remove("vl-offcanvas-overlay-open");
+      setMenuOpen(false);
+    }
+
+    toggleBtns.forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        setMenuOpen(true);
+      });
+    });
+    document.querySelectorAll(".vl-offcanvas-close-toggle, .vl-offcanvas-overlay").forEach(function (el) {
+      el.addEventListener("click", closeMenu);
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") closeMenu();
+    });
+    window.addEventListener("resize", function () {
+      if (window.innerWidth >= DESKTOP_NAV) closeMenu();
+    });
+    document.querySelectorAll(".vl-offcanvas-menu").forEach(function (menu) {
+      menu.addEventListener("click", function (e) {
+        var link = e.target.closest("a");
+        if (!link) return;
+        var item = link.parentElement;
+        if (item && item.classList.contains("has-dropdown")) return;
+        closeMenu();
+      });
+    });
   });
 })();

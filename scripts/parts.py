@@ -37,6 +37,8 @@ COPY = {
         "nav_contact": "Contact",
         "cta_primary": "Confier un recrutement",
         "cta_secondary": "Déposer mon CV",
+        "menu_open": "Ouvrir le menu",
+        "menu_close": "Fermer le menu",
         "offcanvas_note": "Réponse moyenne sous 30 minutes durant les heures d’ouverture.",
         "offcanvas_place": "Montréal, Québec · sur rendez-vous",
         "consult": "Réserver une consultation",
@@ -82,6 +84,8 @@ COPY = {
         "nav_contact": "Contact",
         "cta_primary": "Start a hire",
         "cta_secondary": "Submit my resume",
+        "menu_open": "Open menu",
+        "menu_close": "Close menu",
         "offcanvas_note": "Average response under 30 minutes during business hours.",
         "offcanvas_place": "Montreal, Quebec · by appointment",
         "consult": "Book a consultation",
@@ -152,7 +156,7 @@ def nav_html(lang):
     return f"""
                               <li data-nav="home"><a href="{h['home']}">{t['nav_home']}</a></li>
                               <li class="has-dropdown" data-nav="employeurs">
-                                <a href="{h['employers']}">{t['nav_employers']} <span><i class="fa-solid fa-angle-down d-lg-inline d-none"></i></span></a>
+                                <a href="{h['employers']}">{t['nav_employers']} <span class="tl-nav-caret" aria-hidden="true"><i class="fa-solid fa-angle-down"></i></span></a>
                                   <ul class="sub-menu">
                                       <li><a href="{h['employers']}">{t['nav_why']}</a></li>
                                       <li><a href="{h['services']}">{t['nav_services']}</a></li>
@@ -161,7 +165,7 @@ def nav_html(lang):
                                   </ul>
                               </li>
                               <li class="has-dropdown" data-nav="candidats">
-                                <a href="{h['candidates']}">{t['nav_candidates']} <span><i class="fa-solid fa-angle-down d-lg-inline d-none"></i></span></a>
+                                <a href="{h['candidates']}">{t['nav_candidates']} <span class="tl-nav-caret" aria-hidden="true"><i class="fa-solid fa-angle-down"></i></span></a>
                                   <ul class="sub-menu">
                                       <li><a href="{h['jobs']}">{t['nav_jobs']}</a></li>
                                       <li><a href="{h['cv']}">{t['nav_cv']}</a></li>
@@ -278,51 +282,45 @@ def header(solid=True, lang="fr", alt_url=""):
 <header class="homepage2-body">
   <div id="vl-header-sticky" class="vl-header-area vl-transparent-header">
       <div class="container">
-          <div class="row align-items-center">
-              <div class="col-lg-2 col-md-6 col-6">
-                  <div class="vl-logo">
-                      <a href="{h['home']}"><img src="{a}assets/img/logo/logo1.png" alt="Talendus"></a>
-                  </div>
+          <div class="tl-header-bar">
+              <div class="vl-logo">
+                  <a href="{h['home']}"><img src="{a}assets/img/logo/logo1.png" alt="Talendus"></a>
               </div>
-              <div class="col-lg-6 d-none d-lg-block">
-                  <div class="vl-main-menu text-center">
-                      <nav class="vl-mobile-menu-active">
-                          <ul>
+              <div class="vl-main-menu tl-desktop-nav">
+                  <nav class="vl-mobile-menu-active">
+                      <ul>
 {nav_html(lang)}
-                          </ul>
-                      </nav>
-                  </div>
+                      </ul>
+                  </nav>
               </div>
-              <div class="col-lg-4 col-md-6 col-6">
-                <div class="tl-header-tools d-none d-lg-flex">
-                  {switch}
-                  <div class="hero-btn1">
-                    <a href="{h['contact']}" class="vl-btn2 tl-header-cta">{t['cta_primary']} <span><i class="fa-solid fa-arrow-right"></i></span></a>
-                  </div>
+              <div class="tl-header-tools">
+                {switch}
+                <div class="hero-btn1">
+                  <a href="{h['contact']}" class="vl-btn2 tl-header-cta">{t['cta_primary']} <span><i class="fa-solid fa-arrow-right"></i></span></a>
                 </div>
-                  <div class="tl-mobile-tools d-flex d-lg-none">
-                      {switch}
-                      <button type="button" class="vl-offcanvas-toggle" aria-label="Menu">
-                        <i class="fa-solid fa-bars-staggered"></i>
-                      </button>
-                   </div>
               </div>
+              <div class="tl-mobile-tools">
+                  {switch}
+                  <button type="button" class="vl-offcanvas-toggle" aria-label="{t['menu_open']}" aria-expanded="false" aria-controls="tl-mobile-nav">
+                    <i class="fa-solid fa-bars-staggered"></i>
+                  </button>
+               </div>
           </div>
       </div>
   </div>
 </header>
 <div class="homepage2-body">
-  <div class="vl-offcanvas">
+  <div class="vl-offcanvas" id="tl-mobile-nav">
     <div class="vl-offcanvas-wrapper">
-        <div class="vl-offcanvas-header d-flex justify-content-between align-items-center mb-90">
+        <div class="vl-offcanvas-header d-flex justify-content-between align-items-center">
             <div class="vl-offcanvas-logo">
                 <a href="{h['home']}"><img src="{a}assets/img/logo/logo1.png" alt="Talendus"></a>
             </div>
             <div class="vl-offcanvas-close">
-               <button class="vl-offcanvas-close-toggle"><i class="fa-solid fa-xmark"></i></button>
+               <button type="button" class="vl-offcanvas-close-toggle" aria-label="{t['menu_close']}"><i class="fa-solid fa-xmark"></i></button>
             </div>
         </div>
-        <div class="vl-offcanvas-menu d-lg-none mb-40"><nav></nav></div>
+        <div class="vl-offcanvas-menu"><nav></nav></div>
         <div class="vl-offcanvas-info">
             <h3 class="vl-offcanvas-sm-title">Talendus</h3>
             <p class="tl-offcanvas-tagline">{t['tagline']}</p>
