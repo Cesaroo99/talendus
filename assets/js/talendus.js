@@ -5,6 +5,31 @@
   }
 
   ready(function () {
+    if (window.jQuery) {
+      var $slider = window.jQuery(".hero-main-slider");
+      if ($slider.length) {
+        if ($slider.hasClass("slick-initialized")) {
+          $slider.slick("unslick");
+        }
+        $slider.slick({
+          autoplay: true,
+          autoplaySpeed: 6500,
+          speed: 700,
+          slidesToShow: 1,
+          slidesToScroll: 1,
+          pauseOnHover: true,
+          dots: false,
+          arrows: true,
+          fade: true,
+          cssEase: "ease-in-out",
+          adaptiveHeight: false,
+          draggable: true,
+          prevArrow: window.jQuery(".next-arrow-hero"),
+          nextArrow: window.jQuery(".prev-arrow-hero")
+        });
+      }
+    }
+
     document.querySelectorAll(".tl-form").forEach(function (form) {
       form.addEventListener("submit", function (e) {
         e.preventDefault();
@@ -41,9 +66,9 @@
     var cat = document.getElementById("job-cat");
     var city = document.getElementById("job-city");
     function filterJobs() {
-      var q = (search && search.value || "").toLowerCase();
-      var c = cat && cat.value || "";
-      var v = city && city.value || "";
+      var q = ((search && search.value) || "").toLowerCase();
+      var c = (cat && cat.value) || "";
+      var v = (city && city.value) || "";
       document.querySelectorAll("[data-job]").forEach(function (card) {
         var hay = card.getAttribute("data-job").toLowerCase();
         var ok = (!q || hay.indexOf(q) !== -1) && (!c || hay.indexOf(c) !== -1) && (!v || hay.indexOf(v) !== -1);

@@ -68,7 +68,7 @@ def header(solid=True):
                       <a href="index.html"><img src="assets/img/logo/logo1.png" alt="Talendus"></a>
                   </div>
               </div>
-              <div class="col-lg-8 d-none d-lg-block">
+              <div class="col-lg-7 d-none d-lg-block">
                   <div class="vl-main-menu text-center">
                       <nav class="vl-mobile-menu-active">
                           <ul>
@@ -77,10 +77,10 @@ def header(solid=True):
                       </nav>
                   </div>
               </div>
-              <div class="col-lg-2 col-md-6 col-6">
+              <div class="col-lg-3 col-md-6 col-6">
                 <div class="vl-hero-btn d-none d-lg-block text-end">
                   <div class="hero-btn1">
-                    <a href="contact.html" class="vl-btn2">Recruter <span><i class="fa-solid fa-arrow-right"></i></span></a>
+                    <a href="contact.html" class="vl-btn2 tl-header-cta">Consultation gratuite <span><i class="fa-solid fa-arrow-right"></i></span></a>
                   </div>
                 </div>
                   <div class="vl-header-action-item d-block d-lg-none">
@@ -111,6 +111,10 @@ def header(solid=True):
             <span><a href="tel:+15145550199"><i class="fa-solid fa-phone"></i> 514 555-0199</a></span>
             <span><a href="mailto:info@talendus.ca"><i class="fa-regular fa-envelope"></i> info@talendus.ca</a></span>
             <span><a href="contact.html"><i class="fa-solid fa-location-dot"></i> Montréal, Québec</a></span>
+            <div class="vl-offcanvas-cta">
+              <a href="contact.html" class="tl-btn">Réserver une consultation</a>
+              <a href="candidats.html#cv" class="tl-btn tl-btn-electric">Déposer mon CV</a>
+            </div>
         </div>
     </div>
   </div>
@@ -118,10 +122,42 @@ def header(solid=True):
 </div>
 """
 
+SPEED_STRIP = """
+<section class="tl-speed">
+  <div class="container">
+    <div class="tl-speed-inner">
+      <div>
+        <span class="tl-badge tl-badge-light">À partir de 7 jours</span>
+        <h2>Recevez vos premiers candidats qualifiés en seulement 7 jours.</h2>
+        <p>Pas six semaines de CV génériques. Un vivier industriel, une présélection terrain et une première shortlist calée sur votre production.</p>
+      </div>
+      <div class="tl-speed-actions">
+        <a class="tl-btn tl-btn-lg" href="contact.html">Réserver une consultation gratuite</a>
+        <a class="tl-btn tl-btn-ghost" href="employeurs.html">Parler à un spécialiste</a>
+      </div>
+    </div>
+  </div>
+</section>
+"""
+
+CTA_BAND = """
+<section class="tl-cta-band">
+  <div class="container">
+    <span class="tl-badge tl-badge-light">Recrutement accéléré</span>
+    <h2 class="tl-h2">Un poste vacant en usine coûte plus cher qu’un mandat bien mené.</h2>
+    <p>Employeurs : premiers candidats qualifiés sous 7 jours. Candidats : un dossier présenté aux usines qui recrutent vraiment.</p>
+    <div class="tl-actions">
+      <a class="tl-btn tl-btn-lg" href="contact.html">Obtenir une consultation gratuite</a>
+      <a class="tl-btn tl-btn-ghost" href="candidats.html#cv">Déposer mon CV</a>
+    </div>
+  </div>
+</section>
+"""
+
 FOOTER = """
 <div class="tl-sticky">
-  <a href="contact.html">Consultation gratuite</a>
-  <a class="alt" href="candidats.html#cv">Déposer un CV</a>
+  <a href="contact.html">Réserver une consultation</a>
+  <a class="alt" href="candidats.html#cv">Déposer mon CV</a>
 </div>
 <div class="vl-footer2-section-area">
   <div class="container">
@@ -131,6 +167,7 @@ FOOTER = """
           <img src="assets/img/logo/logo1.png" alt="Talendus">
           <div class="space16"></div>
           <p>Nous recrutons exclusivement pour les usines, entrepôts et entreprises manufacturières du Québec.</p>
+          <p class="tl-muted" style="margin-top:12px">Premiers candidats qualifiés en seulement 7 jours.</p>
         </div>
       </div>
       <div class="col-lg col-md-6">
@@ -196,13 +233,20 @@ FOOTER = """
 </html>
 """
 
-def page_hero(kicker, title, lead):
+def page_hero(kicker, title, lead, actions="", badges=None):
+    if badges is None:
+        badge_html = '<span class="tl-badge tl-badge-light">Premiers candidats sous 7 jours</span>'
+    else:
+        badge_html = badges
+    act = f'<div class="tl-actions">{actions}</div>' if actions else ""
     return f"""
 <section class="tl-page-hero">
   <div class="container">
+    {badge_html}
     <div class="tl-kicker">{kicker}</div>
     <h1 class="tl-h1">{title}</h1>
-    <p class="tl-lead" style="color:rgba(255,255,255,.84)">{lead}</p>
+    <p class="tl-lead">{lead}</p>
+    {act}
   </div>
 </section>
 """
