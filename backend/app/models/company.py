@@ -41,6 +41,8 @@ class Company(Base):
     email: Mapped[str | None] = mapped_column(String(255))
     phone: Mapped[str | None] = mapped_column(String(40))
     website: Mapped[str | None] = mapped_column(String(160))
+    linkedin_url: Mapped[str | None] = mapped_column(String(255))
+    facebook_url: Mapped[str | None] = mapped_column(String(255))
     employees: Mapped[int | None] = mapped_column(Integer)
     size_label: Mapped[str | None] = mapped_column(String(40))
     status: Mapped[CompanyStatus] = mapped_column(Enum(CompanyStatus), default=CompanyStatus.ACTIVE, index=True)

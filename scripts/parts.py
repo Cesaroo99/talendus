@@ -40,7 +40,7 @@ COPY = {
         "nav_about": "À propos",
         "nav_blog": "Blog",
         "nav_contact": "Contact",
-        "nav_account": "Mon espace",
+        "nav_account": "Connexion",
         "nav_employer_account": "Espace employeur",
         "nav_svc_industrial": "Recrutement industriel",
         "nav_svc_mfg": "Recrutement manufacturier",
@@ -97,7 +97,7 @@ COPY = {
         "nav_about": "About",
         "nav_blog": "Blog",
         "nav_contact": "Contact",
-        "nav_account": "My account",
+        "nav_account": "Sign in",
         "nav_employer_account": "Employer portal",
         "nav_svc_industrial": "Industrial recruiting",
         "nav_svc_mfg": "Manufacturing recruiting",
@@ -417,7 +417,7 @@ def header(solid=True, lang="fr", alt_url=""):
               </div>
               <div class="tl-header-tools">
                 {switch}
-                <a href="{h['account']}" class="tl-account-link" data-account-link>{t['nav_account']}</a>
+                <a href="{h['account']}" class="tl-account-link" data-account-link data-auth-open="login">{t['nav_account']}</a>
                 <div class="hero-btn1">
                   <a href="{h['contact']}" class="vl-btn2 tl-header-cta">{t['cta_primary']} <span><i class="fa-solid fa-arrow-right"></i></span></a>
                 </div>
@@ -454,6 +454,7 @@ def header(solid=True, lang="fr", alt_url=""):
             <span><a href="{wa_link(lang)}" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a></span>
             <p class="tl-offcanvas-note">{t['offcanvas_note']}</p>
             <div class="vl-offcanvas-cta">
+              <a href="{h['account']}" class="tl-btn tl-btn-ghost" data-account-link data-auth-open="login">{t['nav_account']}</a>
               <a href="{h['contact']}" class="tl-btn">{t['cta_primary']}</a>
               <a href="{h['cv']}" class="tl-btn tl-btn-electric">{t['cta_secondary']}</a>
             </div>
@@ -592,6 +593,7 @@ def footer(lang="fr"):
 <script src="{a}assets/js/main.js" defer></script>
 <script src="{a}assets/js/api.js" defer></script>
 <script src="{a}assets/js/talendus.js" defer></script>
+<script src="{a}assets/js/auth-gate.js" defer></script>
 <script src="{a}assets/js/account.js" defer></script>
 <script src="{a}assets/js/consent.js" defer></script>
 <script src="{a}assets/js/tracking.js" defer></script>

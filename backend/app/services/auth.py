@@ -1,4 +1,6 @@
 from datetime import timedelta
+from collections import defaultdict
+import time
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -7,12 +9,14 @@ from app.config import get_settings
 from app.errors import AppError
 from app.models import Candidate, Company, CompanyMembership, EmailToken, Recruiter, RefreshToken, User, UserPreference
 from app.models.enums import AccountStatus, CompanyMemberRole, EmailType, NotificationType, UserRole, utcnow
+from app.models.portal import LoginEvent
 from app.schemas import LoginIn, RegisterIn
 from app.security import (
     create_access_token,
     create_refresh_token,
     hash_password,
     hash_token,
+    random_password,
     token_expired,
     verify_password,
 )
@@ -23,6 +27,43 @@ from app.services.notifications import notify
 settings = get_settings()
 
 ALLOWED_SELF_ROLES = {UserRole.CANDIDATE, UserRole.EMPLOYER}
+_LOGIN_FAILS: dict[str, list[float]] = defaultdict(list)
+
+
+def _login_key(email: str, ip: str | None) -> str:
+    return f"{(email or '').lower()}|{(ip or 'unknown')}"
+
+
+def _assert_not_locked(email: str, ip: str | None) -> None:
+    max_attempts = get_settings().login_max_attempts or 5
+    lock_minutes = get_settings().login_lockout_minutes or 15
+    key = _login_key(email, ip)
+    now = time.time()
+    window = lock_minutes * 60
+    hits = [ts for ts in _LOGIN_FAILS[key] if now - ts < window]
+    _LOGIN_FAILS[key] = hits
+    if len(hits) >= max_attempts:
+        raise AppError(429, "Trop de tentatives. Réessayez plus tard.", "LOGIN_LOCKED")
+
+
+def _record_login_fail(email: str, ip: str | None) -> None:
+    _LOGIN_FAILS[_login_key(email, ip)].append(time.time())
+
+
+def _clear_login_fail(email: str, ip: str | None) -> None:
+    _LOGIN_FAILS.pop(_login_key(email, ip), None)
+
+
+def _log_login(db: Session, email: str, success: bool, user: User | None, ip: str | None, user_agent: str | None) -> None:
+    db.add(
+        LoginEvent(
+            user_id=user.id if user else None,
+            email=(email or "")[:255],
+            ip_address=(ip or "")[:64] or None,
+            user_agent=(user_agent or "")[:255] or None,
+            success=success,
+        )
+    )
 
 
 def _issue_tokens(db: Session, user: User) -> dict:
@@ -56,7 +97,9 @@ def _make_email_token(db: Session, user: User, purpose: str, hours: int) -> str:
     return raw
 
 
-def register(db: Session, data: RegisterIn, ip: str | None = None) -> tuple[User, dict]:
+def register(db: Session, data: RegisterIn, ip: str | None = None, user_agent: str | None = None) -> tuple[User, dict]:
+    if (data.website_url or "").strip():
+        raise AppError(400, "Requête refusée.", "SPAM_REJECTED")
     if data.role not in ALLOWED_SELF_ROLES:
         raise AppError(403, "Ce rôle ne peut pas s'inscrire publiquement.", "ROLE_NOT_ALLOWED")
     existing = db.scalar(select(User).where(User.email == data.email.lower()))
@@ -74,12 +117,13 @@ def register(db: Session, data: RegisterIn, ip: str | None = None) -> tuple[User
     db.flush()
     db.add(UserPreference(user_id=user.id))
     if user.role == UserRole.CANDIDATE:
-        db.add(Candidate(user_id=user.id))
+        db.add(Candidate(user_id=user.id, country="Canada", province="Québec"))
     elif user.role == UserRole.EMPLOYER:
+        company_name = (data.company_name or "").strip() or f"{user.last_name} Inc."
         company = Company(
-            name=f"{user.last_name} Inc.",
-            legal_name=f"{user.last_name} Inc.",
-            trade_name=f"{user.last_name} Inc.",
+            name=company_name,
+            legal_name=company_name,
+            trade_name=company_name,
             owner_user_id=user.id,
             contact_name=user.full_name,
             email=user.email,
@@ -103,19 +147,29 @@ def register(db: Session, data: RegisterIn, ip: str | None = None) -> tuple[User
     notify(db, user, NotificationType.ACCOUNT_CREATED, "Compte créé", "Bienvenue chez Talendus.")
     audit(db, "account.register", user, "user", user.id, ip)
     tokens = _issue_tokens(db, user)
+    _log_login(db, user.email, True, user, ip, user_agent)
     db.commit()
     db.refresh(user)
     return user, tokens
 
 
-def login(db: Session, data: LoginIn, ip: str | None = None) -> tuple[User, dict]:
-    user = db.scalar(select(User).where(User.email == data.email.lower()))
+def login(db: Session, data: LoginIn, ip: str | None = None, user_agent: str | None = None) -> tuple[User, dict]:
+    email = data.email.lower()
+    _assert_not_locked(email, ip)
+    user = db.scalar(select(User).where(User.email == email))
     if not user or not verify_password(data.password, user.password_hash):
+        _record_login_fail(email, ip)
+        _log_login(db, email, False, user, ip, user_agent)
+        db.commit()
         raise AppError(401, "Identifiants incorrects.", "INVALID_CREDENTIALS")
     if not user.is_active or user.account_status in {AccountStatus.SUSPENDED, AccountStatus.DEACTIVATED}:
+        _log_login(db, email, False, user, ip, user_agent)
+        db.commit()
         raise AppError(403, "Ce compte est désactivé.", "ACCOUNT_DISABLED")
+    _clear_login_fail(email, ip)
     user.last_login_at = utcnow()
     tokens = _issue_tokens(db, user)
+    _log_login(db, email, True, user, ip, user_agent)
     audit(db, "auth.login", user, "user", user.id, ip)
     db.commit()
     return user, tokens
@@ -206,3 +260,197 @@ def ensure_candidate(db: Session, user: User) -> Candidate:
         db.add(profile)
         db.flush()
     return profile
+
+
+def _provision_role(db: Session, user: User, company_name: str | None = None) -> None:
+    if user.role == UserRole.CANDIDATE:
+        if not db.scalar(select(Candidate).where(Candidate.user_id == user.id)):
+            db.add(Candidate(user_id=user.id, country="Canada", province="Québec"))
+    elif user.role == UserRole.EMPLOYER:
+        existing = db.scalar(select(Company).where(Company.owner_user_id == user.id))
+        if existing:
+            return
+        name = (company_name or "").strip() or f"{user.last_name} Inc."
+        company = Company(
+            name=name,
+            legal_name=name,
+            trade_name=name,
+            owner_user_id=user.id,
+            contact_name=user.full_name,
+            email=user.email,
+            province="Québec",
+            country="Canada",
+        )
+        db.add(company)
+        db.flush()
+        db.add(CompanyMembership(company_id=company.id, user_id=user.id, member_role=CompanyMemberRole.OWNER))
+
+
+def auth_providers() -> dict:
+    return {
+        "password": True,
+        "google": bool(get_settings().google_oauth_client_id),
+        "linkedin": bool(get_settings().linkedin_oauth_client_id),
+    }
+
+
+def login_with_identity(
+    db: Session,
+    *,
+    email: str,
+    first_name: str,
+    last_name: str,
+    role: UserRole,
+    company_name: str | None,
+    ip: str | None,
+    user_agent: str | None,
+    provider: str,
+) -> tuple[User, dict]:
+    if role not in ALLOWED_SELF_ROLES:
+        raise AppError(403, "Ce rôle ne peut pas s'inscrire publiquement.", "ROLE_NOT_ALLOWED")
+    email = email.lower()
+    user = db.scalar(select(User).where(User.email == email))
+    if not user:
+        user = User(
+            email=email,
+            password_hash=hash_password(random_password(16)),
+            first_name=(first_name or "Prénom")[:80],
+            last_name=(last_name or "")[:80],
+            role=role,
+            is_email_verified=True,
+            email_verified_at=utcnow(),
+        )
+        db.add(user)
+        db.flush()
+        db.add(UserPreference(user_id=user.id))
+        _provision_role(db, user, company_name)
+        notify(db, user, NotificationType.ACCOUNT_CREATED, "Compte créé", "Bienvenue chez Talendus.")
+        audit(db, f"account.oauth.{provider}", user, "user", user.id, ip)
+    if not user.is_active or user.account_status in {AccountStatus.SUSPENDED, AccountStatus.DEACTIVATED}:
+        raise AppError(403, "Ce compte est désactivé.", "ACCOUNT_DISABLED")
+    user.is_email_verified = True
+    user.email_verified_at = user.email_verified_at or utcnow()
+    user.last_login_at = utcnow()
+    tokens = _issue_tokens(db, user)
+    _log_login(db, email, True, user, ip, user_agent)
+    audit(db, f"auth.oauth.{provider}", user, "user", user.id, ip)
+    db.commit()
+    db.refresh(user)
+    return user, tokens
+
+
+def login_google(db: Session, id_token: str, role: UserRole, company_name: str | None, ip: str | None, user_agent: str | None) -> tuple[User, dict]:
+    import httpx
+
+    client_id = get_settings().google_oauth_client_id
+    if not client_id:
+        raise AppError(503, "La connexion Google n'est pas configurée.", "OAUTH_UNAVAILABLE")
+    try:
+        res = httpx.get("https://oauth2.googleapis.com/tokeninfo", params={"id_token": id_token}, timeout=10)
+        payload = res.json()
+    except Exception as exc:
+        raise AppError(401, "Jeton Google invalide.", "OAUTH_INVALID") from exc
+    if res.status_code >= 400 or payload.get("aud") != client_id:
+        raise AppError(401, "Jeton Google invalide.", "OAUTH_INVALID")
+    if payload.get("email_verified") in {"false", False, "0", 0}:
+        raise AppError(401, "Le courriel Google n'est pas vérifié.", "OAUTH_UNVERIFIED")
+    email = payload.get("email")
+    if not email:
+        raise AppError(401, "Jeton Google invalide.", "OAUTH_INVALID")
+    return login_with_identity(
+        db,
+        email=email,
+        first_name=payload.get("given_name") or "Prénom",
+        last_name=payload.get("family_name") or "",
+        role=role,
+        company_name=company_name,
+        ip=ip,
+        user_agent=user_agent,
+        provider="google",
+    )
+
+
+def login_linkedin(db: Session, access_token: str, role: UserRole, company_name: str | None, ip: str | None, user_agent: str | None) -> tuple[User, dict]:
+    import httpx
+
+    client_id = get_settings().linkedin_oauth_client_id
+    if not client_id:
+        raise AppError(503, "La connexion LinkedIn n'est pas configurée.", "OAUTH_UNAVAILABLE")
+    try:
+        res = httpx.get(
+            "https://api.linkedin.com/v2/userinfo",
+            headers={"Authorization": f"Bearer {access_token}"},
+            timeout=10,
+        )
+        payload = res.json()
+    except Exception as exc:
+        raise AppError(401, "Jeton LinkedIn invalide.", "OAUTH_INVALID") from exc
+    if res.status_code >= 400:
+        raise AppError(401, "Jeton LinkedIn invalide.", "OAUTH_INVALID")
+    email = payload.get("email")
+    if not email:
+        raise AppError(401, "LinkedIn n'a pas fourni de courriel.", "OAUTH_INVALID")
+    return login_with_identity(
+        db,
+        email=email,
+        first_name=payload.get("given_name") or payload.get("name") or "Prénom",
+        last_name=payload.get("family_name") or "",
+        role=role,
+        company_name=company_name,
+        ip=ip,
+        user_agent=user_agent,
+        provider="linkedin",
+    )
+
+
+def list_sessions(db: Session, user: User) -> list[dict]:
+    rows = list(
+        db.scalars(
+            select(RefreshToken).where(RefreshToken.user_id == user.id).order_by(RefreshToken.created_at.desc())
+        ).all()
+    )
+    return [
+        {
+            "id": row.id,
+            "created_at": row.created_at.isoformat() if row.created_at else None,
+            "expires_at": row.expires_at.isoformat() if row.expires_at else None,
+            "revoked": bool(row.revoked),
+            "active": (not row.revoked) and (not token_expired(row.expires_at)),
+        }
+        for row in rows[:30]
+    ]
+
+
+def revoke_session(db: Session, user: User, session_id: str) -> None:
+    row = db.get(RefreshToken, session_id)
+    if not row or row.user_id != user.id:
+        raise AppError(404, "Session introuvable.", "SESSION_NOT_FOUND")
+    row.revoked = True
+    audit(db, "auth.session_revoke", user, "refresh_token", row.id)
+    db.commit()
+
+
+def revoke_all_sessions(db: Session, user: User) -> int:
+    rows = list(db.scalars(select(RefreshToken).where(RefreshToken.user_id == user.id, RefreshToken.revoked.is_(False))).all())
+    for row in rows:
+        row.revoked = True
+    audit(db, "auth.session_revoke_all", user, "user", user.id)
+    db.commit()
+    return len(rows)
+
+
+def list_login_events(db: Session, user: User, limit: int = 20) -> list[dict]:
+    rows = list(
+        db.scalars(
+            select(LoginEvent).where(LoginEvent.user_id == user.id).order_by(LoginEvent.created_at.desc()).limit(limit)
+        ).all()
+    )
+    return [
+        {
+            "id": row.id,
+            "success": row.success,
+            "ip_address": row.ip_address,
+            "created_at": row.created_at.isoformat() if row.created_at else None,
+        }
+        for row in rows
+    ]

@@ -89,6 +89,26 @@
         .then(function () { clearSession(); });
     },
     me: function () { return request("/users/me"); },
+    providers: function () { return request("/auth/providers"); },
+    forgotPassword: function (email) { return request("/auth/forgot-password", { method: "POST", body: { email: email } }); },
+    resetPassword: function (token, password) {
+      return request("/auth/reset-password", { method: "POST", body: { token: token, new_password: password } });
+    },
+    verifyEmail: function (token) { return request("/auth/verify-email", { method: "POST", body: { token: token } }); },
+    oauthGoogle: function (body) {
+      return request("/auth/oauth/google", { method: "POST", body: body }).then(function (json) {
+        setSession(json.data);
+        return json;
+      });
+    },
+    oauthLinkedIn: function (body) {
+      return request("/auth/oauth/linkedin", { method: "POST", body: body }).then(function (json) {
+        setSession(json.data);
+        return json;
+      });
+    },
+    saveJob: function (jobId) { return request("/jobs/" + jobId + "/save", { method: "POST" }); },
+    unsaveJob: function (jobId) { return request("/jobs/" + jobId + "/save", { method: "DELETE" }); },
     jobs: function (params) {
       var q = new URLSearchParams();
       Object.keys(params || {}).forEach(function (k) {

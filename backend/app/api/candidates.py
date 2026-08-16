@@ -45,7 +45,18 @@ def my_dashboard(user: User = Depends(require_roles(UserRole.CANDIDATE)), db: Se
 @router.patch("/me")
 def update_profile(payload: CandidateProfileIn, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     profile = cand_svc.update_profile(db, user, payload)
-    return ok({"id": profile.id})
+    profile = db.scalar(
+        select(Candidate)
+        .options(
+            joinedload(Candidate.user),
+            joinedload(Candidate.experiences),
+            joinedload(Candidate.education),
+            joinedload(Candidate.certifications),
+            joinedload(Candidate.resumes),
+        )
+        .where(Candidate.id == profile.id)
+    )
+    return ok(cand_svc.serialize_candidate(profile, include_private=True))
 
 
 @router.post("/me/experiences")

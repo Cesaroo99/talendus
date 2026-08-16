@@ -25,6 +25,20 @@ class RegisterIn(BaseModel):
     last_name: str = Field(min_length=1, max_length=80)
     phone: str | None = None
     role: UserRole = UserRole.CANDIDATE
+    company_name: str | None = Field(default=None, max_length=160)
+    website_url: str | None = None  # honeypot anti-spam
+
+
+class OAuthGoogleIn(BaseModel):
+    id_token: str = Field(min_length=20, max_length=8000)
+    role: UserRole = UserRole.CANDIDATE
+    company_name: str | None = Field(default=None, max_length=160)
+
+
+class OAuthLinkedInIn(BaseModel):
+    access_token: str = Field(min_length=8, max_length=4000)
+    role: UserRole = UserRole.CANDIDATE
+    company_name: str | None = Field(default=None, max_length=160)
 
 
 class LoginIn(BaseModel):
@@ -78,6 +92,10 @@ class UserUpdateIn(BaseModel):
 
 class CandidateProfileIn(BaseModel):
     city: str | None = None
+    address: str | None = None
+    province: str | None = None
+    country: str | None = None
+    birth_date: str | None = None
     title: str | None = None
     sector: str | None = None
     years_experience: int | None = Field(default=None, ge=0, le=60)
@@ -131,6 +149,26 @@ class CompanyIn(BaseModel):
     province: str | None = None
     country: str | None = None
     size_label: str | None = None
+    linkedin_url: str | None = None
+    facebook_url: str | None = None
+
+
+class JobAlertIn(BaseModel):
+    keywords: str | None = Field(default=None, max_length=180)
+    city: str | None = Field(default=None, max_length=80)
+    province: str | None = Field(default=None, max_length=80)
+    sector: str | None = Field(default=None, max_length=80)
+    contract_type: str | None = Field(default=None, max_length=40)
+    active: bool | None = True
+
+
+class JobAlertPatchIn(BaseModel):
+    keywords: str | None = Field(default=None, max_length=180)
+    city: str | None = Field(default=None, max_length=80)
+    province: str | None = Field(default=None, max_length=80)
+    sector: str | None = Field(default=None, max_length=80)
+    contract_type: str | None = Field(default=None, max_length=40)
+    active: bool | None = None
 
 
 class JobIn(BaseModel):
