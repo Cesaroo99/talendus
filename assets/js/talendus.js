@@ -173,8 +173,8 @@
         e.preventDefault();
         var kind = form.getAttribute("data-form") || (form.closest("#postuler") ? "apply" : "contact");
         var fallback = isEn
-          ? "Thank you. Average response under 30 minutes during business hours. A consultant will follow up."
-          : "Merci. Réponse moyenne sous 30 minutes durant les heures d’ouverture. Un conseiller vous rejoint.";
+          ? "Thanks. On weekdays we usually reply within 30 minutes. A consultant will follow up."
+          : "Merci. En semaine, on répond en général en moins de 30 minutes. Un conseiller vous rappelle.";
         var api = window.TalendusAPI;
         if (!api) {
           showFormMessage(form, fallback, false);

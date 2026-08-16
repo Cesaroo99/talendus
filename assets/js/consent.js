@@ -39,7 +39,7 @@
     if (isEn()) {
       return {
         title: "Cookies on talendus.ca",
-        text: "Essential cookies keep the site working. Analytics and marketing cookies load only if you accept them. You can change this later.",
+        text: "Essential cookies keep the site working. Analytics and ads load only if you accept them. You can change this later.",
         accept: "Accept all",
         reject: "Essential only",
         privacy: "Privacy policy",
@@ -48,7 +48,7 @@
     }
     return {
       title: "Cookies sur talendus.ca",
-      text: "Les cookies essentiels font fonctionner le site. Les cookies d’analyse et de marketing ne sont chargés que si vous les acceptez. Vous pourrez modifier ce choix plus tard.",
+      text: "Les cookies essentiels font fonctionner le site. Les cookies d'analyse et de pub ne sont chargés que si vous les acceptez. Vous pourrez changer d'avis plus tard.",
       accept: "Tout accepter",
       reject: "Essentiels seulement",
       privacy: "Confidentialité",

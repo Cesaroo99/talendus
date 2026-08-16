@@ -21,7 +21,7 @@
       emptyApps: "No applications yet.", emptyNotifs: "No notifications.", emptyJobs: "No matching roles yet.",
       emptyMsgs: "No messages yet.", emptyInts: "No interviews scheduled.", emptyDocs: "No documents yet.",
       emptySaved: "No saved jobs.", markAll: "Mark all as read", markRead: "Mark as read",
-      welcome: "Your industrial workspace", guest: "Sign in to follow your applications.",
+      welcome: "Your candidate workspace", guest: "Sign in to follow your applications.",
       err: "Something went wrong.", saved: "Saved.", uploaded: "File saved.", send: "Send",
       confirm: "Confirm", cancel: "Cancel", to: "To", write: "Your message", score: "Match",
       welcomeEmployer: "Your hiring workspace", guestEmployer: "Sign in to manage jobs and applications.",
@@ -61,7 +61,7 @@
       forgot: "Forgot password?", alerts: "Job alerts", savedJobs: "Saved jobs", cv: "My resume",
       ats: "ATS", billing: "Billing", duplicate: "Duplicate", deleteJob: "Delete",
       sessions: "Active sessions", loginLog: "Sign-in history", revoke: "Revoke", revokeAll: "Sign out everywhere",
-      onboard: "Complete your profile to get better matches.", keywords: "Keywords",
+      onboard: "Fill in your profile so we can match you to the right shifts.", keywords: "Keywords",
       createAlert: "Create an alert", emptyAlerts: "No job alerts yet.",
       province: "Province", birth: "Date of birth", size: "Company size", social: "Social networks"
     } : {
@@ -115,7 +115,7 @@
       forgot: "Mot de passe oublié ?", alerts: "Alertes emploi", savedJobs: "Offres sauvegardées", cv: "Mon CV",
       ats: "ATS", billing: "Facturation", duplicate: "Dupliquer", deleteJob: "Supprimer",
       sessions: "Sessions actives", loginLog: "Journal des connexions", revoke: "Révoquer", revokeAll: "Déconnecter partout",
-      onboard: "Complétez votre profil pour recevoir de meilleures recommandations.", keywords: "Mots-clés",
+      onboard: "Complétez votre profil pour qu'on vous propose des quarts qui collent.", keywords: "Mots-clés",
       createAlert: "Créer une alerte", emptyAlerts: "Aucune alerte pour le moment.",
       province: "Province", birth: "Date de naissance", size: "Taille de l’entreprise", social: "Réseaux sociaux"
     };
