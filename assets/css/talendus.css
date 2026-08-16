@@ -123,6 +123,7 @@ p, li, h1, h2, h3, h4, a { overflow-wrap: break-word; }
   left: 0;
   right: 0;
   width: 100%;
+  z-index: 100;
 }
 .homepage2-body .vl-header-area.header-sticky {
   background: var(--tl-navy) !important;
@@ -133,6 +134,7 @@ p, li, h1, h2, h3, h4, a { overflow-wrap: break-word; }
 .tl-header-bar {
   display: flex;
   align-items: center;
+  flex-wrap: nowrap;
   gap: 8px 16px;
   min-height: 56px;
   width: 100%;
@@ -960,7 +962,8 @@ a.tl-card:hover, .tl-job-card:hover, .tl-case:hover {
   height: var(--tl-hero-h) !important;
 }
 .hero2-arrow-hero .hero-main-slider .hero2-slider-area {
-  padding: clamp(88px, 12vw, 120px) 0 48px !important;
+  /* Sous le header flottant : le titre ne doit pas se coller au logo / menu. */
+  padding: clamp(128px, 18vh, 200px) 0 64px !important;
   display: flex !important;
   align-items: center;
   min-height: var(--tl-hero-h);
@@ -1189,6 +1192,12 @@ a.tl-card:hover, .tl-job-card:hover, .tl-case:hover {
    Responsive — 479 / 767 / 991 / 1199
    Desktop nav from 1200px. Hamburger below.
    ========================================================= */
+@media (min-width: 1200px) {
+  .hero2-arrow-hero .hero-main-slider .hero2-slider-area {
+    padding: 188px 0 80px !important;
+  }
+}
+
 @media (max-width: 1199px) {
   :root { --tl-hero-h: clamp(520px, 86svh, 640px); }
   .homepage2-body .vl-transparent-header {
