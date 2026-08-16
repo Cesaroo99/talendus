@@ -1,0 +1,45 @@
+# Production locale (garde-fous identiques à Render).
+# Usage : docker compose up --build
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: talendus
+      POSTGRES_USER: talendus
+      POSTGRES_PASSWORD: talendus-dev-only
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U talendus"]
+      interval: 5s
+      timeout: 5s
+      retries: 8
+    volumes:
+      - talendus-pg:/var/lib/postgresql/data
+
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      APP_ENV: production
+      DEBUG: "false"
+      DATABASE_URL: postgresql://talendus:talendus-dev-only@db:5432/talendus
+      SECRET_KEY: local-compose-secret-key-not-for-real-prod-1
+      JWT_SECRET: local-compose-jwt-secret-not-for-real-prod-2
+      ADMIN_EMAIL: lea.super@talendus.ca
+      ADMIN_PASSWORD: ChangeMoiEnProd12
+      FRONTEND_URL: http://localhost:8000
+      CORS_ORIGINS: http://localhost:8000,http://127.0.0.1:8000
+      EMAIL_ENABLED: "false"
+      STORAGE_DIR: /var/data
+      SEO_CANONICAL_HOST: http://localhost:8000
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - talendus-files:/var/data
+
+volumes:
+  talendus-pg:
+  talendus-files:

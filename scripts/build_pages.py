@@ -10,7 +10,7 @@ from parts import (
 from en_pages import build_en
 from seo_pages import write_fr as write_seo_fr
 
-ROOT = Path("/workspace")
+ROOT = Path(__file__).resolve().parents[1]
 SPEED_STRIP = speed_strip("fr")
 CTA_BAND = cta_band("fr")
 

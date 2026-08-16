@@ -7,6 +7,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
+from app.boot import assert_runtime_safe
 from app.config import get_settings
 from app.database import init_db
 from app.errors import AppError, app_error_handler, http_error_handler, unhandled_handler, validation_handler
@@ -23,6 +24,7 @@ SITE_ROOT = Path(__file__).resolve().parents[2]
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    assert_runtime_safe(settings)
     init_db()
     if settings.app_env != "test":
         seed_if_empty()
@@ -32,13 +34,14 @@ async def lifespan(_app: FastAPI):
 
 
 def create_app() -> FastAPI:
+    public_docs = settings.app_env != "production"
     application = FastAPI(
         title="Talendus API",
         description="Back-end de la plateforme de recrutement industriel Talendus.",
         version="1.0.0",
-        docs_url="/api/docs",
-        redoc_url="/api/redoc",
-        openapi_url="/api/openapi.json",
+        docs_url="/api/docs" if public_docs else None,
+        redoc_url="/api/redoc" if public_docs else None,
+        openapi_url="/api/openapi.json" if public_docs else None,
         lifespan=lifespan,
     )
     application.add_middleware(SecurityHeadersMiddleware)

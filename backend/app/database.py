@@ -15,6 +15,8 @@ if use_sqlite:
     connect_args["check_same_thread"] = False
     if settings.app_env == "test" or ":memory:" in settings.database_url or settings.database_url.rstrip("/") == "sqlite:":
         engine_kwargs["poolclass"] = StaticPool
+elif settings.app_env != "test":
+    engine_kwargs.update(pool_size=5, max_overflow=10, pool_recycle=1800)
 
 engine = create_engine(
     "sqlite://" if settings.app_env == "test" else settings.database_url,

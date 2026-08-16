@@ -227,6 +227,12 @@ def seed_if_empty() -> None:
     init_db()
     db = SessionLocal()
     try:
+        if settings.app_env == "production":
+            seed_rbac(db)
+            seed_blog_defaults(db)
+            bootstrap_production_admin(db)
+            db.commit()
+            return
         if db.scalar(select(User).limit(1)):
             seed_rbac(db)
             seed_blog_defaults(db)
@@ -241,6 +247,35 @@ def seed_if_empty() -> None:
         raise
     finally:
         db.close()
+
+
+def bootstrap_production_admin(db: Session) -> User | None:
+    """En production : rôles + un seul super-admin. Jamais de fausses entreprises ni de faux candidats."""
+    existing = db.scalar(select(User).limit(1))
+    if existing:
+        return None
+    email = (settings.admin_email or "").strip().lower()
+    password = (settings.admin_password or "").strip()
+    if not email or "@" not in email:
+        raise RuntimeError("ADMIN_EMAIL est obligatoire pour initialiser la production.")
+    if len(password) < 12:
+        raise RuntimeError("ADMIN_PASSWORD (12 caractères minimum) est obligatoire pour initialiser la production.")
+    user = User(
+        email=email,
+        password_hash=hash_password(password),
+        first_name="Léa",
+        last_name="Morin",
+        role=UserRole.SUPER_ADMIN,
+        title="Super administratrice",
+        is_active=True,
+        is_email_verified=True,
+        email_verified_at=utcnow(),
+    )
+    db.add(user)
+    db.flush()
+    db.add(UserPreference(user_id=user.id, locale="fr-CA"))
+    logger.info("Compte super-admin de production créé (%s). Changez le mot de passe après la première connexion.", email)
+    return user
 
 
 def _seed(db: Session) -> None:

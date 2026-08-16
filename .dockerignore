@@ -1,0 +1,21 @@
+# Contexte de build = racine du dépôt (site HTML + API).
+.git
+.github
+.cursor
+.gitignore
+.env
+.env.*
+!.env.example
+**/.venv
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+backend/data/*
+!backend/data/.gitkeep
+backend/storage/**/*
+!backend/storage/**/.gitkeep
+backend/tests
+docs
+*.md
+.DS_Store
+__MACOSX

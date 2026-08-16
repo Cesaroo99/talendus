@@ -1,0 +1,59 @@
+# Talendus — production (Render)
+# Déploiement automatique depuis `main` uniquement si la CI GitHub (tests) est verte.
+# Première mise en ligne : Dashboard Render → New → Blueprint → ce dépôt, branche main.
+
+databases:
+  - name: talendus-db
+    plan: basic-256mb
+    region: ohio
+    postgresMajorVersion: "17"
+    databaseName: talendus
+    user: talendus
+    ipAllowList: []
+
+services:
+  - type: web
+    name: talendus-web
+    runtime: docker
+    plan: starter
+    region: ohio
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    autoDeployTrigger: checksPass
+    maxShutdownDelaySeconds: 30
+    disk:
+      name: talendus-files
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: STORAGE_DIR
+        value: /var/data
+      - key: STORAGE_BACKEND
+        value: local
+      - key: EMAIL_ENABLED
+        value: "false"
+      - key: TRACKING_ENABLED
+        value: "false"
+      - key: SEO_CANONICAL_HOST
+        value: https://talendus.ca
+      - key: ADMIN_EMAIL
+        value: lea.super@talendus.ca
+      - key: WEB_CONCURRENCY
+        value: "2"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: talendus-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_PASSWORD
+        generateValue: true

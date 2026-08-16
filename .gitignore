@@ -19,3 +19,4 @@ backend/storage/logos/*
 backend/storage/attachments/*
 !backend/storage/attachments/.gitkeep
 *.db
+backend/.pytest_cache/

@@ -244,12 +244,11 @@ Couvrent inscription, connexion, permissions, publication d’offre, candidature
 
 ## Déploiement
 
-1. Python 3.11+
-2. `DATABASE_URL` PostgreSQL recommandé
-3. Secrets forts, `APP_ENV=production`, `DEBUG=false`, `EMAIL_ENABLED=true`
-4. Reverse proxy (HTTPS) vers `uvicorn` / `gunicorn`
-5. Volume persistant pour `STORAGE_DIR`
-6. Le front existant appelle `/api` ; en production, servir l’API et le site sous le même domaine ou ajuster `CORS_ORIGINS`
+La production est définie par `Dockerfile` + `render.yaml` à la racine du dépôt. GitHub Actions (`CI`) lance pytest et construit l’image ; Render ne déploie `main` que si ces contrôles passent (`autoDeployTrigger: checksPass`).
+
+Gardes-fous applicatifs (`APP_ENV=production`) : `DEBUG=false`, secrets ≥ 32 caractères, PostgreSQL obligatoire, seed limité au super-admin (pas d’employeurs / candidats fictifs), `/api/docs` désactivé.
+
+En local, un double de la prod : `docker compose up --build` puis http://localhost:8000.
 
 ## Non livré volontairement
 

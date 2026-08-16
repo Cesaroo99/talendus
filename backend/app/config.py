@@ -1,7 +1,10 @@
 from functools import lru_cache
 from pathlib import Path
 
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from app.boot import normalize_database_url
 
 BACKEND_ROOT = Path(__file__).resolve().parents[1]
 
@@ -26,6 +29,9 @@ class Settings(BaseSettings):
 
     frontend_url: str = "http://localhost:8000"
     cors_origins: str = "http://localhost:8000,http://127.0.0.1:8000,http://localhost:3000"
+    render_external_url: str = ""
+    admin_email: str = "lea.super@talendus.ca"
+    admin_password: str = ""
 
     email_enabled: bool = False
     email_server: str = "localhost"
@@ -99,6 +105,26 @@ class Settings(BaseSettings):
     meta_pixel_id: str = ""
     seo_canonical_host: str = "https://talendus.ca"
     google_site_verification: str = ""
+
+    @field_validator("database_url", mode="before")
+    @classmethod
+    def _normalize_database_url(cls, value: str) -> str:
+        return normalize_database_url(value) if isinstance(value, str) else value
+
+    @model_validator(mode="after")
+    def _apply_platform_urls(self):
+        public = (self.render_external_url or "").rstrip("/")
+        if public:
+            origins = {o.strip() for o in self.cors_origins.split(",") if o.strip()}
+            origins.add(public)
+            origins.add("https://talendus.ca")
+            origins.add("https://www.talendus.ca")
+            self.cors_origins = ",".join(sorted(origins))
+            if self.app_env == "production" and (
+                not self.frontend_url or self.frontend_url.startswith("http://localhost")
+            ):
+                self.frontend_url = public
+        return self
 
     @property
     def cors_origin_list(self) -> list[str]:

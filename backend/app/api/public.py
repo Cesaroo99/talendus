@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, Query, Request
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
+from app.config import get_settings
 from app.database import get_db
 from app.deps import client_ip, require_roles
 from app.errors import ok
@@ -15,8 +16,16 @@ router = APIRouter(tags=["public"])
 
 
 @router.get("/health")
-def health():
-    return ok({"status": "ok", "service": "talendus-api"})
+def health(db: Session = Depends(get_db)):
+    db.execute(text("SELECT 1"))
+    settings = get_settings()
+    return ok(
+        {
+            "status": "ok",
+            "service": "talendus-api",
+            "env": settings.app_env,
+        }
+    )
 
 
 @router.get("/job-board")
