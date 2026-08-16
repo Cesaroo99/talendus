@@ -1,6 +1,8 @@
 # Talendus
 
-Site et plateforme de **Talendus**, cabinet de recrutement industriel au Québec.
+Site et plateforme de **Talendus**, plateforme de recrutement pour toutes les entreprises.
+
+Devise : *Nous recrutons mieux, plus vite et plus intelligemment grâce à l'IA.*
 
 ## Comment le site se met à jour
 
