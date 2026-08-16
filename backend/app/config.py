@@ -56,6 +56,10 @@ class Settings(BaseSettings):
     job_match_min_score: int = 50
     max_resume_mb: int = 5
     rate_limit_per_minute: int = 80
+    login_max_attempts: int = 5
+    login_lockout_minutes: int = 15
+    google_oauth_client_id: str = ""
+    linkedin_oauth_client_id: str = ""
     seed_password: str = "talendus"
     default_currency: str = "CAD"
     default_tax_rate_bp: int = 14975

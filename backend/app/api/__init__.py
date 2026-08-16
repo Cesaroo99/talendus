@@ -1,5 +1,6 @@
 from app.api import (
     admin,
+    alerts,
     applications,
     auth,
     blog,
@@ -23,6 +24,7 @@ from app.api import (
 
 __all__ = [
     "admin",
+    "alerts",
     "applications",
     "auth",
     "blog",

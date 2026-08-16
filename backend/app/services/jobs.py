@@ -343,6 +343,53 @@ def get_managed_job(db: Session, user: User, job_id: str) -> JobOffer:
     return job
 
 
+def duplicate_job(db: Session, user: User, job_id: str) -> JobOffer:
+    source = get_managed_job(db, user, job_id)
+    copy = JobOffer(
+        company_id=source.company_id,
+        recruiter_id=source.recruiter_id,
+        slug=_unique_slug(db, f"{source.slug}-copie"),
+        title=f"{source.title} (copie)",
+        description=source.description,
+        responsibilities=source.responsibilities,
+        qualifications=source.qualifications,
+        location=source.location,
+        lat=source.lat,
+        lng=source.lng,
+        place_id=source.place_id,
+        sector=source.sector,
+        contract_type=source.contract_type,
+        salary_min=source.salary_min,
+        salary_max=source.salary_max,
+        salary_display=source.salary_display,
+        currency=source.currency,
+        openings=source.openings,
+        skills=source.skills,
+        experience_level=source.experience_level,
+        education_required=source.education_required,
+        certifications=source.certifications,
+        shift=source.shift,
+        benefits=source.benefits,
+        status=JobStatus.DRAFT,
+        start_date=source.start_date,
+    )
+    db.add(copy)
+    db.flush()
+    audit(db, "job.duplicate", user, "job", copy.id)
+    db.commit()
+    db.refresh(copy)
+    return copy
+
+
+def delete_job(db: Session, user: User, job_id: str) -> None:
+    job = get_managed_job(db, user, job_id)
+    if job.status == JobStatus.PUBLISHED:
+        raise AppError(400, "Archivez l'offre publiée avant de la supprimer.", "JOB_PUBLISHED")
+    db.delete(job)
+    audit(db, "job.delete", user, "job", job_id)
+    db.commit()
+
+
 def _assert_can_manage(db: Session, user: User, job: JobOffer) -> None:
     if user.role in {UserRole.RECRUITER} | ADMINS:
         return

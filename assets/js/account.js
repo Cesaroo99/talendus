@@ -57,7 +57,13 @@
       pay: "Pay by card", pipeline: "Pipeline",
       mediate: "All contact with candidates goes through Talendus. You cannot write to them or schedule interviews directly.",
       mediateCandidate: "Talendus is your only contact. Employers never receive your email or phone number.",
-      writeTalendus: "Write to your Talendus consultant"
+      writeTalendus: "Write to your Talendus consultant",
+      forgot: "Forgot password?", alerts: "Job alerts", savedJobs: "Saved jobs", cv: "My resume",
+      ats: "ATS", billing: "Billing", duplicate: "Duplicate", deleteJob: "Delete",
+      sessions: "Active sessions", loginLog: "Sign-in history", revoke: "Revoke", revokeAll: "Sign out everywhere",
+      onboard: "Complete your profile to get better matches.", keywords: "Keywords",
+      createAlert: "Create an alert", emptyAlerts: "No job alerts yet.",
+      province: "Province", birth: "Date of birth", size: "Company size", social: "Social networks"
     } : {
       login: "Connexion", register: "Créer un compte", email: "Courriel", password: "Mot de passe",
       first: "Prénom", last: "Nom", submitLogin: "Me connecter", submitRegister: "Créer mon compte",
@@ -105,7 +111,13 @@
       pay: "Payer par carte", pipeline: "Pipeline",
       mediate: "Tout contact avec les candidats passe par Talendus. Vous ne pouvez pas leur écrire ni planifier d’entretien directement.",
       mediateCandidate: "Talendus est votre seul interlocuteur. Les employeurs ne reçoivent jamais votre courriel ni votre téléphone.",
-      writeTalendus: "Écrire à votre conseiller Talendus"
+      writeTalendus: "Écrire à votre conseiller Talendus",
+      forgot: "Mot de passe oublié ?", alerts: "Alertes emploi", savedJobs: "Offres sauvegardées", cv: "Mon CV",
+      ats: "ATS", billing: "Facturation", duplicate: "Dupliquer", deleteJob: "Supprimer",
+      sessions: "Sessions actives", loginLog: "Journal des connexions", revoke: "Révoquer", revokeAll: "Déconnecter partout",
+      onboard: "Complétez votre profil pour recevoir de meilleures recommandations.", keywords: "Mots-clés",
+      createAlert: "Créer une alerte", emptyAlerts: "Aucune alerte pour le moment.",
+      province: "Province", birth: "Date de naissance", size: "Taille de l’entreprise", social: "Réseaux sociaux"
     };
 
     function esc(v) {
@@ -201,6 +213,11 @@
         return id ? { name: "application", id: id } : { name: "apps", id: "" };
       }
       if (name === "job" && !id) return { name: "jobs", id: "" };
+      if (name === "cv" || name === "resume") return { name: "documents", id: id || "" };
+      if (name === "saved" || name === "sauvegardees") return { name: "saved", id: id || "" };
+      if (name === "alerts" || name === "alertes") return { name: "alerts", id: id || "" };
+      if (name === "ats") return { name: "pipeline", id: id || "" };
+      if (name === "billing" || name === "facturation") return { name: "invoices", id: id || "" };
       return { name: name || "dashboard", id: id || "" };
     }
     function currentRoute() {
@@ -243,15 +260,14 @@
     function navItems(unreadN, unreadM) {
       if (isEmployerSpace()) {
         return [
-          ["dashboard", t.dashboard], ["company", t.company], ["jobs", t.jobs], ["inbox", t.inbox],
-          ["pipeline", t.pipeline], ["candidates", t.candidates], ["interviews", t.interviews],
-          ["messages", t.messages, unreadM], ["invoices", t.invoices], ["documents", t.documents],
+          ["dashboard", t.dashboard], ["company", t.company], ["jobs", t.jobs], ["inbox", t.candidates],
+          ["pipeline", t.ats], ["messages", t.messages, unreadM], ["invoices", t.billing],
           ["notifs", t.notifs, unreadN], ["settings", t.settings]
         ];
       }
       return [
-        ["dashboard", t.dashboard], ["profile", t.profile], ["jobs", t.jobs], ["apps", t.apps],
-        ["interviews", t.interviews], ["messages", t.messages, unreadM], ["documents", t.documents],
+        ["dashboard", t.dashboard], ["profile", t.profile], ["documents", t.cv], ["apps", t.apps],
+        ["saved", t.savedJobs], ["alerts", t.alerts], ["messages", t.messages, unreadM],
         ["notifs", t.notifs, unreadN], ["settings", t.settings]
       ];
     }
@@ -282,17 +298,24 @@
 
     function renderGuest() {
       var employer = isEmployerSpace();
+      var hash = (location.hash || "").replace(/^#\/?/, "");
+      if (window.TalendusAuth && (hash.indexOf("reset") === 0 || hash.indexOf("verify") === 0 || hash.indexOf("forgot") === 0 || hash.indexOf("login") === 0 || hash.indexOf("register") === 0)) {
+        return;
+      }
       root.innerHTML = '<div class="tl-account-grid"><div><div class="tl-kicker">Talendus</div><h2 class="tl-h2">' +
         esc(employer ? t.welcomeEmployer : t.welcome) + '</h2><p class="tl-lead">' + esc(employer ? t.guestEmployer : t.guest) +
         "</p></div><div class=\"tl-account-cards\">" +
         '<form class="tl-form" id="acc-login"><h3>' + esc(t.login) + "</h3><label>" + esc(t.email) +
         '</label><input name="email" type="email" required><label>' + esc(t.password) +
         '</label><input name="password" type="password" required minlength="8"><button class="tl-btn" type="submit">' +
-        esc(t.submitLogin) + '</button><div class="tl-success"></div></form>' +
-        '<form class="tl-form" id="acc-register"><h3>' + esc(employer ? t.registerEmployer : t.register) + "</h3><label>" +
-        esc(t.first) + '</label><input name="first_name" required><label>' + esc(t.last) +
-        '</label><input name="last_name" required><label>' + esc(t.email) +
-        '</label><input name="email" type="email" required><label>' + esc(t.password) +
+        esc(t.submitLogin) + '</button><p><button type="button" class="tl-text-btn" id="acc-forgot">' + esc(t.forgot) +
+        '</button></p><div class="tl-success"></div></form>' +
+        '<form class="tl-form" id="acc-register"><h3>' + esc(employer ? t.registerEmployer : t.register) + "</h3>" +
+        '<input class="tl-hp" name="website_url" tabindex="-1" autocomplete="off" aria-hidden="true">' +
+        "<label>" + esc(t.first) + '</label><input name="first_name" required><label>' +
+        esc(t.last) + '</label><input name="last_name" required>' +
+        (employer ? "<label>" + esc(t.company) + '</label><input name="company_name">' : "") +
+        "<label>" + esc(t.email) + '</label><input name="email" type="email" required><label>' + esc(t.password) +
         '</label><input name="password" type="password" required minlength="8"><button class="tl-btn tl-btn-electric" type="submit">' +
         esc(t.submitRegister) + '</button><div class="tl-success"></div></form></div></div>';
       document.getElementById("acc-login").addEventListener("submit", function (e) {
@@ -303,9 +326,15 @@
       document.getElementById("acc-register").addEventListener("submit", function (e) {
         e.preventDefault();
         var d = Object.fromEntries(new FormData(e.target).entries());
-        api.register({ email: d.email, password: d.password, first_name: d.first_name, last_name: d.last_name, role: employer ? "EMPLOYER" : "CANDIDATE" })
-          .then(boot).catch(function (err) { flash(e.target.querySelector(".tl-success"), (err && err.message) || t.err, false); });
+        api.register({
+          email: d.email, password: d.password, first_name: d.first_name, last_name: d.last_name,
+          role: employer ? "EMPLOYER" : "CANDIDATE", company_name: d.company_name || null, website_url: d.website_url || ""
+        }).then(boot).catch(function (err) { flash(e.target.querySelector(".tl-success"), (err && err.message) || t.err, false); });
       });
+      var forgotBtn = document.getElementById("acc-forgot");
+      if (forgotBtn) forgotBtn.onclick = function () {
+        if (window.TalendusAuth) window.TalendusAuth.open("forgot");
+      };
     }
 
     function jobCard(job, extra) {
@@ -323,9 +352,14 @@
       var c = (dash && dash.completeness) || (profile && profile.completeness) || { percent: 0 };
       var s = (dash && dash.stats) || {};
       var stats = [["applications", t.apps, s.applications], ["in_progress", t.inProgress, s.in_progress],
-        ["interviews", t.upcoming, s.interviews], ["accepted", t.accepted, s.accepted]];
+        ["interviews", t.upcoming, s.interviews], ["saved_jobs", t.savedJobs, s.saved_jobs]];
       var primary = ((profile && profile.resumes) || []).filter(function (r) { return r.is_primary; })[0];
-      var html = "<p class=\"tl-lead\">" + esc(t.hello) + " " + esc(user.first_name || "") + "</p>" +
+      var html = "";
+      if ((c.percent || 0) < 70) {
+        html += '<div class="tl-onboard"><b>' + esc(t.onboard) + "</b> — " + esc(c.percent || 0) + " % · " +
+          '<button type="button" class="tl-text-btn" data-nav="profile">' + esc(t.quickProfile) + "</button></div>";
+      }
+      html += "<p class=\"tl-lead\">" + esc(t.hello) + " " + esc(user.first_name || "") + "</p>" +
         "<p>" + esc(t.completeness) + " — <b>" + esc(c.percent || 0) + " %</b></p><div class=\"tl-progress\"><i style=\"width:" + (c.percent || 0) + "%\"></i></div>" +
         '<div class="tl-stat-grid">' + stats.map(function (row) {
           return '<div class="tl-stat-card"><b>' + esc(row[2] || 0) + "</b><span>" + esc(row[1]) + "</span></div>";
@@ -363,8 +397,13 @@
         "<div><label>" + esc(t.last) + '</label><input name="last_name" value="' + esc(user.last_name || "") + '"></div></div>' +
         "<label>" + esc(t.email) + '</label><input value="' + esc(user.email || "") + '" disabled class="tl-disabled">' +
         "<label>" + esc(t.phone) + '</label><input name="phone" value="' + esc(user.phone || "") + '">' +
+        "<label>" + esc(t.address) + '</label><input name="address" value="' + esc(profile.address || "") + '">' +
         '<div class="tl-row-2"><div><label>' + esc(t.city) + '</label><input name="city" value="' + esc(profile.city || "") + '"></div>' +
-        "<div><label>" + esc(t.title) + '</label><input name="title" value="' + esc(profile.title || "") + '"></div></div>' +
+        "<div><label>" + esc(t.province) + '</label><input name="province" value="' + esc(profile.province || "") + '"></div></div>' +
+        '<div class="tl-row-2"><div><label>' + esc(t.country) + '</label><input name="country" value="' + esc(profile.country || "Canada") + '"></div>' +
+        "<div><label>" + esc(t.birth) + '</label><input name="birth_date" type="date" value="' + esc(profile.birth_date || "") + '"></div></div>' +
+        '<div class="tl-row-2"><div><label>' + esc(t.title) + '</label><input name="title" value="' + esc(profile.title || "") + '"></div>' +
+        "<div><label>" + esc(t.experience) + '</label><input name="years_experience" type="number" min="0" value="' + esc(profile.years_experience || "") + '"></div></div>' +
         "<label>" + esc(t.sector) + '</label><input name="sector" value="' + esc(profile.sector || "") + '">' +
         "<label>" + esc(t.bio) + '</label><textarea name="bio" rows="4">' + esc(profile.bio || "") + "</textarea>" +
         "<label>" + esc(t.skills) + '</label><input name="skills" value="' + esc(profile.skills || "") + '">' +
@@ -392,8 +431,10 @@
         Promise.all([
           api.request("/users/me", { method: "PATCH", body: { first_name: d.first_name, last_name: d.last_name, phone: d.phone } }),
           api.request("/candidates/me", { method: "PATCH", body: {
-            city: d.city, title: d.title, sector: d.sector, skills: d.skills, bio: d.bio, languages: d.languages,
+            city: d.city, address: d.address, province: d.province, country: d.country, birth_date: d.birth_date,
+            title: d.title, sector: d.sector, skills: d.skills, bio: d.bio, languages: d.languages,
             availability: d.availability, contract_type: d.contract_type,
+            years_experience: d.years_experience ? Number(d.years_experience) : null,
             desired_salary_min: d.desired_salary_min ? Number(d.desired_salary_min) : null, mobility: d.mobility
           } })
         ]).then(function () { flash(form.querySelector(".tl-success"), t.saved, true); }).catch(function (err) {
@@ -453,6 +494,23 @@
       }
       html += "<h3>" + esc(t.unbookmark) + "</h3><div id=\"acc-saved-jobs\">" + skeleton() + "</div>";
       return html;
+    }
+
+    function renderSavedJobs(items) {
+      if (!items || !items.length) return empty(t.emptySaved);
+      return '<div class="tl-list-cards">' + items.map(function (j) { return jobCard(j); }).join("") + "</div>";
+    }
+
+    function renderAlerts(items) {
+      var list = (!items || !items.length) ? empty(t.emptyAlerts) : items.map(function (a) {
+        return '<div class="tl-account-notif"><b>' + esc(a.keywords || a.city || a.sector || t.alerts) + "</b><p>" +
+          esc([a.city, a.province, a.sector, a.contract_type].filter(Boolean).join(" · ")) +
+          '</p><p><button type="button" class="tl-btn tl-btn-ghost" data-del-alert="' + esc(a.id) + '">' + esc(t.remove) + "</button></p></div>";
+      }).join("");
+      return '<form class="tl-form" id="acc-alert"><h3>' + esc(t.createAlert) + "</h3><label>" + esc(t.keywords) +
+        '</label><input name="keywords"><div class="tl-row-2"><div><label>' + esc(t.city) + '</label><input name="city"></div>' +
+        "<div><label>" + esc(t.sector) + '</label><input name="sector"></div></div><button class="tl-btn" type="submit">' +
+        esc(t.add) + '</button><div class="tl-success"></div></form>' + list;
     }
 
     function bindJobsSearch() {
@@ -651,7 +709,9 @@
         '<h3>' + esc(t.privacy) + "</h3><label><input type=\"checkbox\" name=\"privacy_profile_public\"" + (prefs.privacy_profile_public ? " checked" : "") + "> " +
         esc(t.profilePublic) + '</label><button class="tl-btn" type="submit">' + esc(t.save) + '</button><div class="tl-success"></div></form>' +
         '<form class="tl-form" id="acc-del"><h3>' + esc(t.danger) + '</h3><button class="tl-btn tl-btn-ghost" type="submit">' +
-        esc(t.danger) + '</button><div class="tl-success"></div></form>';
+        esc(t.danger) + '</button><div class="tl-success"></div></form>' +
+        '<div id="acc-sessions"><h3>' + esc(t.sessions) + "</h3>" + skeleton() + "</div>" +
+        '<div id="acc-login-log"><h3>' + esc(t.loginLog) + "</h3>" + skeleton() + "</div>";
     }
 
     function bindSettings() {
@@ -678,6 +738,33 @@
         if (!window.confirm(t.confirmDanger)) return;
         api.request("/users/me/deactivate", { method: "POST" }).then(function () { api.logout().then(renderGuest); });
       });
+      var sessBox = document.getElementById("acc-sessions");
+      if (sessBox) {
+        api.request("/auth/sessions").then(function (json) {
+          var rows = json.data || [];
+          sessBox.innerHTML = "<h3>" + esc(t.sessions) + '</h3><p><button type="button" class="tl-btn tl-btn-ghost" id="acc-revoke-all">' +
+            esc(t.revokeAll) + "</button></p>" + rows.map(function (s) {
+            return '<div class="tl-session-row"><span>' + esc(fmtDate(s.created_at)) + " · " +
+              (s.active ? (isEn ? "Active" : "Active") : (isEn ? "Revoked" : "Révoquée")) +
+              '</span>' + (s.active ? '<button type="button" class="tl-text-btn" data-revoke="' + esc(s.id) + '">' + esc(t.revoke) + "</button>" : "") + "</div>";
+          }).join("");
+          var all = document.getElementById("acc-revoke-all");
+          if (all) all.onclick = function () { api.request("/auth/sessions/revoke-all", { method: "POST" }).then(function () { go("settings"); }); };
+          sessBox.querySelectorAll("[data-revoke]").forEach(function (b) {
+            b.onclick = function () { api.request("/auth/sessions/" + b.getAttribute("data-revoke"), { method: "DELETE" }).then(function () { go("settings"); }); };
+          });
+        }).catch(function () { sessBox.innerHTML = ""; });
+      }
+      var logBox = document.getElementById("acc-login-log");
+      if (logBox) {
+        api.request("/auth/login-events").then(function (json) {
+          var rows = json.data || [];
+          logBox.innerHTML = "<h3>" + esc(t.loginLog) + "</h3>" + (rows.length ? rows.map(function (ev) {
+            return '<div class="tl-account-notif"><b>' + (ev.success ? (isEn ? "Signed in" : "Connexion") : (isEn ? "Failed" : "Échec")) +
+              "</b><p>" + esc(fmtDate(ev.created_at)) + (ev.ip_address ? " · " + esc(ev.ip_address) : "") + "</p></div>";
+          }).join("") : empty(t.emptyNotifs));
+        }).catch(function () { logBox.innerHTML = ""; });
+      }
     }
 
     function employerDashboard(user, dash, company) {
@@ -687,9 +774,9 @@
         [["active_jobs", t.activeJobs], ["applications", t.inbox], ["shortlisted", t.shortlisted], ["interviews", t.interviews], ["hired", t.hired]].map(function (row) {
           return '<div class="tl-stat-card"><b>' + esc(s[row[0]] || 0) + "</b><span>" + esc(row[1]) + "</span></div>";
         }).join("") + "</div><div class=\"tl-quick-actions\"><button type=\"button\" class=\"tl-btn\" data-nav=\"job-new\">" +
-        esc(t.createJob) + "</button><button type=\"button\" class=\"tl-btn tl-btn-ghost\" data-nav=\"inbox\">" + esc(t.inbox) +
-        "</button><button type=\"button\" class=\"tl-btn tl-btn-ghost\" data-nav=\"pipeline\">" + esc(t.pipeline) +
-        "</button><button type=\"button\" class=\"tl-btn tl-btn-ghost\" data-nav=\"invoices\">" + esc(t.invoices) + "</button></div>";
+        esc(t.createJob) + "</button><button type=\"button\" class=\"tl-btn tl-btn-ghost\" data-nav=\"inbox\">" + esc(t.candidates) +
+        "</button><button type=\"button\" class=\"tl-btn tl-btn-ghost\" data-nav=\"pipeline\">" + esc(t.ats) +
+        "</button><button type=\"button\" class=\"tl-btn tl-btn-ghost\" data-nav=\"invoices\">" + esc(t.billing) + "</button></div>";
     }
 
     function companyForm(company) {
@@ -704,6 +791,9 @@
         '<div class="tl-row-2"><div><label>' + esc(t.email) + '</label><input name="email" value="' + esc(company.email || "") + '"></div>' +
         "<div><label>" + esc(t.phone) + '</label><input name="phone" value="' + esc(company.phone || "") + '"></div></div>' +
         "<label>" + esc(t.legal) + '</label><input name="legal_name" value="' + esc(company.legal_name || "") + '">' +
+        '<div class="tl-row-2"><div><label>' + esc(t.size) + '</label><input name="size_label" value="' + esc(company.size_label || "") + '"></div>' +
+        "<div><label>LinkedIn</label><input name=\"linkedin_url\" value=\"" + esc(company.linkedin_url || "") + '"></div></div>' +
+        "<label>Facebook</label><input name=\"facebook_url\" value=\"" + esc(company.facebook_url || "") + '">' +
         '<button class="tl-btn" type="submit">' + esc(t.save) + '</button><div class="tl-success"></div></form>';
     }
 
@@ -713,7 +803,9 @@
         if (j.status === "DRAFT" || j.status === "PAUSED") actions += '<button type="button" class="tl-btn tl-btn-ghost" data-job-pub="' + esc(j.id) + '">' + esc(t.publish) + "</button> ";
         if (j.status === "PUBLISHED") actions += '<button type="button" class="tl-btn tl-btn-ghost" data-job-pause="' + esc(j.id) + '">' + esc(t.pause) + "</button> ";
         actions += '<button type="button" class="tl-btn tl-btn-ghost" data-job-arch="' + esc(j.id) + '">' + esc(t.archive) + "</button> ";
-        actions += '<button type="button" class="tl-btn tl-btn-ghost" data-nav="job-edit" data-id="' + esc(j.id) + '">' + esc(t.edit) + "</button>";
+        actions += '<button type="button" class="tl-btn tl-btn-ghost" data-nav="job-edit" data-id="' + esc(j.id) + '">' + esc(t.edit) + "</button> ";
+        actions += '<button type="button" class="tl-btn tl-btn-ghost" data-job-dup="' + esc(j.id) + '">' + esc(t.duplicate) + "</button>";
+        if (j.status !== "PUBLISHED") actions += ' <button type="button" class="tl-btn tl-btn-ghost" data-job-del="' + esc(j.id) + '">' + esc(t.deleteJob) + "</button>";
         return '<article class="tl-list-card"><span class="tl-chip orange">' + esc(statusLabel(j.status)) + "</span><h3>" + esc(j.title) +
           "</h3><p class=\"tl-meta\">" + esc(j.location || "") + "</p>" + actions + "</article>";
       }).join("") + "</div>";
@@ -832,6 +924,23 @@
       root.querySelectorAll("[data-job-pub]").forEach(function (b) { b.onclick = function () { api.request("/jobs/" + b.getAttribute("data-job-pub") + "/publish", { method: "POST" }).then(function () { go("jobs"); }); }; });
       root.querySelectorAll("[data-job-pause]").forEach(function (b) { b.onclick = function () { api.request("/jobs/" + b.getAttribute("data-job-pause") + "/pause", { method: "POST" }).then(function () { go("jobs"); }); }; });
       root.querySelectorAll("[data-job-arch]").forEach(function (b) { b.onclick = function () { api.request("/jobs/" + b.getAttribute("data-job-arch") + "/archive", { method: "POST" }).then(function () { go("jobs"); }); }; });
+      root.querySelectorAll("[data-job-dup]").forEach(function (b) { b.onclick = function () { api.request("/jobs/" + b.getAttribute("data-job-dup") + "/duplicate", { method: "POST" }).then(function () { go("jobs"); }); }; });
+      root.querySelectorAll("[data-job-del]").forEach(function (b) {
+        b.onclick = function () {
+          if (!window.confirm(t.confirmDanger)) return;
+          api.request("/jobs/" + b.getAttribute("data-job-del"), { method: "DELETE" }).then(function () { go("jobs"); });
+        };
+      });
+      var alertForm = document.getElementById("acc-alert");
+      if (alertForm) alertForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        api.request("/alerts", { method: "POST", body: Object.fromEntries(new FormData(alertForm).entries()) })
+          .then(function () { go("alerts"); })
+          .catch(function (err) { flash(alertForm.querySelector(".tl-success"), (err && err.message) || t.err, false); });
+      });
+      root.querySelectorAll("[data-del-alert]").forEach(function (b) {
+        b.onclick = function () { api.request("/alerts/" + b.getAttribute("data-del-alert"), { method: "DELETE" }).then(function () { go("alerts"); }); };
+      });
       root.querySelectorAll("[data-app-status]").forEach(function (sel) {
         sel.onchange = function () {
           var dest = currentRoute().name === "pipeline" ? "pipeline" : "inbox";
@@ -1011,6 +1120,8 @@
           else if (route.name === "jobs") p = (state.jobs ? Promise.resolve(state.jobs) : api.request("/jobs")).then(renderJobsSearch);
           else if (route.name === "job") p = unwrap(api.request("/jobs/" + route.id)).then(function (j) { state.job = j; return renderJobDetail(j); });
           else if (route.name === "apps") p = unwrap(api.myApplications()).then(renderApps);
+          else if (route.name === "saved") p = unwrap(api.request("/jobs/saved")).then(renderSavedJobs);
+          else if (route.name === "alerts") p = unwrap(api.request("/alerts")).then(renderAlerts);
           else if (route.name === "application") p = unwrap(api.request("/applications/" + route.id)).then(function (a) { state.application = a; return renderAppDetail(a); });
           else if (route.name === "interviews") p = unwrap(api.request("/interviews")).then(function (rows) { return renderInterviews(rows); });
           else if (route.name === "messages") p = Promise.all([
@@ -1049,6 +1160,7 @@
 
     window.addEventListener("hashchange", function () { if (state.user) renderAuthed(); });
     window.addEventListener("popstate", function () { if (state.user) renderAuthed(); });
+    window.addEventListener("talendus:auth", function () { boot(); });
     boot();
   });
 })();

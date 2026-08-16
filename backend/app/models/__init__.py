@@ -25,7 +25,7 @@ from app.models.rbac import Permission, Role
 from app.models.settings import SystemSetting, UserPreference
 from app.models.cms import BlogPost
 from app.models.integrations import ExternalJob, IntegrationCall, WebhookEvent
-from app.models.portal import PortalDocument, SavedJob
+from app.models.portal import JobAlert, LoginEvent, PortalDocument, SavedJob
 
 __all__ = [
     "User",
@@ -64,4 +64,6 @@ __all__ = [
     "BlogPost",
     "SavedJob",
     "PortalDocument",
+    "JobAlert",
+    "LoginEvent",
 ]

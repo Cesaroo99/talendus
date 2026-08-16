@@ -201,6 +201,8 @@
             if (window.TalendusTrack) window.TalendusTrack.apply({ content_name: slug || "job" });
             if (user && user.role === "CANDIDATE") {
               window.location.href = (isEn ? "/en/account.html" : "/espace.html") + "#/apps";
+            } else {
+              form.dispatchEvent(new CustomEvent("talendus:applied", { bubbles: true }));
             }
           }).catch(function (err) {
             showFormMessage(form, (err && err.message) || fallback, true);
@@ -322,7 +324,7 @@
           var share = (job.share && job.share.linkedin)
             ? '<a class="tl-share-linkedin" href="' + escapeHtml(job.share.linkedin) + '" target="_blank" rel="noopener noreferrer">' + (isEn ? "Share on LinkedIn" : "Partager sur LinkedIn") + "</a>"
             : "";
-          return '<article class="tl-job-card" data-job="' + escapeHtml(hay) + '" data-city="' + escapeHtml(job.location || "") + '" data-cat="' + escapeHtml((job.sector || "").toLowerCase()) + '" data-type="' + escapeHtml(job.contract_type || "") + '" data-shift="' + escapeHtml(shiftVal) + '" data-salary="' + escapeHtml(salary) + '"><div class="body"><span class="tl-chip orange">' + escapeHtml(job.contract_type || "") + '</span><span class="tl-chip">' + escapeHtml(job.location || "") + '</span><h3><a href="' + href + '">' + escapeHtml(job.title) + '</a></h3><p>' + escapeHtml([salary, shiftVal].filter(Boolean).join(" · ")) + "</p>" + share + '<a class="tl-split-cta" href="' + href + '" style="color:var(--tl-orange);margin-top:auto;padding-top:14px">' + (isEn ? "View role →" : "Voir le poste →") + "</a></div></article>";
+          return '<article class="tl-job-card" data-job="' + escapeHtml(hay) + '" data-city="' + escapeHtml(job.location || "") + '" data-cat="' + escapeHtml((job.sector || "").toLowerCase()) + '" data-type="' + escapeHtml(job.contract_type || "") + '" data-shift="' + escapeHtml(shiftVal) + '" data-salary="' + escapeHtml(salary) + '"><div class="body"><span class="tl-chip orange">' + escapeHtml(job.contract_type || "") + '</span><span class="tl-chip">' + escapeHtml(job.location || "") + '</span><h3><a href="' + href + '">' + escapeHtml(job.title) + '</a></h3><p>' + escapeHtml([salary, shiftVal].filter(Boolean).join(" · ")) + "</p>" + share + '<p class="tl-job-card-actions"><a class="tl-split-cta" href="' + href + '" style="color:var(--tl-orange)">' + (isEn ? "View role →" : "Voir le poste →") + '</a> <button type="button" class="tl-text-btn" data-save-job="' + escapeHtml(job.id) + '">' + (isEn ? "Save" : "Sauvegarder") + "</button></p></div></article>";
         }).join("");
         filterJobs();
       }).catch(function () {});

@@ -80,6 +80,7 @@ def create_app() -> FastAPI:
 
     from app.api import (
         admin,
+        alerts,
         applications,
         auth,
         blog,
@@ -104,6 +105,7 @@ def create_app() -> FastAPI:
     application.include_router(public.router, prefix="/api")
     application.include_router(public.emails_router, prefix="/api")
     application.include_router(auth.router, prefix="/api")
+    application.include_router(alerts.router, prefix="/api")
     application.include_router(users.router, prefix="/api")
     application.include_router(candidates.router, prefix="/api")
     application.include_router(companies.router, prefix="/api")

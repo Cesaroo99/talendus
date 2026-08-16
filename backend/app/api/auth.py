@@ -8,12 +8,13 @@ from app.models import User
 from app.schemas import (
     EmailVerifyIn,
     LoginIn,
+    OAuthGoogleIn,
+    OAuthLinkedInIn,
     PasswordChangeIn,
     PasswordForgotIn,
     PasswordResetIn,
     RefreshIn,
     RegisterIn,
-    TokenResponse,
     UserPublic,
 )
 from app.services import auth as auth_service
@@ -21,19 +22,44 @@ from app.services import auth as auth_service
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
+def _ua(request: Request) -> str | None:
+    return (request.headers.get("user-agent") or "")[:255] or None
+
+
 def _token_payload(user: User, tokens: dict) -> dict:
     return ok({**tokens, "user": UserPublic.model_validate(user).model_dump(mode="json")})
 
 
+@router.get("/providers")
+def providers():
+    return ok(auth_service.auth_providers())
+
+
 @router.post("/register")
 def register(payload: RegisterIn, request: Request, db: Session = Depends(get_db)):
-    user, tokens = auth_service.register(db, payload, client_ip(request))
+    user, tokens = auth_service.register(db, payload, client_ip(request), _ua(request))
     return _token_payload(user, tokens)
 
 
 @router.post("/login")
 def login(payload: LoginIn, request: Request, db: Session = Depends(get_db)):
-    user, tokens = auth_service.login(db, payload, client_ip(request))
+    user, tokens = auth_service.login(db, payload, client_ip(request), _ua(request))
+    return _token_payload(user, tokens)
+
+
+@router.post("/oauth/google")
+def oauth_google(payload: OAuthGoogleIn, request: Request, db: Session = Depends(get_db)):
+    user, tokens = auth_service.login_google(
+        db, payload.id_token, payload.role, payload.company_name, client_ip(request), _ua(request)
+    )
+    return _token_payload(user, tokens)
+
+
+@router.post("/oauth/linkedin")
+def oauth_linkedin(payload: OAuthLinkedInIn, request: Request, db: Session = Depends(get_db)):
+    user, tokens = auth_service.login_linkedin(
+        db, payload.access_token, payload.role, payload.company_name, client_ip(request), _ua(request)
+    )
     return _token_payload(user, tokens)
 
 
@@ -76,3 +102,25 @@ def verify(payload: EmailVerifyIn, db: Session = Depends(get_db)):
 def resend_verification(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     auth_service.resend_verification(db, user)
     return ok(message="Si le compte n'est pas encore vérifié, un courriel a été envoyé.")
+
+
+@router.get("/sessions")
+def sessions(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    return ok(auth_service.list_sessions(db, user))
+
+
+@router.delete("/sessions/{session_id}")
+def revoke_session(session_id: str, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    auth_service.revoke_session(db, user, session_id)
+    return ok(message="Session révoquée.")
+
+
+@router.post("/sessions/revoke-all")
+def revoke_all(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    count = auth_service.revoke_all_sessions(db, user)
+    return ok({"revoked": count}, message="Sessions révoquées.")
+
+
+@router.get("/login-events")
+def login_events(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    return ok(auth_service.list_login_events(db, user))

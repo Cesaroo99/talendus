@@ -177,3 +177,23 @@ def archive_job(
 ):
     job = jobs_service.set_job_status(db, user, job_id, JobStatus.ARCHIVED)
     return ok(jobs_service.serialize_job(job))
+
+
+@router.post("/{job_id}/duplicate")
+def duplicate_job(
+    job_id: str,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_roles(UserRole.EMPLOYER, UserRole.RECRUITER, UserRole.ADMIN)),
+):
+    job = jobs_service.duplicate_job(db, user, job_id)
+    return ok(jobs_service.serialize_job(job))
+
+
+@router.delete("/{job_id}")
+def delete_job(
+    job_id: str,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_roles(UserRole.EMPLOYER, UserRole.RECRUITER, UserRole.ADMIN)),
+):
+    jobs_service.delete_job(db, user, job_id)
+    return ok(message="Offre supprimée.")

@@ -1950,3 +1950,76 @@ table, .tl-job-card p, .tl-card .body p { color: var(--tl-navy); }
 }
 .tl-pipe-card b { display: block; margin-bottom: 4px; }
 .tl-pipe-card select { width: 100%; margin: 6px 0; }
+
+.tl-auth-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 4000;
+  background: rgba(11, 31, 58, 0.62);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+}
+.tl-auth-overlay[hidden] { display: none !important; }
+body.tl-auth-open { overflow: hidden; }
+.tl-auth-card {
+  width: min(460px, 100%);
+  background: #fff;
+  border-radius: 16px;
+  padding: 28px 24px 22px;
+  box-shadow: 0 24px 64px rgba(11, 31, 58, 0.28);
+  position: relative;
+  max-height: 90vh;
+  overflow: auto;
+}
+.tl-auth-card h2 { margin: 0 0 16px; font-size: 1.45rem; }
+.tl-auth-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  border: 0;
+  background: transparent;
+  font-size: 28px;
+  line-height: 1;
+  color: var(--tl-steel);
+  cursor: pointer;
+}
+.tl-auth-roles { display: grid; gap: 12px; margin: 8px 0 18px; }
+.tl-auth-or { text-align: center; color: var(--tl-steel); margin: 16px 0 8px; }
+.tl-oauth-row { display: grid; gap: 8px; }
+.tl-oauth.is-disabled { opacity: 0.65; cursor: not-allowed; }
+.tl-text-btn {
+  background: none;
+  border: 0;
+  color: var(--tl-orange);
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  text-decoration: underline;
+}
+.tl-hp {
+  position: absolute !important;
+  left: -9999px !important;
+  height: 0 !important;
+  width: 0 !important;
+  opacity: 0 !important;
+}
+.tl-save-job { margin-top: 12px; }
+.tl-job-card-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 14px;
+}
+.tl-onboard {
+  background: var(--tl-ice);
+  border: 1px solid var(--tl-line);
+  border-radius: var(--tl-radius);
+  padding: 14px 16px;
+  margin: 0 0 18px;
+}
+.tl-session-row { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+

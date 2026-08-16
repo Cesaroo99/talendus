@@ -207,6 +207,7 @@ def notify_job_matches(db: Session, job: JobOffer, limit: int = 40) -> int:
             ranked.append((score, candidate, reasons))
     ranked.sort(key=lambda row: row[0], reverse=True)
     sent = 0
+    notified_users: set[str] = set()
     href = f"/emploi-{job.slug}.html"
     where = job.location or "Québec"
     for score, candidate, reasons in ranked[:limit]:
@@ -219,5 +220,28 @@ def notify_job_matches(db: Session, job: JobOffer, limit: int = 40) -> int:
             f"{job.title} ({where}) — score {score} %." + (f" {detail}" if detail else ""),
             href=href,
         )
+        notified_users.add(candidate.user.id)
+        sent += 1
+    from app.models.portal import JobAlert
+    from app.services.alerts import alert_matches_job
+
+    alerts = list(db.scalars(select(JobAlert).where(JobAlert.active.is_(True))).all())
+    for alert in alerts:
+        if alert.user_id in notified_users:
+            continue
+        user = db.get(User, alert.user_id)
+        if not user or user.role != UserRole.CANDIDATE:
+            continue
+        if not alert_matches_job(alert, job):
+            continue
+        notify(
+            db,
+            user,
+            NotificationType.JOB_MATCH,
+            "Nouvelle offre selon votre alerte",
+            f"{job.title} ({where})" + (f" — {alert.keywords}" if alert.keywords else ""),
+            href=href,
+        )
+        notified_users.add(user.id)
         sent += 1
     return sent
