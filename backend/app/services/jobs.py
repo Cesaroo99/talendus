@@ -265,6 +265,9 @@ def set_job_status(db: Session, user: User, job_id: str, status: JobStatus) -> J
     job.status = status
     if status == JobStatus.PUBLISHED:
         job.published_at = job.published_at or utcnow()
+        from app.services.matching import notify_job_matches
+
+        notify_job_matches(db, job)
     audit(db, f"job.{status.value.lower()}", user, "job", job.id)
     db.commit()
     db.refresh(job)

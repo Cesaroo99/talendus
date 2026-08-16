@@ -103,12 +103,6 @@ def create_mission(db: Session, user: User, data) -> RecruitmentMission:
     )
     db.add(mission)
     db.flush()
-    if data.job_id:
-        from app.models import JobOffer
-
-        job = db.get(JobOffer, data.job_id)
-        if job:
-            mission.linked_jobs.append(job)
     audit(db, "mission.create", user, "mission", mission.id)
     db.commit()
     db.refresh(mission)
@@ -192,6 +186,16 @@ def serialize_company(c: Company) -> dict:
 
 
 def serialize_mission(m: RecruitmentMission) -> dict:
+    linked = m.linked_jobs
+    if not linked:
+        job_ids: list[str] = []
+    elif hasattr(linked, "id") and not isinstance(linked, (list, tuple)):
+        job_ids = [linked.id]
+    else:
+        try:
+            job_ids = [j.id for j in linked]
+        except TypeError:
+            job_ids = []
     return {
         "id": m.id,
         "title": m.title,
@@ -206,5 +210,5 @@ def serialize_mission(m: RecruitmentMission) -> dict:
         "start_date": m.start_date,
         "due_date": m.due_date,
         "notes": m.notes,
-        "job_ids": [j.id for j in (m.linked_jobs or [])],
+        "job_ids": job_ids,
     }

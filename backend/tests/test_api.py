@@ -511,3 +511,102 @@ def test_super_admin_preferences_settings_and_conversation(client):
     company = client.get("/api/companies/me", headers=auth_header(emp))
     assert company.status_code == 200
     assert company.json()["data"]["province"] == "Québec"
+
+
+def test_resume_parse_status_on_upload(client):
+    cand = register(client, "parse-cv@example.com")
+    upload = client.post(
+        "/api/candidates/me/resume",
+        headers=auth_header(cand),
+        files={"file": ("cv.pdf", PDF, "application/pdf")},
+    )
+    assert upload.status_code == 200
+    assert upload.json()["data"]["parse_status"] in {"done", "failed", "unsupported"}
+    me = client.get("/api/candidates/me", headers=auth_header(cand)).json()["data"]
+    assert me["resumes"]
+    assert me["resumes"][0]["parse_status"] in {"done", "failed", "unsupported"}
+
+
+def test_job_match_notification_on_publish(client):
+    cand = register(client, "match-notify@example.com", first_name="Karine")
+    cand_h = auth_header(cand)
+    client.patch(
+        "/api/candidates/me",
+        headers=cand_h,
+        json={"city": "Laval", "sector": "Entrepôt", "skills": "WMS, chariot", "years_experience": 5},
+    )
+    emp = register(client, "match-pub@example.com", "EMPLOYER")
+    emp_h = auth_header(emp)
+    job = client.post(
+        "/api/jobs",
+        headers=emp_h,
+        json={
+            "title": "Cariste",
+            "location": "Laval",
+            "sector": "Entrepôt",
+            "skills": "WMS, chariot",
+            "slug": "cariste-notify",
+        },
+    ).json()["data"]
+    published = client.post(f"/api/jobs/{job['id']}/publish", headers=emp_h)
+    assert published.status_code == 200
+    notifs = client.get("/api/notifications", headers=cand_h).json()["data"]
+    assert any(n["type"] == "JOB_MATCH" for n in notifs)
+
+
+def test_pipeline_bootstrap_and_status_api(client):
+    admin = _promote_admin(client, "pipe-admin@example.com")
+    admin_h = auth_header(admin)
+    emp = register(client, "pipe-emp@example.com", "EMPLOYER")
+    emp_h = auth_header(emp)
+    company = client.get("/api/companies/me", headers=emp_h).json()["data"]
+    job = _publish_job(client, emp_h, slug="pipe-cariste", title="Cariste")
+    cand = register(client, "pipe-cand@example.com", first_name="Karine")
+    cand_h = auth_header(cand)
+    applied = client.post("/api/applications", headers=cand_h, json={"job_id": job["id"]}).json()["data"]
+    assert applied["pipeline_stage"] == "nouveaux"
+    profile = client.get("/api/candidates/me", headers=cand_h).json()["data"]
+    mission = client.post(
+        "/api/recruiters/missions",
+        headers=admin_h,
+        json={"title": "Caristes Laval", "company_id": company["id"], "job_id": job["id"], "seats": 2},
+    )
+    assert mission.status_code == 200
+    boot = client.get("/api/admin/bootstrap", headers=admin_h).json()["data"]
+    found = next(m for m in boot["missions"] if m["id"] == mission.json()["data"]["id"])
+    assert found["stageMap"][profile["id"]] == "nouveaux"
+    assert any(p["applicationId"] == applied["id"] and p["stage"] == "nouveaux" for p in found["pipeline"])
+    changed = client.post(
+        f"/api/applications/{applied['id']}/status",
+        headers=emp_h,
+        json={"status": "INTERVIEW"},
+    )
+    assert changed.status_code == 200
+    assert changed.json()["data"]["pipeline_stage"] == "entretien-talendus"
+    boot2 = client.get("/api/admin/bootstrap", headers=admin_h).json()["data"]
+    found2 = next(m for m in boot2["missions"] if m["id"] == mission.json()["data"]["id"])
+    assert found2["stageMap"][profile["id"]] == "entretien-talendus"
+
+
+def test_stripe_checkout_and_webhook_without_keys(client):
+    admin = _promote_admin(client, "stripe-admin@example.com")
+    admin_h = auth_header(admin)
+    emp = register(client, "stripe-emp@example.com", "EMPLOYER")
+    emp_h = auth_header(emp)
+    company = client.get("/api/companies/me", headers=emp_h).json()["data"]
+    invoice = client.post(
+        "/api/invoices",
+        headers=admin_h,
+        json={"company_id": company["id"], "amount": 5000, "due_date": "2026-09-15"},
+    )
+    assert invoice.status_code == 200
+    inv_id = invoice.json()["data"]["id"]
+    checkout = client.post(f"/api/invoices/{inv_id}/checkout", headers=emp_h)
+    assert checkout.status_code == 503
+    assert checkout.json()["code"] == "STRIPE_NOT_CONFIGURED"
+    hook = client.post("/api/webhooks/stripe", content=b"{}", headers={"stripe-signature": "t=1,v1=x"})
+    assert hook.status_code == 503
+    assert hook.json()["code"] == "STRIPE_NOT_CONFIGURED"
+    cand = register(client, "stripe-cand@example.com")
+    denied = client.post(f"/api/invoices/{inv_id}/checkout", headers=auth_header(cand))
+    assert denied.status_code == 403

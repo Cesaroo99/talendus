@@ -29,9 +29,11 @@ Toutes les valeurs sensibles sont lues depuis l’environnement (fichier `.env` 
 | `EMAIL_SERVER` / `EMAIL_USERNAME` / `EMAIL_PASSWORD` | SMTP |
 | `EMAIL_ENABLED` | `false` = log sans envoi réel |
 | `STORAGE_DIR` | Répertoire local des CV |
-| `STORAGE_BACKEND` | `local` (défaut) ou `s3` — la base stocke les métadonnées, pas le binaire |
-| `S3_BUCKET` / `S3_REGION` / `S3_ENDPOINT_URL` / `S3_ACCESS_KEY` / `S3_SECRET_KEY` | Stockage objet optionnel |
+| `STORAGE_BACKEND` | `local` (défaut) ou `s3` |
+| `S3_BUCKET` / `S3_REGION` / `S3_ENDPOINT_URL` / `S3_ACCESS_KEY` / `S3_SECRET_KEY` / `S3_PREFIX` | Stockage objet optionnel (`STORAGE_BACKEND=s3`) |
 | `MAX_RESUME_MB` | Taille max d’un CV |
+| `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` / `STRIPE_PUBLISHABLE_KEY` | Checkout Stripe (503 `STRIPE_NOT_CONFIGURED` si absent) |
+| `JOB_MATCH_MIN_SCORE` | Seuil de notification `JOB_MATCH` à la publication (défaut 50) |
 | `SEED_PASSWORD` | Mot de passe des comptes de démonstration (jamais en production réelle) |
 | `DEFAULT_CURRENCY` | Devise par défaut (`CAD`) |
 | `DEFAULT_TAX_RATE_BP` | Taxes en points de base (14975 ≈ TPS+TVQ) |
@@ -101,7 +103,7 @@ Migrations versionnées :
 
 Autres : `recruiters`, `refresh_tokens`, `email_tokens`, `candidate_experiences`, `candidate_education`, `candidate_certifications`, `interviews`, `internal_notes`, `email_logs`, `roles`, `permissions`, `mission_jobs`, `contract_signatures`.
 
-Les CV ne sont **pas** stockés en binaire dans PostgreSQL : métadonnées + `storage_url` / chemin fichier (`STORAGE_DIR` ou S3 plus tard).
+Les CV ne sont **pas** stockés en binaire dans PostgreSQL : métadonnées + `storage_url`. Avec `STORAGE_BACKEND=s3`, l’upload va vers le seau configuré ; sinon fichiers locaux sous `STORAGE_DIR`. Un parse déterministe (PDF/DOCX, sans LLM) remplit `resumes.parse_json` / `parse_status`.
 
 Comptes de démonstration (mot de passe `talendus` sauf si `SEED_PASSWORD` est modifié) :
 
@@ -178,7 +180,9 @@ Erreur :
 | POST | `/jobs` + publish/pause/close/archive | employeur / recruteur / admin |
 | POST | `/applications` `/applications/public` | candidat / public |
 | GET | `/applications/me` | candidat |
-| POST | `/applications/{id}/status` | staff |
+| POST | `/applications/{id}/status` | staff / employeur |
+| POST | `/invoices/{id}/checkout` | employeur / finance |
+| POST | `/webhooks/stripe` | Stripe (signature, sans JWT) |
 | GET | `/matching/jobs` | candidat |
 | GET | `/matching/jobs/{id}/candidates` | staff / employeur |
 | GET/POST | `/messages` `/messages/directory` `/messages/{user_id}` | oui |
@@ -197,7 +201,11 @@ La documentation interactive liste tous les schémas.
 
 Les événements (compte créé, candidature, changement de statut, CV, entretien, message) créent une notification en base. Les templates texte sont dans `app/emails/templates/`. Chaque envoi est d’abord journalisé (`QUEUED`, corps persisté) puis traité par un worker qui relit la file en base lorsque SMTP est activé. Un échec d’envoi n’annule pas la candidature. Redis / Celery restent optionnels plus tard.
 
-Espace candidat public : `/espace.html` (EN : `/en/account.html`) — profil, CV, correspondances, candidatures, entretiens, messages, notifications. Le back-office `/admin/` hydrate aussi factures, paiements et entretiens depuis `GET /api/admin/bootstrap`.
+Espace candidat public : `/espace.html` (EN : `/en/account.html`) — profil, CV, correspondances, candidatures, entretiens, messages, notifications.
+
+Espace employeur : `/espace-employeur.html` (EN : `/en/account-employer.html`) — entreprise, offres, inbox, pipeline (statuts API), factures (Checkout Stripe si configuré). Le kanban admin `/admin/` enregistre les déplacements via `POST /api/applications/{id}/status` ; `GET /api/admin/bootstrap` fournit `stageMap` et `pipeline`.
+
+À la publication d’une offre, les candidats actifs au-dessus de `JOB_MATCH_MIN_SCORE` reçoivent une notification `JOB_MATCH` (respect des préférences `notify_match` / `notify_in_app`).
 
 ## Sécurité
 
@@ -214,7 +222,7 @@ cd backend
 pytest -q
 ```
 
-Couvrent inscription, connexion, permissions, publication d’offre, candidature, doublon, statut, notifications, matching, messagerie, entretiens, factures, signature interne et accès interdit.
+Couvrent inscription, connexion, permissions, publication d’offre, candidature, doublon, statut, notifications, matching `JOB_MATCH`, messagerie, entretiens, factures, Checkout Stripe (503 sans clé), parse CV et accès interdit.
 
 ## Modules opérationnels
 
@@ -222,8 +230,10 @@ Couvrent inscription, connexion, permissions, publication d’offre, candidature
 - **Messagerie** : fils REST candidat ↔ recruteur / employeur, avec contrôle d’accès. Pas de WebSocket.
 - **Entretiens** : CRUD lié à une candidature, confirmation candidat, notification + e-mail.
 - **Signature interne** : nom, date, IP, empreinte SHA-256 du mandat. Ce n’est pas DocuSign ni une valeur légale tierce.
-- **Facturation** : factures et paiements en base (finance / admin). Pas de Stripe sans clés.
+- **Facturation** : factures et paiements en base (finance / admin). Checkout Stripe (`POST /api/invoices/{id}/checkout`) si `STRIPE_SECRET_KEY` est défini ; webhook `POST /api/webhooks/stripe` pose `stripe_payment_intent_id` et marque la facture payée. Sans clé : 503 `STRIPE_NOT_CONFIGURED`.
 - **Job board** : `GET /api/job-board` (JSON). Partage LinkedIn via URL officielle. Publication automatique seulement si `LINKEDIN_CLIENT_ID` / `LINKEDIN_CLIENT_SECRET` sont définis (`posting_enabled`).
+- **Stockage CV** : local ou S3 (`STORAGE_BACKEND=s3`). Téléchargement authentifié (URL présignée S3 ou fichier local).
+- **Parse CV** : extraction déterministe (e-mails, téléphones, compétences industrielles) dans `parse_json`. Un échec de parse n’empêche pas l’upload.
 
 ## Déploiement
 
@@ -236,4 +246,4 @@ Couvrent inscription, connexion, permissions, publication d’offre, candidature
 
 ## Non livré volontairement
 
-Matching LLM, WebSockets, visioconférence Zoom, DocuSign, encaissement Stripe, Redis/Celery obligatoire, publication LinkedIn sans identifiants OAuth.
+Matching LLM, WebSockets, visioconférence Zoom, DocuSign, Redis/Celery obligatoire, publication LinkedIn sans identifiants OAuth.

@@ -36,6 +36,7 @@ COPY = {
         "nav_blog": "Blog",
         "nav_contact": "Contact",
         "nav_account": "Mon espace",
+        "nav_employer_account": "Espace employeur",
         "cta_primary": "Confier un recrutement",
         "cta_secondary": "Déposer mon CV",
         "menu_open": "Ouvrir le menu",
@@ -84,6 +85,7 @@ COPY = {
         "nav_blog": "Blog",
         "nav_contact": "Contact",
         "nav_account": "My account",
+        "nav_employer_account": "Employer portal",
         "cta_primary": "Start a hire",
         "cta_secondary": "Submit my resume",
         "menu_open": "Open menu",
@@ -132,6 +134,7 @@ HREFS = {
         "headhunt": "services.html",
         "urgent": "contact.html",
         "account": "espace.html",
+        "employer_account": "espace-employeur.html",
     },
     "en": {
         "home": "index.html",
@@ -151,6 +154,7 @@ HREFS = {
         "headhunt": "services.html",
         "urgent": "contact.html",
         "account": "account.html",
+        "employer_account": "account-employer.html",
     },
 }
 
@@ -166,6 +170,7 @@ def nav_html(lang):
                                       <li><a href="{h['services']}">{t['nav_services']}</a></li>
                                       <li><a href="{h['sectors']}">{t['nav_sectors']}</a></li>
                                       <li><a href="{h['calc']}">{t['nav_calc']}</a></li>
+                                      <li><a href="{h['employer_account']}">{t['nav_employer_account']}</a></li>
                                   </ul>
                               </li>
                               <li class="has-dropdown" data-nav="candidats">

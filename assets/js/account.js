@@ -49,7 +49,22 @@
       cancel: "Cancel",
       to: "To",
       write: "Your message",
-      score: "Match"
+      score: "Match",
+      welcomeEmployer: "Your hiring workspace",
+      guestEmployer: "Sign in to manage jobs, applications and invoices.",
+      registerEmployer: "Create an employer account",
+      company: "Company",
+      jobs: "Job openings",
+      inbox: "Applications",
+      pipeline: "Pipeline",
+      invoices: "Invoices",
+      pay: "Pay by card",
+      emptyJobs: "No job openings yet.",
+      emptyInvoices: "No invoices.",
+      emptyInbox: "No applications received.",
+      publish: "Publish",
+      pause: "Pause",
+      draft: "Draft"
     } : {
       login: "Connexion",
       register: "Créer un compte",
@@ -90,7 +105,22 @@
       cancel: "Annuler",
       to: "Destinataire",
       write: "Votre message",
-      score: "Score"
+      score: "Score",
+      welcomeEmployer: "Votre espace employeur",
+      guestEmployer: "Connectez-vous pour gérer vos offres, candidatures et factures.",
+      registerEmployer: "Créer un compte employeur",
+      company: "Entreprise",
+      jobs: "Offres",
+      inbox: "Candidatures",
+      pipeline: "Pipeline",
+      invoices: "Factures",
+      pay: "Payer par carte",
+      emptyJobs: "Aucune offre pour le moment.",
+      emptyInvoices: "Aucune facture.",
+      emptyInbox: "Aucune candidature reçue.",
+      publish: "Publier",
+      pause: "Mettre en pause",
+      draft: "Brouillon"
     };
 
     function esc(v) {
@@ -101,9 +131,12 @@
     function statusLabel(s) {
       var map = {
         SUBMITTED: isEn ? "Submitted" : "Envoyée",
+        RECEIVED: isEn ? "Received" : "Reçue",
         UNDER_REVIEW: isEn ? "Under review" : "En revue",
         SHORTLISTED: isEn ? "Shortlisted" : "Présélection",
         INTERVIEW: isEn ? "Interview" : "Entretien",
+        SECOND_INTERVIEW: isEn ? "Client interview" : "Entretien client",
+        OFFER_SENT: isEn ? "Offer sent" : "Offre envoyée",
         REJECTED: isEn ? "Declined" : "Refusée",
         HIRED: isEn ? "Hired" : "Embauché",
         WITHDRAWN: isEn ? "Withdrawn" : "Retirée",
@@ -116,15 +149,33 @@
       return map[s] || s;
     }
 
+    function isEmployerSpace() {
+      return root.getAttribute("data-space") === "employer";
+    }
+
+    function staffRole(role) {
+      return ["ADMIN", "SUPER_ADMIN", "RECRUITER", "FINANCE", "EDITOR"].indexOf(role) !== -1;
+    }
+
+    function accountHref(role) {
+      if (staffRole(role)) return (isEn ? "../" : "") + "admin/";
+      if (role === "EMPLOYER") return isEn ? "account-employer.html" : "espace-employeur.html";
+      return isEn ? "account.html" : "espace.html";
+    }
+
     function renderGuest() {
+      var employer = isEmployerSpace();
+      var welcome = employer ? t.welcomeEmployer : t.welcome;
+      var guest = employer ? t.guestEmployer : t.guest;
+      var registerTitle = employer ? t.registerEmployer : t.register;
       root.innerHTML = '<div class="tl-account-grid">' +
-        '<div><div class="tl-kicker">Talendus</div><h2 class="tl-h2">' + esc(t.welcome) + '</h2><p class="tl-lead">' + esc(t.guest) + "</p></div>" +
+        '<div><div class="tl-kicker">Talendus</div><h2 class="tl-h2">' + esc(welcome) + '</h2><p class="tl-lead">' + esc(guest) + "</p></div>" +
         '<div class="tl-account-cards">' +
         '<form class="tl-form" id="acc-login"><h3>' + esc(t.login) + "</h3>" +
         "<label>" + esc(t.email) + '</label><input name="email" type="email" required>' +
         "<label>" + esc(t.password) + '</label><input name="password" type="password" required minlength="8">' +
         '<button class="tl-btn" type="submit">' + esc(t.submitLogin) + '</button><div class="tl-success"></div></form>' +
-        '<form class="tl-form" id="acc-register"><h3>' + esc(t.register) + "</h3>" +
+        '<form class="tl-form" id="acc-register"><h3>' + esc(registerTitle) + "</h3>" +
         "<label>" + esc(t.first) + '</label><input name="first_name" required>' +
         "<label>" + esc(t.last) + '</label><input name="last_name" required>' +
         "<label>" + esc(t.email) + '</label><input name="email" type="email" required>' +
@@ -148,7 +199,7 @@
       reg.addEventListener("submit", function (e) {
         e.preventDefault();
         var d = Object.fromEntries(new FormData(reg).entries());
-        api.register({ email: d.email, password: d.password, first_name: d.first_name, last_name: d.last_name, role: "CANDIDATE" }).then(boot).catch(function (err) {
+        api.register({ email: d.email, password: d.password, first_name: d.first_name, last_name: d.last_name, role: isEmployerSpace() ? "EMPLOYER" : "CANDIDATE" }).then(boot).catch(function (err) {
           reg.querySelector(".tl-success").style.display = "block";
           reg.querySelector(".tl-success").textContent = (err && err.message) || t.err;
         });
@@ -341,13 +392,187 @@
     function renderResumes(resumes) {
       if (!resumes || !resumes.length) return "";
       return "<ul>" + resumes.map(function (r) {
-        return "<li>" + esc(r.original_name) + (r.is_primary ? " · CV" : "") + "</li>";
+        return "<li>" + esc(r.original_name) + (r.is_primary ? " · CV" : "") + (r.parse_status ? " · " + esc(r.parse_status) : "") + "</li>";
       }).join("") + "</ul>";
+    }
+
+    function bootEmployer() {
+      Promise.all([
+        api.me().then(function (j) { return j.data; }),
+        api.request("/companies/me").then(function (j) { return j.data; }).catch(function () { return {}; }),
+        api.request("/jobs/managed").then(function (j) { return j.data || []; }).catch(function () { return []; }),
+        api.request("/applications").then(function (j) { return j.data || []; }).catch(function () { return []; }),
+        api.request("/invoices").then(function (j) { return j.data || []; }).catch(function () { return []; }),
+        api.notifications().then(function (j) { return j.data || []; }).catch(function () { return []; }),
+        api.request("/messages").then(function (j) { return j.data || []; }).catch(function () { return []; }),
+        api.request("/messages/directory").then(function (j) { return j.data || []; }).catch(function () { return []; }),
+        api.request("/interviews").then(function (j) { return j.data || []; }).catch(function () { return []; })
+      ]).then(function (rows) {
+        renderEmployer(rows[0], rows[1] || {}, rows[2], rows[3], rows[4], rows[5], rows[6], rows[7], rows[8]);
+      }).catch(function () { renderGuest(); });
+    }
+
+    function renderEmployer(user, company, jobs, apps, invoices, notifs, threads, directory, interviews) {
+      var unread = (notifs || []).filter(function (n) { return !n.is_read; }).length;
+      var unreadMsg = (threads || []).reduce(function (s, th) { return s + (th.unread || 0); }, 0);
+      root.innerHTML = '<div class="tl-account-head"><div><div class="tl-kicker">' + esc(company.name || user.email) + "</div>" +
+        '<h2 class="tl-h2">' + esc((user.first_name || "") + " " + (user.last_name || "")) + "</h2></div>" +
+        '<button class="tl-btn tl-btn-ghost" type="button" id="acc-logout">' + esc(t.logout) + "</button></div>" +
+        '<div class="tl-account-tabs" role="tablist">' +
+        '<button type="button" class="is-active" data-tab="company">' + esc(t.company) + "</button>" +
+        '<button type="button" data-tab="jobs">' + esc(t.jobs) + " (" + (jobs || []).length + ")</button>" +
+        '<button type="button" data-tab="inbox">' + esc(t.inbox) + " (" + (apps || []).length + ")</button>" +
+        '<button type="button" data-tab="pipeline">' + esc(t.pipeline) + "</button>" +
+        '<button type="button" data-tab="invoices">' + esc(t.invoices) + "</button>" +
+        '<button type="button" data-tab="interviews">' + esc(t.interviews) + "</button>" +
+        '<button type="button" data-tab="messages">' + esc(t.messages) + (unreadMsg ? " · " + unreadMsg : "") + "</button>" +
+        '<button type="button" data-tab="notifs">' + esc(t.notifs) + (unread ? " · " + unread : "") + "</button></div>" +
+        '<div class="tl-account-panel" data-panel="company">' + renderCompany(company) + "</div>" +
+        '<div class="tl-account-panel" data-panel="jobs" hidden>' + renderEmployerJobs(jobs) + "</div>" +
+        '<div class="tl-account-panel" data-panel="inbox" hidden>' + renderEmployerInbox(apps) + "</div>" +
+        '<div class="tl-account-panel" data-panel="pipeline" hidden>' + renderEmployerPipeline(apps) + "</div>" +
+        '<div class="tl-account-panel" data-panel="invoices" hidden>' + renderEmployerInvoices(invoices) + "</div>" +
+        '<div class="tl-account-panel" data-panel="interviews" hidden>' + renderInterviews(interviews) + "</div>" +
+        '<div class="tl-account-panel" data-panel="messages" hidden>' + renderMessages(threads, directory) + "</div>" +
+        '<div class="tl-account-panel" data-panel="notifs" hidden>' + renderNotifs(notifs) + "</div>";
+      document.getElementById("acc-logout").onclick = function () { api.logout().then(renderGuest); };
+      root.querySelectorAll("[data-tab]").forEach(function (btn) {
+        btn.onclick = function () {
+          root.querySelectorAll("[data-tab]").forEach(function (b) { b.classList.toggle("is-active", b === btn); });
+          root.querySelectorAll("[data-panel]").forEach(function (p) { p.hidden = p.getAttribute("data-panel") !== btn.getAttribute("data-tab"); });
+        };
+      });
+      var mark = document.getElementById("acc-readall");
+      if (mark) mark.onclick = function () { api.request("/notifications/read-all", { method: "POST" }).then(boot); };
+      bindMessages();
+      bindInterviews();
+      bindEmployerActions();
+    }
+
+    function renderCompany(company) {
+      if (!company || !company.id) return "<p>" + esc(t.err) + "</p>";
+      return '<div class="tl-form"><p><b>' + esc(company.name || "") + "</b></p><p>" +
+        esc(company.city || "") + (company.sector ? " · " + esc(company.sector) : "") + "</p><p>" +
+        esc(company.email || "") + (company.phone ? " · " + esc(company.phone) : "") + "</p></div>";
+    }
+
+    function renderEmployerJobs(jobs) {
+      if (!jobs || !jobs.length) return "<p>" + esc(t.emptyJobs) + "</p>";
+      return '<div class="tl-grid-2">' + jobs.map(function (j) {
+        var actions = "";
+        if (j.status === "DRAFT" || j.status === "PAUSED") {
+          actions = '<p><button type="button" class="tl-btn tl-btn-ghost" data-job-pub="' + esc(j.id) + '">' + esc(t.publish) + "</button></p>";
+        } else if (j.status === "PUBLISHED") {
+          actions = '<p><button type="button" class="tl-btn tl-btn-ghost" data-job-pause="' + esc(j.id) + '">' + esc(t.pause) + "</button></p>";
+        }
+        return '<article class="tl-job-card"><div class="body"><span class="tl-chip orange">' + esc(j.status) + "</span>" +
+          "<h3>" + esc(j.title || "") + "</h3><p>" + esc(j.location || "") + " · " + esc(j.sector || "") + "</p>" + actions + "</div></article>";
+      }).join("") + "</div>";
+    }
+
+    function statusSelect(app) {
+      var opts = ["SUBMITTED", "UNDER_REVIEW", "SHORTLISTED", "INTERVIEW", "SECOND_INTERVIEW", "OFFER_SENT", "HIRED", "REJECTED"];
+      return '<select data-app-status="' + esc(app.id) + '">' + opts.map(function (s) {
+        return '<option value="' + s + '"' + (app.status === s ? " selected" : "") + ">" + esc(statusLabel(s)) + "</option>";
+      }).join("") + "</select>";
+    }
+
+    function renderEmployerInbox(apps) {
+      if (!apps || !apps.length) return "<p>" + esc(t.emptyInbox) + "</p>";
+      return '<div class="tl-grid-2">' + apps.map(function (a) {
+        var cand = a.candidate || {};
+        var job = a.job || {};
+        var score = a.match_score != null ? '<span class="tl-match-score">' + esc(t.score) + " " + a.match_score + " %</span>" : "";
+        return '<article class="tl-job-card"><div class="body">' + score +
+          "<h3>" + esc((cand.first_name || "") + " " + (cand.last_name || "")) + "</h3>" +
+          "<p>" + esc(cand.title || "") + (cand.city ? " · " + esc(cand.city) : "") + "</p>" +
+          "<p>" + esc(job.title || "") + "</p>" + statusSelect(a) + "</div></article>";
+      }).join("") + "</div>";
+    }
+
+    function renderEmployerPipeline(apps) {
+      if (!apps || !apps.length) return "<p>" + esc(t.emptyInbox) + "</p>";
+      var stages = [
+        ["SUBMITTED", isEn ? "New" : "Nouveaux"],
+        ["UNDER_REVIEW", isEn ? "Screening" : "Présélection"],
+        ["INTERVIEW", isEn ? "Talendus interview" : "Entretien Talendus"],
+        ["SHORTLISTED", isEn ? "Presented" : "Présentation"],
+        ["SECOND_INTERVIEW", isEn ? "Client interview" : "Entretien client"],
+        ["OFFER_SENT", isEn ? "Offer" : "Offre"],
+        ["HIRED", isEn ? "Placed" : "Placement"]
+      ];
+      return '<div class="tl-grid-2">' + stages.map(function (st) {
+        var items = (apps || []).filter(function (a) { return a.status === st[0]; });
+        var list = items.map(function (a) {
+          var cand = a.candidate || {};
+          return "<p><b>" + esc((cand.first_name || "") + " " + (cand.last_name || "")) + "</b> — " + esc((a.job || {}).title || "") + "</p>";
+        }).join("") || "<p>—</p>";
+        return '<article class="tl-job-card"><div class="body"><span class="tl-chip orange">' + items.length + "</span><h3>" + esc(st[1]) + "</h3>" + list + "</div></article>";
+      }).join("") + "</div>";
+    }
+
+    function renderEmployerInvoices(invoices) {
+      if (!invoices || !invoices.length) return "<p>" + esc(t.emptyInvoices) + "</p>";
+      return "<div class='tl-account-notifs'>" + invoices.map(function (inv) {
+        var pay = "";
+        if (inv.status !== "PAID" && inv.status !== "CANCELLED") {
+          pay = ' <button type="button" class="tl-btn tl-btn-ghost" data-pay="' + esc(inv.id) + '">' + esc(t.pay) + "</button>";
+        }
+        return '<div class="tl-account-notif"><b>' + esc(inv.number) + " · " + esc(inv.status) + "</b><p>" +
+          (inv.amount_total != null ? inv.amount_total : inv.amount) + " " + esc(inv.currency || "CAD") + pay + "</p></div>";
+      }).join("") + "</div>";
+    }
+
+    function bindEmployerActions() {
+      root.querySelectorAll("[data-app-status]").forEach(function (sel) {
+        sel.onchange = function () {
+          api.request("/applications/" + sel.getAttribute("data-app-status") + "/status", {
+            method: "POST",
+            body: { status: sel.value }
+          }).then(boot).catch(function () {});
+        };
+      });
+      root.querySelectorAll("[data-job-pub]").forEach(function (btn) {
+        btn.onclick = function () {
+          api.request("/jobs/" + btn.getAttribute("data-job-pub") + "/publish", { method: "POST" }).then(boot).catch(function () {});
+        };
+      });
+      root.querySelectorAll("[data-job-pause]").forEach(function (btn) {
+        btn.onclick = function () {
+          api.request("/jobs/" + btn.getAttribute("data-job-pause") + "/pause", { method: "POST" }).then(boot).catch(function () {});
+        };
+      });
+      root.querySelectorAll("[data-pay]").forEach(function (btn) {
+        btn.onclick = function () {
+          api.request("/invoices/" + btn.getAttribute("data-pay") + "/checkout", { method: "POST" }).then(function (json) {
+            var url = json.data && json.data.checkout_url;
+            if (url) window.location.href = url;
+          }).catch(function (err) {
+            window.alert((err && err.message) || t.err);
+          });
+        };
+      });
     }
 
     function boot() {
       var user = api.currentUser();
+      if (user && staffRole(user.role)) {
+        window.location.replace(accountHref(user.role));
+        return;
+      }
+      if (user && user.role === "EMPLOYER" && !isEmployerSpace()) {
+        window.location.replace(accountHref("EMPLOYER"));
+        return;
+      }
+      if (user && user.role === "CANDIDATE" && isEmployerSpace()) {
+        window.location.replace(accountHref("CANDIDATE"));
+        return;
+      }
       if (!user) { renderGuest(); return; }
+      if (user.role === "EMPLOYER" || isEmployerSpace()) {
+        bootEmployer();
+        return;
+      }
       Promise.all([
         api.me().then(function (j) { return j.data; }),
         api.request("/candidates/me").then(function (j) { return j.data; }).catch(function () { return {}; }),

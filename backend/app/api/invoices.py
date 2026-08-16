@@ -8,6 +8,7 @@ from app.models import User
 from app.models.enums import UserRole
 from app.schemas import InvoiceIn, PaymentIn
 from app.services import invoices as invoices_service
+from app.services import stripe_billing
 
 router = APIRouter(prefix="/invoices", tags=["invoices"])
 
@@ -61,3 +62,8 @@ def add_payment(
 ):
     row = invoices_service.add_payment(db, user, invoice_id, payload, client_ip(request))
     return ok(invoices_service.serialize_invoice(row), message="Paiement enregistré.")
+
+
+@router.post("/{invoice_id}/checkout")
+def checkout_invoice(invoice_id: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    return ok(stripe_billing.create_checkout(db, user, invoice_id))

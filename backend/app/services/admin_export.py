@@ -18,12 +18,16 @@ from app.models import (
     User,
 )
 from app.models.enums import ApplicationStatus, InvoiceStatus, JobStatus, MissionStatus
+from app.services.pipeline import stage_for
 
 APP_STATUS = {
     ApplicationStatus.SUBMITTED: "nouveau",
+    ApplicationStatus.RECEIVED: "nouveau",
     ApplicationStatus.UNDER_REVIEW: "a-contacter",
     ApplicationStatus.SHORTLISTED: "qualifie",
     ApplicationStatus.INTERVIEW: "entretien",
+    ApplicationStatus.SECOND_INTERVIEW: "entretien-client",
+    ApplicationStatus.OFFER_SENT: "offre",
     ApplicationStatus.REJECTED: "refuse",
     ApplicationStatus.HIRED: "place",
     ApplicationStatus.WITHDRAWN: "inactif",
@@ -84,7 +88,9 @@ def bootstrap(db: Session) -> dict:
             selectinload(Candidate.applications).joinedload(Application.job),
         )
     ).unique().all()
-    missions = db.scalars(select(RecruitmentMission).order_by(RecruitmentMission.created_at.desc())).all()
+    missions = db.scalars(
+        select(RecruitmentMission).options(selectinload(RecruitmentMission.linked_jobs)).order_by(RecruitmentMission.created_at.desc())
+    ).all()
     contracts = db.scalars(select(Contract).options(selectinload(Contract.signatures))).all()
     notes = db.scalars(select(InternalNote).order_by(InternalNote.created_at.desc()).limit(200)).all()
     notifications = db.scalars(select(Notification).order_by(Notification.created_at.desc()).limit(100)).all()
@@ -124,7 +130,7 @@ def bootstrap(db: Session) -> dict:
         "clients": [_company(c) for c in companies],
         "jobs": [_job(j, applications) for j in jobs],
         "candidates": [_candidate(c) for c in candidates],
-        "missions": [_mission(m) for m in missions],
+        "missions": [_mission(m, applications) for m in missions],
         "contracts": [_contract(c) for c in contracts],
         "notes": [_note(n) for n in notes],
         "notifications": [_notification(n) for n in notifications],
@@ -231,7 +237,36 @@ def _candidate(c: Candidate) -> dict:
     }
 
 
-def _mission(m: RecruitmentMission) -> dict:
+def _mission(m: RecruitmentMission, applications: list[Application]) -> dict:
+    job_ids = set()
+    if m.job_id:
+        job_ids.add(m.job_id)
+    linked = getattr(m, "linked_jobs", None) or []
+    if hasattr(linked, "id") and not isinstance(linked, (list, tuple)):
+        job_ids.add(linked.id)
+    else:
+        try:
+            for job in linked:
+                job_ids.add(job.id)
+        except TypeError:
+            pass
+    pipeline = []
+    stage_map: dict[str, str] = {}
+    for app in applications:
+        if app.job_id not in job_ids:
+            continue
+        stage = stage_for(app.status)
+        if not stage:
+            continue
+        pipeline.append(
+            {
+                "applicationId": app.id,
+                "candidateId": app.candidate_id,
+                "stage": stage,
+                "status": app.status.value,
+            }
+        )
+        stage_map[app.candidate_id] = stage
     return {
         "id": m.id,
         "clientId": m.company_id,
@@ -245,7 +280,8 @@ def _mission(m: RecruitmentMission) -> dict:
         "value": m.value or 0,
         "commission": m.commission or 0,
         "progress": m.progress or 0,
-        "stageMap": {},
+        "stageMap": stage_map,
+        "pipeline": pipeline,
     }
 
 

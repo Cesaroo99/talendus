@@ -17,6 +17,7 @@ from app.services.auth import ensure_candidate
 from app.services.email import send_email
 from app.services.jobs import assert_job_open, get_public_job
 from app.services.notifications import notify
+from app.services.pipeline import stage_for
 
 
 def _history(db: Session, application: Application, old: str | None, new: str, actor: User | None, comment: str | None = None) -> None:
@@ -255,6 +256,7 @@ def serialize_application(row: Application, viewer: User | None = None) -> dict:
             "company_name": row.job.company.name if row.job.company else None,
         },
         "resume_id": row.resume_id,
+        "pipeline_stage": stage_for(row.status),
         "history": [
             {
                 "old_status": h.old_status,
@@ -274,5 +276,7 @@ def serialize_application(row: Application, viewer: User | None = None) -> dict:
                 "first_name": row.candidate.user.first_name,
                 "last_name": row.candidate.user.last_name,
                 "email": row.candidate.user.email,
+                "title": row.candidate.title,
+                "city": row.candidate.city,
             }
     return payload

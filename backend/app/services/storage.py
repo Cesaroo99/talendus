@@ -1,11 +1,13 @@
+import logging
 import uuid
 from pathlib import Path
+from urllib.parse import urlparse
 
 from app.config import get_settings
 from app.deps import safe_filename
 from app.errors import AppError
 
-settings = get_settings()
+logger = logging.getLogger("talendus.storage")
 
 ALLOWED_EXT = {".pdf": "application/pdf", ".doc": "application/msword", ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"}
 MAGIC = {
@@ -24,13 +26,35 @@ def detect_mime(data: bytes, filename: str) -> str:
             if ext == ".doc" and magic == b"PK":
                 raise AppError(400, "Le fichier ne correspond pas à son extension.", "INVALID_FILE_TYPE")
             return mime
-    # DOC files vary; trust extension after size check if no magic matched for .doc
     if ext == ".doc":
         return ALLOWED_EXT[ext]
     raise AppError(400, "Impossible de valider le type du fichier.", "INVALID_FILE_TYPE")
 
 
-def save_resume(data: bytes, filename: str) -> tuple[str, str, str, int]:
+def _use_s3() -> bool:
+    settings = get_settings()
+    return (settings.storage_backend or "local").lower() == "s3" and bool(settings.s3_bucket)
+
+
+def _s3_client():
+    settings = get_settings()
+    try:
+        import boto3
+    except ImportError as exc:
+        raise AppError(503, "Le stockage S3 n'est pas disponible (boto3 manquant).", "STORAGE_UNAVAILABLE") from exc
+    kwargs: dict = {}
+    if settings.s3_region:
+        kwargs["region_name"] = settings.s3_region
+    if settings.s3_endpoint_url:
+        kwargs["endpoint_url"] = settings.s3_endpoint_url
+    if settings.s3_access_key:
+        kwargs["aws_access_key_id"] = settings.s3_access_key
+        kwargs["aws_secret_access_key"] = settings.s3_secret_key
+    return boto3.client("s3", **kwargs)
+
+
+def save_resume(data: bytes, filename: str) -> tuple[str, str, str, int, str]:
+    settings = get_settings()
     max_bytes = settings.max_resume_mb * 1024 * 1024
     if len(data) > max_bytes:
         raise AppError(400, f"Le CV dépasse {settings.max_resume_mb} Mo.", "FILE_TOO_LARGE")
@@ -39,13 +63,47 @@ def save_resume(data: bytes, filename: str) -> tuple[str, str, str, int]:
     mime = detect_mime(data, filename)
     ext = Path(filename).suffix.lower()
     stored = f"{uuid.uuid4().hex}{ext}"
+    original = safe_filename(filename)
+    if _use_s3():
+        key = f"{(settings.s3_prefix or 'talendus').strip('/')}/resumes/{stored}"
+        _s3_client().put_object(
+            Bucket=settings.s3_bucket,
+            Key=key,
+            Body=data,
+            ContentType=mime,
+            ContentDisposition=f'attachment; filename="{original}"',
+        )
+        url = f"s3://{settings.s3_bucket}/{key}"
+        logger.info("resume uploaded s3 key=%s", key)
+        return original, stored, mime, len(data), url
     dest = settings.resume_dir / stored
     dest.write_bytes(data)
-    return safe_filename(filename), stored, mime, len(data)
+    return original, stored, mime, len(data), f"resumes/{stored}"
 
 
 def resume_path(stored_name: str) -> Path:
+    settings = get_settings()
     path = (settings.resume_dir / Path(stored_name).name).resolve()
     if not str(path).startswith(str(settings.resume_dir.resolve())):
         raise AppError(400, "Chemin de fichier invalide.", "INVALID_PATH")
     return path
+
+
+def open_resume(stored_name: str, storage_url: str | None) -> tuple[str | None, Path | None]:
+    """Retourne (url_presignee, chemin_local). L'un des deux est défini."""
+    settings = get_settings()
+    url = storage_url or ""
+    if url.startswith("http://") or url.startswith("https://"):
+        return url, None
+    if url.startswith("s3://") or _use_s3():
+        parsed = urlparse(url) if url.startswith("s3://") else None
+        bucket = parsed.netloc if parsed else settings.s3_bucket
+        prefix = (settings.s3_prefix or "talendus").strip("/")
+        key = parsed.path.lstrip("/") if parsed else f"{prefix}/resumes/{Path(stored_name).name}"
+        signed = _s3_client().generate_presigned_url(
+            "get_object",
+            Params={"Bucket": bucket, "Key": key},
+            ExpiresIn=900,
+        )
+        return signed, None
+    return None, resume_path(stored_name)

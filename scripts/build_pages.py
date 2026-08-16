@@ -972,6 +972,17 @@ write("espace.html", wrap(
     )
     + """<section class="tl-section"><div class="container"><div id="tl-account"></div></div></section>"""
 ))
+write("espace-employeur.html", wrap(
+    "Espace employeur | Talendus",
+    "Connectez-vous pour gérer vos offres, candidatures, pipeline et factures Talendus.",
+    "espace-employeur.html",
+    page_hero(
+        "Entreprises", "Votre espace employeur.",
+        "Offres, candidatures reçues, pipeline et factures — le suivi de vos mandats industriels.",
+        badges='<span class="tl-badge tl-badge-light">Espace privé</span>'
+    )
+    + """<section class="tl-section"><div class="container"><div id="tl-account" data-space="employer"></div></div></section>"""
+))
 write("confidentialite.html", wrap(
     "Politique de confidentialité | Talendus",
     "Politique de confidentialité de Talendus, talendus.ca.",
@@ -1037,7 +1048,7 @@ def sitemap_url(fr, en):
     encoding="utf-8",
 )
 (ROOT / "robots.txt").write_text(
-    "User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /espace.html\nDisallow: /en/account.html\nSitemap: https://talendus.ca/sitemap.xml\n",
+    "User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /espace.html\nDisallow: /espace-employeur.html\nDisallow: /en/account.html\nDisallow: /en/account-employer.html\nSitemap: https://talendus.ca/sitemap.xml\n",
     encoding="utf-8",
 )
 print("done")

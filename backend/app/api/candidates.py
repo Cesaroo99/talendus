@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, File, UploadFile
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import select
 
@@ -12,7 +12,7 @@ from app.rbac import is_admin
 from app.schemas import CandidateProfileIn, CertificationIn, EducationIn, ExperienceIn
 from app.services import candidates as cand_svc
 from app.services.auth import ensure_candidate
-from app.services.storage import resume_path
+from app.services.storage import open_resume
 
 router = APIRouter(prefix="/candidates", tags=["candidates"])
 
@@ -66,7 +66,7 @@ async def upload_resume(
 ):
     data = await file.read()
     row = cand_svc.upload_cv(db, user, data, file.filename or "cv.pdf")
-    return ok({"id": row.id, "original_name": row.original_name})
+    return ok({"id": row.id, "original_name": row.original_name, "parse_status": row.parse_status})
 
 
 @router.get("")
@@ -81,7 +81,9 @@ def list_candidates(
 @router.get("/resumes/{resume_id}/file")
 def download_resume(resume_id: str, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     resume = cand_svc.get_resume_for_user(db, user, resume_id)
-    path = resume_path(resume.stored_name)
+    url, path = open_resume(resume.stored_name, resume.storage_url)
+    if url:
+        return RedirectResponse(url)
     return FileResponse(path, media_type=resume.mime_type, filename=resume.original_name)
 
 

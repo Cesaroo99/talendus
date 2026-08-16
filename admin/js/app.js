@@ -622,13 +622,21 @@
   function viewMission(id) {
     var m = TLStore.mission(id);
     if (!m) return U.empty("Introuvable", "Mission introuvable.");
+    function itemsForStage(stage) {
+      var pipe = m.pipeline || [];
+      if (pipe.length) return pipe.filter(function (p) { return p.stage === stage; });
+      return Object.keys(m.stageMap || {}).filter(function (cid) { return m.stageMap[cid] === stage; }).map(function (cid) {
+        return { candidateId: cid, applicationId: "", stage: stage };
+      });
+    }
     var cols = U.STAGES.map(function (st) {
-      var cards = Object.keys(m.stageMap || {}).filter(function (cid) { return m.stageMap[cid] === st[0]; }).map(function (cid) {
-        var c = TLStore.candidate(cid);
+      var items = itemsForStage(st[0]);
+      var cards = items.map(function (p) {
+        var c = TLStore.candidate(p.candidateId);
         if (!c) return "";
-        return '<div class="kanban-card" draggable="true" data-cid="' + cid + '"><b>' + U.esc(c.firstName + " " + c.lastName) + "</b><span>" + U.esc(c.title) + "</span></div>";
+        return '<div class="kanban-card" draggable="true" data-cid="' + p.candidateId + '" data-app-id="' + (p.applicationId || "") + '"><b>' + U.esc(c.firstName + " " + c.lastName) + "</b><span>" + U.esc(c.title) + "</span></div>";
       }).join("");
-      var n = Object.keys(m.stageMap || {}).filter(function (cid) { return m.stageMap[cid] === st[0]; }).length;
+      var n = items.length;
       return '<div class="kanban-col" data-stage="' + st[0] + '"><h4>' + st[1] + " <span class='badge'>" + n + "</span></h4>" + (cards || '<p style="color:var(--steel);font-size:12px">Déposez un candidat</p>') + "</div>";
     }).join("");
     return `
@@ -636,7 +644,7 @@
       <div class="page-head"><div><h1>${U.esc(m.title)}</h1><p>${U.esc((TLStore.client(m.clientId) || {}).name || "—")} · ${m.seats} poste(s) · échéance ${U.dateFr(m.due)} · ${U.badge(m.status)}</p></div>
         <div class="actions"><span class="badge orange">Valeur ${U.money(m.value)}</span><span class="badge info">Commission ${U.money(m.commission)}</span></div></div>
       <div class="kanban" data-mission="${m.id}">${cols}</div>
-      <p style="color:var(--steel);margin-top:12px">Glissez-déposez les candidats d’une étape à l’autre.</p>`;
+      <p style="color:var(--steel);margin-top:12px">Glissez-déposez les candidats d’une étape à l’autre. Le statut est enregistré dans l’API.</p>`;
   }
 
   /* ---------- Content ---------- */
@@ -907,24 +915,60 @@
     if (!board) return;
     var mid = board.getAttribute("data-mission");
     var dragId = null;
+    var dragAppId = null;
+    var STAGE_TO_STATUS = {
+      nouveaux: "SUBMITTED",
+      preselection: "UNDER_REVIEW",
+      "entretien-talendus": "INTERVIEW",
+      presentation: "SHORTLISTED",
+      "entretien-client": "SECOND_INTERVIEW",
+      offre: "OFFER_SENT",
+      placement: "HIRED"
+    };
     board.querySelectorAll(".kanban-card").forEach(function (card) {
-      card.ondragstart = function () { dragId = card.getAttribute("data-cid"); };
+      card.ondragstart = function () {
+        dragId = card.getAttribute("data-cid");
+        dragAppId = card.getAttribute("data-app-id") || "";
+      };
     });
     board.querySelectorAll(".kanban-col").forEach(function (col) {
       col.ondragover = function (e) { e.preventDefault(); col.classList.add("drag-over"); };
       col.ondragleave = function () { col.classList.remove("drag-over"); };
-      col.ondrop = function (e) {
+      col.ondrop = async function (e) {
         e.preventDefault();
         col.classList.remove("drag-over");
         if (!dragId) return;
         var stage = col.getAttribute("data-stage");
+        var status = STAGE_TO_STATUS[stage];
+        var appId = dragAppId;
         TLStore.update(function (st) {
           var m = st.missions.find(function (x) { return x.id === mid; });
-          if (m) m.stageMap[dragId] = stage;
+          if (m) {
+            m.stageMap = m.stageMap || {};
+            m.stageMap[dragId] = stage;
+            if (m.pipeline && appId) {
+              m.pipeline.forEach(function (p) {
+                if (p.applicationId === appId || p.candidateId === dragId) {
+                  p.stage = stage;
+                  p.status = status || p.status;
+                }
+              });
+            }
+          }
           var c = st.candidates.find(function (x) { return x.id === dragId; });
           var map = { nouveaux: "nouveau", preselection: "a-contacter", "entretien-talendus": "entretien", presentation: "presente", "entretien-client": "entretien-client", offre: "offre", placement: "place" };
           if (c && map[stage]) c.status = map[stage];
         });
+        if (appId && status && window.TalendusAPI) {
+          try {
+            await window.TalendusAPI.request("/applications/" + appId + "/status", { method: "POST", body: { status: status } });
+            if (TLStore.hydrateFromApi) await TLStore.hydrateFromApi();
+          } catch (err) {
+            U.toast((err && err.message) || "Statut enregistré localement (API indisponible).", "err");
+            render();
+            return;
+          }
+        }
         U.toast("Candidat déplacé.", "ok");
         render();
       };

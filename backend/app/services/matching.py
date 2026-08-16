@@ -187,3 +187,40 @@ def staff_candidate_jobs(db: Session, user: User, candidate_id: str, limit: int 
     if not candidate:
         raise AppError(404, "Candidat introuvable.", "CANDIDATE_NOT_FOUND")
     return jobs_for_candidate(db, candidate, limit)
+
+
+def notify_job_matches(db: Session, job: JobOffer, limit: int = 40) -> int:
+    """Alerte les candidats actifs dont le score dépasse le seuil (appelé à la publication)."""
+    from app.config import get_settings
+    from app.models.enums import JobSearchStatus, NotificationType
+    from app.services.notifications import notify
+
+    min_score = get_settings().job_match_min_score or 50
+    candidates = list(
+        db.scalars(
+            select(Candidate).options(joinedload(Candidate.user)).where(Candidate.job_search_status == JobSearchStatus.ACTIVE)
+        ).unique().all()
+    )
+    ranked: list[tuple[int, Candidate, list[str]]] = []
+    for candidate in candidates:
+        if not candidate.user:
+            continue
+        score, reasons = score_pair(candidate, job)
+        if score >= min_score:
+            ranked.append((score, candidate, reasons))
+    ranked.sort(key=lambda row: row[0], reverse=True)
+    sent = 0
+    href = f"/emploi-{job.slug}.html"
+    where = job.location or "Québec"
+    for score, candidate, reasons in ranked[:limit]:
+        detail = " · ".join(reasons[:2])
+        notify(
+            db,
+            candidate.user,
+            NotificationType.JOB_MATCH,
+            "Offre correspondant à votre profil",
+            f"{job.title} ({where}) — score {score} %." + (f" {detail}" if detail else ""),
+            href=href,
+        )
+        sent += 1
+    return sent

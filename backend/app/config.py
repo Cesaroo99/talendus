@@ -38,10 +38,15 @@ class Settings(BaseSettings):
     storage_dir: str = str(BACKEND_ROOT / "storage")
     storage_backend: str = "local"
     s3_bucket: str = ""
-    s3_region: str = ""
+    s3_region: str = "ca-central-1"
     s3_endpoint_url: str = ""
     s3_access_key: str = ""
     s3_secret_key: str = ""
+    s3_prefix: str = "talendus"
+    stripe_secret_key: str = ""
+    stripe_webhook_secret: str = ""
+    stripe_publishable_key: str = ""
+    job_match_min_score: int = 50
     max_resume_mb: int = 5
     rate_limit_per_minute: int = 80
     seed_password: str = "talendus"

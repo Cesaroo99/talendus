@@ -870,6 +870,19 @@ def build_en(write, wrap, page_hero):
         lang="en",
         alt="espace.html",
     ))
+    write("en/account-employer.html", wrap(
+        "Employer portal | Talendus",
+        "Sign in to manage job openings, applications, pipeline and Talendus invoices.",
+        "en/account-employer.html",
+        page_hero(
+            "Employers", "Your hiring workspace.",
+            "Jobs, incoming applications, pipeline and invoices — follow your industrial mandates.",
+            badges='<span class="tl-badge tl-badge-light">Private space</span>',
+        )
+        + """<section class="tl-section"><div class="container"><div id="tl-account" data-space="employer"></div></div></section>""",
+        lang="en",
+        alt="espace-employeur.html",
+    ))
     write("en/privacy.html", wrap(
         "Privacy policy | Talendus",
         "Talendus privacy policy, talendus.ca.",

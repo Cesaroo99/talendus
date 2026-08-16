@@ -71,6 +71,7 @@ def create_app() -> FastAPI:
         public,
         recruiters,
         users,
+        webhooks,
     )
 
     application.include_router(public.router, prefix="/api")
@@ -89,6 +90,7 @@ def create_app() -> FastAPI:
     application.include_router(contracts.router, prefix="/api")
     application.include_router(matching.router, prefix="/api")
     application.include_router(admin.router, prefix="/api")
+    application.include_router(webhooks.router, prefix="/api")
 
     if SITE_ROOT.joinpath("index.html").exists() and settings.app_env != "test":
         application.mount("/", StaticFiles(directory=str(SITE_ROOT), html=True), name="site")

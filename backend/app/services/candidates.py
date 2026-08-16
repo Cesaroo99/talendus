@@ -16,6 +16,7 @@ from app.schemas import CandidateProfileIn, CertificationIn, EducationIn, Experi
 from app.services.audit import audit
 from app.services.auth import ensure_candidate
 from app.services.notifications import notify
+from app.services.resume_parse import parse_json_dump, parse_resume_bytes
 from app.services.storage import save_resume
 
 
@@ -112,17 +113,31 @@ def add_certification(db: Session, user: User, data: CertificationIn) -> Candida
 
 def upload_cv(db: Session, user: User, data: bytes, filename: str) -> Resume:
     profile = ensure_candidate(db, user)
-    original, stored, mime, size = save_resume(data, filename)
+    original, stored, mime, size, url = save_resume(data, filename)
+    parse_status = "failed"
+    parse_json = None
+    parsed: dict = {}
+    try:
+        parsed = parse_resume_bytes(data, mime, original)
+        parse_status = parsed.get("status") or "done"
+        parse_json = parse_json_dump(parsed)
+    except Exception:
+        parse_status = "failed"
+        parsed = {}
+    if not (profile.skills or "").strip() and parsed.get("skills"):
+        profile.skills = ", ".join(parsed["skills"])
     for old in db.scalars(select(Resume).where(Resume.candidate_id == profile.id)):
         old.is_primary = False
     row = Resume(
         candidate_id=profile.id,
         original_name=original,
         stored_name=stored,
-        storage_url=f"resumes/{stored}",
+        storage_url=url,
         mime_type=mime,
         size_bytes=size,
         is_primary=True,
+        parse_status=parse_status,
+        parse_json=parse_json,
     )
     db.add(row)
     notify(db, user, NotificationType.RESUME_UPDATED, "CV mis à jour", "Votre CV a été enregistré.")
@@ -175,7 +190,14 @@ def serialize_candidate(profile: Candidate, include_private: bool = True) -> dic
                 for c in profile.certifications
             ],
             "resumes": [
-                {"id": r.id, "original_name": r.original_name, "is_primary": r.is_primary, "size_bytes": r.size_bytes, "storage_url": r.storage_url, "parse_status": r.parse_status}
+                {
+                    "id": r.id,
+                    "original_name": r.original_name,
+                    "is_primary": r.is_primary,
+                    "size_bytes": r.size_bytes,
+                    "storage_url": r.storage_url,
+                    "parse_status": r.parse_status,
+                }
                 for r in profile.resumes
             ],
         }

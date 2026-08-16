@@ -2,5 +2,7 @@ User-agent: *
 Allow: /
 Disallow: /admin/
 Disallow: /espace.html
+Disallow: /espace-employeur.html
 Disallow: /en/account.html
+Disallow: /en/account-employer.html
 Sitemap: https://talendus.ca/sitemap.xml

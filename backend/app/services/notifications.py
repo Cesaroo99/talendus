@@ -4,10 +4,36 @@ from pathlib import Path
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models import Notification, User
+from app.models import Notification, User, UserPreference
 from app.models.enums import NotificationType, utcnow
 
 logger = logging.getLogger("talendus.notify")
+
+_APPLICATION_TYPES = {
+    NotificationType.APPLICATION_NEW,
+    NotificationType.APPLICATION_STATUS,
+    NotificationType.APPLICATION_ACCEPTED,
+    NotificationType.APPLICATION_REJECTED,
+}
+
+
+def _pref_allows(db: Session, user: User, ntype: NotificationType) -> bool:
+    pref = user.preferences
+    if pref is None:
+        pref = db.scalar(select(UserPreference).where(UserPreference.user_id == user.id))
+    if pref is None:
+        return True
+    if not pref.notify_in_app:
+        return False
+    if ntype is NotificationType.JOB_MATCH and not pref.notify_match:
+        return False
+    if ntype in _APPLICATION_TYPES and not pref.notify_application:
+        return False
+    if ntype is NotificationType.MESSAGE and not pref.notify_message:
+        return False
+    if ntype is NotificationType.INTERVIEW_INVITE and not pref.notify_interview:
+        return False
+    return True
 
 
 def notify(
@@ -19,6 +45,9 @@ def notify(
     href: str | None = None,
 ) -> Notification | None:
     if not user:
+        return None
+    if not _pref_allows(db, user, ntype):
+        logger.info("notify skipped prefs user=%s type=%s", user.id, ntype)
         return None
     row = Notification(user_id=user.id, type=ntype, title=title, message=message, href=href)
     db.add(row)

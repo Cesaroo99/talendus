@@ -14,6 +14,7 @@ from app.api import (
     public,
     recruiters,
     users,
+    webhooks,
 )
 
 __all__ = [
@@ -32,4 +33,5 @@ __all__ = [
     "public",
     "recruiters",
     "users",
+    "webhooks",
 ]

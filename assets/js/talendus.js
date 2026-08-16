@@ -33,6 +33,7 @@
     if (file === "blog.html" || file.indexOf("article-") === 0 || file === "blog-single.html") return "blog";
     if (file === "contact.html") return "contact";
     if (file === "espace.html" || file === "account.html") return "candidats";
+    if (file === "espace-employeur.html" || file === "account-employer.html") return "employeurs";
     return "";
   }
 
@@ -48,8 +49,15 @@
     setTimeout(markActiveNav, 250);
     var apiUser = window.TalendusAPI && window.TalendusAPI.currentUser && window.TalendusAPI.currentUser();
     if (apiUser && apiUser.first_name) {
+      var isEn = (document.documentElement.lang || "").toLowerCase().indexOf("en") === 0;
+      var href = isEn ? "account.html" : "espace.html";
+      if (apiUser.role === "EMPLOYER") href = isEn ? "account-employer.html" : "espace-employeur.html";
+      else if (["ADMIN", "SUPER_ADMIN", "RECRUITER", "FINANCE", "EDITOR"].indexOf(apiUser.role) !== -1) {
+        href = (isEn ? "../" : "") + "admin/";
+      }
       document.querySelectorAll("[data-account-link]").forEach(function (el) {
         el.textContent = apiUser.first_name;
+        el.setAttribute("href", href);
       });
     }
 
