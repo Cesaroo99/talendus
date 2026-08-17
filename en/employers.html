@@ -284,21 +284,39 @@ gtag('consent', 'default', {
   </div>
 </section>
 
-    <section class="tl-section" id="calculator"><div class="container">
-      <div class="row align-items-center g-4">
-        <div class="col-lg-5"><h2 class="tl-h2">What a bad hire really costs</h2>
-        <p class="tl-lead">Estimate the impact of a poor fit: salary, training, overtime and lost productivity. A Talendus mandate — search and screening included — almost always costs less than a seat left vacant too long.</p></div>
-        <div class="col-lg-6 offset-lg-1">
-          <div class="tl-calc">
-            <label for="tl-salary">Annual salary for the role ($)</label>
-            <input id="tl-salary" type="number" value="55000" min="0">
-            <label for="tl-months">Months before the problem is visible</label>
-            <input id="tl-months" type="number" value="4" min="1">
-            <div class="tl-calc-result">Estimated cost<br><b id="tl-cost">—</b></div>
-          </div>
+<section class="tl-section" id="calculator">
+  <div class="container">
+    <div class="tl-center" style="max-width:760px;margin:0 auto 36px">
+      <div class="tl-kicker">Cost calculator</div>
+      <h2 class="tl-h2">What a bad hire actually costs your company</h2>
+      <p class="tl-lead">It is not “one salary too many”. It is the salary already paid, the training lost, overtime to cover the gap, and the search to start over. Enter the role’s salary: the estimate updates, line by line.</p>
+    </div>
+    <div class="tl-calc tl-calc-wide">
+      <div class="tl-calc-grid">
+        <div>
+          <label for="tl-salary">Annual salary of the role</label>
+          <input id="tl-salary" type="number" value="55000" min="0" step="1000" inputmode="numeric">
+          <span class="tl-calc-hint">Gross annual salary, in Canadian dollars. Charges and benefits are not added on top.</span>
+          <label for="tl-months">Months before you see it is the wrong person</label>
+          <input id="tl-months" type="number" value="4" min="1" max="24">
+          <span class="tl-calc-hint">Time already in the job — paid and trained — before the misfit is clear. Three to six months is common.</span>
+        </div>
+        <div>
+          <p class="tl-calc-breakdown-title">Where the money goes</p>
+          <ul class="tl-calc-lines">
+            <li><span>Salary paid during that period</span><b id="tl-cost-paid">—</b></li>
+            <li><span>Training and onboarding lost (35&nbsp;% of salary)</span><b id="tl-cost-training">—</b></li>
+            <li><span>Overtime, lost productivity, search to restart</span><b id="tl-cost-restart">—</b></li>
+          </ul>
+          <div class="tl-calc-result">Estimated cost of a bad hire<br><b id="tl-cost">—</b></div>
         </div>
       </div>
-    </div></section>
+      <p class="tl-calc-note">This is an order of magnitude, not an invoice. A Talendus mandate — search and screening included — almost always costs less than this total. And you avoid paying the wrong person for months.</p>
+      <a class="tl-btn" href="contact.html">Hand us the search</a>
+    </div>
+  </div>
+</section>
+
     <section class="tl-section tl-ice" id="temoignages"><div class="container">
       <div class="tl-center" style="max-width:720px;margin:0 auto 36px">
         <div class="tl-kicker">Employer testimonials</div>
@@ -342,6 +360,16 @@ gtag('consent', 'default', {
     </div>
     <ul class="tl-sectors-cloud"><li><span class="tl-sector-chip">Technology and IT</span></li><li><span class="tl-sector-chip">Construction</span></li><li><span class="tl-sector-chip">Manufacturing</span></li><li><span class="tl-sector-chip">Transportation and logistics</span></li><li><span class="tl-sector-chip">Retail and commerce</span></li><li><span class="tl-sector-chip">Finance</span></li><li><span class="tl-sector-chip">Insurance</span></li><li><span class="tl-sector-chip">Healthcare</span></li><li><span class="tl-sector-chip">Education</span></li><li><span class="tl-sector-chip">Hospitality</span></li><li><span class="tl-sector-chip">Real estate</span></li><li><span class="tl-sector-chip">Professional services</span></li><li><span class="tl-sector-chip">Marketing and communications</span></li><li><span class="tl-sector-chip">Engineering</span></li><li><span class="tl-sector-chip">Administration</span></li><li><span class="tl-sector-chip">Agriculture</span></li><li><span class="tl-sector-chip">Energy</span></li><li><span class="tl-sector-chip">Telecommunications</span></li><li><span class="tl-sector-chip">Business services</span></li><li><span class="tl-sector-chip is-more">And many more</span></li></ul>
     <p class="tl-center tl-muted" style="margin-top:22px;max-width:640px;margin-left:auto;margin-right:auto">These examples do not box anyone in: a mandate or a profile can come from any industry.</p>
+  </div>
+</section>
+
+<section class="tl-section-sm">
+  <div class="container">
+    <div class="tl-center" style="max-width:640px;margin:0 auto 28px">
+      <div class="tl-kicker">In practice</div>
+      <h2 class="tl-h2">What that looks like</h2>
+    </div>
+    <div class="tl-stats tl-stats-compact"><div class="tl-stat"><b>7 d</b><p>Target to put the first files in front of you, on a typical operations role.</p></div><div class="tl-stat"><b>92 %</b><p>Still in the job three months later, on our permanent placements.</p></div><div class="tl-stat"><b>100 %</b><p>One consultant on your file, from the first call through start date.</p></div></div>
   </div>
 </section>
 
