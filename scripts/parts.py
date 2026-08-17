@@ -552,8 +552,11 @@ def header(solid=True, lang="fr", alt_url="", persona="gateway"):
             <div class="vl-offcanvas-logo">
                 <a href="{h['home']}"><img src="{a}assets/img/logo/logo1.png" width="372" height="72" alt="Talendus"></a>
             </div>
-            <div class="vl-offcanvas-close">
-               <button type="button" class="vl-offcanvas-close-toggle" aria-label="{t['menu_close']}"><i class="fa-solid fa-xmark"></i></button>
+            <div class="tl-offcanvas-tools">
+                {switch}
+                <div class="vl-offcanvas-close">
+                   <button type="button" class="vl-offcanvas-close-toggle" aria-label="{t['menu_close']}"><i class="fa-solid fa-xmark"></i></button>
+                </div>
             </div>
         </div>
         <div class="vl-offcanvas-menu"><nav></nav></div>
