@@ -884,6 +884,55 @@ FAQ_EMPLOYERS_EN = [
      "Yes. Manager replacement, reorganization or a sensitive seat: we approach without internal noise, until you choose when to communicate."),
 ]
 
+def homepage_faq(lang="fr"):
+    """FAQ d'accueil : questions partagées à l'entrée, puis chaque persona de son côté."""
+    if lang == "en":
+        gateway = [
+            FAQ_HOME_EN[0],
+            ("I'm looking for a job — what should I do?",
+             "Create a profile and submit your resume. Talendus studies your path and contacts you when an opportunity fits. Companies do not receive your email or phone number. It is free."),
+            ("I'm hiring — what should I do?",
+             "Hand us the need: role, criteria, conditions. Talendus searches, screens and presents a qualified shortlist. You do not browse a resume database. You keep the final decision."),
+            FAQ_HOME_EN[1],
+        ]
+        talent = FAQ_CANDIDATES_EN[:6]
+        hire = [FAQ_EMPLOYERS_EN[i] for i in (0, 1, 8, 11, 14)]
+        titles = ("What people ask first", "Questions from talent", "Questions from employers")
+    else:
+        gateway = [
+            FAQ_HOME[0],
+            ("Je cherche un emploi : que dois-je faire ?",
+             "Créez un profil et déposez votre CV. Talendus étudie votre parcours et vous contacte lorsqu'une opportunité correspond. Les entreprises ne reçoivent pas votre courriel ni votre téléphone. C'est gratuit."),
+            ("Je recrute : que dois-je faire ?",
+             "Confiez-nous le besoin : poste, critères, conditions. Talendus recherche, présélectionne et présente une shortlist qualifiée. Vous ne parcourez pas une base de CV. Vous gardez la décision finale."),
+            FAQ_HOME[1],
+        ]
+        talent = FAQ_CANDIDATS[:6]
+        hire = [FAQ_EMPLOYEURS[i] for i in (0, 1, 8, 11, 14)]
+        titles = ("Ce qu'on nous demande d'abord", "Questions des candidats", "Questions des entreprises")
+
+    def block(persona, title, items):
+        return f"""
+    <section class="tl-section tl-ice" data-persona-only="{persona}">
+      <div class="container">
+        <div class="tl-center" style="max-width:720px;margin:0 auto 28px">
+          <div class="tl-kicker">FAQ</div>
+          <h2 class="tl-h2">{title}</h2>
+        </div>
+        {faq_html(items)}
+      </div>
+    </section>
+"""
+
+    return (
+        '<div id="faq">'
+        + block("gateway", titles[0], gateway)
+        + block("talent", titles[1], talent)
+        + block("entreprise", titles[2], hire)
+        + "</div>"
+    )
+
+
 FAQ_CANDIDATES_EN = [
     ("How do I create my profile?",
      "Sign up, tell us your role, skills, region and preferences, then submit your resume. Five minutes is enough to enter the Talendus network. A consultant can then study your file when an opportunity fits."),

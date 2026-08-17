@@ -86,28 +86,64 @@ TRADE_EXAMPLES = {
     ],
 }
 
-AI_FEATURES = {
+AI_FEATURE_GROUPS = {
     "fr": [
-        ("Matching intelligent", "Nos équipes relient déjà un besoin de recrutement aux profils les plus pertinents."),
-        ("Recommandation de candidats", "Les outils internes suggèrent les dossiers à examiner en priorité."),
-        ("Analyse des CV", "L'IA aide à repérer l'expérience, les métiers et les compétences clés."),
-        ("Analyse des compétences", "Nous comparons les compétences demandées et celles du profil."),
-        ("Classement des candidats", "Une shortlist peut être ordonnée selon le besoin du poste, avant la qualification humaine."),
-        ("Suggestions de profils", "Nous proposons des talents proches, y compris hors recherche active."),
-        ("Aide à la rédaction des offres", "Les équipes structurent un descriptif à partir du besoin, sans inventer d'exigences."),
-        ("Identification des compétences", "Nous extrayons ce qu'un poste exige vraiment, au-delà du titre."),
-        ("Recommandations aux recruteurs", "L'IA guide l'équipe Talendus dans le tri des dossiers. Elle ne remplace pas le conseiller."),
+        (
+            "Relier",
+            "Trouver qui correspond vraiment au besoin.",
+            [
+                ("Matching intelligent", "Relier un besoin de recrutement aux profils les plus pertinents."),
+                ("Recommandation de candidats", "Suggérer les dossiers à examiner en priorité."),
+                ("Suggestions de profils", "Proposer des talents proches, y compris hors recherche active."),
+            ],
+        ),
+        (
+            "Lire",
+            "Comprendre un parcours au-delà du titre.",
+            [
+                ("Analyse des CV", "Repérer l'expérience, les métiers et les compétences clés."),
+                ("Analyse des compétences", "Comparer ce que le poste exige et ce que le profil montre."),
+                ("Identification des compétences", "Extraire ce qu'un poste demande vraiment."),
+            ],
+        ),
+        (
+            "Prioriser",
+            "Aider l'équipe Talendus, pas remplacer le conseiller.",
+            [
+                ("Classement des candidats", "Ordonner une shortlist selon le besoin du poste."),
+                ("Aide à la rédaction des offres", "Clarifier un descriptif à partir du besoin, sans inventer d'exigences."),
+                ("Recommandations aux recruteurs", "Guider le tri interne. La qualification reste humaine."),
+            ],
+        ),
     ],
     "en": [
-        ("Intelligent matching", "Our teams already connect a hiring need to the most relevant profiles."),
-        ("Candidate recommendations", "Internal tools suggest which files to review first."),
-        ("Resume analysis", "AI helps spot experience, occupations and key skills."),
-        ("Skills analysis", "We compare the skills a role requires with those on the profile."),
-        ("Candidate ranking", "A shortlist can be ordered against the role, before human qualification."),
-        ("Profile suggestions", "We propose nearby talent, including people not actively looking."),
-        ("Job-description support", "Teams structure a posting from the need, without inventing requirements."),
-        ("Skills identification", "We extract what a role actually requires, beyond the title."),
-        ("Recruiter recommendations", "AI guides the Talendus team through screening. It does not replace the consultant."),
+        (
+            "Connect",
+            "Find who actually fits the need.",
+            [
+                ("Intelligent matching", "Connect a hiring need to the most relevant profiles."),
+                ("Candidate recommendations", "Suggest which files to review first."),
+                ("Profile suggestions", "Propose nearby talent, including people not actively looking."),
+            ],
+        ),
+        (
+            "Read",
+            "Understand a career beyond the title.",
+            [
+                ("Resume analysis", "Spot experience, occupations and key skills."),
+                ("Skills analysis", "Compare what the role requires with what the profile shows."),
+                ("Skills identification", "Extract what a role actually demands."),
+            ],
+        ),
+        (
+            "Prioritize",
+            "Help the Talendus team — not replace the consultant.",
+            [
+                ("Candidate ranking", "Order a shortlist against the role."),
+                ("Job-description support", "Clarify a posting from the need, without inventing requirements."),
+                ("Recruiter recommendations", "Guide internal screening. Qualification stays human."),
+            ],
+        ),
     ],
 }
 
@@ -141,20 +177,20 @@ def _options(pairs, empty_label):
 def sectors_cloud(lang="fr"):
     more = "Et bien plus encore" if lang == "fr" else "And many more"
     close = (
-        "Talendus recrute pour tous les secteurs et tous les types de métiers. Ces exemples ne limitent pas le mandat."
+        "Ces exemples n'enferment personne : un mandat ou un profil peut venir de n'importe quel secteur."
         if lang == "fr"
-        else "Talendus hires across every industry and every kind of role. These examples do not limit the mandate."
+        else "These examples do not box anyone in: a mandate or a profile can come from any industry."
     )
     kicker = "Tous les secteurs" if lang == "fr" else "Every industry"
     heading = (
-        "Un accompagnement adapté à chaque besoin de recrutement."
+        "Tous les secteurs. Tous les métiers."
         if lang == "fr"
-        else "Support shaped around each hiring need."
+        else "Every industry. Every kind of role."
     )
     lead = (
-        "PME, startups, grandes organisations : Talendus accompagne des entreprises de toutes tailles et de tous horizons."
+        "Entreprises et talents : Talendus travaille dans tous les secteurs, sans spécialisation exclusive."
         if lang == "fr"
-        else "SMEs, startups, larger organizations: Talendus supports companies of every size and background."
+        else "Companies and talent: Talendus works across every industry, with no exclusive specialty."
     )
     chips = "".join(
         f'<li><span class="tl-sector-chip">{name}</span></li>'
@@ -179,14 +215,14 @@ def sectors_cloud(lang="fr"):
 def trades_cloud(lang="fr"):
     kicker = "Métiers" if lang == "fr" else "Roles"
     heading = (
-        "Des talents pour tous les métiers."
+        "Des métiers de tous les niveaux."
         if lang == "fr"
-        else "Talent for every kind of role."
+        else "Roles at every level."
     )
     lead = (
-        "Opérationnel, spécialisé ou cadre : Talendus recherche le profil qui correspond au poste, pas un catalogue fermé."
+        "Opérationnel, spécialisé ou cadre : Talendus accompagne le poste à pourvoir et le parcours de la personne."
         if lang == "fr"
-        else "Operational, specialist or leadership: Talendus looks for the profile that fits the role, not a closed catalogue."
+        else "Operational, specialist or leadership: Talendus supports both the open role and the person's path."
     )
     chips = "".join(f'<li><span class="tl-trade-chip">{name}</span></li>' for name in TRADE_EXAMPLES[lang])
     return f"""
@@ -433,29 +469,140 @@ def why_talendus_section(lang="fr"):
 """
 
 
-def ai_engine_section(lang="fr"):
-    chip = "Déjà utilisé" if lang == "fr" else "Already in use"
-    cards = "".join(
-        f'<div class="tl-card tl-ai-cap"><div class="body"><span class="tl-chip orange">{chip}</span><h3>{title}</h3><p>{text}</p></div></div>'
-        for title, text in AI_FEATURES[lang]
-    )
+def persona_region(persona, html):
+    return f'<div data-persona-only="{persona}">{html}</div>'
+
+
+def gateway_orientation_section(lang="fr"):
     if lang == "en":
-        kicker = "Technology direction"
-        heading = "AI is already in use. Recruiting is already smarter."
-        lead = "We hire better, faster and more intelligently with AI — today, inside Talendus's internal tools. Matching, resume analysis, skills identification and screening support are already used by our teams. You do not operate these tools yourself. Consultants qualify. You keep the final decision."
-    else:
-        kicker = "Direction technologique"
-        heading = "L'IA est déjà en service. Le recrutement, déjà plus intelligent."
-        lead = "Nous recrutons mieux, plus vite et plus intelligemment grâce à l'IA — dès aujourd'hui, dans les outils internes de Talendus. Matching, analyse des CV, identification des compétences et aide à la présélection sont déjà utilisés par nos équipes. Vous n'opérez pas ces outils vous-même. Les conseillers qualifient. Vous gardez la décision finale."
-    return f"""
-<section class="tl-section" id="ia">
+        return """
+<section class="tl-section" id="parcours">
   <div class="container">
-    <div class="tl-center" style="max-width:760px;margin:0 auto 36px">
-      <div class="tl-kicker">{kicker}</div>
-      <h2 class="tl-h2">{heading}</h2>
-      <p class="tl-lead">{lead}</p>
+    <div class="tl-center" style="max-width:720px;margin:0 auto 36px">
+      <div class="tl-kicker">Two sides. No mix-up.</div>
+      <h2 class="tl-h2">Talendus does not put companies and candidates in the same flow.</h2>
+      <p class="tl-lead">Choose your side. The next pages, the actions and the support follow that choice.</p>
     </div>
-    <div class="tl-grid-3">{cards}</div>
+    <div class="tl-gateway-lanes">
+      <article class="tl-gateway-lane is-talent">
+        <span class="tl-kicker">Candidates</span>
+        <h3>You are looking for a job</h3>
+        <p>Create a profile, submit your resume. We study your path and contact you when an opportunity fits. Companies do not receive your email or phone number. It is free.</p>
+        <a class="tl-btn" href="candidates.html" data-set-persona="talent">Create my profile</a>
+      </article>
+      <article class="tl-gateway-lane is-hire">
+        <span class="tl-kicker">Employers</span>
+        <h3>You are hiring</h3>
+        <p>Hand us the need. We search, screen and present a qualified shortlist. You do not browse a resume database. You keep the final decision.</p>
+        <a class="tl-btn" href="employers.html" data-set-persona="entreprise">Hand us the search</a>
+      </article>
+    </div>
+  </div>
+</section>
+"""
+    return """
+<section class="tl-section" id="parcours">
+  <div class="container">
+    <div class="tl-center" style="max-width:720px;margin:0 auto 36px">
+      <div class="tl-kicker">Deux côtés. Aucun mélange.</div>
+      <h2 class="tl-h2">Talendus ne met pas les entreprises et les candidats dans le même parcours.</h2>
+      <p class="tl-lead">Choisissez votre côté. Les pages suivantes, les actions et l'accompagnement suivent ce choix.</p>
+    </div>
+    <div class="tl-gateway-lanes">
+      <article class="tl-gateway-lane is-talent">
+        <span class="tl-kicker">Candidats</span>
+        <h3>Vous cherchez un emploi</h3>
+        <p>Créez un profil, déposez votre CV. Nous étudions votre parcours et vous contactons lorsqu'une opportunité correspond. Les entreprises ne reçoivent pas votre courriel ni votre téléphone. C'est gratuit.</p>
+        <a class="tl-btn" href="candidats.html" data-set-persona="talent">Créer mon profil</a>
+      </article>
+      <article class="tl-gateway-lane is-hire">
+        <span class="tl-kicker">Entreprises</span>
+        <h3>Vous recrutez</h3>
+        <p>Confiez-nous votre besoin. Nous recherchons, présélectionnons et vous présentons une shortlist qualifiée. Vous ne parcourez pas une base de CV. Vous gardez la décision finale.</p>
+        <a class="tl-btn" href="entreprises.html" data-set-persona="entreprise">Confier mon recrutement</a>
+      </article>
+    </div>
+  </div>
+</section>
+"""
+
+
+def persona_switch_bar(lang="fr"):
+    if lang == "en":
+        talent = '<p class="tl-persona-switch">Hiring instead? <a href="employers.html" data-set-persona="entreprise">Go to the employer side</a></p>'
+        hire = '<p class="tl-persona-switch">Looking for a job? <a href="candidates.html" data-set-persona="talent">Go to the talent side</a></p>'
+    else:
+        talent = '<p class="tl-persona-switch">Vous recrutez ? <a href="entreprises.html" data-set-persona="entreprise">Aller du côté entreprises</a></p>'
+        hire = '<p class="tl-persona-switch">Vous cherchez un emploi ? <a href="candidats.html" data-set-persona="talent">Aller du côté candidats</a></p>'
+    return (
+        persona_region("talent", f'<div class="container tl-persona-switch-wrap">{talent}</div>')
+        + persona_region("entreprise", f'<div class="container tl-persona-switch-wrap">{hire}</div>')
+    )
+
+
+def talent_cta_band(lang="fr"):
+    if lang == "en":
+        return """
+<section class="tl-cta-band" id="profil">
+  <div class="container">
+    <span class="tl-badge tl-badge-light">Create my profile</span>
+    <h2 class="tl-h2">Looking for a job? Enter the Talendus network.</h2>
+    <p>Create your profile, submit your resume. We study your path and contact you when an opportunity fits. Free for talent.</p>
+    <div class="tl-actions">
+      <a class="tl-btn tl-btn-lg" href="candidates.html#cv">Create my profile</a>
+      <a class="tl-btn tl-btn-ghost" href="jobs.html">See opportunities</a>
+    </div>
+  </div>
+</section>
+"""
+    return """
+<section class="tl-cta-band" id="profil">
+  <div class="container">
+    <span class="tl-badge tl-badge-light">Créer mon profil</span>
+    <h2 class="tl-h2">Vous cherchez un emploi ? Entrez dans le réseau Talendus.</h2>
+    <p>Créez votre profil, déposez votre CV. Nous étudions votre parcours et vous contactons lorsqu'une opportunité correspond. Gratuit pour les talents.</p>
+    <div class="tl-actions">
+      <a class="tl-btn tl-btn-lg" href="candidats.html#cv">Créer mon profil</a>
+      <a class="tl-btn tl-btn-ghost" href="emplois.html">Voir les opportunités</a>
+    </div>
+  </div>
+</section>
+"""
+
+
+def ai_engine_section(lang="fr"):
+    groups_html = []
+    for title, blurb, items in AI_FEATURE_GROUPS[lang]:
+        rows = "".join(
+            f"<li><strong>{name}</strong> {text}</li>"
+            for name, text in items
+        )
+        groups_html.append(
+            f'<div class="tl-ai-group"><h3>{title}</h3><p>{blurb}</p><ul>{rows}</ul></div>'
+        )
+    groups = "".join(groups_html)
+    if lang == "en":
+        kicker = "Already in our internal tools"
+        heading = "AI already works for Talendus. You receive the result."
+        lead = "Matching, resume reading, skills, ranking: our teams use this today. It is not software we hand you. It is how we present the right files faster. Consultants qualify. You keep the final decision."
+        badge = "In service"
+    else:
+        kicker = "Déjà dans nos outils internes"
+        heading = "L'IA travaille déjà pour Talendus. Vous, vous recevez le résultat."
+        lead = "Matching, lecture des CV, compétences, priorisation : nos équipes s'en servent aujourd'hui. Ce n'est pas un logiciel que nous vous remettons. C'est ce qui nous permet de présenter plus vite les bons dossiers. Les conseillers qualifient. Vous gardez la décision finale."
+        badge = "En service"
+    return f"""
+<section class="tl-section tl-ai-direction" id="ia">
+  <div class="container">
+    <div class="tl-ai-panel">
+      <div class="tl-ai-panel-intro">
+        <span class="tl-chip">{badge}</span>
+        <div class="tl-kicker">{kicker}</div>
+        <h2 class="tl-h2">{heading}</h2>
+        <p class="tl-lead">{lead}</p>
+      </div>
+      <div class="tl-ai-groups">{groups}</div>
+    </div>
   </div>
 </section>
 """
@@ -1079,21 +1226,26 @@ def job_search_filters(lang="fr"):
 
 
 def homepage_after_hero(lang="fr"):
-    return (
+    talent = (
+        for_candidates_section(lang)
+        + candidate_journey_section(lang)
+        + talent_cta_band(lang)
+    )
+    hire = (
         for_companies_section(lang)
-        + for_candidates_section(lang)
-        + approach_section(lang)
         + process_section(lang)
-        + augmented_recruiting_section(lang)
         + why_talendus_section(lang)
-        + technology_section(lang)
         + ai_engine_section(lang)
-        + ai_screening_section(lang)
         + competitive_advantage_section(lang)
-        + human_section(lang)
+        + human_hire_band(lang)
+    )
+    return (
+        persona_switch_bar(lang)
+        + persona_region("gateway", gateway_orientation_section(lang))
+        + persona_region("talent", talent)
+        + persona_region("entreprise", hire)
         + sectors_cloud(lang)
         + trades_cloud(lang)
-        + human_hire_band(lang)
     )
 
 

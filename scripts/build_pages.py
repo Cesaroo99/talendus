@@ -5,7 +5,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from parts import (
     wrap as wrap_page, page_hero, speed_strip, cta_band, faq_html, proof_stats,
-    FAQ_EMPLOYEURS, FAQ_CANDIDATS, FAQ_HOME,
+    FAQ_EMPLOYEURS, FAQ_CANDIDATS, FAQ_HOME, homepage_faq,
 )
 from positioning import (
     homepage_after_hero, job_search_filters, employer_need_fields,
@@ -179,11 +179,15 @@ INDEX_BODY = r"""
             <div class="hero2-heading tl-hero-lock">
                 <h5>Talendus. Agence de placement intelligente.</h5>
                 <div class="space16"></div>
-                <h1>Les bons talents. Plus rapidement. Plus intelligemment.</h1>
+                <h1 data-persona-only="gateway">Vous recrutez ou vous cherchez un emploi ?</h1>
+                <h1 data-persona-only="talent">Votre parcours, étudié. Les bonnes opportunités.</h1>
+                <h1 data-persona-only="entreprise">Les bons talents. Plus rapidement. Plus intelligemment.</h1>
                 <div class="space16"></div>
-                <p>Nous recherchons, évaluons et présélectionnons les talents les plus pertinents pour les entreprises. Nos équipes s'appuient déjà sur la technologie et l'intelligence artificielle — vous n'avez pas à les utiliser vous-même.</p>
+                <p data-persona-only="gateway">Deux côtés distincts : les entreprises qui recrutent, les personnes qui cherchent un emploi. Choisissez ce qui vous correspond. Talendus reste l'intermédiaire.</p>
+                <p data-persona-only="talent">Créez votre profil, déposez votre CV. Nous étudions votre parcours et vous contactons lorsqu'une opportunité correspond. Gratuit pour vous. Les entreprises ne reçoivent pas vos coordonnées.</p>
+                <p data-persona-only="entreprise">Confiez-nous votre besoin. Nous recherchons, présélectionnons et vous présentons une shortlist qualifiée. Vous ne parcourez pas une base de CV. Vous gardez la décision finale.</p>
             </div>
-            <div class="tl-persona-cards">
+            <div class="tl-persona-cards" data-persona-only="gateway">
               <a class="tl-persona-card is-talent" href="candidats.html" data-set-persona="talent">
                 <span class="tl-kicker">Candidats</span>
                 <h2>Je cherche un emploi</h2>
@@ -204,17 +208,9 @@ INDEX_BODY = r"""
 
 write("index.html", wrap(
     "Talendus | Agence de placement intelligente",
-    "Talendus est une agence de placement qui utilise déjà l'intelligence artificielle dans ses opérations. Confiez votre besoin : nous recherchons, présélectionnons et présentons les talents les plus pertinents. Tous secteurs. Nous recrutons mieux, plus vite et plus intelligemment grâce à l'IA.",
+    "Talendus est une agence de placement. Entreprises : confiez un besoin, recevez une shortlist. Candidats : créez un profil, soyez contacté lorsqu'une opportunité correspond. Tous secteurs.",
     "",
-    INDEX_BODY + homepage_after_hero("fr") + """
-    <section class="tl-section tl-ice"><div class="container">
-      <div class="tl-center" style="max-width:720px;margin:0 auto 28px">
-        <div class="tl-kicker" id="faq">FAQ</div>
-        <h2 class="tl-h2">Ce qu'on nous demande d'abord</h2>
-      </div>
-      """ + faq_html(FAQ_HOME) + """
-    </div></section>
-    """,
+    INDEX_BODY + homepage_after_hero("fr") + homepage_faq("fr"),
     solid=False,
 ))
 
