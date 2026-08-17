@@ -30,7 +30,7 @@
       registerEmployerLead: "Hand us a hiring need and follow the shortlists we present.",
       chooseLead: "This decides what you see next.",
       seekHint: "I'm looking for a job",
-      hireHint: "I have a role to fill — Talendus will search",
+      hireHint: "I have a role to fill. Talendus will search",
       haveAccount: "Already have an account? Sign in",
       noAccount: "No account yet? Create one",
       home: "Home"
@@ -56,7 +56,7 @@
       registerEmployerLead: "Confiez un besoin et suivez les shortlists que nous présentons.",
       chooseLead: "Ça détermine ce que vous voyez ensuite.",
       seekHint: "Je cherche un emploi",
-      hireHint: "J'ai un poste à pourvoir — Talendus recherche",
+      hireHint: "J'ai un poste à pourvoir. Talendus recherche",
       haveAccount: "Déjà un compte ? Connexion",
       noAccount: "Pas encore de compte ? Inscription",
       home: "Accueil"
@@ -158,7 +158,7 @@
         return '<button type="button" class="tl-btn tl-btn-ghost-dark tl-oauth' + (on ? "" : " is-disabled") + '"' +
           (on ? ' data-oauth="' + id + '"' : " disabled") + ' title="' + esc(on ? label : t.soon) + '">' +
           '<i class="' + icon + '" aria-hidden="true"></i> ' + esc(label) +
-          (on ? "" : " — " + esc(t.soon)) + "</button>";
+          (on ? "" : ", " + esc(t.soon)) + "</button>";
       }
       return '<p class="tl-auth-or"><span>' + esc(t.or) + "</span></p><div class=\"tl-oauth-row\">" +
         oauthBtn("google", "fa-brands fa-google", t.google) +

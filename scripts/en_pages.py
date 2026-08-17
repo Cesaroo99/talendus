@@ -1,4 +1,4 @@
-"""English pages for Talendus — native copy, not machine-translated chrome."""
+"""English pages for Talendus, native copy, not machine-translated chrome."""
 
 from parts import speed_strip, cta_band, faq_html, proof_stats, FAQ_EMPLOYERS_EN, FAQ_CANDIDATES_EN, FAQ_HOME_EN, homepage_faq
 from seo_pages import write_en as write_seo_en
@@ -50,25 +50,25 @@ JOBS_EN = [
 SECTORS_EN = [
     ("manufacturier", "Manufacturing", "Manufacturing recruitment in Quebec", "One example among others: fabrication, assembly and production trades. Talendus also hires well beyond industry."),
     ("production", "Production", "Production recruitment in Quebec", "Lines, methods, quality and supervision. One of many roles Talendus can fill."),
-    ("entrepot", "Warehousing", "Warehouse recruitment Quebec", "Forklift operators, pickers, clerks and warehouse supervisors — an example of logistics profiles."),
+    ("entrepot", "Warehousing", "Warehouse recruitment Quebec", "Forklift operators, pickers, clerks and warehouse supervisors, an example of logistics profiles."),
     ("logistique", "Logistics", "Logistics recruitment Quebec", "Planning, transport, WMS and coordination. Logistics is one industry among many."),
     ("distribution", "Distribution", "Distribution recruitment Quebec", "Distribution centres, shipping, receiving and inventory management."),
     ("transport", "Transportation", "Transportation and logistics recruiting", "Drivers, transport coordination and flow. Talendus also supports other industries."),
     ("transformation-alimentaire", "Food processing", "Food recruitment Quebec", "Food production: hygiene, operators and supervision. An example, not an exclusive specialty."),
     ("metallurgie", "Metals", "Metals and welding recruitment Quebec", "Welding, machining, metal fabrication. Other roles and industries are equally in scope."),
     ("plasturgie", "Plastics", "Plastics recruitment Quebec", "Injection, extrusion, press set-up and process technicians."),
-    ("maintenance", "Maintenance", "Maintenance recruitment Quebec", "Technicians, mechanics and reliability leads — among a wide range of roles."),
+    ("maintenance", "Maintenance", "Maintenance recruitment Quebec", "Technicians, mechanics and reliability leads, among a wide range of roles."),
 ]
 
 ARTICLES_EN = [
     ("mauvaise-embauche", "What a bad hire really costs", "HR", "usine-equipe.jpg",
-     "A poor fit is more than a salary. Training, overtime, lost productivity and turnover add up fast — in any industry."),
+     "A poor fit is more than a salary. Training, overtime, lost productivity and turnover add up fast, in any industry."),
     ("machiniste-cnc", "Hiring a CNC machinist in Quebec in 2026", "Roles", "cnc-machiniste.jpg",
-     "The CNC machinist remains a tight profile. Here is how to attract, assess and keep this talent — one example among many roles."),
+     "The CNC machinist remains a tight profile. Here is how to attract, assess and keep this talent, one example among many roles."),
     ("caristes-entrepot", "Forklift shortage: tactics for warehouses", "Logistics", "entrepot-logistique.jpg",
      "Distribution centres compete for experienced operators. Three practical levers, transferable to other scarce roles."),
     ("superviseur-production", "Production supervisor: the profile that steadies a team", "Production", "usine-equipe.jpg",
-     "A strong supervisor stabilizes quality and climate. Here is the portrait we validate — applicable to other management roles."),
+     "A strong supervisor stabilizes quality and climate. Here is the portrait we validate, applicable to other management roles."),
     ("roulement-manufacturier", "Cutting turnover in recruiting", "Recruiting", "soudeur-atelier.jpg",
      "Turnover is not only a pay problem. Onboarding, role clarity and cultural fit make the difference, whatever the industry."),
 ]
@@ -149,8 +149,8 @@ def build_en(write, wrap, page_hero):
     <p>Too many companies lose weeks looking for the right people, sorting too many applications, or letting a process drag. Too many talented people send resumes into the void. Hiring deserves better than a job board or software you have to operate alone.</p>
     <p>Talendus was designed as a next-generation placement agency: generalist, human and technological. When a company has a need, it hands it to us. We take on the search and the screening. Artificial intelligence is already at the heart of our internal tools: it speeds up analysis, search and some screening steps. Consultants stay there to understand, qualify and present. The company keeps the final decision.</p>
     <h2 class="tl-h2">What we do</h2>
-    <p>We connect companies and talent. Developers, accountants, welders, nurses, drivers, HR managers — and many other roles, in every industry. A consultant presents the files. Candidates and employers stay on their own side. There is no unmediated direct channel.</p>
-    <p>We hire better, faster and more intelligently with AI: “we hire” means Talendus runs the search and screening for the company. “Faster”: our tools and AI already accelerate certain steps. “More intelligently”: data, technology, AI and human expertise, together — today.</p>
+    <p>We connect companies and talent. Developers, accountants, welders, nurses, drivers, HR managers, and many other roles, in every industry. A consultant presents the files. Candidates and employers stay on their own side. There is no unmediated direct channel.</p>
+    <p>We hire better, faster and more intelligently with AI: “we hire” means Talendus runs the search and screening for the company. “Faster”: our tools and AI already accelerate certain steps. “More intelligently”: data, technology, AI and human expertise, together, today.</p>
     <h2 class="tl-h2">What we are not</h2>
     <p>Not a job board where the company browses a database. Not a marketplace. Not a self-serve ATS. Not software that promises a perfect candidate without a human. Technology stays in service of the Talendus process.</p>
     <h2 class="tl-h2">AI is already part of how we operate</h2>
@@ -185,7 +185,7 @@ def build_en(write, wrap, page_hero):
             ("executive-search.html", "Passive", "Search mandates", "Direct approach of passive candidates for scarce profiles, whatever the industry."),
             ("leadership-recruiting.html", "Leadership", "Manager recruiting", "Managers and executives. Often confidential."),
             ("industrial-recruiting.html", "Example", "Industrial recruiting", "One example among others: production, maintenance, logistics. Talendus is not limited to industry."),
-            ("technical-recruiting.html", "Trades", "Skilled roles", "Technicians, welders, developers, nurses, accountants — a wide range of profiles."),
+            ("technical-recruiting.html", "Trades", "Skilled roles", "Technicians, welders, developers, nurses, accountants, a wide range of profiles."),
             ("temporary-recruiting.html", "Urgent", "Urgent recruiting", "When a critical seat is uncovered. A filtered shortlist, not a resume flood."),
             ("executive-search.html", "Discreet", "Confidential mandates", "Manager replacements or reorganizations run without internal noise."),
             ("employers.html", "HR", "HR support", "Job descriptions, salary grids, joint interviews and onboarding."),
@@ -215,7 +215,7 @@ def build_en(write, wrap, page_hero):
     ))
 
     write("en/employers.html", wrap(
-        "Employers | Placement agency — Talendus",
+        "Employers | Placement agency | Talendus",
         "Hand a hire to Talendus. We already use AI internally to speed up search, analysis and screening. You receive a qualified shortlist and keep the final decision.",
         "en/employers.html",
         page_hero(
@@ -231,7 +231,7 @@ def build_en(write, wrap, page_hero):
       <div class="tl-prose">
         <div class="tl-kicker">The Talendus solution</div>
         <h2 class="tl-h2">We do the search for you.</h2>
-        <p>You have a role to fill. Instead of posting an ad and sorting dozens — sometimes hundreds — of applications, you hand the need to Talendus. We understand the role, search for profiles, analyse careers, screen, speak with candidates when needed, evaluate, then present a qualified selection.</p>
+        <p>You have a role to fill. Instead of posting an ad and sorting dozens (sometimes hundreds) of applications, you hand the need to Talendus. We understand the role, search for profiles, analyse careers, screen, speak with candidates when needed, evaluate, then present a qualified selection.</p>
         <p>You do not access a resume database. You do not “find talent” on Talendus as if it were ATS software. You mandate an agency. Talendus already uses artificial intelligence in its internal tools to speed up search, analysis and screening. You benefit from that power without using it yourself. The hiring decision stays yours.</p>
       </div>
     </div></section>
@@ -296,7 +296,7 @@ def build_en(write, wrap, page_hero):
     ))
 
     write("en/candidates.html", wrap(
-        "Candidates | Join Talendus — placement agency",
+        "Candidates | Join Talendus",
         "Create your profile with Talendus. We study your path and contact you when an opportunity fits. Free. Every industry.",
         "en/candidates.html",
         page_hero(
@@ -375,7 +375,7 @@ def build_en(write, wrap, page_hero):
     ))
 
     write("en/contact.html", wrap(
-        "Contact | Talk to Talendus — Talendus",
+        "Contact | Talk to Talendus",
         "Contact Talendus in Montreal. Describe a hiring need or create your profile. Calls by appointment. 514 555-0199 · info@talendus.ca",
         "en/contact.html",
         page_hero(
@@ -449,7 +449,7 @@ def build_en(write, wrap, page_hero):
           <h2 class="tl-h2">Submit my resume or ask a question</h2>
           <p class="tl-lead">It's free. A consultant calls if a mandate matches.</p>
           <form class="tl-form" action="#" method="post" data-form="contact">
-            <input type="hidden" name="profil" value="Candidate — I am looking for a role">
+            <input type="hidden" name="profil" value="Candidate, I am looking for a role">
             <label>Name</label><input required name="nom">
             <label>Email</label><input type="email" required name="courriel">
             <label>Phone</label><input name="tel">
@@ -469,7 +469,7 @@ def build_en(write, wrap, page_hero):
           <h2 class="tl-h2">Describe my hiring need</h2>
           <p class="tl-lead">Industry, role, headcount, location, contract type. Free call, by appointment.</p>
           <form class="tl-form" action="#" method="post" data-form="hiring-need">
-            <input type="hidden" name="profil" value="Employer — I am hiring">
+            <input type="hidden" name="profil" value="Employer, I am hiring">
             <label>Name</label><input required name="nom">
             <label>Company</label><input required name="entreprise">
             <label>Email</label><input type="email" required name="courriel">
@@ -523,7 +523,7 @@ def build_en(write, wrap, page_hero):
     <section class="tl-section"><div class="container">
       {job_search_filters("en")}
       <div class="tl-grid-3" id="job-list">{''.join(cards)}</div>
-      <p class="tl-muted" id="job-empty" hidden>No roles match these filters. Create your profile — we'll contact you when a mandate fits.</p>
+      <p class="tl-muted" id="job-empty" hidden>No roles match these filters. Create your profile, we'll contact you when a mandate fits.</p>
     </div></section>
     """,
         lang="en",
@@ -532,7 +532,7 @@ def build_en(write, wrap, page_hero):
 
     for slug, title, city, cat, typ, sal, shift, req, sector, skills, exp in JOBS_EN:
         write(f"en/job-{slug}.html", wrap(
-            f"{title} in {city} | Job — Talendus",
+            f"{title} in {city} | Job | Talendus",
             f"{title} role in {city}, Quebec. {typ}. Apply through Talendus: a consultant presents your file. Placement agency, every industry.",
             f"en/job-{slug}.html",
             page_hero(
@@ -586,7 +586,7 @@ def build_en(write, wrap, page_hero):
         for s, n, t, d in SECTORS_EN
     )
     write("en/sectors.html", wrap(
-        "Every industry | Recruiting platform — Talendus",
+        "Every industry | Recruiting platform | Talendus",
         "Talendus is for every industry. Technology, construction, healthcare, finance, manufacturing, retail and many more.",
         "en/sectors.html",
         page_hero(
@@ -615,7 +615,7 @@ def build_en(write, wrap, page_hero):
             <div class="col-lg-7">
               <p class="tl-lead">{desc} This is not an exclusive specialty: Talendus recruits for every company.</p>
               <h2 class="tl-h2">Typical roles</h2>
-              <p>Operations, skilled trades, supervision, management — and other profiles depending on the need.</p>
+              <p>Operations, skilled trades, supervision, management, and other profiles depending on the need.</p>
               <div class="tl-actions" style="margin-top:24px">
                 <a class="tl-btn" href="contact.html">Hand us the search</a>
                 <a class="tl-btn tl-btn-ghost-dark" href="sectors.html">Every industry</a>
@@ -666,7 +666,7 @@ def build_en(write, wrap, page_hero):
             <li>Plan 30/60/90-day onboarding: that is where retention is won.</li>
           </ul>
           <h2>How Talendus steps in</h2>
-          <p>We target profiles by role and skills, validate the fit and present a few files — each one we're ready to stand behind. Talendus already uses AI internally to analyse information faster and spot correspondences; it does not choose in the company's place. Qualification stays human.</p>
+          <p>We target profiles by role and skills, validate the fit and present a few files, each one we're ready to stand behind. Talendus already uses AI internally to analyse information faster and spot correspondences; it does not choose in the company's place. Qualification stays human.</p>
           <p><a href="sectors.html">Every industry</a> · <a href="jobs.html">Job openings</a></p>
           <div class="tl-actions" style="margin-top:28px">
             <a class="tl-btn" href="contact.html">Talk to Talendus</a>
@@ -756,7 +756,7 @@ def build_en(write, wrap, page_hero):
         alt="conditions.html",
     ))
     write("en/how-it-works.html", wrap(
-        "How it works | Talent path — Talendus",
+        "How it works | Talent path | Talendus",
         "Create your profile, submit your resume, be considered for opportunities. Talendus presents your file. Free for talent.",
         "en/how-it-works.html",
         page_hero(
@@ -783,7 +783,7 @@ def build_en(write, wrap, page_hero):
         + """
     <section class="tl-section"><div class="container">
       <div class="tl-prose">
-        <h2 class="tl-h2">A recruiting service — not a job posting</h2>
+        <h2 class="tl-h2">A recruiting service, not a job posting</h2>
         <p>With Talendus, you do not simply post a job and wait for applications. You hand us the need and we take on the search and screening of talent.</p>
         <p>You do not need to spend hours posting, sorting and analysing hundreds of applications. Talendus takes the process on for you. With our teams, methods and technological tools that already include AI, we speed up search and qualification.</p>
         <p>You hand us the search. We take on sourcing, screening and qualification so you can focus on the final decision. We do not simply forward applications. We present a selection of profiles we have already searched and qualified against your need.</p>
@@ -805,13 +805,13 @@ def build_en(write, wrap, page_hero):
         robots="noindex,nofollow",
     ))
     write("en/hr-solutions.html", wrap(
-        "HR solutions | Recruiting support — Talendus",
+        "HR solutions | Recruiting support | Talendus",
         "HR support: job descriptions, salary grids, joint interviews and 30/60/90 onboarding. Every industry.",
         "en/hr-solutions.html",
         page_hero(
             "Employers",
             "Build a hiring process, not just plug a hole.",
-            "Job descriptions, pay grids, joint interviews and onboarding follow-up — for companies tired of winging it.",
+            "Job descriptions, pay grids, joint interviews and onboarding follow-up, for companies tired of winging it.",
             actions='<a class="tl-btn" href="contact.html">Talk to Talendus</a>',
         )
         + """

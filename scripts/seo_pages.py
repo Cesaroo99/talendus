@@ -1,4 +1,4 @@
-"""Pages SEO services et locales — contenus distincts, pas de duplication automatique."""
+"""Pages SEO services et locales, contenus distincts, pas de duplication automatique."""
 
 
 def _page(hero, sections):
@@ -13,7 +13,7 @@ def write_fr(write, wrap, page_hero, cta):
             "Cabinet de recrutement au Québec. Page exemple : production, maintenance, logistique. Talendus recrute pour toutes les entreprises, tous secteurs. Shortlist filtrée, consultation sur rendez-vous.",
             "Services",
             "Recrutement industriel : un exemple parmi d'autres.",
-            "Talendus est une agence de placement pour toutes les entreprises. Cette page illustre un secteur — pas une limite. Vous confiez un mandat ; nous recherchons, filtrons et présentons des dossiers.",
+            "Talendus est une agence de placement pour toutes les entreprises. Cette page illustre un secteur, pas une limite. Vous confiez un mandat ; nous recherchons, filtrons et présentons des dossiers.",
             "Confier mon recrutement",
             """
             <section class="tl-section"><div class="container">
@@ -22,7 +22,7 @@ def write_fr(write, wrap, page_hero, cta):
                   <h2 class="tl-h2">Un exemple de secteur, pas une spécialisation exclusive</h2>
                   <p class="tl-lead">Production, maintenance, entrepôt, logistique, supervision. La technologie, la santé, la finance, le commerce et les autres industries sont tout autant concernées. <a href="secteurs.html">Voir tous les secteurs</a>.</p>
                   <h3>Pour qui</h3>
-                  <p>Toute entreprise qui doit pourvoir un poste — souvent dans un délai serré. L'industrie n'est qu'un paramètre de recherche.</p>
+                  <p>Toute entreprise qui doit pourvoir un poste, souvent dans un délai serré. L'industrie n'est qu'un paramètre de recherche.</p>
                   <h3>Comment on travaille</h3>
                   <p>Brief sur le poste, le salaire réel et l'urgence. Approche de candidats actifs et passifs. Shortlist courte. Suivi 30/60/90 jours sur les mandats permanents.</p>
                   <p>Voir aussi : <a href="recrutement-manufacturier.html">recrutement manufacturier</a>, <a href="recrutement-technique.html">recrutement technique</a>, <a href="emplois.html">offres d'emploi</a>.</p>
@@ -108,7 +108,7 @@ def write_fr(write, wrap, page_hero, cta):
             """
             <section class="tl-section"><div class="container">
               <h2 class="tl-h2">Renforts de production et d'entrepôt</h2>
-              <p>Journaliers, opérateurs, caristes et commis d'expédition lorsque le volume monte. Le délai annoncé dépend du métier et de la région — dès le brief.</p>
+              <p>Journaliers, opérateurs, caristes et commis d'expédition lorsque le volume monte. Le délai annoncé dépend du métier et de la région, dès le brief.</p>
               <h3>Permanent ensuite ?</h3>
               <p>Plusieurs mandats temporaires deviennent permanents. Nous le prévoyons avec vous pour éviter un second recrutement improvisé. <a href="recrutement-permanent.html">Voir le recrutement permanent</a>.</p>
               <p><a href="secteur-entrepot.html">Entrepôt</a> · <a href="article-caristes-entrepot.html">Pénurie de caristes</a></p>
@@ -209,7 +209,7 @@ def write_fr(write, wrap, page_hero, cta):
             "Recrutement au Québec : Grand Montréal, Montérégie, Estrie, Centre-du-Québec, Mauricie et région de Québec. Tous secteurs.",
             "Québec",
             "Recrutement industriel au Québec, au-delà d'une seule ville.",
-            "Nous menons des mandats là où vos usines sont — y compris en région lorsque le profil l'exige. Un cabinet, un réseau industriel.",
+            "Nous menons des mandats là où vos usines sont, y compris en région lorsque le profil l'exige. Un cabinet, un réseau industriel.",
             "Parler d'un mandat au Québec",
             """
             <section class="tl-section"><div class="container">
@@ -247,10 +247,10 @@ def write_en(write, wrap, page_hero, cta):
         (
             "en/industrial-recruiting.html",
             "Industrial recruiting in Quebec | Talendus",
-            "Placement agency in Quebec: production, maintenance, logistics — and every other industry. Screened shortlist, call by appointment.",
+            "Placement agency in Quebec: production, maintenance, logistics, and every other industry. Screened shortlist, call by appointment.",
             "Services",
             "Industrial recruiting: one example among others.",
-            "Talendus is a placement agency for every company. This page illustrates one industry — not a limit. You hand us a mandate; we search, screen and present files.",
+            "Talendus is a placement agency for every company. This page illustrates one industry, not a limit. You hand us a mandate; we search, screen and present files.",
             "Request a hire",
             "industrial recruiting Montreal",
             """
@@ -407,7 +407,7 @@ def write_en(write, wrap, page_hero, cta):
             """
             <section class="tl-section"><div class="container">
               <h2 class="tl-h2">South Shore: food, production, maintenance</h2>
-              <p>Longueuil, Boucherville, Brossard — operators and supervisors who accept rotating shifts are scarce.</p>
+              <p>Longueuil, Boucherville, Brossard, operators and supervisors who accept rotating shifts are scarce.</p>
             </div></section>
             """,
         ),
@@ -417,7 +417,7 @@ def write_en(write, wrap, page_hero, cta):
             "Industrial recruiting across Quebec: Greater Montreal, Montérégie, the Eastern Townships, Centre-du-Québec, Mauricie and the Quebec City area.",
             "Quebec",
             "Industrial recruiting across Quebec, not a single city page.",
-            "We run mandates where your plants are — including the regions when the profile requires it.",
+            "We run mandates where your plants are, including the regions when the profile requires it.",
             "Talk about a Quebec mandate",
             "",
             """
