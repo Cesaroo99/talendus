@@ -79,8 +79,9 @@ p, li, h1, h2, h3, h4, a { overflow-wrap: break-word; }
 }
 
 .vl-offcanvas .vl-offcanvas-logo {
-  width: 186px !important;
-  height: 50px;
+  width: auto !important;
+  max-width: 160px;
+  height: auto;
 }
 
 #loading-icon img {
@@ -112,65 +113,90 @@ p, li, h1, h2, h3, h4, a { overflow-wrap: break-word; }
   overflow: hidden;
 }
 
-/* ----- Header (flex, plus de colonnes Bootstrap) ----- */
-.tl-solid-header .homepage2-body .vl-transparent-header {
-  position: relative;
-  background: var(--tl-navy);
-  padding: 10px 0;
+/* ----- Header ----- */
+:root {
+  --tl-header-h: 72px;
 }
 .homepage2-body .vl-transparent-header {
-  padding: 10px 0;
   left: 0;
   right: 0;
   width: 100%;
   z-index: 100;
+  padding: 8px 0;
+  box-sizing: border-box;
+}
+body:not(.tl-solid-header) .homepage2-body .vl-transparent-header {
+  position: absolute;
+  top: 0;
+  background: transparent;
+}
+.tl-solid-header .homepage2-body .vl-transparent-header,
+.tl-solid-header .homepage2-body .vl-transparent-header.header-sticky {
+  position: sticky !important;
+  top: 0;
+  background: var(--tl-navy) !important;
+  animation: none !important;
+  box-shadow: 0 8px 24px rgba(7, 20, 34, 0.18);
 }
 .homepage2-body .vl-header-area.header-sticky {
   background: var(--tl-navy) !important;
-  z-index: 90;
+  z-index: 100;
   width: 100%;
 }
 
 .tl-header-bar {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  flex-wrap: nowrap;
-  gap: 8px 16px;
+  column-gap: 12px;
   min-height: 56px;
   width: 100%;
   min-width: 0;
 }
 .tl-header-bar .vl-logo {
-  flex: 0 0 auto;
+  grid-column: 1;
   display: flex;
   align-items: center;
+  min-width: 0;
+}
+.tl-header-bar .vl-logo a {
+  display: flex;
+  align-items: center;
+  line-height: 0;
 }
 .tl-desktop-nav {
   display: none;
-  flex: 1 1 auto;
+  grid-column: 2;
   min-width: 0;
   align-items: center;
   justify-content: center;
+  overflow: visible;
 }
 .tl-desktop-nav .vl-mobile-menu-active {
   width: 100%;
+  min-width: 0;
 }
 .tl-header-tools {
   display: none;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
-  flex: 0 0 auto;
-}
-.tl-mobile-tools {
-  display: flex;
+  grid-column: 3;
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
-  margin-left: auto;
-  flex: 0 0 auto;
+  min-width: 0;
+  flex-shrink: 0;
+  isolation: isolate;
+  z-index: 3;
 }
-@media (min-width: 1200px) {
+.tl-mobile-tools {
+  display: flex;
+  grid-column: 3;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  isolation: isolate;
+  z-index: 3;
+}
+@media (min-width: 1400px) {
   .tl-desktop-nav { display: flex; }
   .tl-header-tools { display: flex; }
   .tl-mobile-tools { display: none; }
@@ -210,7 +236,7 @@ p, li, h1, h2, h3, h4, a { overflow-wrap: break-word; }
   position: relative;
   color: #fff;
 }
-@media (min-width: 1400px) {
+@media (min-width: 1600px) {
   .homepage2-body .tl-desktop-nav > nav > ul > li > a {
     padding: 0 14px !important;
     font-size: 16px !important;
@@ -222,7 +248,7 @@ p, li, h1, h2, h3, h4, a { overflow-wrap: break-word; }
   align-items: center;
   line-height: 1;
 }
-@media (min-width: 1200px) {
+@media (min-width: 1400px) {
   .homepage2-body .tl-desktop-nav > nav > ul > li > a .tl-nav-caret {
     display: inline-flex;
   }
@@ -242,7 +268,7 @@ p, li, h1, h2, h3, h4, a { overflow-wrap: break-word; }
   background: var(--tl-orange);
   animation: tl-nav-in .25s ease;
 }
-@media (min-width: 1400px) {
+@media (min-width: 1600px) {
   .homepage2-body .tl-desktop-nav > nav > ul > li.is-active > a::after {
     left: 14px;
     right: 14px;
@@ -402,7 +428,17 @@ p, li, h1, h2, h3, h4, a { overflow-wrap: break-word; }
 }
 .homepage2-body .vl-offcanvas-header {
   margin-bottom: 20px !important;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   gap: 12px;
+}
+.homepage2-body .vl-offcanvas-logo {
+  min-width: 0;
+}
+.homepage2-body .vl-offcanvas-logo img {
+  width: min(148px, 46vw);
+  height: auto;
 }
 .homepage2-body .vl-offcanvas-close button,
 .vl-offcanvas-close-toggle {
@@ -416,6 +452,15 @@ p, li, h1, h2, h3, h4, a { overflow-wrap: break-word; }
   font-size: 22px;
   padding: 0;
   cursor: pointer;
+}
+.tl-offcanvas-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+.vl-offcanvas .tl-lang {
+  background: rgba(255,255,255,.1);
 }
 .homepage2-body .vl-offcanvas-menu {
   display: block !important;
@@ -942,6 +987,7 @@ a.tl-card:hover, .tl-job-card:hover, .tl-case:hover {
   color: #fff;
   padding: clamp(36px, 5vw, 64px) 0 clamp(40px, 6vw, 72px);
   position: relative;
+  z-index: 0;
 }
 .tl-page-hero h1 { color: #fff; max-width: 920px; }
 .tl-page-hero p { color: rgba(255,255,255,.84); max-width: 680px; }
@@ -982,6 +1028,9 @@ a.tl-card:hover, .tl-job-card:hover, .tl-case:hover {
   border-radius: 999px;
   overflow: hidden;
   flex: 0 0 auto;
+  position: relative;
+  z-index: 4;
+  background: rgba(11, 31, 58, 0.55);
 }
 .tl-lang a {
   color: #fff !important;
@@ -1326,8 +1375,8 @@ a.tl-card:hover, .tl-job-card:hover, .tl-case:hover {
 }
 
 /* =========================================================
-   Responsive : 479 / 767 / 991 / 1199
-   Desktop nav from 1200px. Hamburger below.
+   Responsive : 479 / 767 / 991 / 1399
+   Menu desktop à partir de 1400px. Hamburger en dessous.
    ========================================================= */
 @media (min-width: 1200px) {
   .hero2-arrow-hero .hero-main-slider .hero2-slider-area {
@@ -1406,7 +1455,7 @@ a.tl-card:hover, .tl-job-card:hover, .tl-case:hover {
   }
   .tl-split a { min-height: 0; padding: 24px; }
   .tl-split h3 { font-size: 22px; }
-  .tl-page-hero { padding: 32px 0 40px; }
+  .tl-page-hero { padding: 28px 0 40px; }
   .tl-lead { font-size: 16px; }
   .tl-section-sm { padding: 40px 0; }
   .tl-calc { padding: 22px 18px; }
@@ -1439,7 +1488,11 @@ a.tl-card:hover, .tl-job-card:hover, .tl-case:hover {
     grid-template-columns: 1fr;
   }
   .tl-hero-badges .tl-badge { font-size: 11px; }
-  .tl-header-bar { min-height: 52px; gap: 8px; }
+  .tl-header-bar { min-height: 52px; }
+  .homepage2-body .vl-transparent-header .vl-logo img {
+    width: 118px !important;
+    height: 29px !important;
+  }
   .homepage2-body .vl-offcanvas {
     width: 100% !important;
     padding: 20px 16px 32px !important;
@@ -1774,6 +1827,14 @@ table, .tl-job-card p, .tl-card .body p { color: var(--tl-navy); }
   font-size: 14px !important;
   font-weight: 700 !important;
   box-shadow: none !important;
+  white-space: nowrap;
+}
+@media (min-width: 1400px) and (max-width: 1599px) {
+  .tl-session-login span { display: none; }
+  .tl-session-cta {
+    padding: 8px 12px !important;
+    font-size: 13px !important;
+  }
 }
 .tl-avatar {
   display: inline-flex;
