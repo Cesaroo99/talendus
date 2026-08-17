@@ -1255,7 +1255,7 @@ def bad_hire_calculator_section(lang="fr"):
           <div class="tl-calc-result">Estimated cost of a bad hire<br><b id="tl-cost">—</b></div>
         </div>
       </div>
-      <p class="tl-calc-note">This is an order of magnitude, not an invoice. A Talendus mandate — search and screening included — almost always costs less than this total. And you avoid paying the wrong person for months.</p>
+      <p class="tl-calc-note">This is an order of magnitude, not an invoice. A Talendus mandate — search and screening included — always costs 5 to 8 times less than this total. And you avoid paying the wrong person for months.</p>
       <a class="tl-btn" href="contact.html">Hand us the search</a>
     </div>
   </div>
@@ -1289,7 +1289,7 @@ def bad_hire_calculator_section(lang="fr"):
           <div class="tl-calc-result">Coût estimé d'une mauvaise embauche<br><b id="tl-cost">—</b></div>
         </div>
       </div>
-      <p class="tl-calc-note">C'est un ordre de grandeur, pas une facture. Un mandat Talendus — recherche et présélection comprises — coûte presque toujours moins que ce total. Et vous évitez de payer le mauvais profil pendant des mois.</p>
+      <p class="tl-calc-note">C'est un ordre de grandeur, pas une facture. Un mandat Talendus — recherche et présélection comprises — coûte toujours entre 5 et 8 fois moins que ce total. Et vous évitez de payer le mauvais profil pendant des mois.</p>
       <a class="tl-btn" href="contact.html">Confier mon recrutement</a>
     </div>
   </div>
