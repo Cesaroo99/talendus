@@ -173,20 +173,47 @@
           var person = splitName(formValue(form, ["nom", "name"]));
           var slug = form.getAttribute("data-job-slug") || jobSlugFromPage();
           var user = api.currentUser && api.currentUser();
-          var send = (user && user.role === "CANDIDATE")
-            ? api.apply({
-                job_slug: slug,
-                cover_note: formValue(form, ["message", "note"]) || null
-              })
-            : api.applyPublic({
-                job_slug: slug,
-                first_name: person.first,
-                last_name: person.last,
-                email: formValue(form, ["courriel", "email"]),
-                phone: formValue(form, ["tel", "telephone", "phone"]) || null,
-                cv_url: formValue(form, ["cv", "resume"]) || null,
-                cover_note: formValue(form, ["message", "note"]) || null
+          var fileInput = form.querySelector('input[type=file][name=cvfile]');
+          var file = fileInput && fileInput.files && fileInput.files[0];
+          var cover = formValue(form, ["message", "note"]) || null;
+          var allowed = /\.(pdf|doc|docx|png|jpe?g|webp)$/i;
+          if (file && !allowed.test(file.name)) {
+            showFormMessage(form, isEn ? "Use a PDF, Word or image file (PNG, JPG)." : "Utilisez un fichier PDF, Word ou image (PNG, JPG).", true);
+            done();
+            return;
+          }
+          if (file && file.size > 5 * 1024 * 1024) {
+            showFormMessage(form, isEn ? "The file must be 5 MB or less." : "Le fichier doit faire 5 Mo ou moins.", true);
+            done();
+            return;
+          }
+          var send;
+          if (user && user.role === "CANDIDATE") {
+            send = Promise.resolve(null);
+            if (file) {
+              var up = new FormData();
+              up.append("file", file);
+              send = api.uploadResume(up).then(function (json) {
+                return json && json.data && json.data.id;
               });
+            }
+            send = send.then(function (resumeId) {
+              var body = { job_slug: slug, cover_note: cover };
+              if (resumeId) body.resume_id = resumeId;
+              return api.apply(body);
+            });
+          } else {
+            var fd = new FormData();
+            fd.append("job_slug", slug);
+            fd.append("first_name", person.first);
+            fd.append("last_name", person.last || "");
+            fd.append("email", formValue(form, ["courriel", "email"]));
+            var phone = formValue(form, ["tel", "telephone", "phone"]);
+            if (phone) fd.append("phone", phone);
+            if (cover) fd.append("cover_note", cover);
+            if (file) fd.append("file", file);
+            send = api.request("/applications/public", { method: "POST", body: fd });
+          }
           send.then(function () {
             showFormMessage(form, fallback, false);
             form.reset();
@@ -260,6 +287,19 @@
           form.reset();
         }).then(done);
       });
+    });
+
+    document.querySelectorAll('form[data-form="apply"] input[name="cvfile"]').forEach(function (input) {
+      var user = window.TalendusAPI && window.TalendusAPI.currentUser && window.TalendusAPI.currentUser();
+      if (user && user.role === "CANDIDATE") {
+        input.required = false;
+        var hint = input.parentElement && input.parentElement.querySelector(".tl-file-hint");
+        if (hint) {
+          hint.textContent = isEn
+            ? "PDF, Word or image, 5 MB max. Leave empty to use the resume already on your profile."
+            : "PDF, Word ou image, 5 Mo max. Laissez vide pour utiliser le CV déjà dans votre profil.";
+        }
+      }
     });
 
     function money(amount) {
@@ -397,6 +437,24 @@
           administration: "Administration",
           marketing: "Marketing"
         };
+        var catIcon = {
+          entrepot: "fa-warehouse",
+          production: "fa-industry",
+          metallurgie: "fa-fire",
+          manufacturier: "fa-gears",
+          maintenance: "fa-wrench",
+          supervision: "fa-user-tie",
+          logistique: "fa-boxes-stacked",
+          cadres: "fa-briefcase",
+          technologie: "fa-laptop-code",
+          finance: "fa-calculator",
+          ingenierie: "fa-compass-drafting",
+          transport: "fa-truck",
+          sante: "fa-heart-pulse",
+          commerce: "fa-store",
+          administration: "fa-building",
+          marketing: "fa-bullhorn"
+        };
         jobList.innerHTML = items.map(function (job) {
           var href = prefix + job.slug + ".html";
           var salary = job.salary_display || "";
@@ -406,24 +464,29 @@
           var sector = job.sector || "";
           var skills = job.skills || "";
           var exp = job.experience_level || "";
-          var cat = job.category || sector || "";
+          var cat = String(job.category || sector || "").toLowerCase();
           var hay = [job.title, loc, cat, sector, typ, salary, shiftVal, skills, exp].join(" ");
           var excerpt = job.summary || job.qualifications || job.description || skills || "";
           if (excerpt.length > 180) excerpt = excerpt.slice(0, 177) + "…";
-          var shownCat = catLabel[String(cat).toLowerCase()] || cat;
-          var cta = isEn ? "View opening" : "Voir l'offre";
-          return '<a class="tl-job-card" href="' + href + '" aria-label="' + escapeHtml(cta + " : " + job.title) + '" data-job="' + escapeHtml(hay) + '" data-city="' + escapeHtml(loc) + '" data-cat="' + escapeHtml(String(cat).toLowerCase()) + '" data-type="' + escapeHtml(typ) + '" data-shift="' + escapeHtml(shiftVal) + '" data-salary="' + escapeHtml(salary) + '" data-sector="' + escapeHtml(sector.toLowerCase()) + '" data-exp="' + escapeHtml(String(exp).toLowerCase()) + '">' +
-            '<div class="tl-job-card-top"><span class="tl-chip orange">' + escapeHtml(typ) + '</span>' +
+          var shownCat = catLabel[cat] || job.category || sector || "";
+          var cta = isEn ? "View opening and apply" : "Voir l'offre et postuler";
+          var icon = catIcon[cat] || "fa-briefcase";
+          var chips = String(skills).split(/[,;]/).map(function (s) { return s.trim(); }).filter(Boolean).slice(0, 6)
+            .map(function (s) { return "<span>" + escapeHtml(s) + "</span>"; }).join("");
+          var facts = "";
+          if (loc) facts += "<div><dt>" + (isEn ? "Location" : "Lieu") + "</dt><dd>" + escapeHtml(loc) + "</dd></div>";
+          if (salary) facts += "<div><dt>" + (isEn ? "Pay" : "Rémunération") + "</dt><dd>" + escapeHtml(salary) + "</dd></div>";
+          if (shiftVal) facts += "<div><dt>" + (isEn ? "Schedule" : "Horaire") + "</dt><dd>" + escapeHtml(shiftVal) + "</dd></div>";
+          return '<a class="tl-job-card" href="' + href + '" aria-label="' + escapeHtml(cta + " : " + job.title) + '" data-job="' + escapeHtml(hay) + '" data-city="' + escapeHtml(loc) + '" data-cat="' + escapeHtml(cat) + '" data-type="' + escapeHtml(typ) + '" data-shift="' + escapeHtml(shiftVal) + '" data-salary="' + escapeHtml(salary) + '" data-sector="' + escapeHtml(sector.toLowerCase()) + '" data-exp="' + escapeHtml(String(exp).toLowerCase()) + '">' +
+            '<div class="tl-job-card-banner"><span class="tl-job-card-icon" aria-hidden="true"><i class="fa-solid ' + icon + '"></i></span><div class="tl-job-card-banner-text"><p class="tl-job-card-cat">' + escapeHtml(shownCat) + '</p><p class="tl-job-card-via">Via Talendus</p></div></div>' +
+            '<div class="tl-job-card-body">' +
+            '<div class="tl-job-card-top">' + (typ ? '<span class="tl-chip orange">' + escapeHtml(typ) + "</span>" : "") +
             (expLabel[exp] ? '<span class="tl-chip">' + escapeHtml(expLabel[exp]) + "</span>" : "") + "</div>" +
             "<h3>" + escapeHtml(job.title) + "</h3>" +
-            '<ul class="tl-job-meta">' +
-              (loc ? '<li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>' + escapeHtml(loc) + "</span></li>" : "") +
-              (shiftVal ? '<li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>' + escapeHtml(shiftVal) + "</span></li>" : "") +
-              (salary ? '<li><i class="fa-solid fa-sack-dollar" aria-hidden="true"></i><span>' + escapeHtml(salary) + "</span></li>" : "") +
-            "</ul>" +
-            (excerpt ? '<p class="tl-job-excerpt">' + escapeHtml(excerpt) + "</p>" : "") +
-            (shownCat ? '<p class="tl-job-card-cat">' + escapeHtml(shownCat) + "</p>" : "") +
-            '<span class="tl-job-card-cta">' + cta + "</span></a>";
+            (facts ? '<dl class="tl-job-facts-mini">' + facts + "</dl>" : "") +
+            (excerpt ? '<p class="tl-job-excerpt-label">' + (isEn ? "Profile we look for" : "Profil recherché") + '</p><p class="tl-job-excerpt">' + escapeHtml(excerpt) + "</p>" : "") +
+            (chips ? '<div class="tl-job-skills">' + chips + "</div>" : "") +
+            '</div><span class="tl-job-card-cta">' + cta + "</span></a>";
         }).join("");
         filterJobs();
       }).catch(function () {});

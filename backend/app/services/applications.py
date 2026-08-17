@@ -144,7 +144,14 @@ def apply(db: Session, user: User, data: ApplicationCreateIn, ip: str | None = N
     return application
 
 
-def apply_public(db: Session, data: PublicApplyIn, ip: str | None = None) -> Application:
+def apply_public(
+    db: Session,
+    data: PublicApplyIn,
+    ip: str | None = None,
+    *,
+    cv_file: bytes | None = None,
+    cv_filename: str | None = None,
+) -> Application:
     job = get_public_job(db, data.job_slug)
     assert_job_open(job)
     email = data.email.lower()
@@ -175,7 +182,17 @@ def apply_public(db: Session, data: PublicApplyIn, ip: str | None = None) -> App
         db.add(UserPreference(user_id=user.id))
         db.add(Candidate(user_id=user.id, city=None, title=None))
         send_email(db, user.email, EmailType.WELCOME, "welcome", name=user.first_name, link=f"{job.title}")
-    payload = ApplicationCreateIn(job_slug=data.job_slug, cover_note=data.cover_note or data.cv_url)
+    resume_id = None
+    if cv_file and cv_filename:
+        from app.services.candidates import upload_cv
+
+        resume = upload_cv(db, user, cv_file, cv_filename)
+        resume_id = resume.id
+    payload = ApplicationCreateIn(
+        job_slug=data.job_slug,
+        cover_note=data.cover_note or (None if resume_id else data.cv_url),
+        resume_id=resume_id,
+    )
     return apply(db, user, payload, ip)
 
 

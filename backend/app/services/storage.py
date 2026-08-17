@@ -43,6 +43,15 @@ def detect_mime(data: bytes, filename: str) -> str:
     raise AppError(400, "Impossible de valider le type du fichier.", "INVALID_FILE_TYPE")
 
 
+def detect_resume_mime(data: bytes, filename: str) -> str:
+    ext = Path(filename).suffix.lower()
+    if ext in ALLOWED_EXT:
+        return detect_mime(data, filename)
+    if ext in ALLOWED_IMAGE_EXT:
+        return detect_image_mime(data, filename)
+    raise AppError(400, "Formats de CV autorisés : PDF, DOC, DOCX, PNG, JPG, WEBP.", "INVALID_FILE_TYPE")
+
+
 def detect_image_mime(data: bytes, filename: str) -> str:
     ext = Path(filename).suffix.lower()
     if ext not in ALLOWED_IMAGE_EXT:
@@ -79,6 +88,8 @@ def save_bytes(
         raise AppError(400, "Fichier vide ou illisible.", "INVALID_FILE")
     if kind == "image":
         mime = detect_image_mime(data, filename)
+    elif kind == "resume":
+        mime = detect_resume_mime(data, filename)
     else:
         mime = detect_mime(data, filename)
     ext = Path(filename).suffix.lower()
@@ -169,7 +180,7 @@ def _s3_client():
 
 
 def save_resume(data: bytes, filename: str) -> tuple[str, str, str, int, str]:
-    return save_bytes(data, filename, category="resumes")
+    return save_bytes(data, filename, category="resumes", kind="resume")
 
 
 def resume_path(stored_name: str) -> Path:
