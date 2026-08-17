@@ -1,5 +1,5 @@
 /* =========================================================
-   Talendus — design system industriel (navy / électrique / orange sécurité)
+   Talendus : design system industriel (navy / électrique / orange sécurité)
    Surcharge du template StaffX (homepage 2).
    ========================================================= */
 :root {
@@ -513,13 +513,14 @@ p, li, h1, h2, h3, h4, a { overflow-wrap: break-word; }
 
 .tl-btn-ghost {
   background: transparent !important;
-  border: 1px solid rgba(255,255,255,.45) !important;
-  color: #fff !important;
+  border: 1px solid rgba(11,31,58,.22) !important;
+  color: var(--tl-navy) !important;
   box-shadow: none !important;
 }
 .tl-btn-ghost:hover {
-  background: rgba(255,255,255,.1) !important;
-  border-color: #fff !important;
+  background: rgba(11,31,58,.04) !important;
+  border-color: var(--tl-navy) !important;
+  color: var(--tl-navy) !important;
 }
 
 .tl-btn-ghost-dark {
@@ -531,6 +532,7 @@ p, li, h1, h2, h3, h4, a { overflow-wrap: break-word; }
 .tl-btn-ghost-dark:hover {
   border-color: var(--tl-navy) !important;
   background: rgba(11,31,58,.04) !important;
+  color: var(--tl-navy) !important;
 }
 
 .tl-btn-navy { background: var(--tl-navy) !important; }
@@ -547,7 +549,6 @@ p, li, h1, h2, h3, h4, a { overflow-wrap: break-word; }
   gap: 10px;
   padding: 15px 24px;
   border-radius: var(--tl-radius-sm);
-  color: #fff !important;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: .02em;
@@ -559,6 +560,11 @@ p, li, h1, h2, h3, h4, a { overflow-wrap: break-word; }
   border: 0;
   cursor: pointer;
 }
+.tl-btn,
+.tl-btn-navy,
+.tl-btn-electric {
+  color: #fff !important;
+}
 .tl-btn-navy, .tl-btn-electric { box-shadow: 0 10px 24px rgba(11, 31, 58, 0.22); }
 .tl-btn:hover,
 .tl-btn-navy:hover,
@@ -569,6 +575,37 @@ p, li, h1, h2, h3, h4, a { overflow-wrap: break-word; }
 }
 .tl-btn-navy:hover { background: #16365f !important; }
 .tl-btn-electric:hover { background: var(--tl-electric-2) !important; }
+
+/* Boutons fantômes sur fonds sombres : texte blanc lisible */
+.vl-transparent-header .tl-btn-ghost,
+.tl-header-tools .tl-btn-ghost,
+.tl-mobile-tools .tl-btn-ghost,
+.vl-offcanvas .tl-btn-ghost,
+.tl-page-hero .tl-btn-ghost,
+.tl-cta-band .tl-btn-ghost,
+.tl-dark .tl-btn-ghost,
+.tl-consent .tl-btn-ghost,
+.tl-split .tl-btn-ghost,
+.tl-speed .tl-btn-ghost,
+.tl-calc .tl-btn-ghost {
+  border: 1px solid rgba(255,255,255,.45) !important;
+  color: #fff !important;
+}
+.vl-transparent-header .tl-btn-ghost:hover,
+.tl-header-tools .tl-btn-ghost:hover,
+.tl-mobile-tools .tl-btn-ghost:hover,
+.vl-offcanvas .tl-btn-ghost:hover,
+.tl-page-hero .tl-btn-ghost:hover,
+.tl-cta-band .tl-btn-ghost:hover,
+.tl-dark .tl-btn-ghost:hover,
+.tl-consent .tl-btn-ghost:hover,
+.tl-split .tl-btn-ghost:hover,
+.tl-speed .tl-btn-ghost:hover,
+.tl-calc .tl-btn-ghost:hover {
+  background: rgba(255,255,255,.1) !important;
+  border-color: #fff !important;
+  color: #fff !important;
+}
 
 .tl-btn-lg {
   padding: 18px 28px;
@@ -1038,7 +1075,7 @@ a.tl-card:hover, .tl-job-card:hover, .tl-case:hover {
 .tl-ice { background: var(--tl-ice); }
 
 /* =========================================================
-   Hero slider — dimensions, cadrage, CTA verrouillés
+   Hero slider : dimensions, cadrage, CTA verrouillés
    ========================================================= */
 :root { --tl-hero-h: clamp(560px, 78vh, 720px); }
 .hero2-arrow-hero { overflow: hidden; }
@@ -1285,7 +1322,7 @@ a.tl-card:hover, .tl-job-card:hover, .tl-case:hover {
 }
 
 /* =========================================================
-   Responsive — 479 / 767 / 991 / 1199
+   Responsive : 479 / 767 / 991 / 1199
    Desktop nav from 1200px. Hamburger below.
    ========================================================= */
 @media (min-width: 1200px) {
@@ -2352,7 +2389,7 @@ body.tl-auth-guest .tl-portal-section { padding-top: 28px; padding-bottom: 48px;
 .tl-session-row { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
 
 /* =========================================================
-   Persona-first — hide mixed CTAs, gateway hero
+   Persona-first : hide mixed CTAs, gateway hero
    ========================================================= */
 .homepage2-body .vl-transparent-header .tl-account-link,
 .homepage2-body .vl-transparent-header .tl-register-link {

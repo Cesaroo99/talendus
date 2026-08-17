@@ -213,7 +213,7 @@
       return map[s] || s;
     }
     function fmtDate(v) {
-      if (!v) return "—";
+      if (!v) return "-";
       return String(v).replace("T", " ").slice(0, 16);
     }
     function authDownload(path, filename) {
@@ -431,11 +431,11 @@
       var primary = ((profile && profile.resumes) || []).filter(function (r) { return r.is_primary; })[0];
       var html = "";
       if ((c.percent || 0) < 70) {
-        html += '<div class="tl-onboard"><b>' + esc(t.onboard) + "</b> — " + esc(c.percent || 0) + " % · " +
+        html += '<div class="tl-onboard"><b>' + esc(t.onboard) + "</b>, " + esc(c.percent || 0) + " % · " +
           '<button type="button" class="tl-text-btn" data-nav="profile">' + esc(t.quickProfile) + "</button></div>";
       }
       html += "<p class=\"tl-lead\">" + esc(t.hello) + " " + esc(user.first_name || "") + "</p>" +
-        "<p>" + esc(t.completeness) + " — <b>" + esc(c.percent || 0) + " %</b></p><div class=\"tl-progress\"><i style=\"width:" + (c.percent || 0) + "%\"></i></div>" +
+        "<p>" + esc(t.completeness) + ", <b>" + esc(c.percent || 0) + " %</b></p><div class=\"tl-progress\"><i style=\"width:" + (c.percent || 0) + "%\"></i></div>" +
         '<div class="tl-stat-grid">' + stats.map(function (row) {
           return '<div class="tl-stat-card"><b>' + esc(row[2] || 0) + "</b><span>" + esc(row[1]) + "</span></div>";
         }).join("") + "</div><div class=\"tl-quick-actions\">" +
@@ -457,14 +457,14 @@
     function profileForm(user, profile) {
       profile = profile || {};
       var exp = (profile.experiences || []).map(function (e) {
-        return "<li>" + esc(e.role) + " — " + esc(e.company) + ' <button type="button" class="tl-btn tl-btn-ghost" data-del-exp="' + esc(e.id) + '">' + esc(t.remove) + "</button></li>";
-      }).join("") || "<li>—</li>";
+        return "<li>" + esc(e.role) + ", " + esc(e.company) + ' <button type="button" class="tl-btn tl-btn-ghost" data-del-exp="' + esc(e.id) + '">' + esc(t.remove) + "</button></li>";
+      }).join("") || "<li>-</li>";
       var edu = (profile.education || []).map(function (e) {
-        return "<li>" + esc(e.diploma || "") + " — " + esc(e.school) + ' <button type="button" class="tl-btn tl-btn-ghost" data-del-edu="' + esc(e.id) + '">' + esc(t.remove) + "</button></li>";
-      }).join("") || "<li>—</li>";
+        return "<li>" + esc(e.diploma || "") + ", " + esc(e.school) + ' <button type="button" class="tl-btn tl-btn-ghost" data-del-edu="' + esc(e.id) + '">' + esc(t.remove) + "</button></li>";
+      }).join("") || "<li>-</li>";
       var certs = (profile.certifications || []).map(function (e) {
         return "<li>" + esc(e.name) + ' <button type="button" class="tl-btn tl-btn-ghost" data-del-cert="' + esc(e.id) + '">' + esc(t.remove) + "</button></li>";
-      }).join("") || "<li>—</li>";
+      }).join("") || "<li>-</li>";
       return '<p class="tl-meta">' + esc(t.updated) + " : " + esc(fmtDate(profile.updated_at)) + "</p>" +
         '<form class="tl-form" id="acc-avatar"><label>' + esc(t.photo) + '</label><input name="file" type="file" accept="image/jpeg,image/png,image/webp">' +
         '<button class="tl-btn tl-btn-ghost" type="submit">' + esc(t.save) + '</button><div class="tl-success"></div></form>' +
@@ -682,7 +682,7 @@
 
     function renderMessages(threads, directory, thread) {
       var opts = (directory || []).map(function (p) {
-        return '<option value="' + esc(p.id) + '">' + esc((p.first_name || "") + " " + (p.last_name || "") + " — " + statusLabel(p.role || "")) + "</option>";
+        return '<option value="' + esc(p.id) + '">' + esc((p.first_name || "") + " " + (p.last_name || "") + ", " + statusLabel(p.role || "")) + "</option>";
       }).join("");
       var list = (!threads || !threads.length) ? empty(t.emptyMsgs) : threads.map(function (th) {
         return '<button type="button" class="tl-account-notif' + (th.unread ? " is-unread" : "") + '" data-open-thread="' + esc(th.user_id) + '"><b>' +
@@ -725,12 +725,12 @@
       var list = (docs || []).map(function (d) {
         return "<li>" + esc(d.original_name) + " · " + esc(d.kind) + ' <button type="button" class="tl-btn tl-btn-ghost" data-dl="' + esc(d.download_path) + '" data-dl-name="' + esc(d.original_name) + '">' + esc(t.download) +
           '</button> <button type="button" class="tl-btn tl-btn-ghost" data-del-doc="' + esc(d.id) + '">' + esc(t.remove) + "</button></li>";
-      }).join("") || "<li>—</li>";
+      }).join("") || "<li>-</li>";
       var cvs = (resumes || []).map(function (r) {
         return "<li>" + esc(r.original_name) + (r.is_primary ? " · CV" : "") +
           ' <button type="button" class="tl-btn tl-btn-ghost" data-dl="' + esc(r.download_path) + '" data-dl-name="' + esc(r.original_name) + '">' + esc(t.download) + "</button>" +
           ' <button type="button" class="tl-btn tl-btn-ghost" data-del-cv="' + esc(r.id) + '">' + esc(t.remove) + "</button></li>";
-      }).join("") || "<li>—</li>";
+      }).join("") || "<li>-</li>";
       return "<h3>CV</h3><ul>" + cvs + '</ul><form class="tl-form" id="acc-cv"><label>' + esc(t.upload) +
         '</label><input name="file" type="file" accept=".pdf,.doc,.docx,application/pdf" required><button class="tl-btn" type="submit">' +
         esc(t.replace) + '</button><div class="tl-success"></div></form><h3>' + esc(t.otherDocs) + "</h3><ul>" + list +
@@ -928,7 +928,7 @@
         return "<tr><td data-label=\"" + esc(t.first) + "\">" + esc((c.first_name || "") + " " + (c.last_name || "")) +
           "</td><td data-label=\"" + esc(t.title) + "\">" + esc(c.title || job.title || "") + "</td><td data-label=\"" + esc(t.apps) + "\">" +
           '<span class="tl-chip orange">' + esc(statusLabel(a.status)) + "</span></td><td data-label=\"" + esc(t.experience) + "\">" +
-          esc(c.years_experience || "—") +
+          esc(c.years_experience || "-") +
           '</td><td><button type="button" class="tl-btn tl-btn-ghost" data-nav="candidate" data-id="' + esc(c.id || "") + '">' +
           esc(t.candidates) + "</button></td></tr>";
       }).join("") + "</tbody></table></div>";
@@ -979,7 +979,7 @@
             "</article>";
         }).join("");
         return '<section class="tl-pipe-col"><h4>' + esc(st[1]) + " <span>" + (grouped[st[0]] || []).length + "</span></h4>" +
-          (cards || '<p class="tl-meta">—</p>') + "</section>";
+          (cards || '<p class="tl-meta">-</p>') + "</section>";
       }).join("") + "</div>";
     }
 

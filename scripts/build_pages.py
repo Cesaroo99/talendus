@@ -138,25 +138,25 @@ JOBS = [
 SECTORS = [
     ("manufacturier", "Manufacturier", "Recrutement manufacturier au Québec", "Un exemple parmi d'autres : fabrication, assemblage et métiers de production. Talendus recrute aussi bien au-delà de l'industrie."),
     ("production", "Production", "Recrutement en production au Québec", "Lignes, méthodes, qualité et supervision. Un des nombreux métiers que Talendus peut pourvoir."),
-    ("entrepot", "Entrepôt", "Recrutement entrepôt Québec", "Caristes, préparateurs, commis et superviseurs d'entrepôt — un exemple de profils logistiques."),
+    ("entrepot", "Entrepôt", "Recrutement entrepôt Québec", "Caristes, préparateurs, commis et superviseurs d'entrepôt, un exemple de profils logistiques."),
     ("logistique", "Logistique", "Recrutement logistique Québec", "Planification, transport, WMS et coordination. La logistique est un secteur parmi d'autres."),
     ("distribution", "Distribution", "Recrutement distribution Québec", "Centres de distribution, expédition, réception et gestion des stocks."),
     ("transport", "Transport", "Recrutement transport et logistique", "Chauffeurs, coordination transport et flux. Talendus accompagne aussi d'autres industries."),
     ("transformation-alimentaire", "Transformation alimentaire", "Recrutement alimentaire Québec", "Production alimentaire : hygiène, opérateurs et supervision. Un exemple, pas une spécialisation exclusive."),
     ("metallurgie", "Métallurgie", "Recrutement métallurgie et soudure Québec", "Soudure, usinage, fabrication métallique. D'autres métiers et secteurs sont tout autant concernés."),
     ("plasturgie", "Plasturgie", "Recrutement plasturgie Québec", "Injection, extrusion, set-up et techniciens de procédé."),
-    ("maintenance", "Maintenance", "Recrutement maintenance Québec", "Techniciens, mécaniciens et responsables fiabilité — parmi une grande variété de métiers."),
+    ("maintenance", "Maintenance", "Recrutement maintenance Québec", "Techniciens, mécaniciens et responsables fiabilité, parmi une grande variété de métiers."),
 ]
 
 ARTICLES = [
     ("mauvaise-embauche", "Combien coûte une mauvaise embauche ?", "RH", "usine-equipe.jpg",
-     "Un mauvais fit ne se limite pas au salaire. Entre formation, heures supplémentaires, perte de productivité et roulement, la facture grimpe vite — dans n'importe quel secteur."),
+     "Un mauvais fit ne se limite pas au salaire. Entre formation, heures supplémentaires, perte de productivité et roulement, la facture grimpe vite, dans n'importe quel secteur."),
     ("machiniste-cnc", "Recruter un machiniste CNC au Québec en 2026", "Métiers", "cnc-machiniste.jpg",
-     "Le machiniste CNC reste un profil tendu. Voici comment attirer, évaluer et retenir ce talent — un exemple parmi beaucoup d'autres métiers."),
+     "Le machiniste CNC reste un profil tendu. Voici comment attirer, évaluer et retenir ce talent, un exemple parmi beaucoup d'autres métiers."),
     ("caristes-entrepot", "Pénurie de caristes : stratégies pour les entrepôts", "Logistique", "entrepot-logistique.jpg",
      "Les centres de distribution se disputent les caristes expérimentés. Trois leviers concrets, transposables à d'autres métiers rares."),
     ("superviseur-production", "Superviseur de production : le profil qui change une équipe", "Production", "usine-equipe.jpg",
-     "Un bon superviseur stabilise la qualité et le climat. Voici le portrait que nous validons — applicable à d'autres rôles de gestion."),
+     "Un bon superviseur stabilise la qualité et le climat. Voici le portrait que nous validons, applicable à d'autres rôles de gestion."),
     ("roulement-manufacturier", "Réduire le roulement en recrutement", "Recrutement", "soudeur-atelier.jpg",
      "Le roulement n'est pas qu'un problème salarial. Accueil, clarté du poste et adéquation culturelle font la différence, quel que soit le secteur."),
 ]
@@ -235,8 +235,8 @@ simple_page(
     <p>Trop d'entreprises perdent des semaines à chercher les bonnes personnes, à trier trop de candidatures, ou à laisser un processus s'éterniser. Trop de talents envoient des CV dans le vide. Le recrutement mérite mieux qu'un tableau d'affichage ou qu'un logiciel que l'on doit apprendre à utiliser seul.</p>
     <p>Talendus a été conçu comme une agence de placement nouvelle génération : généraliste, humaine et technologique. Lorsqu'une entreprise a un besoin, elle nous le transmet. Nous prenons en charge la recherche et la présélection. L'intelligence artificielle est déjà au cœur de nos outils internes : elle accélère l'analyse, la recherche et certaines étapes de présélection. Les conseillers restent là pour comprendre, qualifier et présenter. L'entreprise garde la décision finale.</p>
     <h2 class="tl-h2">Ce que nous faisons</h2>
-    <p>Nous rapprochons les entreprises et les talents. Développeurs, comptables, soudeurs, infirmiers, chauffeurs, responsables RH, gestionnaires — et bien d'autres métiers, dans tous les secteurs. Un conseiller présente les dossiers. Candidats et employeurs restent chacun de leur côté. Il n'y a pas de canal direct non médié.</p>
-    <p>Nous recrutons mieux, plus vite et plus intelligemment grâce à l'IA : « nous recrutons » signifie que Talendus mène la recherche et la présélection pour le compte de l'entreprise. « Plus vite » : nos outils et l'IA accélèrent déjà certaines étapes. « Plus intelligemment » : données, technologie, IA et expertise humaine, ensemble — dès aujourd'hui.</p>
+    <p>Nous rapprochons les entreprises et les talents. Développeurs, comptables, soudeurs, infirmiers, chauffeurs, responsables RH, gestionnaires, et bien d'autres métiers, dans tous les secteurs. Un conseiller présente les dossiers. Candidats et employeurs restent chacun de leur côté. Il n'y a pas de canal direct non médié.</p>
+    <p>Nous recrutons mieux, plus vite et plus intelligemment grâce à l'IA : « nous recrutons » signifie que Talendus mène la recherche et la présélection pour le compte de l'entreprise. « Plus vite » : nos outils et l'IA accélèrent déjà certaines étapes. « Plus intelligemment » : données, technologie, IA et expertise humaine, ensemble, dès aujourd'hui.</p>
     <h2 class="tl-h2">Ce que nous ne sommes pas</h2>
     <p>Pas un job board où l'entreprise parcourt une base. Pas une marketplace. Pas un ATS en libre-service. Pas un logiciel qui promet un candidat parfait sans humain. La technologie reste au service du processus Talendus.</p>
     <h2 class="tl-h2">L'IA, déjà dans notre identité opérationnelle</h2>
@@ -294,10 +294,10 @@ services_cards = "".join(
         ("chasse-de-tetes.html", "Passif", "Chasse de têtes", "Nous approchons des personnes déjà en poste pour les profils rares. Vous ne parcourez pas une base : nous identifions et présentons."),
         ("recrutement-cadres.html", "Direction", "Recrutement de cadres", "Gestionnaires et dirigeants. Souvent confidentiel. Shortlist qualifiée, décision chez vous."),
         ("recrutement-industriel.html", "Exemple", "Recrutement industriel", "Un exemple parmi d'autres : production, maintenance, logistique. Talendus n'est pas limité à l'industrie."),
-        ("recrutement-technique.html", "Métiers", "Métiers spécialisés", "Techniciens, soudeurs, développeurs, infirmiers, comptables — une grande variété de profils, tous secteurs."),
+        ("recrutement-technique.html", "Métiers", "Métiers spécialisés", "Techniciens, soudeurs, développeurs, infirmiers, comptables, une grande variété de profils, tous secteurs."),
         ("recrutement-temporaire.html", "Urgent", "Recrutement urgent", "Quand un poste critique est découvert. Une shortlist filtrée, pas une avalanche de CV."),
         ("chasse-de-tetes.html", "Discret", "Mandats confidentiels", "Remplacements de cadres ou réorganisations menés sans bruit interne."),
-        ("entreprises.html", "RH", "Accompagnement RH", "Descriptifs de poste, grilles salariales, entrevues conjointes et intégration — autour du mandat de placement."),
+        ("entreprises.html", "RH", "Accompagnement RH", "Descriptifs de poste, grilles salariales, entrevues conjointes et intégration, autour du mandat de placement."),
     ]
 )
 simple_page(
@@ -317,7 +317,7 @@ simple_page(
           <ul>
             <li>Une shortlist qualifiée, pas un portail d'emplois déguisé.</li>
             <li>Un délai annoncé dès le brief, selon la rareté réelle du profil.</li>
-            <li>Un conseiller qui comprend le poste — l'IA est déjà utilisée par Talendus, elle ne vous est pas remise comme un moteur de recherche.</li>
+            <li>Un conseiller qui comprend le poste, l'IA est déjà utilisée par Talendus, elle ne vous est pas remise comme un moteur de recherche.</li>
           </ul>
         </div>
         <div class="col-lg-6">
@@ -346,7 +346,7 @@ EMPLOYERS_BODY = (
       <div class="tl-prose">
         <div class="tl-kicker">La solution Talendus</div>
         <h2 class="tl-h2">Nous faisons le travail de recherche pour vous.</h2>
-        <p>Vous avez un poste à pourvoir. Au lieu de publier une annonce et de trier des dizaines — parfois des centaines — de candidatures, vous transmettez le besoin à Talendus. Nous comprenons le poste, nous recherchons les profils, nous analysons les parcours, nous présélectionnons, nous échangeons avec les candidats lorsque c'est nécessaire, nous évaluons, puis nous vous présentons une sélection qualifiée.</p>
+        <p>Vous avez un poste à pourvoir. Au lieu de publier une annonce et de trier des dizaines (parfois des centaines) de candidatures, vous transmettez le besoin à Talendus. Nous comprenons le poste, nous recherchons les profils, nous analysons les parcours, nous présélectionnons, nous échangeons avec les candidats lorsque c'est nécessaire, nous évaluons, puis nous vous présentons une sélection qualifiée.</p>
         <p>Vous n'accédez pas à une base de CV. Vous ne « cherchez pas des talents » sur Talendus comme sur un logiciel ATS. Vous mandattez une agence. Talendus utilise déjà l'intelligence artificielle dans ses outils internes pour accélérer la recherche, l'analyse et la présélection des talents. Vous bénéficiez de cette puissance sans avoir à l'utiliser vous-même. La décision d'embauche reste la vôtre.</p>
       </div>
     </div></section>
@@ -420,13 +420,13 @@ EMPLOYERS_BODY = (
     + proof_stats("fr")
 )
 write("entreprises.html", wrap(
-    "Entreprises | Agence de placement — Talendus",
+    "Entreprises | Agence de placement | Talendus",
     "Confiez un recrutement à Talendus. Nous utilisons déjà l'IA en interne pour accélérer la recherche, l'analyse et la présélection. Vous recevez une shortlist qualifiée et gardez la décision finale.",
     "entreprises.html",
     EMPLOYERS_BODY,
 ))
 write("employeurs.html", wrap(
-    "Employeurs | Recrutement pour toutes les entreprises — Talendus",
+    "Employeurs | Recrutement pour toutes les entreprises | Talendus",
     "Redirection vers l’espace entreprises Talendus.",
     "employeurs.html",
     '<section class="tl-section"><div class="container"><p>Cette page a été déplacée. <a href="entreprises.html">Continuer vers Entreprises</a></p><script>location.replace("entreprises.html");</script></div></section>',
@@ -434,7 +434,7 @@ write("employeurs.html", wrap(
 
 # Candidats
 write("candidats.html", wrap(
-    "Candidats | Rejoindre Talendus — agence de placement",
+    "Candidats | Rejoindre Talendus",
     "Créez votre profil chez Talendus. Nous étudions votre parcours et vous contactons lorsqu'une opportunité correspond. Gratuit. Tous secteurs.",
     "candidats.html",
     page_hero(
@@ -457,7 +457,7 @@ write("candidats.html", wrap(
           <h3>Ce que Talendus fait ensuite</h3>
           <ol>
             <li>Analyse de votre profil et de votre CV.</li>
-            <li>Considération pour les mandats pertinents — y compris non affichés.</li>
+            <li>Considération pour les mandats pertinents, y compris non affichés.</li>
             <li>Échanges avec un conseiller, puis étapes de sélection si besoin.</li>
             <li>Présentation à une entreprise uniquement lorsque ça colle.</li>
           </ol>
@@ -516,7 +516,7 @@ write("candidats.html", wrap(
 
 # Contact
 write("contact.html", wrap(
-    "Contact | Confier un recrutement ou créer un profil — Talendus",
+    "Contact | Confier un recrutement ou créer un profil | Talendus",
     "Contactez Talendus à Montréal. Confiez un besoin de recrutement ou créez votre profil. Appels sur rendez-vous. 514 555-0199 · info@talendus.ca",
     "contact.html",
     page_hero(
@@ -590,7 +590,7 @@ write("contact.html", wrap(
           <h2 class="tl-h2">Déposer mon CV ou poser une question</h2>
           <p class="tl-lead">C'est gratuit. Un conseiller vous rappelle si un mandat correspond.</p>
           <form class="tl-form" action="#" method="post" data-form="contact">
-            <input type="hidden" name="profil" value="Candidat — je cherche un poste">
+            <input type="hidden" name="profil" value="Candidat, je cherche un poste">
             <label>Nom</label><input required name="nom">
             <label>Courriel</label><input type="email" required name="courriel">
             <label>Téléphone</label><input name="tel">
@@ -610,7 +610,7 @@ write("contact.html", wrap(
           <h2 class="tl-h2">Décrire mon besoin de recrutement</h2>
           <p class="tl-lead">Vous transmettez le poste. Talendus recherche et présélectionne. Appel gratuit, sur rendez-vous.</p>
           <form class="tl-form" action="#" method="post" data-form="hiring-need">
-            <input type="hidden" name="profil" value="Employeur — je recrute">
+            <input type="hidden" name="profil" value="Employeur, je recrute">
             <label>Nom</label><input required name="nom">
             <label>Entreprise</label><input required name="entreprise">
             <label>Courriel</label><input type="email" required name="courriel">
@@ -670,7 +670,7 @@ write("emplois.html", wrap(
 
 for slug, title, city, cat, typ, sal, shift, req, sector, skills, exp in JOBS:
     write(f"emploi-{slug}.html", wrap(
-        f"{title} à {city} | Emploi — Talendus",
+        f"{title} à {city} | Emploi | Talendus",
         f"Poste de {title} à {city}, Québec. {typ}. Postulez via Talendus : un conseiller présente votre dossier. Agence de placement, tous secteurs.",
         f"emploi-{slug}.html",
         page_hero(
@@ -712,7 +712,7 @@ sec_cards = "".join(
     for s, n, t, d in SECTORS
 )
 write("secteurs.html", wrap(
-    "Tous les secteurs | Agence de placement — Talendus",
+    "Tous les secteurs | Agence de placement | Talendus",
     "Talendus recrute pour tous les secteurs et tous les types de métiers. Technologie, construction, santé, finance, industrie, commerce et bien plus.",
     "secteurs.html",
     page_hero(
@@ -739,7 +739,7 @@ for slug, name, title, desc in SECTORS:
             <div class="col-lg-7">
               <p class="tl-lead">{desc} Ce n'est pas une spécialisation exclusive : Talendus recrute pour toutes les entreprises, dans tous les métiers.</p>
               <h2 class="tl-h2">Métiers typiques</h2>
-              <p>Opération, métiers spécialisés, supervision, gestion — et d'autres profils selon votre besoin.</p>
+              <p>Opération, métiers spécialisés, supervision, gestion, et d'autres profils selon votre besoin.</p>
               <div class="tl-actions" style="margin-top:24px">
                 <a class="tl-btn" href="contact.html">Confiez-nous votre recrutement</a>
                 <a class="tl-btn tl-btn-ghost-dark" href="secteurs.html">Tous les secteurs</a>
@@ -806,7 +806,7 @@ for slug, title, cat, img, lead in ARTICLES:
             <li>Prévoir l'accueil 30/60/90 jours : c'est là que se joue la rétention.</li>
           </ul>
           <h2>Comment Talendus intervient</h2>
-          <p>Nous ciblons des profils selon le métier et les compétences, nous validons le fit et nous présentons peu de dossiers — chacun que nous sommes prêts à défendre. Talendus utilise déjà l'IA en interne pour analyser plus vite les informations et identifier des correspondances ; elle ne choisit pas à la place de l'entreprise. La qualification reste humaine.</p>
+          <p>Nous ciblons des profils selon le métier et les compétences, nous validons le fit et nous présentons peu de dossiers, chacun que nous sommes prêts à défendre. Talendus utilise déjà l'IA en interne pour analyser plus vite les informations et identifier des correspondances ; elle ne choisit pas à la place de l'entreprise. La qualification reste humaine.</p>
           <p><a href="secteurs.html">Tous les secteurs</a> · <a href="emplois.html">Offres d'emploi</a> · <a href="entreprises.html">Solutions entreprises</a></p>
           <div class="tl-actions" style="margin-top:28px">
             <a class="tl-btn" href="contact.html">Confier mon recrutement</a>
@@ -915,7 +915,7 @@ simple_page(
     "solutions-rh.html",
     "Entreprises",
     "Structurer le recrutement, pas seulement combler un trou.",
-    "Descriptions de poste, grilles salariales, entrevues conjointes et suivi d'intégration — pour les entreprises qui veulent arrêter d'improviser.",
+    "Descriptions de poste, grilles salariales, entrevues conjointes et suivi d'intégration, pour les entreprises qui veulent arrêter d'improviser.",
     """
     <section class="tl-section"><div class="container">
       <div class="tl-grid-3">
