@@ -102,6 +102,16 @@
 
   /* ---------- Auth ---------- */
   function renderLogin() {
+    var production = TLStore.apiEnv === "production";
+    var emailPrefill = production ? "lea.super@talendus.ca" : "sophie.admin@talendus.ca";
+    var passPrefill = production ? "" : "talendus";
+    var demo = production ? "" : `<div class="demo-accounts">
+              Démo locale · mot de passe <b>talendus</b><br>
+              <button type="button" data-fill="sophie.admin@talendus.ca">Admin</button> ·
+              <button type="button" data-fill="marc.recruiter@talendus.ca">Recruteur</button> ·
+              <button type="button" data-fill="nathalie.finance@talendus.ca">Finance</button> ·
+              <button type="button" data-fill="alex.editeur@talendus.ca">Éditeur</button>
+            </div>`;
     app.innerHTML = `
       <div class="login">
         <section class="login-brand">
@@ -120,19 +130,13 @@
         <section class="login-panel">
           <div class="login-card">
             <h2>Connexion</h2>
-            <p class="sub">Espace privé — accès réservé à l’équipe Talendus.</p>
+            <p class="sub">${production ? "Serveur de production — compte staff uniquement (ADMIN_EMAIL sur Render)." : "Espace privé — accès réservé à l’équipe Talendus."}</p>
             <form id="login-form" class="form-grid" style="grid-template-columns:1fr">
-              ${U.field("Courriel", "email", "sophie.admin@talendus.ca", "email")}
-              ${U.field("Mot de passe", "password", "talendus", "password")}
+              ${U.field("Courriel", "email", emailPrefill, "email")}
+              ${U.field("Mot de passe", "password", passPrefill, "password")}
               <button class="btn btn-orange" type="submit">Entrer dans le back-office</button>
             </form>
-            <div class="demo-accounts">
-              Démo · mot de passe <b>talendus</b><br>
-              <button type="button" data-fill="sophie.admin@talendus.ca">Admin</button> ·
-              <button type="button" data-fill="marc.recruiter@talendus.ca">Recruteur</button> ·
-              <button type="button" data-fill="nathalie.finance@talendus.ca">Finance</button> ·
-              <button type="button" data-fill="alex.editeur@talendus.ca">Éditeur</button>
-            </div>
+            ${demo}
           </div>
         </section>
       </div>`;
@@ -140,7 +144,12 @@
       e.preventDefault();
       var d = U.formData(e.target);
       var u = await TLStore.login(d.email, d.password);
-      if (!u) { U.toast("Identifiants incorrects.", "err"); return; }
+      if (!u) {
+        var err = TLStore.lastError;
+        if (err === "not-staff") U.toast("Ce compte n’a pas accès au back-office. Utilisez le compte administrateur de production.", "err");
+        else U.toast("Identifiants incorrects.", "err");
+        return;
+      }
       U.toast("Bienvenue " + u.firstName + ".", "ok");
       go("#/" + firstModule());
       render();
@@ -1876,7 +1885,11 @@
     render();
   });
   (async function boot() {
-    if (TLStore.me() && window.TalendusAPI && TLStore.hydrateFromApi) {
+    if (TLStore.detectEnv) await TLStore.detectEnv();
+    if (TLStore.apiEnv === "production" && TLStore.me() && !TLStore.isLive()) {
+      TLStore.logout();
+    }
+    if (TLStore.me() && window.TalendusAPI && TLStore.hydrateFromApi && TLStore.isLive()) {
       await TLStore.hydrateFromApi();
     }
     render();

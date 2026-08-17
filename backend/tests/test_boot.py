@@ -62,3 +62,28 @@ def test_production_seed_has_no_direct_employer_or_fake_companies(client, monkey
         assert db.scalar(select(func.count()).select_from(User).where(User.role == UserRole.EMPLOYER)) == 0
     finally:
         db.close()
+
+
+def test_production_admin_created_when_candidates_already_exist(client, monkeypatch):
+    from sqlalchemy import select
+
+    from app import seed as seed_mod
+    from app.database import SessionLocal
+    from app.models import User
+    from app.models.enums import UserRole
+    from conftest import register
+
+    register(client, "sophie.admin@talendus.ca", first_name="Sophie")
+    monkeypatch.setattr(seed_mod.settings, "app_env", "production")
+    monkeypatch.setattr(seed_mod.settings, "admin_email", "lea.super@talendus.ca")
+    monkeypatch.setattr(seed_mod.settings, "admin_password", "SuperSecret12!")
+    seed_mod.seed_if_empty()
+    db = SessionLocal()
+    try:
+        admin = db.scalar(select(User).where(User.email == "lea.super@talendus.ca"))
+        assert admin is not None
+        assert admin.role == UserRole.SUPER_ADMIN
+        cand = db.scalar(select(User).where(User.email == "sophie.admin@talendus.ca"))
+        assert cand.role == UserRole.CANDIDATE
+    finally:
+        db.close()

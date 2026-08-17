@@ -223,12 +223,26 @@
         return false;
       }
     },
+    apiEnv: "",
+    lastError: "",
+    detectEnv: async function () {
+      try {
+        var root = window.TALENDUS_API_URL ? String(window.TALENDUS_API_URL).replace(/\/$/, "") : "/api";
+        var json = await fetch(root + "/health").then(function (res) { return res.json(); });
+        this.apiEnv = (json && json.data && json.data.env) || "";
+      } catch (e) {
+        this.apiEnv = "";
+      }
+      return this.apiEnv;
+    },
     isLive: function () {
       var s = this.session();
       return !!(s && s.access_token);
     },
     subscribe: function (fn) { listeners.push(fn); },
     login: async function (email, password) {
+      this.lastError = "";
+      var production = this.apiEnv === "production";
       if (window.TalendusAPI) {
         try {
           var json = await window.TalendusAPI.login(email, password);
@@ -236,7 +250,11 @@
           if (apiUser) {
             var staffMap = { ADMIN: "admin", SUPER_ADMIN: "admin", RECRUITER: "recruiter", FINANCE: "finance", EDITOR: "editor" };
             var mapped = staffMap[apiUser.role];
-            if (!mapped) throw new Error("not-staff");
+            if (!mapped) {
+              window.TalendusAPI.clearSession();
+              this.lastError = "not-staff";
+              return null;
+            }
             var local = state.users.find(function (x) { return x.email === email; });
             if (local) {
               sessionStorage.setItem(SESSION, JSON.stringify({ id: local.id, role: local.role, access_token: json.data.access_token }));
@@ -262,8 +280,19 @@
             await this.hydrateFromApi();
             return created;
           }
-        } catch (e) {}
+        } catch (e) {
+          if (window.TalendusAPI) window.TalendusAPI.clearSession();
+          if (e && e.message === "not-staff") {
+            this.lastError = "not-staff";
+            return null;
+          }
+          if (production) {
+            this.lastError = "api";
+            return null;
+          }
+        }
       }
+      if (production) return null;
       var u = state.users.find(function (x) { return x.email === email && x.password === password; });
       if (!u) return null;
       var session = { id: u.id, role: u.role };
