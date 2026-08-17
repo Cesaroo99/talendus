@@ -10,6 +10,7 @@ from positioning import (
     candidate_journey_section, for_candidates_section,
     placement_process_services_section, technology_section, ai_screening_section,
     competitive_advantage_section, hiring_need_form_section,
+    bad_hire_calculator_section,
 )
 
 A = "../assets/"
@@ -252,22 +253,8 @@ def build_en(write, wrap, page_hero):
         + human_section("en")
         + why_talendus_section("en")
         + company_types_section("en")
+        + bad_hire_calculator_section("en")
         + f"""
-    <section class="tl-section" id="calculator"><div class="container">
-      <div class="row align-items-center g-4">
-        <div class="col-lg-5"><h2 class="tl-h2">What a bad hire really costs</h2>
-        <p class="tl-lead">Estimate the impact of a poor fit: salary, training, overtime and lost productivity. A Talendus mandate — search and screening included — almost always costs less than a seat left vacant too long.</p></div>
-        <div class="col-lg-6 offset-lg-1">
-          <div class="tl-calc">
-            <label for="tl-salary">Annual salary for the role ($)</label>
-            <input id="tl-salary" type="number" value="55000" min="0">
-            <label for="tl-months">Months before the problem is visible</label>
-            <input id="tl-months" type="number" value="4" min="1">
-            <div class="tl-calc-result">Estimated cost<br><b id="tl-cost">—</b></div>
-          </div>
-        </div>
-      </div>
-    </div></section>
     <section class="tl-section tl-ice" id="temoignages"><div class="container">
       <div class="tl-center" style="max-width:720px;margin:0 auto 36px">
         <div class="tl-kicker">Employer testimonials</div>

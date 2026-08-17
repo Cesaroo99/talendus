@@ -15,6 +15,7 @@ from positioning import (
     candidate_journey_section, for_companies_section, for_candidates_section,
     placement_process_services_section, technology_section, ai_screening_section,
     competitive_advantage_section, augmented_recruiting_section, hiring_need_form_section,
+    bad_hire_calculator_section,
 )
 from en_pages import build_en
 from seo_pages import write_fr as write_seo_fr
@@ -379,22 +380,8 @@ EMPLOYERS_BODY = (
     + human_section("fr")
     + why_talendus_section("fr")
     + company_types_section("fr")
+    + bad_hire_calculator_section("fr")
     + """
-    <section class="tl-section" id="calculateur"><div class="container">
-      <div class="row align-items-center g-4">
-        <div class="col-lg-5"><h2 class="tl-h2">Combien coûte une mauvaise embauche</h2>
-        <p class="tl-lead">Estimez l'impact d'un mauvais fit : salaire, formation, heures sup. et perte de productivité. Un mandat Talendus — recherche et présélection comprises — coûte presque toujours moins cher qu'un poste vacant trop longtemps.</p></div>
-        <div class="col-lg-6 offset-lg-1">
-          <div class="tl-calc">
-            <label for="tl-salary">Salaire annuel du poste ($)</label>
-            <input id="tl-salary" type="number" value="55000" min="0">
-            <label for="tl-months">Mois avant que le problème soit visible</label>
-            <input id="tl-months" type="number" value="4" min="1">
-            <div class="tl-calc-result">Coût estimé<br><b id="tl-cost">—</b></div>
-          </div>
-        </div>
-      </div>
-    </div></section>
     <section class="tl-section tl-ice" id="temoignages"><div class="container">
       <div class="tl-center" style="max-width:720px;margin:0 auto 36px">
         <div class="tl-kicker">Témoignages entreprises</div>

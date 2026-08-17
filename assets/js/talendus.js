@@ -276,19 +276,31 @@
       });
     });
 
+    function money(amount) {
+      return new Intl.NumberFormat(isEn ? "en-CA" : "fr-CA", {
+        style: "currency",
+        currency: "CAD",
+        maximumFractionDigits: 0
+      }).format(amount);
+    }
+    function setMoney(id, amount) {
+      var el = document.getElementById(id);
+      if (el) el.textContent = money(amount);
+    }
     var salary = document.getElementById("tl-salary");
     var months = document.getElementById("tl-months");
     var result = document.getElementById("tl-cost");
     function calc() {
       if (!salary || !months || !result) return;
-      var s = Number(salary.value) || 0;
-      var m = Number(months.value) || 0;
-      var cost = s * (m / 12) + s * 0.35 + 18000;
-      result.textContent = new Intl.NumberFormat(isEn ? "en-CA" : "fr-CA", {
-        style: "currency",
-        currency: "CAD",
-        maximumFractionDigits: 0
-      }).format(cost);
+      var s = Math.max(0, Number(salary.value) || 0);
+      var m = Math.max(1, Number(months.value) || 0);
+      var paid = s * (m / 12);
+      var training = s * 0.35;
+      var restart = 18000;
+      setMoney("tl-cost-paid", paid);
+      setMoney("tl-cost-training", training);
+      setMoney("tl-cost-restart", restart);
+      result.textContent = money(paid + training + restart);
     }
     if (salary && months) {
       salary.addEventListener("input", calc);

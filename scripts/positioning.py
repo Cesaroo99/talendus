@@ -1225,6 +1225,78 @@ def job_search_filters(lang="fr"):
 """
 
 
+def bad_hire_calculator_section(lang="fr"):
+    if lang == "en":
+        return """
+<section class="tl-section" id="calculator">
+  <div class="container">
+    <div class="tl-center" style="max-width:760px;margin:0 auto 36px">
+      <div class="tl-kicker">Cost calculator</div>
+      <h2 class="tl-h2">What a bad hire actually costs your company</h2>
+      <p class="tl-lead">It is not “one salary too many”. It is the salary already paid, the training lost, overtime to cover the gap, and the search to start over. Enter the role’s salary: the estimate updates, line by line.</p>
+    </div>
+    <div class="tl-calc tl-calc-wide">
+      <div class="tl-calc-grid">
+        <div>
+          <label for="tl-salary">Annual salary of the role</label>
+          <input id="tl-salary" type="number" value="55000" min="0" step="1000" inputmode="numeric">
+          <span class="tl-calc-hint">Gross annual salary, in Canadian dollars. Charges and benefits are not added on top.</span>
+          <label for="tl-months">Months before you see it is the wrong person</label>
+          <input id="tl-months" type="number" value="4" min="1" max="24">
+          <span class="tl-calc-hint">Time already in the job — paid and trained — before the misfit is clear. Three to six months is common.</span>
+        </div>
+        <div>
+          <p class="tl-calc-breakdown-title">Where the money goes</p>
+          <ul class="tl-calc-lines">
+            <li><span>Salary paid during that period</span><b id="tl-cost-paid">—</b></li>
+            <li><span>Training and onboarding lost (35&nbsp;% of salary)</span><b id="tl-cost-training">—</b></li>
+            <li><span>Overtime, lost productivity, search to restart</span><b id="tl-cost-restart">—</b></li>
+          </ul>
+          <div class="tl-calc-result">Estimated cost of a bad hire<br><b id="tl-cost">—</b></div>
+        </div>
+      </div>
+      <p class="tl-calc-note">This is an order of magnitude, not an invoice. A Talendus mandate — search and screening included — almost always costs less than this total. And you avoid paying the wrong person for months.</p>
+      <a class="tl-btn" href="contact.html">Hand us the search</a>
+    </div>
+  </div>
+</section>
+"""
+    return """
+<section class="tl-section" id="calculateur">
+  <div class="container">
+    <div class="tl-center" style="max-width:760px;margin:0 auto 36px">
+      <div class="tl-kicker">Calculateur de coût</div>
+      <h2 class="tl-h2">Ce qu'une mauvaise embauche coûte vraiment à votre entreprise</h2>
+      <p class="tl-lead">Ce n'est pas « un salaire de trop ». C'est le salaire déjà versé, la formation perdue, les heures supplémentaires pour couvrir le poste, et le recrutement à recommencer. Entrez le salaire du poste : le coût s'affiche, ligne par ligne.</p>
+    </div>
+    <div class="tl-calc tl-calc-wide">
+      <div class="tl-calc-grid">
+        <div>
+          <label for="tl-salary">Salaire annuel du poste</label>
+          <input id="tl-salary" type="number" value="55000" min="0" step="1000" inputmode="numeric">
+          <span class="tl-calc-hint">Salaire brut annuel, en dollars canadiens. Les charges et avantages ne sont pas ajoutés par-dessus.</span>
+          <label for="tl-months">Mois avant de constater que ce n'est pas la bonne personne</label>
+          <input id="tl-months" type="number" value="4" min="1" max="24">
+          <span class="tl-calc-hint">Le temps déjà en poste — payé et formé — avant que le décalage soit clair. Trois à six mois est fréquent.</span>
+        </div>
+        <div>
+          <p class="tl-calc-breakdown-title">Où va l'argent</p>
+          <ul class="tl-calc-lines">
+            <li><span>Salaire versé pendant cette période</span><b id="tl-cost-paid">—</b></li>
+            <li><span>Formation et intégration perdues (35&nbsp;% du salaire)</span><b id="tl-cost-training">—</b></li>
+            <li><span>Heures sup., perte de productivité, recherche à relancer</span><b id="tl-cost-restart">—</b></li>
+          </ul>
+          <div class="tl-calc-result">Coût estimé d'une mauvaise embauche<br><b id="tl-cost">—</b></div>
+        </div>
+      </div>
+      <p class="tl-calc-note">C'est un ordre de grandeur, pas une facture. Un mandat Talendus — recherche et présélection comprises — coûte presque toujours moins que ce total. Et vous évitez de payer le mauvais profil pendant des mois.</p>
+      <a class="tl-btn" href="contact.html">Confier mon recrutement</a>
+    </div>
+  </div>
+</section>
+"""
+
+
 def homepage_after_hero(lang="fr"):
     talent = (
         for_candidates_section(lang)
