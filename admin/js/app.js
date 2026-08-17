@@ -789,16 +789,78 @@
 
   function viewSettings() {
     var me = TLStore.me();
-    if (me.role !== "admin") return U.empty("Accès restreint", "Les paramètres globaux sont réservés aux administrateurs.");
+    var admin = me.role === "admin";
+    var access = [
+      ["Tableau de bord", true, true, false, true],
+      ["Candidats, clients, offres, missions", true, false, false, true],
+      ["Finance et factures", false, true, false, true],
+      ["Contenu du site", false, false, true, true],
+      ["Statistiques", false, true, false, true],
+      ["Notifications internes", true, true, true, true],
+      ["Paramètres du compte", true, true, true, true],
+      ["Paramètres de la plateforme", false, false, false, true]
+    ];
+    var marks = function (row) {
+      return row.slice(1).map(function (on) {
+        return "<td>" + (on ? "Oui" : "—") + "</td>";
+      }).join("");
+    };
+    var personaLead = {
+      admin: "Vous voyez tout le centre opérationnel, y compris la configuration de la plateforme.",
+      recruiter: "Vous suivez les mandats, les candidats et les clients. La finance et le contenu du site restent hors de cet accès.",
+      finance: "Vous suivez la facturation et les statistiques. Les dossiers candidats restent à l’équipe de recrutement.",
+      editor: "Vous gérez le contenu public. Les mandats et la finance restent à l’équipe de recrutement."
+    };
     return `
-      <div class="page-head"><div><h1>Paramètres</h1><p>Rôles, équipe et données de démonstration</p></div></div>
-      <div class="card"><div class="table-wrap"><table class="data"><thead><tr><th>Utilisateur</th><th>Courriel</th><th>Rôle</th><th>Modules</th></tr></thead><tbody>
-      ${S().users.map(function (u) {
-        return "<tr><td>" + U.esc(u.firstName + " " + u.lastName) + "</td><td>" + u.email + "</td><td>" + roleLabel(u.role) + "</td><td>" + (TLStore.PERMS[u.role] || []).join(", ") + "</td></tr>";
-      }).join("")}
-      </tbody></table></div></div>
-      <p style="margin-top:16px"><button class="btn btn-danger" id="reset-demo">Réinitialiser les données démo</button></p>
-      <p style="color:var(--steel)">Architecture prête pour authentification, API, stockage CV et paiements réels.</p>`;
+      <div class="page-head"><div><h1>Paramètres</h1><p>${U.esc(personaLead[me.role] || personaLead.recruiter)}</p></div></div>
+      <div class="settings-tabs" role="tablist">
+        <button type="button" class="settings-tab is-active" data-stab="account">Compte</button>
+        <button type="button" class="settings-tab" data-stab="security">Sécurité</button>
+        <button type="button" class="settings-tab" data-stab="access">Accès selon le rôle</button>
+        ${admin ? '<button type="button" class="settings-tab" data-stab="platform">Plateforme</button>' : ""}
+      </div>
+      <div class="settings-panel" data-spanel="account">
+        <div class="card card-pad">
+          <div class="card-head"><h3>Votre compte Talendus</h3></div>
+          <p class="sub">${U.esc(me.email)} · ${roleLabel(me.role)}</p>
+          <p>Les entreprises et les candidats ne voient jamais cet espace. C’est l’outil interne de l’agence.</p>
+          <form id="adm-prefs" class="form-grid" style="grid-template-columns:1fr">
+            <label class="check"><input type="checkbox" name="notify_email" checked> Courriel</label>
+            <label class="check"><input type="checkbox" name="notify_in_app" checked> Dans l’application</label>
+            <label class="check"><input type="checkbox" name="notify_application" checked> Nouvelles candidatures</label>
+            <label class="check"><input type="checkbox" name="notify_message" checked> Messages</label>
+            <label class="check"><input type="checkbox" name="notify_interview" checked> Entretiens</label>
+            <button class="btn btn-orange" type="submit">Enregistrer</button>
+          </form>
+        </div>
+      </div>
+      <div class="settings-panel" data-spanel="security" hidden>
+        <div class="card card-pad">
+          <div class="card-head"><h3>Mot de passe</h3></div>
+          <form id="adm-pass" class="form-grid" style="grid-template-columns:1fr">
+            ${U.field("Mot de passe actuel", "current_password", "", "password")}
+            ${U.field("Nouveau mot de passe", "new_password", "", "password")}
+            <button class="btn btn-orange" type="submit">Mettre à jour</button>
+          </form>
+        </div>
+        <div class="card card-pad" id="adm-sessions" style="margin-top:16px"><p class="sub">Sessions…</p></div>
+      </div>
+      <div class="settings-panel" data-spanel="access" hidden>
+        <div class="card">
+          <div class="card-pad"><p>Chaque rôle du back-office ne voit que ce dont il a besoin. Les espaces candidat et entreprise restent séparés de cet outil.</p></div>
+          <div class="table-wrap"><table class="data"><thead><tr><th>Zone</th><th>Recruteur</th><th>Finance</th><th>Éditeur</th><th>Admin</th></tr></thead><tbody>
+          ${access.map(function (row) { return "<tr><td>" + U.esc(row[0]) + "</td>" + marks(row) + "</tr>"; }).join("")}
+          </tbody></table></div>
+        </div>
+      </div>
+      ${admin ? `<div class="settings-panel" data-spanel="platform" hidden>
+        <div class="card card-pad">
+          <div class="card-head"><h3>Plateforme</h3></div>
+          <p class="sub">Réglages internes de l’agence — pas visibles sur le site public.</p>
+          <div id="adm-platform"><p class="sub">Chargement…</p></div>
+          <p style="margin-top:16px"><button class="btn btn-danger" id="reset-demo">Réinitialiser les données démo</button></p>
+        </div>
+      </div>` : ""}`;
   }
 
   function viewProfile() {
@@ -1332,6 +1394,82 @@
         render();
       });
     };
+    view.querySelectorAll("[data-stab]").forEach(function (btn) {
+      btn.onclick = function () {
+        var name = btn.getAttribute("data-stab");
+        view.querySelectorAll("[data-stab]").forEach(function (b) { b.classList.toggle("is-active", b === btn); });
+        view.querySelectorAll("[data-spanel]").forEach(function (p) { p.hidden = p.getAttribute("data-spanel") !== name; });
+      };
+    });
+    function api() { return window.TalendusAPI; }
+    var prefForm = document.getElementById("adm-prefs");
+    if (prefForm && api()) {
+      api().request("/users/me/preferences").then(function (json) {
+        var d = (json && json.data) || {};
+        ["notify_email", "notify_in_app", "notify_application", "notify_message", "notify_interview"].forEach(function (k) {
+          var el = prefForm.querySelector("[name=" + k + "]");
+          if (el) el.checked = d[k] !== false;
+        });
+      }).catch(function () {});
+      prefForm.onsubmit = function (e) {
+        e.preventDefault();
+        var body = {};
+        ["notify_email", "notify_in_app", "notify_application", "notify_message", "notify_interview"].forEach(function (k) {
+          var el = prefForm.querySelector("[name=" + k + "]");
+          if (el) body[k] = !!el.checked;
+        });
+        api().request("/users/me/preferences", { method: "PATCH", body: body }).then(function () {
+          U.toast("Préférences enregistrées.", "ok");
+        }).catch(function (err) { U.toast((err && err.message) || "Impossible d’enregistrer.", "err"); });
+      };
+    }
+    var passForm = document.getElementById("adm-pass");
+    if (passForm && api()) {
+      passForm.onsubmit = function (e) {
+        e.preventDefault();
+        var d = U.formData(passForm);
+        api().request("/auth/change-password", { method: "POST", body: d }).then(function () {
+          U.toast("Mot de passe mis à jour.", "ok");
+          passForm.reset();
+        }).catch(function (err) { U.toast((err && err.message) || "Impossible de changer le mot de passe.", "err"); });
+      };
+    }
+    var sess = document.getElementById("adm-sessions");
+    if (sess && api()) {
+      api().request("/auth/sessions").then(function (json) {
+        var rows = (json && json.data) || [];
+        sess.innerHTML = '<div class="card-head"><h3>Sessions actives</h3></div>' + (rows.map(function (s) {
+          return '<div class="n-item"><b>' + U.esc(s.created_at || "") + "</b> · " + (s.active ? "Active" : "Révoquée") + "</div>";
+        }).join("") || "<p class='sub'>Aucune session listée.</p>") +
+          '<p style="margin-top:12px"><button type="button" class="btn btn-ghost" id="adm-revoke-all">Déconnecter partout</button></p>';
+        var all = document.getElementById("adm-revoke-all");
+        if (all) all.onclick = function () {
+          api().request("/auth/sessions/revoke-all", { method: "POST" }).then(function () {
+            U.toast("Sessions révoquées.", "ok");
+            render();
+          });
+        };
+      }).catch(function () { sess.innerHTML = "<p class='sub'>Sessions indisponibles hors connexion API.</p>"; });
+    }
+    var platform = document.getElementById("adm-platform");
+    if (platform && api()) {
+      api().request("/admin/settings").then(function (json) {
+        var rows = (json && json.data) || [];
+        platform.innerHTML = '<form id="adm-platform-form">' + rows.map(function (s) {
+          return '<label>' + U.esc(s.label || s.key) + '</label><input name="' + U.esc(s.key) + '" value="' + U.esc(s.value || "") + '">';
+        }).join("") + (rows.length ? '<button class="btn btn-orange" type="submit">Enregistrer la plateforme</button>' : "<p class='sub'>Aucun réglage plateforme.</p>") + "</form>";
+        var pf = document.getElementById("adm-platform-form");
+        if (pf) pf.onsubmit = function (e) {
+          e.preventDefault();
+          var fd = U.formData(pf);
+          var tasks = Object.keys(fd).map(function (key) {
+            return api().request("/admin/settings", { method: "PATCH", body: { key: key, value: fd[key] } });
+          });
+          Promise.all(tasks).then(function () { U.toast("Plateforme enregistrée.", "ok"); })
+            .catch(function (err) { U.toast((err && err.message) || "Impossible d’enregistrer.", "err"); });
+        };
+      }).catch(function () { platform.innerHTML = "<p class='sub'>Réservé aux administrateurs connectés à l’API.</p>"; });
+    }
     bindKanban();
   }
 

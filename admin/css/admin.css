@@ -490,6 +490,17 @@ table.data .check { width: 36px; cursor: default; }
 .n-item.unread { background: #fff7f0; }
 .quick { position: relative; }
 
+.settings-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
+.settings-tab {
+  border: 1px solid var(--line); background: #fff; color: var(--navy);
+  font-weight: 700; font-size: 13px; padding: 8px 14px; border-radius: 999px; cursor: pointer;
+}
+.settings-tab.is-active { background: var(--navy); color: #fff; border-color: var(--navy); }
+.settings-panel .card + .card { margin-top: 16px; }
+.settings-panel label.check { display: flex; gap: 8px; align-items: center; font-weight: 600; }
+#adm-platform-form label { display: block; font-weight: 700; margin: 10px 0 4px; }
+#adm-platform-form input { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; }
+
 @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes pop { from { transform: translateY(8px) scale(.98); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes shine { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }

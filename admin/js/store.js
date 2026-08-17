@@ -13,9 +13,9 @@
 
   const PERMS = {
     admin: ["dashboard", "candidates", "clients", "jobs", "missions", "content", "finance", "analytics", "notifications", "settings", "profile"],
-    recruiter: ["dashboard", "candidates", "clients", "jobs", "missions", "notifications", "profile"],
-    finance: ["dashboard", "finance", "analytics", "notifications", "profile"],
-    editor: ["content", "notifications", "profile"]
+    recruiter: ["dashboard", "candidates", "clients", "jobs", "missions", "notifications", "settings", "profile"],
+    finance: ["dashboard", "finance", "analytics", "notifications", "settings", "profile"],
+    editor: ["content", "notifications", "settings", "profile"]
   };
 
   function d(iso) { return iso; }
@@ -236,7 +236,7 @@
           var json = await window.TalendusAPI.login(email, password);
           var apiUser = json && json.data && json.data.user;
           if (apiUser) {
-            var staffMap = { ADMIN: "admin", RECRUITER: "recruiter", FINANCE: "finance", EDITOR: "editor" };
+            var staffMap = { ADMIN: "admin", SUPER_ADMIN: "admin", RECRUITER: "recruiter", FINANCE: "finance", EDITOR: "editor" };
             var mapped = staffMap[apiUser.role];
             if (!mapped) throw new Error("not-staff");
             var local = state.users.find(function (x) { return x.email === email; });

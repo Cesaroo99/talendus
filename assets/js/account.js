@@ -78,7 +78,38 @@
       sessions: "Active sessions", loginLog: "Sign-in history", revoke: "Revoke", revokeAll: "Sign out everywhere",
       onboard: "Complete your profile so Talendus can consider you for relevant opportunities.", keywords: "Keywords",
       createAlert: "Create an alert", emptyAlerts: "No job alerts yet.",
-      province: "Province", birth: "Date of birth", size: "Company size", social: "Social networks"
+      province: "Province", birth: "Date of birth", size: "Company size", social: "Social networks",
+      settingsLeadCandidate: "Your file stays with Talendus. Employers never receive your email or phone number.",
+      settingsLeadEmployer: "Manage your access. Hiring still goes through Talendus: you do not contact candidates directly.",
+      settingsAccount: "Account", settingsNotifs: "Notifications", settingsTeam: "Team",
+      settingsLang: "Language of the workspace", settingsLangFr: "French", settingsLangEn: "English",
+      settingsEmailLocked: "This email is used to sign in. Write to your consultant if you need to change it.",
+      notifyMatch: "Opportunities that may fit", notifyMatchHint: "When Talendus identifies a mandate that matches your profile.",
+      notifyApplication: "Application updates", notifyApplicationHint: "When your file moves forward with Talendus.",
+      notifyPresented: "Presented files", notifyPresentedHint: "When Talendus shares a shortlist for one of your mandates.",
+      notifyInterview: "Interviews", notifyInterviewHint: "Reminders and changes to interview times.",
+      notifyMessage: "Messages from your consultant", notifyMessageHint: "When Talendus writes to you in the workspace.",
+      notifyChannels: "How we reach you", notifyChannelsHint: "Talendus writes by email and in this workspace. SMS and WhatsApp are not active yet.",
+      privacyHint: "Companies never get your direct contact details. A consultant presents your file only when the fit holds.",
+      privacyTalendus: "Talendus may use a short professional summary when presenting you to a company.",
+      dangerHint: "This deactivates the account. Your consultant can no longer consider you for mandates.",
+      dangerHintEmployer: "This deactivates your access. Your company file stays with Talendus.",
+      sessionsHint: "Devices currently signed in to your workspace.",
+      loginLogHint: "Recent sign-in attempts on this account.",
+      teamHint: "Invite colleagues who should follow the files Talendus presents. They still cannot contact candidates directly.",
+      teamReadOnly: "You can see who has access. Only an administrator can invite someone.",
+      yourRole: "Your access",
+      yourAccessHint: "What you can do in this workspace depends on the role your company assigned.",
+      openProfile: "Edit my profile", openCompany: "Company file", openBilling: "Invoices",
+      comingSoon: "Coming soon",
+      noSessions: "No other session recorded.",
+      inviteHint: "The person receives access to this company workspace.",
+      roleHintOwner: "Full access, including team and company file.",
+      roleHintAdmin: "Manages the company file and the team.",
+      roleHintHr: "Follows presented files and hiring needs.",
+      roleHintRecruiter: "Follows presented files for the mandates you work on.",
+      roleHintBilling: "Sees invoices. Hiring files stay with HR and administrators.",
+      roleHintMember: "Limited access to the company workspace."
     } : {
       login: "Connexion", register: "Créer un compte", email: "Courriel", password: "Mot de passe",
       first: "Prénom", last: "Nom", submitLogin: "Me connecter", submitRegister: "Créer mon compte",
@@ -147,7 +178,38 @@
       sessions: "Sessions actives", loginLog: "Journal des connexions", revoke: "Révoquer", revokeAll: "Déconnecter partout",
       onboard: "Complétez votre profil pour que Talendus puisse vous considérer pour des opportunités pertinentes.", keywords: "Mots-clés",
       createAlert: "Créer une alerte", emptyAlerts: "Aucune alerte pour le moment.",
-      province: "Province", birth: "Date de naissance", size: "Taille de l’entreprise", social: "Réseaux sociaux"
+      province: "Province", birth: "Date de naissance", size: "Taille de l’entreprise", social: "Réseaux sociaux",
+      settingsLeadCandidate: "Votre dossier reste chez Talendus. Les employeurs ne reçoivent jamais votre courriel ni votre téléphone.",
+      settingsLeadEmployer: "Gérez votre accès. Le recrutement passe toujours par Talendus : vous n’écrivez pas aux candidats en direct.",
+      settingsAccount: "Compte", settingsNotifs: "Notifications", settingsTeam: "Équipe",
+      settingsLang: "Langue de l’espace", settingsLangFr: "Français", settingsLangEn: "Anglais",
+      settingsEmailLocked: "Ce courriel sert à vous connecter. Écrivez à votre conseiller s’il doit être modifié.",
+      notifyMatch: "Opportunités qui peuvent correspondre", notifyMatchHint: "Quand Talendus identifie un mandat proche de votre profil.",
+      notifyApplication: "Suivi de candidature", notifyApplicationHint: "Quand votre dossier avance avec Talendus.",
+      notifyPresented: "Dossiers présentés", notifyPresentedHint: "Quand Talendus vous transmet une shortlist pour un mandat.",
+      notifyInterview: "Entretiens", notifyInterviewHint: "Rappels et changements d’horaire.",
+      notifyMessage: "Messages de votre conseiller", notifyMessageHint: "Quand Talendus vous écrit dans l’espace.",
+      notifyChannels: "Comment on vous joint", notifyChannelsHint: "Talendus vous écrit par courriel et dans cet espace. SMS et WhatsApp ne sont pas encore actifs.",
+      privacyHint: "Les entreprises n’ont jamais vos coordonnées directes. Un conseiller présente votre dossier seulement si l’adéquation tient.",
+      privacyTalendus: "Talendus peut utiliser un court résumé professionnel au moment de vous présenter à une entreprise.",
+      dangerHint: "Cette action désactive le compte. Votre conseiller ne pourra plus vous considérer pour des mandats.",
+      dangerHintEmployer: "Cette action désactive votre accès. Le dossier de l’entreprise reste chez Talendus.",
+      sessionsHint: "Appareils actuellement connectés à votre espace.",
+      loginLogHint: "Tentatives de connexion récentes sur ce compte.",
+      teamHint: "Invitez des collègues qui doivent suivre les dossiers que Talendus présente. Ils ne contactent pas les candidats en direct.",
+      teamReadOnly: "Vous voyez qui a accès. Seul un administrateur peut inviter quelqu’un.",
+      yourRole: "Votre accès",
+      yourAccessHint: "Ce que vous pouvez faire ici dépend du rôle attribué par votre entreprise.",
+      openProfile: "Modifier mon profil", openCompany: "Fiche entreprise", openBilling: "Factures",
+      comingSoon: "Prochainement",
+      noSessions: "Aucune autre session enregistrée.",
+      inviteHint: "La personne reçoit un accès à l’espace de cette entreprise.",
+      roleHintOwner: "Accès complet, y compris l’équipe et la fiche entreprise.",
+      roleHintAdmin: "Gère la fiche entreprise et l’équipe.",
+      roleHintHr: "Suit les dossiers présentés et les besoins de recrutement.",
+      roleHintRecruiter: "Suit les dossiers présentés sur les mandats suivis.",
+      roleHintBilling: "Voit les factures. Les dossiers de recrutement restent aux RH et administrateurs.",
+      roleHintMember: "Accès limité à l’espace entreprise."
     };
 
     function esc(v) {
@@ -176,7 +238,7 @@
         COMPLETED: isEn ? "Completed" : "Terminé",
         CANCELLED: isEn ? "Cancelled" : "Annulé",
         NO_SHOW: isEn ? "No-show" : "Absent",
-        OWNER: isEn ? "Administrator" : "Administrateur",
+        OWNER: isEn ? "Owner" : "Propriétaire",
         ADMIN: isEn ? "Administrator" : "Administrateur",
         HR: isEn ? "HR" : "RH",
         RECRUITER: isEn ? "Recruiter" : "Recruteur",
@@ -302,17 +364,19 @@
     function unwrap(p) { return p.then(function (j) { return j.data; }); }
     function navItems(unreadN, unreadM) {
       if (isEmployerSpace()) {
-        return [
+        var items = [
           ["dashboard", t.dashboard, "fa-table-columns"],
           ["company", t.company, "fa-building"],
           ["jobs", t.hiring, "fa-clipboard-list"],
           ["inbox", t.candidates, "fa-users"],
           ["pipeline", t.ats, "fa-diagram-project"],
-          ["messages", t.messages, "fa-comments", unreadM],
-          ["invoices", t.billing, "fa-file-invoice-dollar"],
-          ["notifs", t.notifs, "fa-bell", unreadN],
-          ["settings", t.settings, "fa-gear"]
+          ["messages", t.messages, "fa-comments", unreadM]
         ];
+        if (!state.company || state.company.can_read_invoices !== false) {
+          items.push(["invoices", t.billing, "fa-file-invoice-dollar"]);
+        }
+        items.push(["notifs", t.notifs, "fa-bell", unreadN], ["settings", t.settings, "fa-gear"]);
+        return items;
       }
       return [
         ["dashboard", t.dashboard, "fa-table-columns"],
@@ -344,6 +408,10 @@
       var name = ((user.first_name || "") + " " + (user.last_name || "")).trim() || user.email;
       var role = isEmployerSpace() ? (isEn ? "Employer" : "Entreprise") : (isEn ? "Candidate" : "Candidat");
       var pageTitle = (navItems(unreadN, unreadM).filter(function (it) { return it[0] === route.name; })[0] || [0, t.dashboard])[1];
+      var pageLead = "";
+      if (route.name === "settings") {
+        pageLead = '<p class="tl-portal-pagehead-lead">' + esc(isEmployerSpace() ? t.settingsLeadEmployer : t.settingsLeadCandidate) + "</p>";
+      }
       var av = window.__tlAvatarUrl
         ? '<span class="tl-avatar is-lg"><img src="' + esc(window.__tlAvatarUrl) + '" alt=""></span>'
         : '<span class="tl-avatar is-lg" aria-hidden="true">' + esc(initials(user)) + "</span>";
@@ -353,7 +421,7 @@
           items +
         "</nav>" +
         '<div class="tl-portal-main">' +
-          '<div class="tl-portal-pagehead"><h1>' + esc(pageTitle) + "</h1></div>" +
+          '<div class="tl-portal-pagehead"><h1>' + esc(pageTitle) + "</h1>" + pageLead + "</div>" +
           content +
         "</div></div>";
       root.querySelectorAll("[data-go]").forEach(function (btn) {
@@ -765,27 +833,121 @@
       });
     }
 
-    function renderSettings(prefs) {
+    function roleAccessHint(role) {
+      var map = {
+        OWNER: t.roleHintOwner,
+        ADMIN: t.roleHintAdmin,
+        HR: t.roleHintHr,
+        RECRUITER: t.roleHintRecruiter,
+        BILLING: t.roleHintBilling,
+        MEMBER: t.roleHintMember
+      };
+      return map[role] || t.yourAccessHint;
+    }
+
+    function settingsTabs(canTeam) {
+      var tabs = [
+        ["account", t.settingsAccount, "fa-id-card"],
+        ["notifications", t.settingsNotifs, "fa-bell"]
+      ];
+      if (!isEmployerSpace()) tabs.push(["privacy", t.privacy, "fa-shield-halved"]);
+      tabs.push(["security", t.security, "fa-lock"]);
+      if (isEmployerSpace() && canTeam) tabs.push(["team", t.settingsTeam, "fa-users"]);
+      return tabs;
+    }
+
+    function settingsActiveTab(canTeam) {
+      var id = currentRoute().id || "account";
+      var allowed = settingsTabs(canTeam).map(function (x) { return x[0]; });
+      return allowed.indexOf(id) !== -1 ? id : "account";
+    }
+
+    function settingsCheck(name, on, label, hint) {
+      return '<label class="tl-settings-check"><input type="checkbox" name="' + name + '"' + (on ? " checked" : "") + ">" +
+        "<span><b>" + esc(label) + "</b>" + (hint ? "<small>" + esc(hint) + "</small>" : "") + "</span></label>";
+    }
+
+    function settingsCard(title, hint, inner, extraClass) {
+      return '<section class="tl-settings-card' + (extraClass ? " " + extraClass : "") + '"><div class="tl-settings-card-head"><h2>' +
+        esc(title) + "</h2>" + (hint ? "<p>" + esc(hint) + "</p>" : "") + "</div>" + inner + "</section>";
+    }
+
+    function renderSettings(prefs, extras) {
       prefs = prefs || {};
-      return '<form class="tl-form" id="acc-pass"><h3>' + esc(t.security) + "</h3><label>" + esc(t.currentPass) +
-        '</label><input name="current_password" type="password" required><label>' + esc(t.newPass) +
-        '</label><input name="new_password" type="password" required minlength="8"><button class="tl-btn" type="submit">' +
-        esc(t.save) + '</button><div class="tl-success"></div></form>' +
-        '<form class="tl-form" id="acc-prefs"><h3>' + esc(t.notifyPrefs) + "</h3>" +
-        '<label><input type="checkbox" name="notify_email"' + (prefs.notify_email !== false ? " checked" : "") + "> " + esc(t.emailNotif) + "</label>" +
-        '<label><input type="checkbox" name="notify_in_app"' + (prefs.notify_in_app !== false ? " checked" : "") + "> " + esc(t.inApp) + "</label>" +
-        '<label><input type="checkbox" name="notify_sms"' + (prefs.notify_sms ? " checked" : "") + "> " + esc(t.sms) + "</label>" +
-        '<label><input type="checkbox" name="notify_whatsapp"' + (prefs.notify_whatsapp ? " checked" : "") + "> " + esc(t.wa) + "</label>" +
-        '<label><input type="checkbox" name="notify_push"' + (prefs.notify_push ? " checked" : "") + "> " + esc(t.push) + "</label>" +
-        '<h3>' + esc(t.privacy) + "</h3><label><input type=\"checkbox\" name=\"privacy_profile_public\"" + (prefs.privacy_profile_public ? " checked" : "") + "> " +
-        esc(t.profilePublic) + '</label><button class="tl-btn" type="submit">' + esc(t.save) + '</button><div class="tl-success"></div></form>' +
-        '<form class="tl-form" id="acc-del"><h3>' + esc(t.danger) + '</h3><button class="tl-btn tl-btn-ghost" type="submit">' +
-        esc(t.danger) + '</button><div class="tl-success"></div></form>' +
-        '<div id="acc-sessions"><h3>' + esc(t.sessions) + "</h3>" + skeleton() + "</div>" +
-        '<div id="acc-login-log"><h3>' + esc(t.loginLog) + "</h3>" + skeleton() + "</div>";
+      extras = extras || {};
+      var user = state.user || {};
+      var company = extras.company || {};
+      var members = extras.members || [];
+      var canTeam = !!company.can_manage_members;
+      var memberRole = company.member_role || "";
+      var tab = settingsActiveTab(canTeam);
+      var name = ((user.first_name || "") + " " + (user.last_name || "")).trim() || user.email;
+      var persona = isEmployerSpace() ? (isEn ? "Employer workspace" : "Espace entreprise") : (isEn ? "Candidate workspace" : "Espace candidat");
+      var tabs = settingsTabs(canTeam).map(function (it) {
+        return '<button type="button" class="tl-settings-tab' + (tab === it[0] ? " is-active" : "") + '" data-settings-tab="' + it[0] + '">' +
+          '<i class="fa-solid ' + it[2] + '" aria-hidden="true"></i>' + esc(it[1]) + "</button>";
+      }).join("");
+      var body = "";
+      if (tab === "account") {
+        var links = isEmployerSpace()
+          ? '<p class="tl-settings-links"><button type="button" class="tl-btn tl-btn-ghost" data-nav="company">' + esc(t.openCompany) + "</button>" +
+            (company.can_read_invoices ? ' <button type="button" class="tl-btn tl-btn-ghost" data-nav="invoices">' + esc(t.openBilling) + "</button>" : "") + "</p>"
+          : '<p class="tl-settings-links"><button type="button" class="tl-btn tl-btn-ghost" data-nav="profile">' + esc(t.openProfile) + "</button></p>";
+        var roleBox = isEmployerSpace()
+          ? '<div class="tl-settings-role"><span class="tl-chip orange">' + esc(statusLabel(memberRole || "MEMBER")) + "</span><p>" +
+            esc(roleAccessHint(memberRole)) + "</p></div>"
+          : "";
+        body = settingsCard(t.settingsAccount, t.changeEmail,
+          '<div class="tl-settings-identity"><div><b>' + esc(name) + "</b><span>" + esc(user.email || "") +
+          "</span><span>" + esc(persona) + "</span></div></div>" + roleBox + links +
+          '<p class="tl-meta">' + esc(t.settingsEmailLocked) + "</p>") +
+          settingsCard(t.settingsLang, "",
+            '<form class="tl-form" id="acc-locale"><label class="tl-settings-radio"><input type="radio" name="locale" value="fr-CA"' +
+            (prefs.locale !== "en-CA" ? " checked" : "") + "> " + esc(t.settingsLangFr) + "</label>" +
+            '<label class="tl-settings-radio"><input type="radio" name="locale" value="en-CA"' +
+            (prefs.locale === "en-CA" ? " checked" : "") + "> " + esc(t.settingsLangEn) + "</label>" +
+            '<button class="tl-btn" type="submit">' + esc(t.save) + '</button><div class="tl-success"></div></form>');
+      } else if (tab === "notifications") {
+        var events = isEmployerSpace()
+          ? settingsCheck("notify_application", prefs.notify_application !== false, t.notifyPresented, t.notifyPresentedHint) +
+            settingsCheck("notify_interview", prefs.notify_interview !== false, t.notifyInterview, t.notifyInterviewHint) +
+            settingsCheck("notify_message", prefs.notify_message !== false, t.notifyMessage, t.notifyMessageHint)
+          : settingsCheck("notify_match", prefs.notify_match !== false, t.notifyMatch, t.notifyMatchHint) +
+            settingsCheck("notify_application", prefs.notify_application !== false, t.notifyApplication, t.notifyApplicationHint) +
+            settingsCheck("notify_interview", prefs.notify_interview !== false, t.notifyInterview, t.notifyInterviewHint) +
+            settingsCheck("notify_message", prefs.notify_message !== false, t.notifyMessage, t.notifyMessageHint);
+        body = '<form class="tl-form" id="acc-prefs">' +
+          settingsCard(t.settingsNotifs, "", events) +
+          settingsCard(t.notifyChannels, t.notifyChannelsHint,
+            settingsCheck("notify_email", prefs.notify_email !== false, t.emailNotif, "") +
+            settingsCheck("notify_in_app", prefs.notify_in_app !== false, t.inApp, "") +
+            '<p class="tl-meta">' + esc(t.sms) + " · " + esc(t.wa) + "</p>") +
+          '<button class="tl-btn" type="submit">' + esc(t.save) + '</button><div class="tl-success"></div></form>';
+      } else if (tab === "privacy") {
+        body = '<form class="tl-form" id="acc-privacy">' +
+          settingsCard(t.privacy, t.privacyHint,
+            settingsCheck("privacy_profile_public", !!prefs.privacy_profile_public, t.privacyTalendus, t.mediateCandidate)) +
+          '<button class="tl-btn" type="submit">' + esc(t.save) + '</button><div class="tl-success"></div></form>';
+      } else if (tab === "security") {
+        body = settingsCard(t.security, "",
+          '<form class="tl-form" id="acc-pass"><label>' + esc(t.currentPass) + '</label><input name="current_password" type="password" required autocomplete="current-password">' +
+          "<label>" + esc(t.newPass) + '</label><input name="new_password" type="password" required minlength="8" autocomplete="new-password">' +
+          '<button class="tl-btn" type="submit">' + esc(t.save) + '</button><div class="tl-success"></div></form>') +
+          '<div id="acc-sessions">' + settingsCard(t.sessions, t.sessionsHint, skeleton()) + "</div>" +
+          '<div id="acc-login-log">' + settingsCard(t.loginLog, t.loginLogHint, skeleton()) + "</div>" +
+          settingsCard(t.danger, isEmployerSpace() ? t.dangerHintEmployer : t.dangerHint,
+            '<form class="tl-form" id="acc-del"><button class="tl-btn tl-btn-ghost" type="submit">' + esc(t.danger) +
+            '</button><div class="tl-success"></div></form>', "is-danger");
+      } else if (tab === "team") {
+        body = renderMembers(members, canTeam);
+      }
+      return '<div class="tl-settings"><nav class="tl-settings-tabs" aria-label="' + esc(t.settings) + '">' + tabs + "</nav>" + body + "</div>";
     }
 
     function bindSettings() {
+      root.querySelectorAll("[data-settings-tab]").forEach(function (btn) {
+        btn.onclick = function () { go("settings", btn.getAttribute("data-settings-tab")); };
+      });
       var pass = document.getElementById("acc-pass");
       if (pass) pass.addEventListener("submit", function (e) {
         e.preventDefault();
@@ -793,15 +955,47 @@
         api.request("/auth/change-password", { method: "POST", body: d }).then(function () { flash(pass.querySelector(".tl-success"), t.saved, true); })
           .catch(function (err) { flash(pass.querySelector(".tl-success"), (err && err.message) || t.err, false); });
       });
+      function savePrefs(form, keys) {
+        var body = {};
+        keys.forEach(function (k) {
+          var el = form.querySelector("[name=" + k + "]");
+          if (!el) return;
+          if (el.type === "checkbox") body[k] = !!el.checked;
+          else if (el.type === "radio") {
+            var picked = form.querySelector("[name=" + k + "]:checked");
+            if (picked) body[k] = picked.value;
+          } else body[k] = el.value;
+        });
+        return api.request("/users/me/preferences", { method: "PATCH", body: body });
+      }
+      var locale = document.getElementById("acc-locale");
+      if (locale) locale.addEventListener("submit", function (e) {
+        e.preventDefault();
+        savePrefs(locale, ["locale"]).then(function () {
+          var picked = locale.querySelector("[name=locale]:checked");
+          var wantEn = picked && picked.value === "en-CA";
+          if (wantEn !== isEn) {
+            var page = isEmployerSpace()
+              ? (wantEn ? "/en/account-employer.html" : "/espace-employeur.html")
+              : (wantEn ? "/en/account.html" : "/espace.html");
+            window.location.href = page + "#/settings/account";
+            return;
+          }
+          flash(locale.querySelector(".tl-success"), t.saved, true);
+        }).catch(function (err) { flash(locale.querySelector(".tl-success"), (err && err.message) || t.err, false); });
+      });
       var prefs = document.getElementById("acc-prefs");
       if (prefs) prefs.addEventListener("submit", function (e) {
         e.preventDefault();
-        var body = {};
-        ["notify_email", "notify_in_app", "notify_sms", "notify_whatsapp", "notify_push", "privacy_profile_public"].forEach(function (k) {
-          body[k] = !!prefs.querySelector("[name=" + k + "]").checked;
-        });
-        api.request("/users/me/preferences", { method: "PATCH", body: body }).then(function () { flash(prefs.querySelector(".tl-success"), t.saved, true); })
+        savePrefs(prefs, ["notify_email", "notify_in_app", "notify_application", "notify_message", "notify_match", "notify_interview"])
+          .then(function () { flash(prefs.querySelector(".tl-success"), t.saved, true); })
           .catch(function (err) { flash(prefs.querySelector(".tl-success"), (err && err.message) || t.err, false); });
+      });
+      var privacy = document.getElementById("acc-privacy");
+      if (privacy) privacy.addEventListener("submit", function (e) {
+        e.preventDefault();
+        savePrefs(privacy, ["privacy_profile_public"]).then(function () { flash(privacy.querySelector(".tl-success"), t.saved, true); })
+          .catch(function (err) { flash(privacy.querySelector(".tl-success"), (err && err.message) || t.err, false); });
       });
       var del = document.getElementById("acc-del");
       if (del) del.addEventListener("submit", function (e) {
@@ -813,24 +1007,25 @@
       if (sessBox) {
         api.request("/auth/sessions").then(function (json) {
           var rows = json.data || [];
-          sessBox.innerHTML = "<h3>" + esc(t.sessions) + '</h3><p><button type="button" class="tl-btn tl-btn-ghost" id="acc-revoke-all">' +
-            esc(t.revokeAll) + "</button></p>" + rows.map(function (s) {
-            return '<div class="tl-session-row"><span>' + esc(fmtDate(s.created_at)) + " · " +
-              (s.active ? (isEn ? "Active" : "Active") : (isEn ? "Revoked" : "Révoquée")) +
-              '</span>' + (s.active ? '<button type="button" class="tl-text-btn" data-revoke="' + esc(s.id) + '">' + esc(t.revoke) + "</button>" : "") + "</div>";
-          }).join("");
+          sessBox.innerHTML = settingsCard(t.sessions, t.sessionsHint,
+            '<p><button type="button" class="tl-btn tl-btn-ghost" id="acc-revoke-all">' + esc(t.revokeAll) + "</button></p>" +
+            (rows.length ? rows.map(function (s) {
+              return '<div class="tl-session-row"><span>' + esc(fmtDate(s.created_at)) + " · " +
+                (s.active ? (isEn ? "Active" : "Active") : (isEn ? "Revoked" : "Révoquée")) +
+                "</span>" + (s.active ? '<button type="button" class="tl-text-btn" data-revoke="' + esc(s.id) + '">' + esc(t.revoke) + "</button>" : "") + "</div>";
+            }).join("") : '<p class="tl-meta">' + esc(t.noSessions) + "</p>"));
           var all = document.getElementById("acc-revoke-all");
-          if (all) all.onclick = function () { api.request("/auth/sessions/revoke-all", { method: "POST" }).then(function () { go("settings"); }); };
+          if (all) all.onclick = function () { api.request("/auth/sessions/revoke-all", { method: "POST" }).then(function () { go("settings", "security"); }); };
           sessBox.querySelectorAll("[data-revoke]").forEach(function (b) {
-            b.onclick = function () { api.request("/auth/sessions/" + b.getAttribute("data-revoke"), { method: "DELETE" }).then(function () { go("settings"); }); };
+            b.onclick = function () { api.request("/auth/sessions/" + b.getAttribute("data-revoke"), { method: "DELETE" }).then(function () { go("settings", "security"); }); };
           });
-        }).catch(function () { sessBox.innerHTML = ""; });
+        }).catch(function () { sessBox.innerHTML = settingsCard(t.sessions, t.sessionsHint, '<p class="tl-meta">' + esc(t.err) + "</p>"); });
       }
       var logBox = document.getElementById("acc-login-log");
       if (logBox) {
         api.request("/auth/login-events").then(function (json) {
           var rows = json.data || [];
-          logBox.innerHTML = "<h3>" + esc(t.loginLog) + "</h3>" + (rows.length ? rows.map(function (ev) {
+          logBox.innerHTML = settingsCard(t.loginLog, t.loginLogHint, rows.length ? rows.map(function (ev) {
             return '<div class="tl-account-notif"><b>' + (ev.success ? (isEn ? "Signed in" : "Connexion") : (isEn ? "Failed" : "Échec")) +
               "</b><p>" + esc(fmtDate(ev.created_at)) + (ev.ip_address ? " · " + esc(ev.ip_address) : "") + "</p></div>";
           }).join("") : empty(t.emptyNotifs));
@@ -979,18 +1174,23 @@
       }).join("") + "</div>";
     }
 
-    function renderMembers(members) {
+    function renderMembers(members, canManage) {
       var rows = (members || []).map(function (m) {
         return "<tr><td data-label=\"" + esc(t.first) + "\">" + esc((m.first_name || "") + " " + (m.last_name || "")) +
           "</td><td>" + esc(m.email || "") + "</td><td>" + esc(statusLabel(m.member_role)) + "</td></tr>";
       }).join("");
-      return '<div class="tl-table-wrap"><table class="tl-portal-table"><tbody>' + (rows || "") + "</tbody></table></div>" +
-        '<form class="tl-form" id="acc-invite"><h3>' + esc(t.invite) + "</h3><div class=\"tl-row-2\"><input name=\"first_name\" required placeholder=\"" +
-        esc(t.first) + '"><input name="last_name" required placeholder="' + esc(t.last) + '"></div>' +
-        '<input name="email" type="email" required><select name="member_role"><option value="HR">RH</option><option value="RECRUITER">' +
-        (isEn ? "Recruiter" : "Recruteur") + '</option><option value="ADMIN">' + (isEn ? "Administrator" : "Administrateur") +
-        '</option><option value="BILLING">Billing</option></select><button class="tl-btn" type="submit">' + esc(t.invite) +
-        '</button><div class="tl-success"></div></form>';
+      var table = '<div class="tl-table-wrap"><table class="tl-portal-table"><thead><tr><th>' + esc(t.first) + "</th><th>" +
+        esc(t.email) + "</th><th>" + esc(t.permissions) + "</th></tr></thead><tbody>" + (rows || "") + "</tbody></table></div>";
+      var invite = canManage
+        ? '<form class="tl-form" id="acc-invite"><div class="tl-row-2"><input name="first_name" required placeholder="' +
+          esc(t.first) + '"><input name="last_name" required placeholder="' + esc(t.last) + '"></div>' +
+          '<input name="email" type="email" required placeholder="' + esc(t.email) + '"><select name="member_role">' +
+          '<option value="HR">RH</option><option value="RECRUITER">' + (isEn ? "Recruiter" : "Recruteur interne") +
+          '</option><option value="ADMIN">' + (isEn ? "Administrator" : "Administrateur") +
+          '</option><option value="BILLING">' + (isEn ? "Billing" : "Facturation") + "</option></select>" +
+          '<button class="tl-btn" type="submit">' + esc(t.invite) + '</button><div class="tl-success"></div></form>'
+        : '<p class="tl-meta">' + esc(t.teamReadOnly) + "</p>";
+      return settingsCard(t.settingsTeam, canManage ? t.teamHint : t.teamReadOnly, table + invite);
     }
 
     var state = { user: null, unreadN: 0, unreadM: 0, jobFilters: {} };
@@ -1116,7 +1316,7 @@
       if (invite) invite.addEventListener("submit", function (e) {
         e.preventDefault();
         api.request("/companies/me/members", { method: "POST", body: Object.fromEntries(new FormData(invite).entries()) })
-          .then(function () { go("settings"); }).catch(function (err) { flash(invite.querySelector(".tl-success"), (err && err.message) || t.err, false); });
+          .then(function () { go("settings", "team"); }).catch(function (err) { flash(invite.querySelector(".tl-success"), (err && err.message) || t.err, false); });
       });
       var intForm = document.getElementById("acc-int");
       if (intForm) {
@@ -1181,6 +1381,7 @@
         var p;
         if (isEmployerSpace()) {
           if (route.name === "dashboard") p = Promise.all([unwrap(api.request("/companies/me/dashboard")), unwrap(api.request("/companies/me"))]).then(function (r) {
+            state.company = r[1];
             return employerDashboard(user, r[0], r[1]);
           });
           else if (route.name === "company") p = unwrap(api.request("/companies/me")).then(function (c) { state.company = c; return companyForm(c); });
@@ -1208,8 +1409,13 @@
           else if (route.name === "documents") p = unwrap(api.request("/documents?owner_type=company")).then(function (docs) { return renderDocs(docs, []); });
           else if (route.name === "notifs") p = Promise.resolve(renderNotifs(state.notifs));
           else if (route.name === "settings") p = Promise.all([
-            unwrap(api.request("/users/me/preferences")), unwrap(api.request("/companies/me/members"))
-          ]).then(function (r) { return renderSettings(r[0]) + "<h3>" + esc(t.members) + "</h3>" + renderMembers(r[1]); });
+            unwrap(api.request("/users/me/preferences")),
+            unwrap(api.request("/companies/me")).catch(function () { return {}; }),
+            unwrap(api.request("/companies/me/members")).catch(function () { return []; })
+          ]).then(function (r) {
+            state.company = r[1];
+            return renderSettings(r[0], { company: r[1], members: r[2] });
+          });
           else p = Promise.resolve(empty(t.err));
         } else {
           if (route.name === "dashboard") p = Promise.all([unwrap(api.request("/candidates/me/dashboard")), unwrap(api.request("/candidates/me"))]).then(function (r) {
@@ -1230,7 +1436,9 @@
             unwrap(api.request("/documents")), unwrap(api.request("/candidates/me"))
           ]).then(function (r) { return renderDocs(r[0], (r[1] && r[1].resumes) || []); });
           else if (route.name === "notifs") p = Promise.resolve(renderNotifs(state.notifs));
-          else if (route.name === "settings") p = unwrap(api.request("/users/me/preferences")).then(renderSettings);
+          else if (route.name === "settings") p = unwrap(api.request("/users/me/preferences")).then(function (prefs) {
+            return renderSettings(prefs, {});
+          });
           else p = Promise.resolve(empty(t.err));
         }
         p.then(function (html) {
