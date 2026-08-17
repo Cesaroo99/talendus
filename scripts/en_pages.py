@@ -1,6 +1,6 @@
 """English pages for Talendus, native copy, not machine-translated chrome."""
 
-from parts import speed_strip, cta_band, faq_html, proof_stats, FAQ_EMPLOYERS_EN, FAQ_CANDIDATES_EN, FAQ_HOME_EN, homepage_faq
+from parts import speed_strip, cta_band, faq_html, proof_stats, FAQ_EMPLOYERS_EN, FAQ_CANDIDATES_EN, FAQ_HOME_EN, homepage_faq, cv_file_field
 from seo_pages import write_en as write_seo_en
 from positioning import (
     homepage_after_hero, job_search_filters, employer_need_fields,
@@ -326,14 +326,15 @@ def build_en(write, wrap, page_hero):
           </ol>
         </div>
         <div class="col-lg-6 offset-lg-1">
-          <form class="tl-form" action="#" method="post" data-form="contact">
-            <label>Name</label><input required name="nom">
-            <label>Email</label><input type="email" required name="courriel">
-            <label>Phone</label><input name="tel">
+          <form class="tl-form" action="#" method="post" data-form="talent-cv" enctype="multipart/form-data">
+            <label>Name</label><input required name="nom" autocomplete="name">
+            <label>Email</label><input type="email" required name="courriel" autocomplete="email">
+            <label>Phone</label><input name="tel" autocomplete="tel">
             <label>Target role</label>
             <select name="metier">""" + talent_trade_options("en") + """</select>
             <label>Region</label><input name="region" placeholder="Laval, Montérégie, Quebec City, remote…">
-            <label>Link to your resume (Drive, Dropbox…)</label><input name="cv" placeholder="https://">
+            """ + cv_file_field("en", required=True) + """
+            <label>Link to your resume <span class="tl-optional">(optional)</span></label><input name="cv" placeholder="https://">
             <button class="tl-btn tl-btn-lg" type="submit">Create my profile</button>
             <div class="tl-success" role="status"></div>
           </form>
@@ -449,18 +450,20 @@ def build_en(write, wrap, page_hero):
           <div class="tl-kicker">Talent</div>
           <h2 class="tl-h2">Submit my resume or ask a question</h2>
           <p class="tl-lead">It's free. A consultant calls if a mandate matches.</p>
-          <form class="tl-form" action="#" method="post" data-form="contact">
+          <form class="tl-form" action="#" method="post" data-form="talent-cv" enctype="multipart/form-data">
             <input type="hidden" name="profil" value="Candidate, I am looking for a role">
-            <label>Name</label><input required name="nom">
-            <label>Email</label><input type="email" required name="courriel">
-            <label>Phone</label><input name="tel">
+            <label>Name</label><input required name="nom" autocomplete="name">
+            <label>Email</label><input type="email" required name="courriel" autocomplete="email">
+            <label>Phone</label><input name="tel" autocomplete="tel">
             <label>Subject</label>
             <select name="objet">
               <option>Submit my resume</option>
               <option>Join the talent pool</option>
               <option>Question about a job</option>
             </select>
-            <label>Message</label><textarea required name="message" placeholder="Role, skills, city, job type"></textarea>
+            {cv_file_field("en", required=False)}
+            <label>Link to your resume <span class="tl-optional">(optional)</span></label><input name="cv" placeholder="https://">
+            <label>Message</label><textarea name="message" placeholder="Role, skills, city, job type"></textarea>
             <button class="tl-btn tl-btn-lg" type="submit">Create my profile</button>
             <div class="tl-success"></div>
           </form>

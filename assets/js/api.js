@@ -175,6 +175,7 @@
     },
     apply: function (body) { return request("/applications", { method: "POST", body: body }); },
     applyPublic: function (body) { return request("/applications/public", { method: "POST", body: body }); },
+    submitTalentProfile: function (body) { return request("/talent-profile", { method: "POST", body: body }); },
     myApplications: function () { return request("/applications/me"); },
     notifications: function (unread) { return request("/notifications" + (unread ? "?unread=true" : "")); },
     contact: function (body) { return request("/contact", { method: "POST", body: body }); },

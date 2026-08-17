@@ -228,14 +228,19 @@ gtag('consent', 'default', {
           </ol>
         </div>
         <div class="col-lg-6 offset-lg-1">
-          <form class="tl-form" action="#" method="post" data-form="contact">
-            <label>Name</label><input required name="nom">
-            <label>Email</label><input type="email" required name="courriel">
-            <label>Phone</label><input name="tel">
+          <form class="tl-form" action="#" method="post" data-form="talent-cv" enctype="multipart/form-data">
+            <label>Name</label><input required name="nom" autocomplete="name">
+            <label>Email</label><input type="email" required name="courriel" autocomplete="email">
+            <label>Phone</label><input name="tel" autocomplete="tel">
             <label>Target role</label>
             <select name="metier"><option>Developer</option><option>Accountant</option><option>Engineer</option><option>Driver</option><option>Forklift operator</option><option>Welder</option><option>Technician</option><option>Nurse</option><option>Sales associate</option><option>HR manager</option><option>Manager</option><option>Marketing</option><option>Administration</option><option>Production</option><option>Logistics</option><option>Electromechanical technician</option><option>Machinist</option><option>Supervisor</option><option>Other</option></select>
             <label>Region</label><input name="region" placeholder="Laval, Montérégie, Quebec City, remote…">
-            <label>Link to your resume (Drive, Dropbox…)</label><input name="cv" placeholder="https://">
+            <label class="tl-file">
+              <span>Your resume *</span>
+              <input type="file" name="cvfile" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp,application/pdf,image/png,image/jpeg" required>
+              <span class="tl-file-hint">PDF, Word (DOC, DOCX) or image (PNG, JPG). 5 MB max. The file goes to Talendus, not to employers.</span>
+            </label>
+            <label>Link to your resume <span class="tl-optional">(optional)</span></label><input name="cv" placeholder="https://">
             <button class="tl-btn tl-btn-lg" type="submit">Create my profile</button>
             <div class="tl-success" role="status"></div>
           </form>

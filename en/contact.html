@@ -248,18 +248,24 @@ gtag('consent', 'default', {
           <div class="tl-kicker">Talent</div>
           <h2 class="tl-h2">Submit my resume or ask a question</h2>
           <p class="tl-lead">It's free. A consultant calls if a mandate matches.</p>
-          <form class="tl-form" action="#" method="post" data-form="contact">
+          <form class="tl-form" action="#" method="post" data-form="talent-cv" enctype="multipart/form-data">
             <input type="hidden" name="profil" value="Candidate, I am looking for a role">
-            <label>Name</label><input required name="nom">
-            <label>Email</label><input type="email" required name="courriel">
-            <label>Phone</label><input name="tel">
+            <label>Name</label><input required name="nom" autocomplete="name">
+            <label>Email</label><input type="email" required name="courriel" autocomplete="email">
+            <label>Phone</label><input name="tel" autocomplete="tel">
             <label>Subject</label>
             <select name="objet">
               <option>Submit my resume</option>
               <option>Join the talent pool</option>
               <option>Question about a job</option>
             </select>
-            <label>Message</label><textarea required name="message" placeholder="Role, skills, city, job type"></textarea>
+            <label class="tl-file">
+              <span>Your resume <span class="tl-optional">(optional)</span></span>
+              <input type="file" name="cvfile" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp,application/pdf,image/png,image/jpeg">
+              <span class="tl-file-hint">PDF, Word (DOC, DOCX) or image (PNG, JPG). 5 MB max. The file goes to Talendus, not to employers.</span>
+            </label>
+            <label>Link to your resume <span class="tl-optional">(optional)</span></label><input name="cv" placeholder="https://">
+            <label>Message</label><textarea name="message" placeholder="Role, skills, city, job type"></textarea>
             <button class="tl-btn tl-btn-lg" type="submit">Create my profile</button>
             <div class="tl-success"></div>
           </form>

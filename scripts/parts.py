@@ -983,6 +983,30 @@ FAQ_CANDIDATES_EN = [
      "No. We present your file only when the role, terms and environment match what you told us, and after the screening steps planned for that mandate."),
 ]
 
+CV_FILE_ACCEPT = ".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp,application/pdf,image/png,image/jpeg"
+
+
+def cv_file_field(lang="fr", required=True):
+    req = " required" if required else ""
+    if lang == "en":
+        hint = "PDF, Word (DOC, DOCX) or image (PNG, JPG). 5 MB max. The file goes to Talendus, not to employers."
+        label = "Your resume" + (" *" if required else "")
+        optional = "" if required else ' <span class="tl-optional">(optional)</span>'
+        return f"""<label class="tl-file">
+              <span>{label}{optional}</span>
+              <input type="file" name="cvfile" accept="{CV_FILE_ACCEPT}"{req}>
+              <span class="tl-file-hint">{hint}</span>
+            </label>"""
+    hint = "PDF, Word (DOC, DOCX) ou image (PNG, JPG). 5 Mo max. Le fichier arrive chez Talendus, pas chez les employeurs."
+    label = "Votre CV" + (" *" if required else "")
+    optional = "" if required else ' <span class="tl-optional">(facultatif)</span>'
+    return f"""<label class="tl-file">
+              <span>{label}{optional}</span>
+              <input type="file" name="cvfile" accept="{CV_FILE_ACCEPT}"{req}>
+              <span class="tl-file-hint">{hint}</span>
+            </label>"""
+
+
 def wrap(title, desc, slug, body, solid=True, lang="fr", alt="", robots="index,follow", extra_json_ld=None, og_type="website", og_image="", persona=None):
     if lang == "fr":
         switch = alt or "en/index.html"

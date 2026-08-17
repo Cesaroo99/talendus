@@ -150,6 +150,24 @@
       box.style.color = isError ? "#8a1f11" : "";
     }
 
+    function cvFileFromForm(form) {
+      var fileInput = form.querySelector('input[type=file][name=cvfile]');
+      return fileInput && fileInput.files && fileInput.files[0];
+    }
+
+    function validateCvFile(form, file) {
+      var allowed = /\.(pdf|doc|docx|png|jpe?g|webp)$/i;
+      if (file && !allowed.test(file.name)) {
+        showFormMessage(form, isEn ? "Use a PDF, Word or image file (PNG, JPG)." : "Utilisez un fichier PDF, Word ou image (PNG, JPG).", true);
+        return false;
+      }
+      if (file && file.size > 5 * 1024 * 1024) {
+        showFormMessage(form, isEn ? "The file must be 5 MB or less." : "Le fichier doit faire 5 Mo ou moins.", true);
+        return false;
+      }
+      return true;
+    }
+
     document.querySelectorAll(".tl-form").forEach(function (form) {
       form.addEventListener("submit", function (e) {
         e.preventDefault();
@@ -173,17 +191,9 @@
           var person = splitName(formValue(form, ["nom", "name"]));
           var slug = form.getAttribute("data-job-slug") || jobSlugFromPage();
           var user = api.currentUser && api.currentUser();
-          var fileInput = form.querySelector('input[type=file][name=cvfile]');
-          var file = fileInput && fileInput.files && fileInput.files[0];
+          var file = cvFileFromForm(form);
           var cover = formValue(form, ["message", "note"]) || null;
-          var allowed = /\.(pdf|doc|docx|png|jpe?g|webp)$/i;
-          if (file && !allowed.test(file.name)) {
-            showFormMessage(form, isEn ? "Use a PDF, Word or image file (PNG, JPG)." : "Utilisez un fichier PDF, Word ou image (PNG, JPG).", true);
-            done();
-            return;
-          }
-          if (file && file.size > 5 * 1024 * 1024) {
-            showFormMessage(form, isEn ? "The file must be 5 MB or less." : "Le fichier doit faire 5 Mo ou moins.", true);
+          if (!validateCvFile(form, file)) {
             done();
             return;
           }
@@ -228,6 +238,45 @@
             } else {
               form.dispatchEvent(new CustomEvent("talendus:applied", { bubbles: true }));
             }
+          }).catch(function (err) {
+            showFormMessage(form, (err && err.message) || fallback, true);
+          }).then(done);
+          return;
+        }
+        if (kind === "talent-cv") {
+          var person = splitName(formValue(form, ["nom", "name"]));
+          var file = cvFileFromForm(form);
+          var user = api.currentUser && api.currentUser();
+          if (!validateCvFile(form, file)) {
+            done();
+            return;
+          }
+          if (user && user.role && user.role !== "CANDIDATE") {
+            showFormMessage(form, isEn ? "Use a candidate account to submit a resume." : "Utilisez un compte candidat pour déposer un CV.", true);
+            done();
+            return;
+          }
+          var fd = new FormData();
+          fd.append("first_name", person.first);
+          fd.append("last_name", person.last || "");
+          fd.append("email", formValue(form, ["courriel", "email"]));
+          var phone = formValue(form, ["tel", "telephone", "phone"]);
+          if (phone) fd.append("phone", phone);
+          var title = formValue(form, ["metier", "title"]);
+          if (title) fd.append("title", title);
+          var city = formValue(form, ["region", "city"]);
+          if (city) fd.append("city", city);
+          var cvUrl = formValue(form, ["cv"]);
+          if (cvUrl) fd.append("cv_url", cvUrl);
+          var message = formValue(form, ["message", "msg"]);
+          if (message) fd.append("message", message);
+          var subject = formValue(form, ["objet", "subject", "profil"]);
+          if (subject) fd.append("subject", subject);
+          if (file) fd.append("file", file);
+          api.request("/talent-profile", { method: "POST", body: fd }).then(function () {
+            showFormMessage(form, fallback, false);
+            form.reset();
+            if (window.TalendusTrack) window.TalendusTrack.lead({ content_name: "talent-cv" });
           }).catch(function (err) {
             showFormMessage(form, (err && err.message) || fallback, true);
           }).then(done);
@@ -294,7 +343,7 @@
       });
     });
 
-    document.querySelectorAll('form[data-form="apply"] input[name="cvfile"]').forEach(function (input) {
+    document.querySelectorAll('form[data-form="apply"] input[name="cvfile"], form[data-form="talent-cv"] input[name="cvfile"]').forEach(function (input) {
       var user = window.TalendusAPI && window.TalendusAPI.currentUser && window.TalendusAPI.currentUser();
       if (user && user.role === "CANDIDATE") {
         input.required = false;

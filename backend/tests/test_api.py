@@ -748,3 +748,76 @@ def test_stripe_checkout_and_webhook_without_keys(client):
     cand = register(client, "stripe-cand@example.com")
     denied = client.post(f"/api/invoices/{inv_id}/checkout", headers=auth_header(cand))
     assert denied.status_code == 403
+
+
+def test_public_talent_profile_uploads_pdf(client):
+    from sqlalchemy import select
+
+    from app.database import SessionLocal
+    from app.models import Candidate, Resume, User
+
+    res = client.post(
+        "/api/talent-profile",
+        data={
+            "first_name": "Maya",
+            "last_name": "Côté",
+            "email": "maya.talent@example.com",
+            "title": "Cariste",
+            "city": "Laval",
+        },
+        files={"file": ("cv.pdf", PDF, "application/pdf")},
+    )
+    assert res.status_code == 200, res.text
+    body = res.json()
+    assert body["data"]["resume_id"]
+    assert body["data"]["created"] is True
+    db = SessionLocal()
+    try:
+        user = db.scalar(select(User).where(User.email == "maya.talent@example.com"))
+        assert user is not None
+        assert user.role.value == "CANDIDATE"
+        profile = db.scalar(select(Candidate).where(Candidate.user_id == user.id))
+        assert profile.title == "Cariste"
+        assert profile.city == "Laval"
+        resume = db.scalar(select(Resume).where(Resume.id == body["data"]["resume_id"]))
+        assert resume is not None
+        assert resume.original_name == "cv.pdf"
+    finally:
+        db.close()
+
+
+def test_public_talent_profile_rejects_employer_email(client):
+    register(client, "boss.talent@example.com", "EMPLOYER")
+    res = client.post(
+        "/api/talent-profile",
+        data={"first_name": "Boss", "email": "boss.talent@example.com"},
+        files={"file": ("cv.pdf", PDF, "application/pdf")},
+    )
+    assert res.status_code == 409
+    assert res.json()["code"] == "EMAIL_TAKEN"
+
+
+def test_public_talent_profile_without_file_still_creates(client):
+    from sqlalchemy import select
+
+    from app.database import SessionLocal
+    from app.models import User
+
+    res = client.post(
+        "/api/talent-profile",
+        json={
+            "first_name": "Sam",
+            "last_name": "Question",
+            "email": "sam.question@example.com",
+            "message": "Question sur un poste de soudeur.",
+        },
+    )
+    assert res.status_code == 200, res.text
+    assert res.json()["data"]["resume_id"] is None
+    db = SessionLocal()
+    try:
+        user = db.scalar(select(User).where(User.email == "sam.question@example.com"))
+        assert user is not None
+        assert user.role.value == "CANDIDATE"
+    finally:
+        db.close()

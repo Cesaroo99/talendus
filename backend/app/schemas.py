@@ -355,6 +355,21 @@ class ContactIn(BaseModel):
     company_size: str | None = None
 
 
+class PublicTalentProfileIn(BaseModel):
+    first_name: str = Field(min_length=1, max_length=80)
+    last_name: str = ""
+    email: EmailStr
+    phone: str | None = None
+    title: str | None = None
+    city: str | None = None
+    sector: str | None = None
+    availability: str | None = None
+    cv_url: str | None = None
+    message: str | None = None
+    subject: str | None = None
+    password: str | None = Field(default=None, min_length=8, max_length=128)
+
+
 class CompanyMemberIn(BaseModel):
     email: EmailStr
     first_name: str = Field(min_length=1, max_length=80)

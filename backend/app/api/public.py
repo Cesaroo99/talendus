@@ -1,4 +1,6 @@
 from fastapi import APIRouter, Depends, Query, Request
+from fastapi.exceptions import RequestValidationError
+from pydantic import ValidationError
 from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
@@ -8,9 +10,10 @@ from app.deps import client_ip, require_roles
 from app.errors import ok
 from app.models import EmailLog, User
 from app.models.enums import EmailType, UserRole
-from app.schemas import ContactIn
+from app.schemas import ContactIn, PublicTalentProfileIn
 from app.services.audit import audit
 from app.services.email import send_email
+from app.services import candidates as cand_svc
 
 router = APIRouter(tags=["public"])
 
@@ -81,6 +84,58 @@ def contact(payload: ContactIn, request: Request, db: Session = Depends(get_db))
         else "Message reçu. Un conseiller vous rejoint sous peu."
     )
     return ok(message=message)
+
+
+def _form_text(form, key: str) -> str:
+    value = form.get(key)
+    if value is None or hasattr(value, "read"):
+        return ""
+    return str(value).strip()
+
+
+def _talent_payload(raw: dict) -> PublicTalentProfileIn:
+    try:
+        return PublicTalentProfileIn.model_validate(raw)
+    except ValidationError as exc:
+        raise RequestValidationError(exc.errors()) from exc
+
+
+@router.post("/talent-profile")
+async def talent_profile(request: Request, db: Session = Depends(get_db)):
+    content_type = (request.headers.get("content-type") or "").lower()
+    cv_file = None
+    cv_filename = None
+    if "multipart/form-data" in content_type:
+        form = await request.form()
+        payload = _talent_payload(
+            {
+                "first_name": _form_text(form, "first_name") or _form_text(form, "nom"),
+                "last_name": _form_text(form, "last_name"),
+                "email": _form_text(form, "email") or _form_text(form, "courriel"),
+                "phone": _form_text(form, "phone") or _form_text(form, "tel") or None,
+                "title": _form_text(form, "title") or _form_text(form, "metier") or None,
+                "city": _form_text(form, "city") or _form_text(form, "region") or None,
+                "sector": _form_text(form, "sector") or _form_text(form, "secteur") or None,
+                "availability": _form_text(form, "availability") or None,
+                "cv_url": _form_text(form, "cv_url") or _form_text(form, "cv") or None,
+                "message": _form_text(form, "message") or None,
+                "subject": _form_text(form, "subject") or _form_text(form, "objet") or None,
+                "password": _form_text(form, "password") or None,
+            }
+        )
+        upload = form.get("file") or form.get("cvfile")
+        filename = getattr(upload, "filename", "") or ""
+        if upload is not None and hasattr(upload, "read") and filename:
+            data = await upload.read()
+            if data:
+                cv_file = data
+                cv_filename = filename
+    else:
+        payload = _talent_payload(await request.json())
+    result = cand_svc.submit_public_talent(
+        db, payload, client_ip(request), cv_file=cv_file, cv_filename=cv_filename
+    )
+    return ok(result, message="Profil reçu. Un conseiller Talendus vous rejoint sous peu.")
 
 
 emails_router = APIRouter(prefix="/emails", tags=["emails"])
