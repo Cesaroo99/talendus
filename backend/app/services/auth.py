@@ -287,9 +287,11 @@ def _provision_role(db: Session, user: User, company_name: str | None = None) ->
 
 
 def auth_providers() -> dict:
+    google_client_id = get_settings().google_oauth_client_id or ""
     return {
         "password": True,
-        "google": bool(get_settings().google_oauth_client_id),
+        "google": bool(google_client_id),
+        "google_client_id": google_client_id,
         "linkedin": bool(get_settings().linkedin_oauth_client_id),
     }
 

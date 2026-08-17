@@ -833,24 +833,14 @@ write("espace.html", wrap(
     "Mon espace candidat | Talendus",
     "Connectez-vous pour gérer votre profil, votre CV, vos candidatures et vos échanges avec Talendus.",
     "espace.html",
-    page_hero(
-        "Candidats", "Votre dossier Talendus.",
-        "Profil, CV, candidatures, messages avec votre conseiller et entretiens. Talendus reste votre interlocuteur.",
-        badges='<span class="tl-badge tl-badge-light">Espace privé</span>'
-    )
-    + """<section class="tl-section tl-portal-section"><div class="container"><div id="tl-account"></div></div></section>""",
+    """<section class="tl-section tl-portal-section"><div class="container"><div id="tl-account"></div></div></section>""",
     robots="noindex,nofollow",
 ))
 write("espace-employeur.html", wrap(
     "Espace entreprise | Talendus",
     "Suivez les dossiers que Talendus vous présente, vos mandats et vos factures. Vous ne parcourez pas une base de candidats.",
     "espace-employeur.html",
-    page_hero(
-        "Entreprises", "Votre espace entreprise.",
-        "Mandats, shortlists présentées, pipeline et factures. Tout contact avec les candidats passe par Talendus.",
-        badges='<span class="tl-badge tl-badge-light">Espace privé</span>'
-    )
-    + """<section class="tl-section tl-portal-section"><div class="container"><div id="tl-account" data-space="employer"></div></div></section>""",
+    """<section class="tl-section tl-portal-section"><div class="container"><div id="tl-account" data-space="employer"></div></div></section>""",
     robots="noindex,nofollow",
 ))
 write("confidentialite.html", wrap(
