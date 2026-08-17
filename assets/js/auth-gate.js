@@ -21,7 +21,7 @@
       guestCta: "Sign in", dashboard: "Dashboard", logout: "Sign out",
       workspace: "My workspace", settings: "Settings", notifs: "Notifications",
       accountMenu: "Account menu",
-      saveJob: "Save job", savedJob: "Saved", applyTrack: "Create an account to track this application",
+      saveJob: "Save job", savedJob: "Saved", saveNeedCandidate: "Use a candidate account to save a job.", applyTrack: "Create an account to track this application",
       needAccount: "Create an account to continue",
       err: "Something went wrong.",
       loginLead: "Access your Talendus workspace.",
@@ -45,7 +45,7 @@
       guestCta: "Connexion", dashboard: "Tableau de bord", logout: "Déconnexion",
       workspace: "Mon espace", settings: "Paramètres", notifs: "Notifications",
       accountMenu: "Menu du compte",
-      saveJob: "Sauvegarder", savedJob: "Sauvegardée", applyTrack: "Créer un compte pour suivre cette candidature",
+      saveJob: "Sauvegarder", savedJob: "Sauvegardée", saveNeedCandidate: "Utilisez un compte candidat pour sauvegarder une offre.", applyTrack: "Créer un compte pour suivre cette candidature",
       needAccount: "Créez un compte pour continuer",
       err: "Une erreur s’est produite.",
       loginLead: "Accédez à votre espace Talendus.",
@@ -168,6 +168,7 @@
       overlay.hidden = true;
       overlay.innerHTML = "";
       document.body.classList.remove("tl-auth-open");
+      if (pending && pending.type === "save") pending = null;
     }
 
     function flashBox(sel, msg, ok) {
@@ -266,15 +267,20 @@
     }
 
     function afterAuth(user) {
-      closeOverlay();
       paintSession();
       window.dispatchEvent(new CustomEvent("talendus:auth", { detail: user }));
-      if (pending && pending.type === "save" && user && user.role === "CANDIDATE") {
-        var jobId = pending.jobId;
-        pending = null;
-        api.saveJob(jobId).then(function () { paintSaveButtons(); }).catch(function () {});
+      if (pending && pending.type === "save") {
+        if (user && user.role === "CANDIDATE") {
+          var jobId = pending.jobId;
+          pending = null;
+          closeOverlay();
+          api.saveJob(jobId).then(function () { paintSaveButtons(); }).catch(function () {});
+          return;
+        }
+        flashBox(".tl-success", t.saveNeedCandidate, false);
         return;
       }
+      closeOverlay();
       if (pending && pending.type === "portal") {
         pending = null;
         goToWorkspace(user);
@@ -357,12 +363,20 @@
     function openAuth(mode, opts) {
       opts = opts || {};
       var role = (opts.role || authRole || defaultRole()).toUpperCase();
+      if (pending && pending.type === "save") role = "CANDIDATE";
       if (role !== "EMPLOYER") role = "CANDIDATE";
       authRole = role;
       var token = opts.token || "";
       var user = api.currentUser();
-      if (user && ["login", "register", "choose"].indexOf(mode) !== -1) {
+      var savingJob = pending && pending.type === "save";
+      if (user && !savingJob && ["login", "register", "choose"].indexOf(mode) !== -1) {
         goToWorkspace(user);
+        return;
+      }
+      if (user && savingJob && user.role === "CANDIDATE") {
+        var jobId = pending.jobId;
+        pending = null;
+        api.saveJob(jobId).then(function () { paintSaveButtons(); }).catch(function () {});
         return;
       }
       overlay.hidden = false;
@@ -407,11 +421,11 @@
           var isHire = role === "EMPLOYER";
           inner = shell(
             "<h2>" + esc(t.register) + "</h2>" +
-            '<p class="tl-auth-lead">' + esc(isHire ? t.registerEmployerLead : t.registerLead) + "</p>" +
-            '<div class="tl-auth-tabs" role="tablist">' +
+            '<p class="tl-auth-lead">' + esc(savingJob ? t.saveNeedCandidate : (isHire ? t.registerEmployerLead : t.registerLead)) + "</p>" +
+            (savingJob ? "" : ('<div class="tl-auth-tabs" role="tablist">' +
               '<button type="button" role="tab" class="' + (isHire ? "" : "is-active") + '" data-auth-role="CANDIDATE" aria-selected="' + (isHire ? "false" : "true") + '">' + esc(t.seek) + "</button>" +
               '<button type="button" role="tab" class="' + (isHire ? "is-active" : "") + '" data-auth-role="EMPLOYER" aria-selected="' + (isHire ? "true" : "false") + '">' + esc(t.hire) + "</button>" +
-            "</div>" +
+            "</div>")) +
             '<form class="tl-form tl-auth-form" id="tl-auth-register">' +
               '<input class="tl-hp" name="website_url" tabindex="-1" autocomplete="off" aria-hidden="true">' +
               '<div class="tl-row-2">' +
@@ -429,7 +443,7 @@
         } else {
           inner = shell(
             "<h2>" + esc(t.login) + "</h2>" +
-            '<p class="tl-auth-lead">' + esc(t.loginLead) + "</p>" +
+            '<p class="tl-auth-lead">' + esc(savingJob ? t.saveNeedCandidate : t.loginLead) + "</p>" +
             '<form class="tl-form tl-auth-form" id="tl-auth-login">' +
               "<label>" + esc(t.email) + '</label><input name="email" type="email" required autocomplete="username">' +
               "<label>" + esc(t.password) + '</label><input name="password" type="password" required minlength="8" autocomplete="current-password">' +
@@ -642,15 +656,25 @@
       var save = e.target.closest("[data-save-job]");
       if (save) {
         e.preventDefault();
+        e.stopPropagation();
         var jobId = save.getAttribute("data-save-job");
+        if (!jobId) return;
         var user = api.currentUser();
-        if (!user || user.role !== "CANDIDATE") {
-          pending = { type: "save", jobId: jobId };
-          openAuth("register", { role: "CANDIDATE" });
+        if (user && user.role === "CANDIDATE") {
+          var method = save.classList.contains("is-saved") ? "DELETE" : "POST";
+          api.request("/jobs/" + jobId + "/save", { method: method }).then(function () {
+            paintSaveButtons();
+          }).catch(function (err) {
+            if (err && (err.status === 401 || err.status === 403)) {
+              pending = { type: "save", jobId: jobId };
+              openAuth("login", { role: "CANDIDATE" });
+              return;
+            }
+          });
           return;
         }
-        var method = save.classList.contains("is-saved") ? "DELETE" : "POST";
-        api.request("/jobs/" + jobId + "/save", { method: method }).then(function () { paintSaveButtons(); }).catch(function () {});
+        pending = { type: "save", jobId: jobId };
+        openAuth(user ? "login" : "register", { role: "CANDIDATE" });
       }
     });
 
@@ -679,7 +703,7 @@
       api.request("/jobs/" + encodeURIComponent(jobSlug)).then(function (payload) {
         var job = payload && payload.data;
         if (!job) return;
-        var host = document.querySelector("#postuler") || document.querySelector(".tl-page-hero .container") || document.querySelector(".tl-section .container");
+        var host = document.querySelector(".tl-job-apply-card") || document.querySelector("#postuler") || document.querySelector(".tl-page-hero .container") || document.querySelector(".tl-section .container");
         if (!host || host.querySelector("[data-save-job]")) return;
         var btn = document.createElement("button");
         btn.type = "button";
