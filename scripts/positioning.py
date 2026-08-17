@@ -1236,7 +1236,6 @@ def homepage_after_hero(lang="fr"):
         + process_section(lang)
         + why_talendus_section(lang)
         + ai_engine_section(lang)
-        + competitive_advantage_section(lang)
         + human_hire_band(lang)
     )
     return (
@@ -1244,8 +1243,6 @@ def homepage_after_hero(lang="fr"):
         + persona_region("gateway", gateway_orientation_section(lang))
         + persona_region("talent", talent)
         + persona_region("entreprise", hire)
-        + sectors_cloud(lang)
-        + trades_cloud(lang)
     )
 
 

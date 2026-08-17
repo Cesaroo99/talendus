@@ -124,7 +124,7 @@ def build_en(write, wrap, page_hero):
         "Talendus | Intelligent placement agency",
         "Talendus is a placement agency. Companies: hand us a need, receive a shortlist. Candidates: create a profile, be contacted when an opportunity fits. Every industry.",
         "en/",
-        INDEX_EN + homepage_after_hero("en") + homepage_faq("en"),
+        INDEX_EN + homepage_after_hero("en") + homepage_faq("en") + sectors_cloud("en") + trades_cloud("en"),
         solid=False,
         lang="en",
         alt="",
@@ -253,7 +253,6 @@ def build_en(write, wrap, page_hero):
         + human_section("en")
         + why_talendus_section("en")
         + company_types_section("en")
-        + sectors_cloud("en")
         + f"""
     <section class="tl-section" id="calculator"><div class="container">
       <div class="row align-items-center g-4">
@@ -303,7 +302,8 @@ def build_en(write, wrap, page_hero):
         <a class="tl-btn tl-btn-lg" href="contact.html">Hand us the search</a>
       </div>
     </div></section>
-    """,
+    """
+        + sectors_cloud("en"),
         lang="en",
         alt="entreprises.html",
     ))

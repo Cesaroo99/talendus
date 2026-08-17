@@ -210,7 +210,7 @@ write("index.html", wrap(
     "Talendus | Agence de placement intelligente",
     "Talendus est une agence de placement. Entreprises : confiez un besoin, recevez une shortlist. Candidats : créez un profil, soyez contacté lorsqu'une opportunité correspond. Tous secteurs.",
     "",
-    INDEX_BODY + homepage_after_hero("fr") + homepage_faq("fr"),
+    INDEX_BODY + homepage_after_hero("fr") + homepage_faq("fr") + sectors_cloud("fr") + trades_cloud("fr"),
     solid=False,
 ))
 
@@ -380,7 +380,6 @@ EMPLOYERS_BODY = (
     + human_section("fr")
     + why_talendus_section("fr")
     + company_types_section("fr")
-    + sectors_cloud("fr")
     + """
     <section class="tl-section" id="calculateur"><div class="container">
       <div class="row align-items-center g-4">
@@ -431,6 +430,7 @@ EMPLOYERS_BODY = (
       </div>
     </div></section>
     """
+    + sectors_cloud("fr")
 )
 write("entreprises.html", wrap(
     "Entreprises | Agence de placement — Talendus",
