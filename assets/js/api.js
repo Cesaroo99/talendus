@@ -48,6 +48,11 @@
     }).then(function (res) {
       return res.json().catch(function () { return {}; }).then(function (json) {
         if (!res.ok || json.success === false) {
+          var publicAuth = /\/auth\/(login|register|oauth|forgot-password|reset-password|verify-email)/.test(path);
+          if (res.status === 401 && token && !publicAuth) {
+            clearSession();
+            try { window.dispatchEvent(new CustomEvent("talendus:session-cleared")); } catch (e) {}
+          }
           var err = new Error((json && json.message) || "Erreur API");
           err.code = json && json.code;
           err.status = res.status;

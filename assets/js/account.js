@@ -11,16 +11,6 @@
     var isEn = (document.documentElement.lang || "").toLowerCase().indexOf("en") === 0;
     document.body.classList.add("tl-portal-active");
 
-    function assetPrefix() {
-      var img = document.querySelector(".vl-logo img");
-      var src = img && img.getAttribute("src");
-      if (src) return src.replace(/assets\/img\/logo\/[^/?#]+$/, "");
-      return isEn ? "../" : "";
-    }
-    function logoUrl() { return assetPrefix() + "assets/img/logo/logo1.png"; }
-    function plantUrl() { return assetPrefix() + "assets/img/all-images/industry/usine-equipe.jpg"; }
-    var MARK_SVG = '<svg viewBox="0 0 36 36" aria-hidden="true"><path fill="#ffffff" fill-rule="evenodd" d="M18 1.5c9.113 0 16.5 7.387 16.5 16.5S27.113 34.5 18 34.5 1.5 27.113 1.5 18 8.887 1.5 18 1.5zm-7.25 9.75h14.5a1.75 1.75 0 1 1 0 3.5h-5.5v12.75a1.75 1.75 0 1 1-3.5 0V14.75h-5.5a1.75 1.75 0 1 1 0-3.5z"/></svg>';
-
     var t = isEn ? {
       login: "Sign in", register: "Create an account", email: "Email", password: "Password",
       first: "First name", last: "Last name", submitLogin: "Sign in", submitRegister: "Create my account",
@@ -376,9 +366,21 @@
       });
     }
 
+    function renderChecking() {
+      document.body.classList.remove("tl-auth-guest");
+      root.innerHTML =
+        '<div class="tl-session-gate">' +
+          '<div class="tl-session-gate-card">' +
+            '<p class="tl-lead">' + esc(t.loading) + "</p>" +
+            skeleton() +
+          "</div>" +
+        "</div>";
+    }
+
     function renderGuest() {
       var employer = isEmployerSpace();
       document.body.classList.add("tl-auth-guest");
+      state.user = null;
       var hash = (location.hash || "").replace(/^#\/?/, "");
       if (window.TalendusAuth && (hash.indexOf("reset") === 0 || hash.indexOf("verify") === 0 || hash.indexOf("forgot") === 0)) {
         return;
@@ -392,7 +394,7 @@
             "<h2>" + esc(t.login) + "</h2>" +
             '<p class="tl-lead">' + esc(employer ? t.guestEmployer : t.guest) + "</p>" +
             '<div class="tl-actions">' +
-              '<button type="button" class="tl-btn tl-btn-lg" data-auth-open="login">' + esc(t.submitLogin) + "</button>" +
+              '<button type="button" class="tl-btn tl-btn-lg" data-auth-open="login"' + roleAttr + ">" + esc(t.submitLogin) + "</button>" +
               '<button type="button" class="tl-btn tl-btn-ghost-dark tl-btn-lg" data-auth-open="register"' + roleAttr + ">" + esc(employer ? t.registerEmployer : t.register) + "</button>" +
             "</div>" +
           "</div>" +
@@ -1246,18 +1248,31 @@
       if (isEmployerSpace() && /[?&]paid=/.test(location.search || "")) {
         if (!(location.hash || "").replace("#", "")) location.hash = "#/invoices";
       }
-      var user = api.currentUser();
-      if (user && staffRole(user.role)) { window.location.replace(accountHref(user.role)); return; }
-      if (user && user.role === "EMPLOYER" && !isEmployerSpace()) { window.location.replace(accountHref("EMPLOYER")); return; }
-      if (user && user.role === "CANDIDATE" && isEmployerSpace()) { window.location.replace(accountHref("CANDIDATE")); return; }
-      if (!user) { renderGuest(); return; }
-      state.user = user;
-      api.me().then(function (j) { state.user = j.data; renderAuthed(); }).catch(function () { renderGuest(); });
+      var local = api.currentUser();
+      if (!local) { renderGuest(); return; }
+      renderChecking();
+      api.me().then(function (j) {
+        var user = j.data;
+        state.user = user;
+        if (staffRole(user.role)) { window.location.replace(accountHref(user.role)); return; }
+        if (user.role === "EMPLOYER" && !isEmployerSpace()) { window.location.replace(accountHref("EMPLOYER")); return; }
+        if (user.role === "CANDIDATE" && isEmployerSpace()) { window.location.replace(accountHref("CANDIDATE")); return; }
+        renderAuthed();
+      }).catch(function (err) {
+        if (!api.currentUser() || (err && err.status === 401)) {
+          renderGuest();
+          return;
+        }
+        root.innerHTML = errBox((err && err.message) || t.err);
+        var retry = root.querySelector("[data-retry]");
+        if (retry) retry.onclick = boot;
+      });
     }
 
     window.addEventListener("hashchange", function () { if (state.user) renderAuthed(); });
     window.addEventListener("popstate", function () { if (state.user) renderAuthed(); });
     window.addEventListener("talendus:auth", function () { boot(); });
+    window.addEventListener("talendus:session-cleared", function () { renderGuest(); });
     boot();
   });
 })();

@@ -8,6 +8,7 @@ def test_auth_providers(client):
     assert data["password"] is True
     assert data["google"] is False
     assert data["linkedin"] is False
+    assert data["google_client_id"] == ""
 
 
 def test_oauth_unavailable_without_config(client):

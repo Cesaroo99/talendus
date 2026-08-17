@@ -706,12 +706,7 @@ def build_en(write, wrap, page_hero):
         "My candidate account | Talendus",
         "Sign in to manage your profile, resume, applications and Talendus notifications.",
         "en/account.html",
-        page_hero(
-            "Candidates", "Your Talendus file.",
-            "Profile, resume, applications, messages and interviews. Follow your job search.",
-            badges='<span class="tl-badge tl-badge-light">Private space</span>',
-        )
-        + """<section class="tl-section tl-portal-section"><div class="container"><div id="tl-account"></div></div></section>""",
+        """<section class="tl-section tl-portal-section"><div class="container"><div id="tl-account"></div></div></section>""",
         lang="en",
         alt="espace.html",
         robots="noindex,nofollow",
@@ -720,12 +715,7 @@ def build_en(write, wrap, page_hero):
         "Employer portal | Talendus",
         "Sign in to manage job openings, applications, pipeline and Talendus invoices.",
         "en/account-employer.html",
-        page_hero(
-            "Employers", "Your hiring workspace.",
-            "Jobs, presented files, pipeline and invoices. Follow your hires.",
-            badges='<span class="tl-badge tl-badge-light">Private space</span>',
-        )
-        + """<section class="tl-section tl-portal-section"><div class="container"><div id="tl-account" data-space="employer"></div></div></section>""",
+        """<section class="tl-section tl-portal-section"><div class="container"><div id="tl-account" data-space="employer"></div></div></section>""",
         lang="en",
         alt="espace-employeur.html",
         robots="noindex,nofollow",
