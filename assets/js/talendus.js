@@ -187,6 +187,11 @@
             done();
             return;
           }
+          if (user && user.role && user.role !== "CANDIDATE") {
+            showFormMessage(form, isEn ? "Use a candidate account to apply." : "Utilisez un compte candidat pour postuler.", true);
+            done();
+            return;
+          }
           var send;
           if (user && user.role === "CANDIDATE") {
             send = Promise.resolve(null);

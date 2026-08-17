@@ -241,6 +241,45 @@ def test_public_apply_on_site_page_without_existing_job(client):
     assert any(item["slug"] == "cariste" for item in listed.json()["data"])
 
 
+def test_public_job_catalog_slug_without_prior_apply(client):
+    res = client.get("/api/jobs/cariste")
+    assert res.status_code == 200, res.text
+    assert res.json()["data"]["slug"] == "cariste"
+    assert res.json()["data"]["status"] == "PUBLISHED"
+
+
+def test_public_apply_paused_site_job_stays_closed(client, db):
+    from app.models import Company, JobOffer
+    from app.models.enums import CompanyStatus, JobStatus
+
+    company = Company(name="Talendus", status=CompanyStatus.ACTIVE, city="Montréal")
+    db.add(company)
+    db.flush()
+    job = JobOffer(
+        company_id=company.id,
+        slug="comptable",
+        title="Comptable",
+        description="Mandat en pause.",
+        location="Montréal",
+        status=JobStatus.PAUSED,
+        published_at=None,
+    )
+    db.add(job)
+    db.commit()
+    applied = client.post(
+        "/api/applications/public",
+        json={
+            "job_slug": "comptable",
+            "first_name": "Léa",
+            "last_name": "Roy",
+            "email": "lea.comptable@example.com",
+        },
+    )
+    assert applied.status_code == 409, applied.text
+    db.refresh(job)
+    assert job.status == JobStatus.PAUSED
+
+
 def test_logged_in_candidate_applies_to_site_slug(client):
     cand = register(client, "site.apply@example.com")
     applied = client.post(
@@ -266,7 +305,7 @@ def test_public_apply_unknown_slug_still_404(client):
     assert applied.json()["code"] == "JOB_NOT_FOUND"
 
 
-def test_public_apply_reopens_archived_site_job(client, db):
+def test_public_apply_does_not_reopen_archived_site_job(client, db):
     from app.models import Company, JobOffer
     from app.models.enums import CompanyStatus, JobStatus
 
@@ -292,9 +331,10 @@ def test_public_apply_reopens_archived_site_job(client, db):
             "email": "lea.vendeur@example.com",
         },
     )
-    assert applied.status_code == 200, applied.text
+    assert applied.status_code == 409, applied.text
+    assert applied.json()["code"] == "JOB_CLOSED"
     db.refresh(job)
-    assert job.status == JobStatus.PUBLISHED
+    assert job.status == JobStatus.ARCHIVED
 
 
 def test_candidate_can_upload_png_resume(client):

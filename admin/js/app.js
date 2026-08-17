@@ -2137,8 +2137,9 @@
   (async function boot() {
     if (TLStore.detectEnv) await TLStore.detectEnv();
     if (TLStore.apiEnv === "production" && TLStore.me() && !TLStore.isLive()) {
-      TLStore.logout();
+      sessionStorage.removeItem("talendus-admin-session");
     }
+    if (TLStore.restoreFromPublic) TLStore.restoreFromPublic();
     if (TLStore.me() && window.TalendusAPI && TLStore.hydrateFromApi && TLStore.isLive()) {
       await TLStore.hydrateFromApi();
     }
