@@ -1,6 +1,6 @@
 """English pages for Talendus — native copy, not machine-translated chrome."""
 
-from parts import speed_strip, cta_band, faq_html, proof_stats, FAQ_EMPLOYERS_EN, FAQ_CANDIDATES_EN, FAQ_HOME_EN
+from parts import speed_strip, cta_band, faq_html, proof_stats, FAQ_EMPLOYERS_EN, FAQ_CANDIDATES_EN, FAQ_HOME_EN, homepage_faq
 from seo_pages import write_en as write_seo_en
 from positioning import (
     homepage_after_hero, job_search_filters, employer_need_fields,
@@ -91,11 +91,15 @@ INDEX_EN = rf"""
             <div class="hero2-heading tl-hero-lock">
                 <h5>Talendus. An intelligent placement agency.</h5>
                 <div class="space16"></div>
-                <h1>The right talent. Faster. Smarter.</h1>
+                <h1 data-persona-only="gateway">Are you hiring, or looking for a job?</h1>
+                <h1 data-persona-only="talent">Your path, studied. The right opportunities.</h1>
+                <h1 data-persona-only="entreprise">The right talent. Faster. Smarter.</h1>
                 <div class="space16"></div>
-                <p>We search, evaluate and shortlist the most relevant people for companies. Our teams already rely on technology and artificial intelligence — you do not have to use the tools yourself.</p>
+                <p data-persona-only="gateway">Two distinct sides: companies that hire, people looking for a job. Choose what fits you. Talendus stays the intermediary.</p>
+                <p data-persona-only="talent">Create your profile, submit your resume. We study your path and contact you when an opportunity fits. Free for you. Companies do not receive your contact details.</p>
+                <p data-persona-only="entreprise">Hand us the need. We search, screen and present a qualified shortlist. You do not browse a resume database. You keep the final decision.</p>
             </div>
-            <div class="tl-persona-cards">
+            <div class="tl-persona-cards" data-persona-only="gateway">
               <a class="tl-persona-card is-talent" href="candidates.html" data-set-persona="talent">
                 <span class="tl-kicker">Candidates</span>
                 <h2>I'm looking for a job</h2>
@@ -118,17 +122,9 @@ INDEX_EN = rf"""
 def build_en(write, wrap, page_hero):
     write("en/index.html", wrap(
         "Talendus | Intelligent placement agency",
-        "Talendus is a placement agency that already uses artificial intelligence in its operations. Hand us the need: we search, screen and present the most relevant talent. Every industry. We hire better, faster and more intelligently with AI.",
+        "Talendus is a placement agency. Companies: hand us a need, receive a shortlist. Candidates: create a profile, be contacted when an opportunity fits. Every industry.",
         "en/",
-        INDEX_EN + homepage_after_hero("en") + f"""
-    <section class="tl-section tl-ice"><div class="container">
-      <div class="tl-center" style="max-width:720px;margin:0 auto 28px">
-        <div class="tl-kicker" id="faq">FAQ</div>
-        <h2 class="tl-h2">What people ask first</h2>
-      </div>
-      {faq_html(FAQ_HOME_EN)}
-    </div></section>
-    """,
+        INDEX_EN + homepage_after_hero("en") + homepage_faq("en"),
         solid=False,
         lang="en",
         alt="",

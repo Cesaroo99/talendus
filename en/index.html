@@ -4,7 +4,7 @@
      <meta charset="UTF-8">
      <meta name="viewport" content="width=device-width, initial-scale=1.0">
      <title>Talendus | Intelligent placement agency</title>
-     <meta name="description" content="Talendus is a placement agency that already uses artificial intelligence in its operations. Hand us the need: we search, screen and present the most relevant talent. Every industry. We hire better, faster and more intelligently with AI.">
+     <meta name="description" content="Talendus is a placement agency. Companies: hand us a need, receive a shortlist. Candidates: create a profile, be contacted when an opportunity fits. Every industry.">
      <meta name="keywords" content="recruitment agency, staffing agency, outsourced recruiting, talent search, candidate screening, intelligent recruiting, AI-assisted recruiting, personnel placement, recruiting solution, talent recruiting, Talendus Quebec">
      <link rel="canonical" href="https://talendus.ca/en/">
      <link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/">
@@ -14,14 +14,14 @@
      <meta property="og:locale" content="en_CA">
      <meta property="og:locale:alternate" content="fr_CA">
      <meta property="og:title" content="Talendus | Intelligent placement agency">
-     <meta property="og:description" content="Talendus is a placement agency that already uses artificial intelligence in its operations. Hand us the need: we search, screen and present the most relevant talent. Every industry. We hire better, faster and more intelligently with AI.">
+     <meta property="og:description" content="Talendus is a placement agency. Companies: hand us a need, receive a shortlist. Candidates: create a profile, be contacted when an opportunity fits. Every industry.">
      <meta property="og:type" content="website">
      <meta property="og:url" content="https://talendus.ca/en/">
      <meta property="og:site_name" content="Talendus">
      <meta property="og:image" content="https://talendus.ca/assets/img/all-images/industry/usine-equipe.jpg">
      <meta name="twitter:card" content="summary_large_image">
      <meta name="twitter:title" content="Talendus | Intelligent placement agency">
-     <meta name="twitter:description" content="Talendus is a placement agency that already uses artificial intelligence in its operations. Hand us the need: we search, screen and present the most relevant talent. Every industry. We hire better, faster and more intelligently with AI.">
+     <meta name="twitter:description" content="Talendus is a placement agency. Companies: hand us a need, receive a shortlist. Candidates: create a profile, be contacted when an opportunity fits. Every industry.">
      <meta name="twitter:image" content="https://talendus.ca/assets/img/all-images/industry/usine-equipe.jpg">
      <meta name="theme-color" content="#0b1f3a">
     <link rel="shortcut icon" href="../assets/img/logo/fav-logo1.png" type="image/png">
@@ -167,11 +167,15 @@ gtag('consent', 'default', {
             <div class="hero2-heading tl-hero-lock">
                 <h5>Talendus. An intelligent placement agency.</h5>
                 <div class="space16"></div>
-                <h1>The right talent. Faster. Smarter.</h1>
+                <h1 data-persona-only="gateway">Are you hiring, or looking for a job?</h1>
+                <h1 data-persona-only="talent">Your path, studied. The right opportunities.</h1>
+                <h1 data-persona-only="entreprise">The right talent. Faster. Smarter.</h1>
                 <div class="space16"></div>
-                <p>We search, evaluate and shortlist the most relevant people for companies. Our teams already rely on technology and artificial intelligence — you do not have to use the tools yourself.</p>
+                <p data-persona-only="gateway">Two distinct sides: companies that hire, people looking for a job. Choose what fits you. Talendus stays the intermediary.</p>
+                <p data-persona-only="talent">Create your profile, submit your resume. We study your path and contact you when an opportunity fits. Free for you. Companies do not receive your contact details.</p>
+                <p data-persona-only="entreprise">Hand us the need. We search, screen and present a qualified shortlist. You do not browse a resume database. You keep the final decision.</p>
             </div>
-            <div class="tl-persona-cards">
+            <div class="tl-persona-cards" data-persona-only="gateway">
               <a class="tl-persona-card is-talent" href="candidates.html" data-set-persona="talent">
                 <span class="tl-kicker">Candidates</span>
                 <h2>I'm looking for a job</h2>
@@ -188,23 +192,31 @@ gtag('consent', 'default', {
         </div>
   </div>
 </div>
-
-<section class="tl-section" id="entreprises-intro">
+<div data-persona-only="talent"><div class="container tl-persona-switch-wrap"><p class="tl-persona-switch">Hiring instead? <a href="employers.html" data-set-persona="entreprise">Go to the employer side</a></p></div></div><div data-persona-only="entreprise"><div class="container tl-persona-switch-wrap"><p class="tl-persona-switch">Looking for a job? <a href="candidates.html" data-set-persona="talent">Go to the talent side</a></p></div></div><div data-persona-only="gateway">
+<section class="tl-section" id="parcours">
   <div class="container">
-    <div class="tl-prose">
-      <div class="tl-kicker">For employers</div>
-      <h2 class="tl-h2">You have a role to fill? Don't spend your weeks sorting applications.</h2>
-      <p>Hand the need to Talendus. We are not a job board where you browse candidates yourself, and not a software tool that leaves the search on your desk. We are a placement agency: you describe the role, we take on the work of finding, screening and qualifying people.</p>
-      <p>Our team studies the mandate, searches across our network and the profiles we already know, analyses resumes, speaks with candidates when needed, and presents a qualified shortlist. You keep the final decision. We do the work you should not have to do alone: understand the need, identify talent, compare skills, run first conversations, and put only relevant files in front of you.</p>
-      <p>Talendus already uses artificial intelligence in its internal tools to speed up search, analysis and screening. You benefit from that power without using the tools yourself: we mobilize them to find and qualify the most relevant profiles for your need. Consultants remain essential to confirm fit, motivations and context.</p>
-      <div class="tl-actions" style="margin-top:28px">
-        <a class="tl-btn" href="contact.html">Hand us the search</a>
-        <a class="tl-btn tl-btn-ghost-dark" href="employers.html">How we work with companies</a>
-      </div>
+    <div class="tl-center" style="max-width:720px;margin:0 auto 36px">
+      <div class="tl-kicker">Two sides. No mix-up.</div>
+      <h2 class="tl-h2">Talendus does not put companies and candidates in the same flow.</h2>
+      <p class="tl-lead">Choose your side. The next pages, the actions and the support follow that choice.</p>
+    </div>
+    <div class="tl-gateway-lanes">
+      <article class="tl-gateway-lane is-talent">
+        <span class="tl-kicker">Candidates</span>
+        <h3>You are looking for a job</h3>
+        <p>Create a profile, submit your resume. We study your path and contact you when an opportunity fits. Companies do not receive your email or phone number. It is free.</p>
+        <a class="tl-btn" href="candidates.html" data-set-persona="talent">Create my profile</a>
+      </article>
+      <article class="tl-gateway-lane is-hire">
+        <span class="tl-kicker">Employers</span>
+        <h3>You are hiring</h3>
+        <p>Hand us the need. We search, screen and present a qualified shortlist. You do not browse a resume database. You keep the final decision.</p>
+        <a class="tl-btn" href="employers.html" data-set-persona="entreprise">Hand us the search</a>
+      </article>
     </div>
   </div>
 </section>
-
+</div><div data-persona-only="talent">
 <section class="tl-section tl-ice" id="candidats-intro">
   <div class="container">
     <div class="tl-prose">
@@ -221,14 +233,41 @@ gtag('consent', 'default', {
   </div>
 </section>
 
-<section class="tl-section" id="approche">
+<section class="tl-section" id="parcours-candidat">
   <div class="container">
     <div class="tl-center" style="max-width:720px;margin:0 auto 36px">
-      <div class="tl-kicker">Our approach</div>
-      <h2 class="tl-h2">How Talendus works.</h2>
-      <p class="tl-lead">Technology, AI and human expertise serve one process: search, screen, qualify, present.</p>
+      <div class="tl-kicker">Your path</div>
+      <h2 class="tl-h2">From profile to a possible introduction.</h2>
     </div>
-    <div class="tl-grid-3"><div class="tl-card"><div class="body"><h3>Technology</h3><p>Modern tools help Talendus structure needs, track mandates and move faster — without turning hiring into self-serve software for the company.</p></div></div><div class="tl-card"><div class="body"><h3>Artificial intelligence</h3><p>Talendus already uses AI in its internal tools to analyse, search, compare and process information faster. It supports our teams. It does not choose the hire, and it is not a tool we hand to recruiters to search on their own.</p></div></div><div class="tl-card"><div class="body"><h3>Human expertise</h3><p>Consultants verify real fit, speak with candidates, weigh professional personality and context, and qualify the files we present.</p></div></div><div class="tl-card"><div class="body"><h3>Market knowledge</h3><p>We work with companies of every size and with candidates at every level. Understanding both sides is what makes a shortlist useful.</p></div></div><div class="tl-card"><div class="body"><h3>Selection</h3><p>We do not sell volume. We do not send a pile of resumes. The aim is to present the most relevant profiles, so you can focus on the final choice.</p></div></div></div>
+    <div class="tl-steps tl-steps-7"><div class="tl-step"><span>01</span><h3>Create your profile</h3><p>Name, role, region, skills and preferences. Five minutes to enter the Talendus network. This is not a public CV dump: it is a file our team can study.</p></div><div class="tl-step"><span>02</span><h3>Submit your resume</h3><p>A link or an upload. We use it to understand your path. Companies do not receive the document until we present you — and they still do not get your direct contact details.</p></div><div class="tl-step"><span>03</span><h3>Skills and preferences</h3><p>What you know how to do, where you can work, the kind of role you want. The clearer this is, the more useful our search for you becomes.</p></div><div class="tl-step"><span>04</span><h3>Opportunities</h3><p>You can browse openings we publish and apply. Many mandates never appear: your profile stays active and we can contact you when a fit appears.</p></div><div class="tl-step"><span>05</span><h3>Identified for a role</h3><p>When your profile matches a need, Talendus can reach out. We do not send you blindly to fifteen employers.</p></div><div class="tl-step"><span>06</span><h3>Talk with Talendus</h3><p>A consultant is your contact. Screening, questions, sometimes an interview with us — before any introduction to a company.</p></div><div class="tl-step"><span>07</span><h3>Presented when it fits</h3><p>If the fit holds, we present your file. You keep control: you can decline. The company chooses. We remain in the middle.</p></div><div class="tl-step"><span>08</span><h3>Follow your path</h3><p>In your workspace: applications, messages with Talendus, interviews we schedule. No direct employer inbox.</p></div></div>
+  </div>
+</section>
+
+<section class="tl-cta-band" id="profil">
+  <div class="container">
+    <span class="tl-badge tl-badge-light">Create my profile</span>
+    <h2 class="tl-h2">Looking for a job? Enter the Talendus network.</h2>
+    <p>Create your profile, submit your resume. We study your path and contact you when an opportunity fits. Free for talent.</p>
+    <div class="tl-actions">
+      <a class="tl-btn tl-btn-lg" href="candidates.html#cv">Create my profile</a>
+      <a class="tl-btn tl-btn-ghost" href="jobs.html">See opportunities</a>
+    </div>
+  </div>
+</section>
+</div><div data-persona-only="entreprise">
+<section class="tl-section" id="entreprises-intro">
+  <div class="container">
+    <div class="tl-prose">
+      <div class="tl-kicker">For employers</div>
+      <h2 class="tl-h2">You have a role to fill? Don't spend your weeks sorting applications.</h2>
+      <p>Hand the need to Talendus. We are not a job board where you browse candidates yourself, and not a software tool that leaves the search on your desk. We are a placement agency: you describe the role, we take on the work of finding, screening and qualifying people.</p>
+      <p>Our team studies the mandate, searches across our network and the profiles we already know, analyses resumes, speaks with candidates when needed, and presents a qualified shortlist. You keep the final decision. We do the work you should not have to do alone: understand the need, identify talent, compare skills, run first conversations, and put only relevant files in front of you.</p>
+      <p>Talendus already uses artificial intelligence in its internal tools to speed up search, analysis and screening. You benefit from that power without using the tools yourself: we mobilize them to find and qualify the most relevant profiles for your need. Consultants remain essential to confirm fit, motivations and context.</p>
+      <div class="tl-actions" style="margin-top:28px">
+        <a class="tl-btn" href="contact.html">Hand us the search</a>
+        <a class="tl-btn tl-btn-ghost-dark" href="employers.html">How we work with companies</a>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -239,17 +278,6 @@ gtag('consent', 'default', {
       <h2 class="tl-h2">You hand us the need. We do the search.</h2>
     </div>
     <div class="tl-steps tl-steps-8"><div class="tl-step"><span>01</span><h3>You hand us the need</h3><p>Describe the role and the profile you are looking for.</p></div><div class="tl-step"><span>02</span><h3>We talk with you</h3><p>Our team goes deeper so we understand the context, constraints and the kind of person you actually need.</p></div><div class="tl-step"><span>03</span><h3>We define the profile</h3><p>We set the search criteria: must-haves, nice-to-haves, experience, location and conditions.</p></div><div class="tl-step"><span>04</span><h3>We start the search</h3><p>Our teams use their methods, network, technology and internal AI tools. You do not hunt candidates yourself.</p></div><div class="tl-step"><span>05</span><h3>We screen</h3><p>We analyse and qualify the people we identified. You do not receive a pile of resumes.</p></div><div class="tl-step"><span>06</span><h3>We meet candidates</h3><p>We run the evaluation steps required for the mandate: conversations, checks, availability.</p></div><div class="tl-step"><span>07</span><h3>We present the best profiles</h3><p>You receive a selection of relevant candidates we are prepared to stand behind.</p></div><div class="tl-step"><span>08</span><h3>You choose</h3><p>You review, meet people according to your process, and make the final decision. Talendus does not hire in your place.</p></div></div>
-  </div>
-</section>
-
-<section class="tl-section" id="recrutement-augmente">
-  <div class="container">
-    <div class="tl-center" style="max-width:760px;margin:0 auto 36px">
-      <div class="tl-kicker">Already operational</div>
-      <h2 class="tl-h2">Hiring augmented by artificial intelligence.</h2>
-      <p class="tl-lead">Talendus already uses AI internally to speed up search, analyse profiles, spot correspondences, support screening and structure information — so our recruiters can focus on human qualification.</p>
-    </div>
-    <div class="tl-grid-3"><div class="tl-card"><div class="body"><h3>Faster search</h3><p>Internal tools help our teams cover more ground and treat large volumes of information without leaving the search on your desk.</p></div></div><div class="tl-card"><div class="body"><h3>Profile analysis</h3><p>Resumes are read, structured and compared to the role: skills, experience, qualifications and path.</p></div></div><div class="tl-card"><div class="body"><h3>Useful correspondences</h3><p>AI helps relate a need to profiles that deserve human review. It does not declare a perfect hire.</p></div></div><div class="tl-card"><div class="body"><h3>Screening support</h3><p>A first pass and a clearer order of files, so consultants spend their time on people worth qualifying.</p></div></div><div class="tl-card"><div class="body"><h3>Structured information</h3><p>What a mandate requires and what a career shows is organized so the team works faster.</p></div></div><div class="tl-card"><div class="body"><h3>Human qualification</h3><p>Consultants verify, contact, interview and select. AI accelerates the work. It does not replace Talendus expertise.</p></div></div></div>
   </div>
 </section>
 
@@ -266,36 +294,17 @@ gtag('consent', 'default', {
   </div>
 </section>
 
-<section class="tl-section tl-ice" id="technologie">
+<section class="tl-section tl-ai-direction" id="ia">
   <div class="container">
-    <div class="tl-center" style="max-width:720px;margin:0 auto 36px">
-      <div class="tl-kicker">Our technology</div>
-      <h2 class="tl-h2">The intelligent tools that improve Talendus's hiring process.</h2>
-      <p class="tl-lead">Technology and AI are Talendus's operational advantage — not a software product we sell instead of placement.</p>
+    <div class="tl-ai-panel">
+      <div class="tl-ai-panel-intro">
+        <span class="tl-chip">In service</span>
+        <div class="tl-kicker">Already in our internal tools</div>
+        <h2 class="tl-h2">AI already works for Talendus. You receive the result.</h2>
+        <p class="tl-lead">Matching, resume reading, skills, ranking: our teams use this today. It is not software we hand you. It is how we present the right files faster. Consultants qualify. You keep the final decision.</p>
+      </div>
+      <div class="tl-ai-groups"><div class="tl-ai-group"><h3>Connect</h3><p>Find who actually fits the need.</p><ul><li><strong>Intelligent matching</strong> Connect a hiring need to the most relevant profiles.</li><li><strong>Candidate recommendations</strong> Suggest which files to review first.</li><li><strong>Profile suggestions</strong> Propose nearby talent, including people not actively looking.</li></ul></div><div class="tl-ai-group"><h3>Read</h3><p>Understand a career beyond the title.</p><ul><li><strong>Resume analysis</strong> Spot experience, occupations and key skills.</li><li><strong>Skills analysis</strong> Compare what the role requires with what the profile shows.</li><li><strong>Skills identification</strong> Extract what a role actually demands.</li></ul></div><div class="tl-ai-group"><h3>Prioritize</h3><p>Help the Talendus team — not replace the consultant.</p><ul><li><strong>Candidate ranking</strong> Order a shortlist against the role.</li><li><strong>Job-description support</strong> Clarify a posting from the need, without inventing requirements.</li><li><strong>Recruiter recommendations</strong> Guide internal screening. Qualification stays human.</li></ul></div></div>
     </div>
-    <div class="tl-grid-3"><div class="tl-card"><div class="body"><h3>Proprietary technology</h3><p>Talendus has built and uses internal tools so its teams work more effectively. They are not a SaaS product you log into to hunt candidates.</p></div></div><div class="tl-card"><div class="body"><h3>Intelligent tools</h3><p>Analysis, matching support, classification, synthesis and writing assistance sit inside our process. You see the result: a more relevant shortlist, delivered faster.</p></div></div><div class="tl-card"><div class="body"><h3>Benefit over architecture</h3><p>You do not need to learn a stack or configure an engine. You hand us the need. We use the technology. You receive qualified profiles.</p></div></div></div>
-  </div>
-</section>
-
-<section class="tl-section" id="ia">
-  <div class="container">
-    <div class="tl-center" style="max-width:760px;margin:0 auto 36px">
-      <div class="tl-kicker">Technology direction</div>
-      <h2 class="tl-h2">AI is already in use. Recruiting is already smarter.</h2>
-      <p class="tl-lead">We hire better, faster and more intelligently with AI — today, inside Talendus's internal tools. Matching, resume analysis, skills identification and screening support are already used by our teams. You do not operate these tools yourself. Consultants qualify. You keep the final decision.</p>
-    </div>
-    <div class="tl-grid-3"><div class="tl-card tl-ai-cap"><div class="body"><span class="tl-chip orange">Already in use</span><h3>Intelligent matching</h3><p>Our teams already connect a hiring need to the most relevant profiles.</p></div></div><div class="tl-card tl-ai-cap"><div class="body"><span class="tl-chip orange">Already in use</span><h3>Candidate recommendations</h3><p>Internal tools suggest which files to review first.</p></div></div><div class="tl-card tl-ai-cap"><div class="body"><span class="tl-chip orange">Already in use</span><h3>Resume analysis</h3><p>AI helps spot experience, occupations and key skills.</p></div></div><div class="tl-card tl-ai-cap"><div class="body"><span class="tl-chip orange">Already in use</span><h3>Skills analysis</h3><p>We compare the skills a role requires with those on the profile.</p></div></div><div class="tl-card tl-ai-cap"><div class="body"><span class="tl-chip orange">Already in use</span><h3>Candidate ranking</h3><p>A shortlist can be ordered against the role, before human qualification.</p></div></div><div class="tl-card tl-ai-cap"><div class="body"><span class="tl-chip orange">Already in use</span><h3>Profile suggestions</h3><p>We propose nearby talent, including people not actively looking.</p></div></div><div class="tl-card tl-ai-cap"><div class="body"><span class="tl-chip orange">Already in use</span><h3>Job-description support</h3><p>Teams structure a posting from the need, without inventing requirements.</p></div></div><div class="tl-card tl-ai-cap"><div class="body"><span class="tl-chip orange">Already in use</span><h3>Skills identification</h3><p>We extract what a role actually requires, beyond the title.</p></div></div><div class="tl-card tl-ai-cap"><div class="body"><span class="tl-chip orange">Already in use</span><h3>Recruiter recommendations</h3><p>AI guides the Talendus team through screening. It does not replace the consultant.</p></div></div></div>
-  </div>
-</section>
-
-<section class="tl-section" id="preselection-ia">
-  <div class="container">
-    <div class="tl-prose" style="margin-bottom:36px">
-      <div class="tl-kicker">AI-assisted screening</div>
-      <h2 class="tl-h2">AI accelerates the work. It does not replace Talendus expertise.</h2>
-      <p>Artificial intelligence helps Talendus run a first analysis of profiles. It does not send you a pile of resumes, and it does not hire in your place. Technology processes information quickly. AI helps identify correspondences. A Talendus recruiter analyses, verifies, talks and qualifies. The company receives a relevant selection and decides.</p>
-    </div>
-    <div class="tl-grid-3"><div class="tl-card"><div class="body"><h3>AI</h3><p>Analyses available information, spots potential correspondences and helps prioritize files.</p></div></div><div class="tl-card"><div class="body"><h3>Talendus team</h3><p>Verifies, qualifies, contacts, interviews and selects. Human judgment remains essential.</p></div></div><div class="tl-card"><div class="body"><h3>Company</h3><p>Receives a relevant selection and makes the final decision. You do not operate the AI.</p></div></div></div>
   </div>
 </section>
 
@@ -315,40 +324,6 @@ gtag('consent', 'default', {
   </div>
 </section>
 
-<section class="tl-section tl-ice" id="humain">
-  <div class="container">
-    <div class="tl-prose">
-      <div class="tl-kicker">The human dimension</div>
-      <h2 class="tl-h2">Hiring is not matching keywords on a resume.</h2>
-      <p>A useful profile is more than a list of tools and job titles. Talendus also needs to understand motivations, the real path, ambitions, professional personality, expectations, the context of the role and — when it matters — the culture of the organization. That reading does not come out of a score. It comes from people who speak with candidates and who have understood the mandate.</p>
-      <p>Our consultants stay essential: they check whether a correspondence is real, they run the conversations, they weigh what a CV cannot say, they confirm fit, and they present the files. AI already helps us treat information faster. It does not replace that judgment. The company keeps the final decision. Humans, on both sides, remain at the centre of qualification.</p>
-    </div>
-  </div>
-</section>
-
-<section class="tl-section" id="secteurs">
-  <div class="container">
-    <div class="tl-center" style="max-width:720px;margin:0 auto 28px">
-      <div class="tl-kicker">Every industry</div>
-      <h2 class="tl-h2">Support shaped around each hiring need.</h2>
-      <p class="tl-lead">SMEs, startups, larger organizations: Talendus supports companies of every size and background.</p>
-    </div>
-    <ul class="tl-sectors-cloud"><li><span class="tl-sector-chip">Technology and IT</span></li><li><span class="tl-sector-chip">Construction</span></li><li><span class="tl-sector-chip">Manufacturing</span></li><li><span class="tl-sector-chip">Transportation and logistics</span></li><li><span class="tl-sector-chip">Retail and commerce</span></li><li><span class="tl-sector-chip">Finance</span></li><li><span class="tl-sector-chip">Insurance</span></li><li><span class="tl-sector-chip">Healthcare</span></li><li><span class="tl-sector-chip">Education</span></li><li><span class="tl-sector-chip">Hospitality</span></li><li><span class="tl-sector-chip">Real estate</span></li><li><span class="tl-sector-chip">Professional services</span></li><li><span class="tl-sector-chip">Marketing and communications</span></li><li><span class="tl-sector-chip">Engineering</span></li><li><span class="tl-sector-chip">Administration</span></li><li><span class="tl-sector-chip">Agriculture</span></li><li><span class="tl-sector-chip">Energy</span></li><li><span class="tl-sector-chip">Telecommunications</span></li><li><span class="tl-sector-chip">Business services</span></li><li><span class="tl-sector-chip is-more">And many more</span></li></ul>
-    <p class="tl-center tl-muted" style="margin-top:22px;max-width:640px;margin-left:auto;margin-right:auto">Talendus hires across every industry and every kind of role. These examples do not limit the mandate.</p>
-  </div>
-</section>
-
-<section class="tl-section tl-ice" id="metiers">
-  <div class="container">
-    <div class="tl-center" style="max-width:720px;margin:0 auto 28px">
-      <div class="tl-kicker">Roles</div>
-      <h2 class="tl-h2">Talent for every kind of role.</h2>
-      <p class="tl-lead">Operational, specialist or leadership: Talendus looks for the profile that fits the role, not a closed catalogue.</p>
-    </div>
-    <ul class="tl-trades-cloud"><li><span class="tl-trade-chip">Developer</span></li><li><span class="tl-trade-chip">Accountant</span></li><li><span class="tl-trade-chip">Engineer</span></li><li><span class="tl-trade-chip">Driver</span></li><li><span class="tl-trade-chip">Forklift operator</span></li><li><span class="tl-trade-chip">Welder</span></li><li><span class="tl-trade-chip">Technician</span></li><li><span class="tl-trade-chip">Nurse</span></li><li><span class="tl-trade-chip">Sales associate</span></li><li><span class="tl-trade-chip">HR manager</span></li><li><span class="tl-trade-chip">Manager</span></li><li><span class="tl-trade-chip">Marketing</span></li><li><span class="tl-trade-chip">Administration</span></li><li><span class="tl-trade-chip">Production</span></li><li><span class="tl-trade-chip">Logistics</span></li><li><span class="tl-trade-chip">Electromechanical technician</span></li><li><span class="tl-trade-chip">Machinist</span></li><li><span class="tl-trade-chip">Supervisor</span></li></ul>
-  </div>
-</section>
-
 <section class="tl-cta-band" id="mandat">
   <div class="container">
     <span class="tl-badge tl-badge-light">Hand us the search</span>
@@ -360,15 +335,60 @@ gtag('consent', 'default', {
     </div>
   </div>
 </section>
+</div>
+<section class="tl-section" id="secteurs">
+  <div class="container">
+    <div class="tl-center" style="max-width:720px;margin:0 auto 28px">
+      <div class="tl-kicker">Every industry</div>
+      <h2 class="tl-h2">Every industry. Every kind of role.</h2>
+      <p class="tl-lead">Companies and talent: Talendus works across every industry, with no exclusive specialty.</p>
+    </div>
+    <ul class="tl-sectors-cloud"><li><span class="tl-sector-chip">Technology and IT</span></li><li><span class="tl-sector-chip">Construction</span></li><li><span class="tl-sector-chip">Manufacturing</span></li><li><span class="tl-sector-chip">Transportation and logistics</span></li><li><span class="tl-sector-chip">Retail and commerce</span></li><li><span class="tl-sector-chip">Finance</span></li><li><span class="tl-sector-chip">Insurance</span></li><li><span class="tl-sector-chip">Healthcare</span></li><li><span class="tl-sector-chip">Education</span></li><li><span class="tl-sector-chip">Hospitality</span></li><li><span class="tl-sector-chip">Real estate</span></li><li><span class="tl-sector-chip">Professional services</span></li><li><span class="tl-sector-chip">Marketing and communications</span></li><li><span class="tl-sector-chip">Engineering</span></li><li><span class="tl-sector-chip">Administration</span></li><li><span class="tl-sector-chip">Agriculture</span></li><li><span class="tl-sector-chip">Energy</span></li><li><span class="tl-sector-chip">Telecommunications</span></li><li><span class="tl-sector-chip">Business services</span></li><li><span class="tl-sector-chip is-more">And many more</span></li></ul>
+    <p class="tl-center tl-muted" style="margin-top:22px;max-width:640px;margin-left:auto;margin-right:auto">These examples do not box anyone in: a mandate or a profile can come from any industry.</p>
+  </div>
+</section>
 
-    <section class="tl-section tl-ice"><div class="container">
-      <div class="tl-center" style="max-width:720px;margin:0 auto 28px">
-        <div class="tl-kicker" id="faq">FAQ</div>
-        <h2 class="tl-h2">What people ask first</h2>
+<section class="tl-section tl-ice" id="metiers">
+  <div class="container">
+    <div class="tl-center" style="max-width:720px;margin:0 auto 28px">
+      <div class="tl-kicker">Roles</div>
+      <h2 class="tl-h2">Roles at every level.</h2>
+      <p class="tl-lead">Operational, specialist or leadership: Talendus supports both the open role and the person's path.</p>
+    </div>
+    <ul class="tl-trades-cloud"><li><span class="tl-trade-chip">Developer</span></li><li><span class="tl-trade-chip">Accountant</span></li><li><span class="tl-trade-chip">Engineer</span></li><li><span class="tl-trade-chip">Driver</span></li><li><span class="tl-trade-chip">Forklift operator</span></li><li><span class="tl-trade-chip">Welder</span></li><li><span class="tl-trade-chip">Technician</span></li><li><span class="tl-trade-chip">Nurse</span></li><li><span class="tl-trade-chip">Sales associate</span></li><li><span class="tl-trade-chip">HR manager</span></li><li><span class="tl-trade-chip">Manager</span></li><li><span class="tl-trade-chip">Marketing</span></li><li><span class="tl-trade-chip">Administration</span></li><li><span class="tl-trade-chip">Production</span></li><li><span class="tl-trade-chip">Logistics</span></li><li><span class="tl-trade-chip">Electromechanical technician</span></li><li><span class="tl-trade-chip">Machinist</span></li><li><span class="tl-trade-chip">Supervisor</span></li></ul>
+  </div>
+</section>
+<div id="faq">
+    <section class="tl-section tl-ice" data-persona-only="gateway">
+      <div class="container">
+        <div class="tl-center" style="max-width:720px;margin:0 auto 28px">
+          <div class="tl-kicker">FAQ</div>
+          <h2 class="tl-h2">What people ask first</h2>
+        </div>
+        <div class="tl-faq"><details open><summary>How does Talendus work?</summary><p>Talendus is a placement agency. A company hands us a hiring need. We search, analyse, screen and qualify profiles, then present a shortlist. The company reviews those files and makes the final decision. As a candidate, you create a profile: we contact you when your path matches an opportunity. There is no unmediated contact between employer and candidate.</p></details><details><summary>I'm looking for a job — what should I do?</summary><p>Create a profile and submit your resume. Talendus studies your path and contacts you when an opportunity fits. Companies do not receive your email or phone number. It is free.</p></details><details><summary>I'm hiring — what should I do?</summary><p>Hand us the need: role, criteria, conditions. Talendus searches, screens and presents a qualified shortlist. You do not browse a resume database. You keep the final decision.</p></details><details><summary>Is Talendus limited to certain industries?</summary><p>No. Talendus hires across every industry and every kind of role. Technology, healthcare, finance, construction, retail, manufacturing, services: those are examples, not limits. SMEs, startups or larger organizations: support follows the need, not a single specialty.</p></details></div>
       </div>
-      <div class="tl-faq"><details open><summary>How does Talendus work?</summary><p>Talendus is a placement agency. A company hands us a hiring need. We search, analyse, screen and qualify profiles, then present a shortlist. The company reviews those files and makes the final decision. As a candidate, you create a profile: we contact you when your path matches an opportunity. There is no unmediated contact between employer and candidate.</p></details><details><summary>Is Talendus limited to certain industries?</summary><p>No. Talendus hires across every industry and every kind of role. Technology, healthcare, finance, construction, retail, manufacturing, services: those are examples, not limits. SMEs, startups or larger organizations: support follows the need, not a single specialty.</p></details><details><summary>Do you actually use artificial intelligence?</summary><p>Yes. Talendus already uses tools that integrate artificial intelligence in its internal recruiting processes. These technologies help speed up profile analysis, correspondence search and some screening tasks. They strengthen Talendus teams without replacing their human expertise.</p></details><details><summary>Do I have to use an AI tool to hire with Talendus?</summary><p>No. You do not need to use an AI tool yourself. Talendus uses its own technological tools and AI solutions internally to search, analyse and screen talent on your behalf.</p></details><details><summary>Does AI choose the candidate for me?</summary><p>No. Artificial intelligence helps Talendus analyse and identify potentially relevant profiles, but human qualification and evaluation remain essential. Talendus then presents a selection of candidates matching the defined need. The final decision always belongs to the company.</p></details><details><summary>What advantages does AI bring to my hiring?</summary><p>It lets Talendus process large amounts of information faster, identify relevant correspondences between profiles and roles, and accelerate certain search and screening steps. You get a more effective process without having to manage those tools yourself.</p></details><details><summary>When do we see the first candidates?</summary><p>On a typical operations mandate, we aim for the first files in 7 days. That is a screened shortlist, not a pile of resumes. A scarce profile or a leadership seat takes longer. We say so at the briefing.</p></details><details><summary>How do you bill employers?</summary><p>Success fees based on the placed person's annual salary. No fee if the mandate does not close, per the agreement. The first call is free, by appointment.</p></details></div>
-    </div></section>
-    
+    </section>
+
+    <section class="tl-section tl-ice" data-persona-only="talent">
+      <div class="container">
+        <div class="tl-center" style="max-width:720px;margin:0 auto 28px">
+          <div class="tl-kicker">FAQ</div>
+          <h2 class="tl-h2">Questions from talent</h2>
+        </div>
+        <div class="tl-faq"><details open><summary>How do I create my profile?</summary><p>Sign up, tell us your role, skills, region and preferences, then submit your resume. Five minutes is enough to enter the Talendus network. A consultant can then study your file when an opportunity fits.</p></details><details><summary>Do I have to submit my resume?</summary><p>Yes — it is the clearest way for us to understand your path. Without a resume we can still open a profile, but analysis and a possible introduction to a company will be more limited.</p></details><details><summary>How does Talendus use my profile?</summary><p>To understand your career and consider you for relevant mandates. We do not sell your data. Companies do not receive your email or phone number. A consultant presents your file only when the fit holds, and through the usual process with your involvement.</p></details><details><summary>Can I be contacted about an opportunity?</summary><p>Yes. Even without a posted job, your profile stays active. When your path matches a need, Talendus can reach you, talk, then possibly introduce you. You are not obliged to accept.</p></details><details><summary>Does Talendus introduce me directly to companies?</summary><p>Not without a step first. We study the fit. Often a conversation with us precedes any introduction. You are not sent blindly to fifteen employers. When we present, the company sees a qualified file, not your contact details in the open.</p></details><details><summary>How does screening work?</summary><p>We compare your path to the role: skills, experience, location, motivations. We may ask questions or meet you. If it does not fit, we do not force a useless interview. If it holds, we prepare the introduction.</p></details></div>
+      </div>
+    </section>
+
+    <section class="tl-section tl-ice" data-persona-only="entreprise">
+      <div class="container">
+        <div class="tl-center" style="max-width:720px;margin:0 auto 28px">
+          <div class="tl-kicker">FAQ</div>
+          <h2 class="tl-h2">Questions from employers</h2>
+        </div>
+        <div class="tl-faq"><details open><summary>How does Talendus work?</summary><p>You send us a need: role, criteria, conditions. Talendus analyses the mandate, searches for profiles, screens, evaluates when needed, then presents a qualified selection. You review those files, meet people through your own process, and choose. We are not a site where you browse a resume database.</p></details><details><summary>How do I hand a hire to Talendus?</summary><p>Describe the need through the form, a call or your employer workspace. Role, skills, experience, location, contract type and urgency. A consultant picks up the brief. Publishing a visible ad is not required: many mandates stay confidential.</p></details><details><summary>Do I have to use an AI tool to hire with Talendus?</summary><p>No. You do not need to use an AI tool yourself. Talendus uses its own technological tools and AI solutions internally to search, analyse and screen talent on your behalf.</p></details><details><summary>Who makes the final decision?</summary><p>You. Talendus presents a shortlist. You review, meet, retain. We do not hire in the company's place.</p></details><details><summary>How are fees calculated?</summary><p>On success, against the placed person's annual salary. No fee if the mandate does not close, per the agreement. The first call is free.</p></details></div>
+      </div>
+    </section>
+</div>
 <a class="tl-whatsapp" href="https://wa.me/15145550199?text=Hello%20Talendus%2C%20I%20would%20like%20to%20talk%20about%20a%20hiring%20need." target="_blank" rel="noopener noreferrer" aria-label="Message Talendus on WhatsApp">
   <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M19.11 17.47c-.29-.15-1.73-.85-2-.95-.27-.1-.46-.15-.66.15s-.76.95-.93 1.15c-.17.2-.34.22-.63.07-.29-.15-1.22-.45-2.33-1.43-.86-.77-1.44-1.72-1.61-2.01-.17-.29-.02-.45.13-.6.13-.13.29-.34.43-.51.15-.17.2-.29.29-.48.1-.2.05-.36-.02-.51-.07-.15-.66-1.59-.9-2.18-.24-.57-.48-.49-.66-.5h-.56c-.2 0-.51.07-.78.36-.27.29-1.02.99-1.02 2.42s1.05 2.81 1.19 3 .07.15 2.06 3.15c1.64 1.41 2.96 1.85 3.58 2.06.54.17 1.04.15 1.43.09.44-.06 1.73-.71 1.97-1.39.24-.68.24-1.27.17-1.39-.07-.12-.26-.2-.55-.35zM16.03 4.05C9.41 4.05 4.05 9.4 4.05 16.03c0 2.11.55 4.17 1.6 5.99L4 28l6.12-1.6a11.94 11.94 0 0 0 5.91 1.51h.01c6.62 0 11.98-5.36 11.98-11.98 0-3.2-1.25-6.21-3.51-8.47a11.9 11.9 0 0 0-8.48-3.51zm0 21.86h-.01a9.94 9.94 0 0 1-5.06-1.38l-.36-.22-3.63.95.97-3.54-.23-.37a9.93 9.93 0 0 1-1.52-5.32c0-5.48 4.46-9.94 9.95-9.94 2.66 0 5.15 1.04 7.03 2.92a9.87 9.87 0 0 1 2.91 7.02c0 5.49-4.47 9.95-9.95 9.95z"/></svg>
 </a>
