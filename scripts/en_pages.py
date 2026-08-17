@@ -224,7 +224,6 @@ def build_en(write, wrap, page_hero):
             actions='<a class="tl-btn" href="contact.html">Hand us the search</a><a class="tl-btn tl-btn-ghost" href="hiring-need.html">Describe my need</a>',
             badges='<span class="tl-badge tl-badge-light">Placement agency</span> <span class="tl-badge tl-badge-light">Every industry</span>',
         )
-        + proof_stats("en")
         + problems_section("en")
         + """
     <section class="tl-section"><div class="container">
@@ -303,7 +302,8 @@ def build_en(write, wrap, page_hero):
       </div>
     </div></section>
     """
-        + sectors_cloud("en"),
+        + sectors_cloud("en")
+        + proof_stats("en"),
         lang="en",
         alt="entreprises.html",
     ))
