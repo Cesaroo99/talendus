@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.config import get_settings
 from app.database import SessionLocal, init_db
+from app.site_jobs import ensure_site_catalog
 from app.models import (
     Application,
     ApplicationStatusHistory,
@@ -89,11 +90,11 @@ JOBS = [
     ("soudeur", "Soudeur-monteur", "Métalco", "Drummondville", "Métallurgie", "Permanent", 28, 34, "28 à 34 $/h", "MIG/TIG, plans", "3 ans", "Quart de jour", JobStatus.PUBLISHED),
     ("machiniste-cnc", "Machiniste CNC", "Plastika", "Saint-Jérôme", "Manufacturier", "Permanent", 30, 38, "30 à 38 $/h", "Set-up, dessins", "3 ans", "Quart de jour", JobStatus.PUBLISHED),
     ("electromecanicien", "Électromécanicien", "Usine Nordique", "Montréal", "Maintenance", "Permanent", 32, 40, "32 à 40 $/h", "Hydraulique, électricité", "5 ans", "Quarts rotatifs", JobStatus.PUBLISHED),
-    ("mecanicien-industriel", "Mécanicien industriel", "Forge Mauricie", "Sherbrooke", "Maintenance", "Permanent", 30, 36, "30 à 36 $/h", "Préventif, convoyeurs", "3 ans", "Quart de jour", JobStatus.DRAFT),
+    ("mecanicien-industriel", "Mécanicien industriel", "Forge Mauricie", "Sherbrooke", "Maintenance", "Permanent", 30, 36, "30 à 36 $/h", "Préventif, convoyeurs", "3 ans", "Quart de jour", JobStatus.PUBLISHED),
     ("journalier-usine", "Journalier d'usine", "Distro Plus", "Boucherville", "Production", "Permanent", 18, 21, "18 à 21 $/h", "Manutention", "Aucune", "Quart de soir", JobStatus.PUBLISHED),
-    ("superviseur-production", "Superviseur de production", "Alimor", "Trois-Rivières", "Supervision", "Permanent", 70000, 85000, "70 000 à 85 000 $", "Lean, KPI", "5 ans", "Quart de jour", JobStatus.ARCHIVED),
+    ("superviseur-production", "Superviseur de production", "Alimor", "Trois-Rivières", "Supervision", "Permanent", 70000, 85000, "70 000 à 85 000 $", "Lean, KPI", "5 ans", "Quart de jour", JobStatus.PUBLISHED),
     ("coordonnateur-logistique", "Coordonnateur logistique", "TransQuébec", "Anjou", "Logistique", "Permanent", 55000, 68000, "55 000 à 68 000 $", "WMS, anglais", "3 ans", "Quart de jour", JobStatus.PUBLISHED),
-    ("directeur-usine", "Directeur d'usine", "Usine Nordique", "Québec", "Cadres", "Permanent", 120000, 150000, "120 000 à 150 000 $", "P&L, Lean", "10 ans", "Quart de jour", JobStatus.PAUSED),
+    ("directeur-usine", "Directeur d'usine", "Usine Nordique", "Québec", "Cadres", "Permanent", 120000, 150000, "120 000 à 150 000 $", "P&L, Lean", "10 ans", "Quart de jour", JobStatus.PUBLISHED),
 ]
 
 CANDIDATES = [
@@ -231,14 +232,17 @@ def seed_if_empty() -> None:
             seed_rbac(db)
             seed_blog_defaults(db)
             bootstrap_production_admin(db)
+            ensure_site_catalog(db)
             db.commit()
             return
         if db.scalar(select(User).limit(1)):
             seed_rbac(db)
             seed_blog_defaults(db)
+            ensure_site_catalog(db)
             db.commit()
             return
         _seed(db)
+        ensure_site_catalog(db)
         db.commit()
         logger.info("Base Talendus initialisée (seed).")
     except Exception:
@@ -250,7 +254,7 @@ def seed_if_empty() -> None:
 
 
 def bootstrap_production_admin(db: Session) -> User | None:
-    """En production : rôles + un seul super-admin. Jamais de fausses entreprises ni de faux candidats."""
+    """En production : rôles + un seul super-admin. Pas de faux employeurs ni de faux candidats."""
     existing = db.scalar(select(User).limit(1))
     if existing:
         return None

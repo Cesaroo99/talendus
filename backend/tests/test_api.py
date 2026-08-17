@@ -224,6 +224,79 @@ def test_public_apply_uploads_pdf_resume(client):
     assert applied.json()["data"]["resume_id"]
 
 
+def test_public_apply_on_site_page_without_existing_job(client):
+    applied = client.post(
+        "/api/applications/public",
+        json={
+            "job_slug": "cariste",
+            "first_name": "Nadia",
+            "last_name": "Côté",
+            "email": "nadia.site@example.com",
+            "password": "Password1!",
+            "cover_note": "Disponible de jour.",
+        },
+    )
+    assert applied.status_code == 200, applied.text
+    listed = client.get("/api/jobs")
+    assert any(item["slug"] == "cariste" for item in listed.json()["data"])
+
+
+def test_logged_in_candidate_applies_to_site_slug(client):
+    cand = register(client, "site.apply@example.com")
+    applied = client.post(
+        "/api/applications",
+        headers=auth_header(cand),
+        json={"job_slug": "developpeur", "cover_note": "Portfolio sur demande."},
+    )
+    assert applied.status_code == 200, applied.text
+    assert applied.json()["data"]["status"] == "SUBMITTED"
+
+
+def test_public_apply_unknown_slug_still_404(client):
+    applied = client.post(
+        "/api/applications/public",
+        json={
+            "job_slug": "poste-inexistant",
+            "first_name": "Sam",
+            "last_name": "Test",
+            "email": "sam.inconnu@example.com",
+        },
+    )
+    assert applied.status_code == 404
+    assert applied.json()["code"] == "JOB_NOT_FOUND"
+
+
+def test_public_apply_reopens_archived_site_job(client, db):
+    from app.models import Company, JobOffer
+    from app.models.enums import CompanyStatus, JobStatus
+
+    company = Company(name="Talendus", status=CompanyStatus.ACTIVE, city="Montréal")
+    db.add(company)
+    db.flush()
+    job = JobOffer(
+        company_id=company.id,
+        slug="vendeur",
+        title="Vendeur",
+        description="Mandat archivé par erreur.",
+        location="Longueuil",
+        status=JobStatus.ARCHIVED,
+    )
+    db.add(job)
+    db.commit()
+    applied = client.post(
+        "/api/applications/public",
+        json={
+            "job_slug": "vendeur",
+            "first_name": "Léa",
+            "last_name": "Roy",
+            "email": "lea.vendeur@example.com",
+        },
+    )
+    assert applied.status_code == 200, applied.text
+    db.refresh(job)
+    assert job.status == JobStatus.PUBLISHED
+
+
 def test_candidate_can_upload_png_resume(client):
     cand = register(client, "pngcv@example.com")
     upload = client.post(
