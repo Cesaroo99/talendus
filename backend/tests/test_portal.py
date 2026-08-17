@@ -70,6 +70,10 @@ def test_candidate_cannot_access_employer_dashboard(client):
 def test_employer_dashboard_and_members(client):
     emp = register(client, "abc-inc@example.com", "EMPLOYER", first_name="Marie")
     headers = auth_header(emp)
+    company = client.get("/api/companies/me", headers=headers)
+    assert company.status_code == 200
+    assert company.json()["data"]["member_role"] == "OWNER"
+    assert company.json()["data"]["can_manage_members"] is True
     dash = client.get("/api/companies/me/dashboard", headers=headers)
     assert dash.status_code == 200
     assert dash.json()["data"]["stats"]["active_jobs"] == 0

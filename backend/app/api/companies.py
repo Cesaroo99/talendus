@@ -9,7 +9,8 @@ from app.models import Company, User
 from app.models.enums import UserRole
 from app.schemas import CompanyIn, CompanyMemberIn, CompanyMemberPatchIn, RecruiterInviteIn
 from app.services import companies as companies_service
-from app.services.access import user_belongs_to_company
+from app.rbac import company_can
+from app.services.access import member_role_for, user_belongs_to_company
 from app.services.portal import (
     employer_dashboard,
     invite_member,
@@ -47,7 +48,13 @@ def my_company(
     user: User = Depends(require_roles(UserRole.EMPLOYER)),
 ):
     company = companies_service.company_for_employer(db, user)
-    return ok(companies_service.serialize_company(company))
+    payload = companies_service.serialize_company(company)
+    role = member_role_for(db, user, company.id)
+    payload["member_role"] = role.value if role else None
+    payload["can_manage_members"] = company_can(role, "members:manage")
+    payload["can_edit_company"] = company_can(role, "company:write")
+    payload["can_read_invoices"] = company_can(role, "invoices:read")
+    return ok(payload)
 
 
 @router.get("/me/dashboard")
