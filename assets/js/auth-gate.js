@@ -19,6 +19,8 @@
       verifyTitle: "Confirming your email…", verifyOk: "Email verified. You can sign in.",
       forgotTitle: "Reset your password", forgotOk: "If an account exists, we sent an email.",
       guestCta: "Sign in", dashboard: "Dashboard", logout: "Sign out",
+      workspace: "My workspace", settings: "Settings", notifs: "Notifications",
+      accountMenu: "Account menu",
       saveJob: "Save job", savedJob: "Saved", applyTrack: "Create an account to track this application",
       needAccount: "Create an account to continue",
       err: "Something went wrong.",
@@ -45,6 +47,8 @@
       verifyTitle: "Vérification du courriel…", verifyOk: "Courriel vérifié. Vous pouvez vous connecter.",
       forgotTitle: "Réinitialiser le mot de passe", forgotOk: "Si un compte existe, un courriel a été envoyé.",
       guestCta: "Connexion", dashboard: "Tableau de bord", logout: "Déconnexion",
+      workspace: "Mon espace", settings: "Paramètres", notifs: "Notifications",
+      accountMenu: "Menu du compte",
       saveJob: "Sauvegarder", savedJob: "Sauvegardée", applyTrack: "Créer un compte pour suivre cette candidature",
       needAccount: "Créez un compte pour continuer",
       err: "Une erreur s’est produite.",
@@ -102,10 +106,33 @@
           bodyHtml +
         "</div></div>";
     }
-    function portalHref(role) {
+    function portalHref(role, hash) {
       if (staffRole(role)) return "/admin/";
-      if (role === "EMPLOYER") return siteRoot() + (isEn ? "account-employer.html" : "espace-employeur.html") + "#/dashboard";
-      return siteRoot() + (isEn ? "account.html" : "espace.html") + "#/dashboard";
+      var dest = role === "EMPLOYER"
+        ? siteRoot() + (isEn ? "account-employer.html" : "espace-employeur.html")
+        : siteRoot() + (isEn ? "account.html" : "espace.html");
+      return dest + (hash || "#/dashboard");
+    }
+    function roleLabel(role) {
+      if (role === "EMPLOYER") return t.hire;
+      if (staffRole(role)) return isEn ? "Team" : "Équipe";
+      return t.seek;
+    }
+    function initials(user) {
+      var a = String((user && user.first_name) || "").trim().charAt(0);
+      var b = String((user && user.last_name) || "").trim().charAt(0);
+      var fallback = String((user && user.email) || "?").charAt(0);
+      return ((a + b) || fallback).toUpperCase();
+    }
+    function displayName(user) {
+      return (((user && user.first_name) || "") + " " + ((user && user.last_name) || "")).trim() || (user && user.email) || "";
+    }
+    function avatarHtml(user, cls) {
+      var url = window.__tlAvatarUrl;
+      if (url) {
+        return '<span class="tl-avatar ' + (cls || "") + '"><img src="' + esc(url) + '" alt=""></span>';
+      }
+      return '<span class="tl-avatar ' + (cls || "") + '" aria-hidden="true">' + esc(initials(user)) + "</span>";
     }
     function parseAuthHash() {
       var raw = (location.hash || "").replace(/^#\/?/, "");
@@ -168,7 +195,7 @@
 
     function afterAuth(user) {
       closeOverlay();
-      paintHeader();
+      paintSession();
       window.dispatchEvent(new CustomEvent("talendus:auth", { detail: user }));
       if (pending && pending.type === "save" && user && user.role === "CANDIDATE") {
         var jobId = pending.jobId;
@@ -348,6 +375,7 @@
 
     window.TalendusAuth = {
       open: function (mode, opts) { openAuth(mode || "login", opts || {}); },
+      paint: function () { paintSession(); },
       requireCandidate: function (intent) {
         var user = api.currentUser();
         if (user && user.role === "CANDIDATE") return Promise.resolve(user);
@@ -364,22 +392,98 @@
       }
     };
 
-    function paintHeader() {
+    function guestMarkup(kind) {
+      if (kind === "mobile") {
+        return '<a href="' + esc(siteRoot() + (isEn ? "account.html" : "espace.html")) + '" class="tl-session-icon-btn" data-auth-open="login" aria-label="' + esc(t.login) + '">' +
+          '<i class="fa-regular fa-user" aria-hidden="true"></i></a>';
+      }
+      if (kind === "offcanvas") {
+        return '<a href="' + esc(siteRoot() + (isEn ? "account.html" : "espace.html")) + '" class="tl-btn tl-btn-ghost" data-auth-open="login">' + esc(t.login) + "</a>" +
+          '<a href="' + esc(siteRoot() + (isEn ? "account.html" : "espace.html")) + '" class="tl-btn" data-auth-open="register">' + esc(t.register) + "</a>";
+      }
+      return '<a href="' + esc(siteRoot() + (isEn ? "account.html" : "espace.html")) + '" class="tl-session-login" data-auth-open="login">' +
+        '<i class="fa-regular fa-user" aria-hidden="true"></i><span>' + esc(t.login) + "</span></a>" +
+        '<a href="' + esc(siteRoot() + (isEn ? "account.html" : "espace.html")) + '" class="tl-btn tl-session-cta" data-auth-open="register">' + esc(t.register) + "</a>";
+    }
+
+    function authedMarkup(user, unread, kind) {
+      var space = portalHref(user.role);
+      var badge = unread ? '<span class="tl-session-badge">' + (unread > 9 ? "9+" : unread) + "</span>" : "";
+      var menu =
+        '<div class="tl-session-menu" role="menu">' +
+          '<div class="tl-session-menu-id">' + avatarHtml(user, "is-lg") +
+            "<div><strong>" + esc(displayName(user)) + "</strong><span>" + esc(roleLabel(user.role)) + "</span></div></div>" +
+          '<a role="menuitem" href="' + esc(space) + '"><i class="fa-solid fa-table-columns" aria-hidden="true"></i>' + esc(t.workspace) + "</a>" +
+          '<a role="menuitem" href="' + esc(portalHref(user.role, "#/notifs")) + '"><i class="fa-regular fa-bell" aria-hidden="true"></i>' + esc(t.notifs) +
+            (unread ? '<span class="tl-session-badge is-inline">' + unread + "</span>" : "") + "</a>" +
+          '<a role="menuitem" href="' + esc(portalHref(user.role, "#/settings")) + '"><i class="fa-solid fa-gear" aria-hidden="true"></i>' + esc(t.settings) + "</a>" +
+          '<button type="button" role="menuitem" data-auth-logout><i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>' + esc(t.logout) + "</button>" +
+        "</div>";
+      if (kind === "offcanvas") {
+        return '<div class="tl-session-offcanvas-user">' + avatarHtml(user, "is-lg") +
+          "<div><strong>" + esc(displayName(user)) + "</strong><span>" + esc(roleLabel(user.role)) + "</span></div></div>" +
+          '<a class="tl-btn" href="' + esc(space) + '">' + esc(t.workspace) + "</a>" +
+          '<button type="button" class="tl-btn tl-btn-ghost" data-auth-logout>' + esc(t.logout) + "</button>";
+      }
+      var bell = '<a class="tl-session-bell" href="' + esc(portalHref(user.role, "#/notifs")) + '" aria-label="' + esc(t.notifs) + '">' +
+        '<i class="fa-regular fa-bell" aria-hidden="true"></i>' + badge + "</a>";
+      var trigger = '<button type="button" class="tl-session-user" data-session-menu aria-expanded="false" aria-haspopup="true" aria-label="' + esc(t.accountMenu) + '">' +
+        avatarHtml(user) + '<span class="tl-session-name">' + esc(user.first_name || t.workspace) + '</span><i class="fa-solid fa-angle-down tl-session-caret" aria-hidden="true"></i></button>';
+      if (kind === "mobile") {
+        return bell + trigger + menu;
+      }
+      return bell + trigger + menu;
+    }
+
+    function fillSessions(user, unread) {
+      document.body.classList.toggle("tl-is-authed", !!user);
+      document.querySelectorAll("[data-session]").forEach(function (slot) {
+        var kind = slot.getAttribute("data-session") || "desktop";
+        slot.classList.remove("is-open");
+        slot.innerHTML = user ? authedMarkup(user, unread, kind) : guestMarkup(kind);
+      });
+    }
+
+    function loadAvatarThen(user, done) {
+      if (!user || !user.avatar_path) { done(); return; }
+      if (window.__tlAvatarUrl) { done(); return; }
+      var token = "";
+      try { token = localStorage.getItem("talendus_access_token") || ""; } catch (e) {}
+      fetch("/api/users/me/avatar", { headers: token ? { Authorization: "Bearer " + token } : {} })
+        .then(function (res) { return res.ok ? res.blob() : Promise.reject(); })
+        .then(function (blob) {
+          if (blob && blob.type && blob.type.indexOf("image") === 0) {
+            window.__tlAvatarUrl = URL.createObjectURL(blob);
+          }
+        })
+        .catch(function () {})
+        .then(done);
+    }
+
+    function paintSession() {
       var user = api.currentUser();
-      document.querySelectorAll("[data-account-link]").forEach(function (el) {
-        if (user && user.first_name) {
-          el.textContent = user.first_name;
-          el.setAttribute("href", portalHref(user.role));
-          el.removeAttribute("data-auth-open");
-        } else {
-          el.textContent = t.guestCta;
-          el.setAttribute("href", "#");
-          el.setAttribute("data-auth-open", "login");
-        }
-      });
-      document.querySelectorAll("[data-auth-logout]").forEach(function (el) {
-        el.hidden = !user;
-      });
+      if (!user) {
+        window.__tlAvatarUrl = "";
+        fillSessions(null, 0);
+        return;
+      }
+      fillSessions(user, window.__tlUnread || 0);
+      function withUser(next) {
+        loadAvatarThen(next, function () {
+          fillSessions(next, window.__tlUnread || 0);
+          api.request("/notifications/unread").then(function (json) {
+            var count = (json.meta && json.meta.count) || (json.data || []).length || 0;
+            window.__tlUnread = count;
+            fillSessions(next, count);
+          }).catch(function () {});
+        });
+      }
+      api.me().then(function (json) {
+        if (json && json.data) {
+          try { localStorage.setItem("talendus_user", JSON.stringify(json.data)); } catch (e) {}
+          withUser(json.data);
+        } else withUser(user);
+      }).catch(function () { withUser(user); });
     }
 
     function paintSaveButtons() {
@@ -401,11 +505,46 @@
     }
 
     document.addEventListener("click", function (e) {
+      var menuBtn = e.target.closest("[data-session-menu]");
+      if (menuBtn) {
+        e.preventDefault();
+        var wrap = menuBtn.closest(".tl-session");
+        var open = wrap && !wrap.classList.contains("is-open");
+        document.querySelectorAll(".tl-session.is-open").forEach(function (el) {
+          el.classList.remove("is-open");
+          var b = el.querySelector("[data-session-menu]");
+          if (b) b.setAttribute("aria-expanded", "false");
+        });
+        if (wrap && open) {
+          wrap.classList.add("is-open");
+          menuBtn.setAttribute("aria-expanded", "true");
+        }
+        return;
+      }
+      if (!e.target.closest(".tl-session")) {
+        document.querySelectorAll(".tl-session.is-open").forEach(function (el) {
+          el.classList.remove("is-open");
+          var b = el.querySelector("[data-session-menu]");
+          if (b) b.setAttribute("aria-expanded", "false");
+        });
+      }
+      var logout = e.target.closest("[data-auth-logout]");
+      if (logout) {
+        e.preventDefault();
+        api.logout().then(function () {
+          window.__tlAvatarUrl = "";
+          window.__tlUnread = 0;
+          paintSession();
+          window.dispatchEvent(new CustomEvent("talendus:auth", { detail: null }));
+        });
+        return;
+      }
       var open = e.target.closest("[data-auth-open]");
       if (open) {
         e.preventDefault();
         var mode = open.getAttribute("data-auth-open") || "login";
-        if (mode === "register") openAuth("choose");
+        var role = open.getAttribute("data-auth-role") || "";
+        if (mode === "register") openAuth(role ? "register" : "choose", role ? { role: role } : {});
         else openAuth(mode);
         return;
       }
@@ -429,7 +568,7 @@
       openAuth(hash.name, { token: hash.query.token || "", role: hash.query.role, email: hash.query.email });
     }
 
-    paintHeader();
+    paintSession();
 
     var pageFile = (location.pathname.split("/").pop() || "").toLowerCase();
     var jobSlug = "";

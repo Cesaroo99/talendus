@@ -42,7 +42,13 @@ COPY = {
         "nav_blog": "Blog",
         "nav_contact": "Contact",
         "nav_account": "Connexion",
-        "nav_register": "Inscription",
+        "nav_register": "Créer un compte",
+        "nav_workspace": "Mon espace",
+        "nav_sign_out": "Déconnexion",
+        "nav_notifs": "Notifications",
+        "nav_settings": "Paramètres",
+        "role_talent": "Candidat",
+        "role_hire": "Entreprise",
         "nav_employer_account": "Espace employeur",
         "nav_publish": "Soumettre un besoin",
         "nav_hr": "Solutions RH",
@@ -125,7 +131,13 @@ COPY = {
         "nav_blog": "Blog",
         "nav_contact": "Contact",
         "nav_account": "Sign in",
-        "nav_register": "Sign up",
+        "nav_register": "Create account",
+        "nav_workspace": "My workspace",
+        "nav_sign_out": "Sign out",
+        "nav_notifs": "Notifications",
+        "nav_settings": "Settings",
+        "role_talent": "Candidate",
+        "role_hire": "Employer",
         "nav_employer_account": "Employer portal",
         "nav_publish": "Submit a hiring need",
         "nav_hr": "HR solutions",
@@ -510,11 +522,21 @@ def header(solid=True, lang="fr", alt_url="", persona="gateway"):
               </div>
               <div class="tl-header-tools">
                 {switch}
-                <a href="{h['account']}" class="tl-account-link" data-account-link data-auth-open="login">{t['nav_account']}</a>
-                <a href="{h['account']}" class="tl-account-link tl-register-link" data-auth-open="register">{t['nav_register']}</a>
+                <div class="tl-session" data-session="desktop">
+                  <a href="{h['account']}" class="tl-session-login" data-auth-open="login">
+                    <i class="fa-regular fa-user" aria-hidden="true"></i>
+                    <span>{t['nav_account']}</span>
+                  </a>
+                  <a href="{h['account']}" class="tl-btn tl-session-cta" data-auth-open="register">{t['nav_register']}</a>
+                </div>
               </div>
               <div class="tl-mobile-tools">
                   {switch}
+                  <div class="tl-session tl-session-compact" data-session="mobile">
+                    <a href="{h['account']}" class="tl-session-icon-btn" data-auth-open="login" aria-label="{t['nav_account']}">
+                      <i class="fa-regular fa-user" aria-hidden="true"></i>
+                    </a>
+                  </div>
                   <button type="button" class="vl-offcanvas-toggle" aria-label="{t['menu_open']}" aria-expanded="false" aria-controls="tl-mobile-nav">
                     <i class="fa-solid fa-bars-staggered"></i>
                   </button>
@@ -544,8 +566,8 @@ def header(solid=True, lang="fr", alt_url="", persona="gateway"):
             <span><a href="{h['contact']}"><i class="fa-solid fa-location-dot"></i> {t['offcanvas_place']}</a></span>
             <span><a href="{wa_link(lang)}" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a></span>
             <p class="tl-offcanvas-note">{t['offcanvas_note']}</p>
-            <div class="vl-offcanvas-cta">
-              <a href="{h['account']}" class="tl-btn tl-btn-ghost" data-account-link data-auth-open="login">{t['nav_account']}</a>
+            <div class="vl-offcanvas-cta tl-session tl-session-offcanvas" data-session="offcanvas">
+              <a href="{h['account']}" class="tl-btn tl-btn-ghost" data-auth-open="login">{t['nav_account']}</a>
               <a href="{h['account']}" class="tl-btn" data-auth-open="register">{t['nav_register']}</a>
             </div>
         </div>

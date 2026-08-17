@@ -113,14 +113,24 @@ gtag('consent', 'default', {
                     <a class="" href="../recrutement-industriel-laval.html" lang="fr" hreflang="fr-CA">FR</a>
                     <a class="is-active" href="#" lang="en" hreflang="en-CA">EN</a>
                   </nav>
-                <a href="account.html" class="tl-account-link" data-account-link data-auth-open="login">Sign in</a>
-                <a href="account.html" class="tl-account-link tl-register-link" data-auth-open="register">Sign up</a>
+                <div class="tl-session" data-session="desktop">
+                  <a href="account.html" class="tl-session-login" data-auth-open="login">
+                    <i class="fa-regular fa-user" aria-hidden="true"></i>
+                    <span>Sign in</span>
+                  </a>
+                  <a href="account.html" class="tl-btn tl-session-cta" data-auth-open="register">Create account</a>
+                </div>
               </div>
               <div class="tl-mobile-tools">
                   <nav class="tl-lang" aria-label="Language / Langue">
                     <a class="" href="../recrutement-industriel-laval.html" lang="fr" hreflang="fr-CA">FR</a>
                     <a class="is-active" href="#" lang="en" hreflang="en-CA">EN</a>
                   </nav>
+                  <div class="tl-session tl-session-compact" data-session="mobile">
+                    <a href="account.html" class="tl-session-icon-btn" data-auth-open="login" aria-label="Sign in">
+                      <i class="fa-regular fa-user" aria-hidden="true"></i>
+                    </a>
+                  </div>
                   <button type="button" class="vl-offcanvas-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="tl-mobile-nav">
                     <i class="fa-solid fa-bars-staggered"></i>
                   </button>
@@ -150,9 +160,9 @@ gtag('consent', 'default', {
             <span><a href="contact.html"><i class="fa-solid fa-location-dot"></i> Montreal, Quebec · by appointment</a></span>
             <span><a href="https://wa.me/15145550199?text=Hello%20Talendus%2C%20I%20would%20like%20to%20talk%20about%20a%20hiring%20need." target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a></span>
             <p class="tl-offcanvas-note">On weekdays we usually reply within 30 minutes.</p>
-            <div class="vl-offcanvas-cta">
-              <a href="account.html" class="tl-btn tl-btn-ghost" data-account-link data-auth-open="login">Sign in</a>
-              <a href="account.html" class="tl-btn" data-auth-open="register">Sign up</a>
+            <div class="vl-offcanvas-cta tl-session tl-session-offcanvas" data-session="offcanvas">
+              <a href="account.html" class="tl-btn tl-btn-ghost" data-auth-open="login">Sign in</a>
+              <a href="account.html" class="tl-btn" data-auth-open="register">Create account</a>
             </div>
         </div>
     </div>

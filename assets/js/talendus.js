@@ -47,24 +47,6 @@
   ready(function () {
     markActiveNav();
     setTimeout(markActiveNav, 250);
-    var apiUser = window.TalendusAPI && window.TalendusAPI.currentUser && window.TalendusAPI.currentUser();
-    if (apiUser && apiUser.first_name) {
-      var isEnNav = (document.documentElement.lang || "").toLowerCase().indexOf("en") === 0;
-      var root = isEnNav ? "/en/" : "/";
-      var href = root + (isEnNav ? "account.html" : "espace.html") + "#/dashboard";
-      if (apiUser.role === "EMPLOYER") href = root + (isEnNav ? "account-employer.html" : "espace-employeur.html") + "#/dashboard";
-      else if (["ADMIN", "SUPER_ADMIN", "RECRUITER", "FINANCE", "EDITOR"].indexOf(apiUser.role) !== -1) {
-        href = "/admin/";
-      }
-      document.querySelectorAll("[data-account-link]").forEach(function (el) {
-        el.textContent = apiUser.first_name;
-        el.setAttribute("href", href);
-        el.removeAttribute("data-auth-open");
-      });
-      document.querySelectorAll("[data-auth-open='register']").forEach(function (el) {
-        el.hidden = true;
-      });
-    }
 
     if (window.jQuery) {
       var $ = window.jQuery;

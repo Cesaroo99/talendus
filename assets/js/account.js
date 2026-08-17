@@ -313,32 +313,59 @@
     function navItems(unreadN, unreadM) {
       if (isEmployerSpace()) {
         return [
-          ["dashboard", t.dashboard], ["company", t.company], ["jobs", t.hiring], ["inbox", t.candidates],
-          ["pipeline", t.ats], ["messages", t.messages, unreadM], ["invoices", t.billing],
-          ["notifs", t.notifs, unreadN], ["settings", t.settings]
+          ["dashboard", t.dashboard, "fa-table-columns"],
+          ["company", t.company, "fa-building"],
+          ["jobs", t.hiring, "fa-clipboard-list"],
+          ["inbox", t.candidates, "fa-users"],
+          ["pipeline", t.ats, "fa-diagram-project"],
+          ["messages", t.messages, "fa-comments", unreadM],
+          ["invoices", t.billing, "fa-file-invoice-dollar"],
+          ["notifs", t.notifs, "fa-bell", unreadN],
+          ["settings", t.settings, "fa-gear"]
         ];
       }
       return [
-        ["dashboard", t.dashboard], ["profile", t.profile], ["documents", t.cv], ["apps", t.apps],
-        ["saved", t.savedJobs], ["alerts", t.alerts], ["messages", t.messages, unreadM],
-        ["notifs", t.notifs, unreadN], ["settings", t.settings]
+        ["dashboard", t.dashboard, "fa-table-columns"],
+        ["profile", t.profile, "fa-user"],
+        ["documents", t.cv, "fa-file-lines"],
+        ["apps", t.apps, "fa-briefcase"],
+        ["saved", t.savedJobs, "fa-bookmark"],
+        ["alerts", t.alerts, "fa-bell"],
+        ["messages", t.messages, "fa-comments", unreadM],
+        ["notifs", t.notifs, "fa-inbox", unreadN],
+        ["settings", t.settings, "fa-gear"]
       ];
+    }
+    function initials(user) {
+      var a = String((user && user.first_name) || "").trim().charAt(0);
+      var b = String((user && user.last_name) || "").trim().charAt(0);
+      return ((a + b) || String((user && user.email) || "?").charAt(0)).toUpperCase();
     }
     function shell(user, content, unreadN, unreadM) {
       var route = currentRoute();
       var items = navItems(unreadN, unreadM).map(function (it) {
+        var badge = it[3] ? '<span class="tl-portal-badge">' + it[3] + "</span>" : "";
         return '<button type="button" data-go="' + it[0] + '" class="' + (route.name === it[0] ? "is-active" : "") + '">' +
-          esc(it[1]) + (it[2] ? '<span class="tl-portal-badge">' + it[2] + "</span>" : "") + "</button>";
+          '<span class="tl-portal-nav-label"><i class="fa-solid ' + it[2] + '" aria-hidden="true"></i>' + esc(it[1]) + "</span>" + badge + "</button>";
       }).join("");
       var mobile = '<div class="tl-mobile-nav"><select id="acc-mobile-nav">' + navItems(unreadN, unreadM).map(function (it) {
         return '<option value="' + it[0] + '"' + (route.name === it[0] ? " selected" : "") + ">" + esc(it[1]) + "</option>";
       }).join("") + "</select></div>";
       var name = ((user.first_name || "") + " " + (user.last_name || "")).trim() || user.email;
-      root.innerHTML = '<div class="tl-account-head"><div><div class="tl-kicker">' + esc(user.email) + "</div>" +
-        '<h2 class="tl-h2">' + esc(name) + '</h2></div><button class="tl-btn tl-btn-ghost" type="button" id="acc-logout">' + esc(t.logout) + "</button></div>" +
-        mobile + '<div class="tl-portal"><nav class="tl-portal-nav" aria-label="Talendus">' + items + "</nav>" +
-        '<div class="tl-portal-main">' + content + "</div></div>";
-      document.getElementById("acc-logout").onclick = function () { api.logout().then(renderGuest); };
+      var role = isEmployerSpace() ? (isEn ? "Employer" : "Entreprise") : (isEn ? "Candidate" : "Candidat");
+      var pageTitle = (navItems(unreadN, unreadM).filter(function (it) { return it[0] === route.name; })[0] || [0, t.dashboard])[1];
+      var av = window.__tlAvatarUrl
+        ? '<span class="tl-avatar is-lg"><img src="' + esc(window.__tlAvatarUrl) + '" alt=""></span>'
+        : '<span class="tl-avatar is-lg" aria-hidden="true">' + esc(initials(user)) + "</span>";
+      root.innerHTML = mobile + '<div class="tl-portal">' +
+        '<nav class="tl-portal-nav" aria-label="Talendus">' +
+          '<div class="tl-portal-user">' + av + "<div><strong>" + esc(name) + "</strong><span>" + esc(role) + "</span></div></div>" +
+          items +
+        "</nav>" +
+        '<div class="tl-portal-main">' +
+          '<div class="tl-portal-pagehead"><h1>' + esc(pageTitle) + "</h1></div>" +
+          content +
+        "</div></div>";
       root.querySelectorAll("[data-go]").forEach(function (btn) {
         btn.onclick = function () { go(btn.getAttribute("data-go")); };
       });
@@ -356,60 +383,20 @@
       if (window.TalendusAuth && (hash.indexOf("reset") === 0 || hash.indexOf("verify") === 0 || hash.indexOf("forgot") === 0)) {
         return;
       }
+      var roleAttr = employer ? ' data-auth-role="EMPLOYER"' : ' data-auth-role="CANDIDATE"';
       root.innerHTML =
-        '<div class="tl-auth-page">' +
-          '<div class="tl-auth-shell tl-auth-shell-page">' +
-            '<aside class="tl-auth-brand">' +
-              '<img class="tl-auth-photo" src="' + esc(plantUrl()) + '" alt="" width="600" height="800">' +
-              '<div class="tl-auth-brand-inner">' +
-                '<div class="tl-auth-mark">' + MARK_SVG + "</div>" +
-                '<p class="tl-auth-word">Talendus</p>' +
-                '<p class="tl-auth-tagline">' + esc(t.brand) + "</p>" +
-                '<ul class="tl-auth-points"><li>' + esc(t.point1) + "</li><li>" + esc(t.point2) + "</li></ul>" +
-              "</div></aside>" +
-            '<div class="tl-auth-panel">' +
-              '<a class="tl-auth-logo" href="index.html"><img src="' + esc(logoUrl()) + '" width="186" height="36" alt="Talendus"></a>' +
-              '<p class="tl-kicker">' + esc(employer ? t.welcomeEmployer : t.welcome) + "</p>" +
-              '<h2>' + esc(t.login) + " / " + esc(employer ? t.registerEmployer : t.register) + "</h2>" +
-              '<p class="tl-auth-lead">' + esc(employer ? t.guestEmployer : t.guest) + "</p>" +
-              '<div class="tl-account-cards">' +
-                '<form class="tl-form tl-auth-form" id="acc-login">' +
-                  "<h3>" + esc(t.login) + "</h3>" +
-                  '<p class="tl-auth-card-lead">' + esc(t.loginLead) + "</p>" +
-                  "<label>" + esc(t.email) + '</label><input name="email" type="email" required autocomplete="username">' +
-                  "<label>" + esc(t.password) + '</label><input name="password" type="password" required minlength="8" autocomplete="current-password">' +
-                  '<button class="tl-btn tl-btn-lg" type="submit">' + esc(t.submitLogin) + "</button>" +
-                  '<p class="tl-auth-forgot"><button type="button" class="tl-text-btn" id="acc-forgot">' + esc(t.forgot) + "</button></p>" +
-                  '<div class="tl-success"></div></form>' +
-                '<form class="tl-form tl-auth-form" id="acc-register">' +
-                  "<h3>" + esc(employer ? t.registerEmployer : t.register) + "</h3>" +
-                  '<p class="tl-auth-card-lead">' + esc(employer ? t.registerEmployerLead : t.registerLead) + "</p>" +
-                  '<input class="tl-hp" name="website_url" tabindex="-1" autocomplete="off" aria-hidden="true">' +
-                  '<div class="tl-row-2"><div><label>' + esc(t.first) + '</label><input name="first_name" required autocomplete="given-name"></div>' +
-                  "<div><label>" + esc(t.last) + '</label><input name="last_name" required autocomplete="family-name"></div></div>' +
-                  (employer ? "<label>" + esc(t.company) + '</label><input name="company_name" autocomplete="organization">' : "") +
-                  "<label>" + esc(t.email) + '</label><input name="email" type="email" required autocomplete="email">' +
-                  "<label>" + esc(t.password) + '</label><input name="password" type="password" required minlength="8" autocomplete="new-password">' +
-                  '<button class="tl-btn tl-btn-lg tl-btn-electric" type="submit">' + esc(t.submitRegister) + "</button>" +
-                  '<div class="tl-success"></div></form>' +
-              "</div></div></div></div>";
-      document.getElementById("acc-login").addEventListener("submit", function (e) {
-        e.preventDefault();
-        var d = Object.fromEntries(new FormData(e.target).entries());
-        api.login(d.email, d.password).then(boot).catch(function (err) { flash(e.target.querySelector(".tl-success"), (err && err.message) || t.err, false); });
-      });
-      document.getElementById("acc-register").addEventListener("submit", function (e) {
-        e.preventDefault();
-        var d = Object.fromEntries(new FormData(e.target).entries());
-        api.register({
-          email: d.email, password: d.password, first_name: d.first_name, last_name: d.last_name,
-          role: employer ? "EMPLOYER" : "CANDIDATE", company_name: d.company_name || null, website_url: d.website_url || ""
-        }).then(boot).catch(function (err) { flash(e.target.querySelector(".tl-success"), (err && err.message) || t.err, false); });
-      });
-      var forgotBtn = document.getElementById("acc-forgot");
-      if (forgotBtn) forgotBtn.onclick = function () {
-        if (window.TalendusAuth) window.TalendusAuth.open("forgot");
-      };
+        '<div class="tl-session-gate">' +
+          '<div class="tl-session-gate-card">' +
+            '<span class="tl-session-gate-icon" aria-hidden="true"><i class="fa-regular fa-user"></i></span>' +
+            '<p class="tl-kicker">' + esc(employer ? t.welcomeEmployer : t.welcome) + "</p>" +
+            "<h2>" + esc(t.login) + "</h2>" +
+            '<p class="tl-lead">' + esc(employer ? t.guestEmployer : t.guest) + "</p>" +
+            '<div class="tl-actions">' +
+              '<button type="button" class="tl-btn tl-btn-lg" data-auth-open="login">' + esc(t.submitLogin) + "</button>" +
+              '<button type="button" class="tl-btn tl-btn-ghost-dark tl-btn-lg" data-auth-open="register"' + roleAttr + ">" + esc(employer ? t.registerEmployer : t.register) + "</button>" +
+            "</div>" +
+          "</div>" +
+        "</div>";
     }
 
     function jobCard(job, extra) {
@@ -522,7 +509,14 @@
         var file = av.querySelector("[name=file]").files[0];
         if (!file) return;
         var fd = new FormData(); fd.append("file", file);
-        api.request("/users/me/avatar", { method: "POST", body: fd }).then(function () { flash(av.querySelector(".tl-success"), t.uploaded, true); }).catch(function (err) {
+        api.request("/users/me/avatar", { method: "POST", body: fd }).then(function (json) {
+          flash(av.querySelector(".tl-success"), t.uploaded, true);
+          if (json && json.data) {
+            try { localStorage.setItem("talendus_user", JSON.stringify(Object.assign(api.currentUser() || {}, json.data))); } catch (err) {}
+          }
+          window.__tlAvatarUrl = "";
+          if (window.TalendusAuth && window.TalendusAuth.paint) window.TalendusAuth.paint();
+        }).catch(function (err) {
           flash(av.querySelector(".tl-success"), (err && err.message) || t.err, false);
         });
       });
