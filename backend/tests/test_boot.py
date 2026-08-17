@@ -36,8 +36,9 @@ def test_production_seed_has_no_direct_employer_or_fake_companies(client, monkey
 
     from app import seed as seed_mod
     from app.database import SessionLocal
-    from app.models import Company, User
-    from app.models.enums import UserRole
+    from app.models import Company, JobOffer, User
+    from app.models.enums import JobStatus, UserRole
+    from app.site_jobs import SITE_JOBS
 
     monkeypatch.setattr(seed_mod.settings, "app_env", "production")
     monkeypatch.setattr(seed_mod.settings, "admin_email", "lea.super@talendus.ca")
@@ -49,9 +50,15 @@ def test_production_seed_has_no_direct_employer_or_fake_companies(client, monkey
         assert "lea.super@talendus.ca" in emails
         assert "j.rivest@metalco.ca" not in emails
         assert "karine.lavoie@email.ca" not in emails
-        assert db.scalar(select(func.count()).select_from(Company)) == 0
+        companies = list(db.scalars(select(Company)))
+        assert [c.name for c in companies] == ["Talendus"]
+        jobs = list(db.scalars(select(JobOffer)))
+        slugs = {job.slug for job in jobs}
+        assert slugs == {item["slug"] for item in SITE_JOBS}
+        assert all(job.status == JobStatus.PUBLISHED for job in jobs)
         admin = db.scalar(select(User).where(User.email == "lea.super@talendus.ca"))
         assert admin.role == UserRole.SUPER_ADMIN
         assert seed_mod.bootstrap_production_admin(db) is None
+        assert db.scalar(select(func.count()).select_from(User).where(User.role == UserRole.EMPLOYER)) == 0
     finally:
         db.close()

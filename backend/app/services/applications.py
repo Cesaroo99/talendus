@@ -18,6 +18,7 @@ from app.services.auth import ensure_candidate
 from app.services.email import send_email
 from app.services.jobs import assert_job_open, get_public_job
 from app.services.notifications import notify, portal_href
+from app.site_jobs import open_site_job_for_apply
 from app.services.pipeline import stage_for
 
 
@@ -81,7 +82,11 @@ def apply(db: Session, user: User, data: ApplicationCreateIn, ip: str | None = N
     if data.job_id:
         job = db.scalar(select(JobOffer).options(joinedload(JobOffer.company)).where(JobOffer.id == data.job_id))
     elif data.job_slug:
-        job = db.scalar(select(JobOffer).options(joinedload(JobOffer.company)).where(JobOffer.slug == data.job_slug))
+        job = open_site_job_for_apply(db, data.job_slug)
+        if not job:
+            job = db.scalar(
+                select(JobOffer).options(joinedload(JobOffer.company)).where(JobOffer.slug == data.job_slug)
+            )
     if not job:
         raise AppError(404, "Offre introuvable.", "JOB_NOT_FOUND")
     assert_job_open(job)
@@ -152,7 +157,7 @@ def apply_public(
     cv_file: bytes | None = None,
     cv_filename: str | None = None,
 ) -> Application:
-    job = get_public_job(db, data.job_slug)
+    job = open_site_job_for_apply(db, data.job_slug) or get_public_job(db, data.job_slug)
     assert_job_open(job)
     email = data.email.lower()
     user = db.scalar(select(User).where(User.email == email))
