@@ -15,6 +15,7 @@ from app.models import (
     Message,
     Notification,
     Payment,
+    PortalDocument,
     RecruitmentMission,
     User,
 )
@@ -90,6 +91,23 @@ ROLE = {
     "EDITOR": "editor",
 }
 
+CONTRACT_STATUS = {
+    "ACTIVE": "Actif",
+    "DRAFT": "brouillon",
+    "EXPIRED": "Expire bientôt",
+}
+
+SITE_PAGES = [
+    {"id": "pg-home", "title": "Accueil", "slug": "/", "status": "publie"},
+    {"id": "pg-employers", "title": "Entreprises", "slug": "/entreprises.html", "status": "publie"},
+    {"id": "pg-jobs", "title": "Offres d’emploi", "slug": "/emplois.html", "status": "publie"},
+    {"id": "pg-talent", "title": "Candidats", "slug": "/candidats.html", "status": "publie"},
+    {"id": "pg-contact", "title": "Contact", "slug": "/contact.html", "status": "publie"},
+    {"id": "pg-about", "title": "À propos", "slug": "/a-propos.html", "status": "publie"},
+    {"id": "pg-services", "title": "Services", "slug": "/services.html", "status": "publie"},
+    {"id": "pg-blog", "title": "Blog", "slug": "/blog.html", "status": "publie"},
+]
+
 
 def bootstrap(db: Session, user: User | None = None) -> dict:
     users = db.scalars(select(User).order_by(User.created_at.asc())).all()
@@ -100,6 +118,7 @@ def bootstrap(db: Session, user: User | None = None) -> dict:
             joinedload(Candidate.user),
             selectinload(Candidate.experiences),
             selectinload(Candidate.education),
+            selectinload(Candidate.resumes),
             selectinload(Candidate.applications).joinedload(Application.job),
         )
     ).unique().all()
@@ -124,6 +143,11 @@ def bootstrap(db: Session, user: User | None = None) -> dict:
         select(Invoice).options(joinedload(Invoice.company), joinedload(Invoice.mission)).order_by(Invoice.created_at.desc())
     ).unique().all()
     payments = db.scalars(select(Payment).options(joinedload(Payment.invoice)).order_by(Payment.created_at.desc())).unique().all()
+    portal_docs = db.scalars(select(PortalDocument).order_by(PortalDocument.created_at.desc())).all()
+    from app.services.settings import get_json_setting
+
+    testimonials = get_json_setting(db, "cms.testimonials", default=[])
+    faqs = get_json_setting(db, "cms.faq", default=[])
 
     unread_messages = 0
     if user:
@@ -178,6 +202,10 @@ def bootstrap(db: Session, user: User | None = None) -> dict:
         "interviews": [_interview(i) for i in interviews],
         "invoices": [_invoice(i) for i in invoices],
         "payments": [_payment(p) for p in payments],
+        "documents": _documents(candidates, portal_docs),
+        "pages": [dict(page) for page in SITE_PAGES],
+        "testimonials": testimonials if isinstance(testimonials, list) else [],
+        "faqs": faqs if isinstance(faqs, list) else [],
         "jobMatches": job_matches,
         "monthly": _monthly(applications, invoices),
         "stats": {
@@ -361,7 +389,7 @@ def _contract(c: Contract) -> dict:
         "end": c.end_date or "",
         "commission": c.commission_percent or 0,
         "terms": c.terms or "",
-        "status": c.status.value if c.status else "",
+        "status": CONTRACT_STATUS.get(c.status.value if c.status else "", c.status.value if c.status else ""),
         "document": c.document_name or "",
         "signed": bool(latest),
         "signedAt": latest.signed_at.strftime("%Y-%m-%d %H:%M") if latest and latest.signed_at else "",
@@ -409,6 +437,45 @@ def _payment(p: Payment) -> dict:
         "date": p.paid_at or "",
         "method": method,
     }
+
+
+def _size_label(n: int | None) -> str:
+    size = int(n or 0)
+    if size >= 1024 * 1024:
+        return f"{size / (1024 * 1024):.1f} Mo".replace(".", ",")
+    if size >= 1024:
+        return f"{max(1, round(size / 1024))} Ko"
+    return f"{size} o"
+
+
+def _documents(candidates: list[Candidate], portal_docs: list[PortalDocument]) -> list[dict]:
+    docs = []
+    for cand in candidates:
+        for resume in cand.resumes or []:
+            docs.append(
+                {
+                    "id": resume.id,
+                    "name": resume.original_name,
+                    "entity": "candidate",
+                    "entityId": cand.id,
+                    "size": _size_label(resume.size_bytes),
+                    "kind": "resume",
+                    "url": f"/api/candidates/resumes/{resume.id}/file",
+                }
+            )
+    for row in portal_docs:
+        docs.append(
+            {
+                "id": row.id,
+                "name": row.original_name,
+                "entity": row.owner_type,
+                "entityId": row.owner_id,
+                "size": _size_label(row.size_bytes),
+                "kind": row.kind,
+                "url": f"/api/documents/{row.id}/file",
+            }
+        )
+    return docs
 
 
 def _note(n: InternalNote) -> dict:

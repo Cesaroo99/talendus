@@ -61,7 +61,14 @@
     PUBLISHED: ["Publiée", "ok"],
     DRAFT: ["Brouillon", "muted"],
     PAUSED: ["Suspendue", "warn"],
-    ARCHIVED: ["Archivée", "muted"]
+    ACTIVE: ["Actif", "ok"],
+    DRAFT: ["Brouillon", "muted"],
+    EXPIRED: ["Expiré", "warn"],
+    SENT: ["Envoyée", "info"],
+    PAID: ["Payée", "ok"],
+    PENDING: ["En attente", "warn"],
+    OVERDUE: ["En retard", "danger"],
+    CANCELLED: ["Annulée", "muted"]
   };
 
   const STAGES = [

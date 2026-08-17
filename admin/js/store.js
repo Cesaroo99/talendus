@@ -207,7 +207,7 @@
         var json = await window.TalendusAPI.bootstrap();
         var d = json && json.data;
         if (!d) return false;
-        ["candidates", "clients", "jobs", "missions", "hiringRequests", "applications", "contracts", "notes", "notifications", "activities", "interviews", "invoices", "payments", "jobMatches"].forEach(function (key) {
+        ["candidates", "clients", "jobs", "missions", "hiringRequests", "applications", "contracts", "notes", "notifications", "activities", "interviews", "invoices", "payments", "jobMatches", "documents", "pages", "testimonials", "faqs"].forEach(function (key) {
           if (Array.isArray(d[key])) state[key] = d[key];
         });
         if (d.monthly && typeof d.monthly === "object") state.monthly = d.monthly;

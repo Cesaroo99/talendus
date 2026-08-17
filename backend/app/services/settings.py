@@ -78,3 +78,50 @@ def serialize_setting(row: SystemSetting) -> dict:
         "updated_at": row.updated_at.isoformat() if row.updated_at else None,
         "updated_by": row.updated_by,
     }
+
+
+PLATFORM_DEFAULTS = (
+    ("agency_name", "Talendus", "Nom de l’agence"),
+    ("support_email", "ivan.p@example.net", "Courriel interne"),
+    ("default_commission_percent", "16", "Commission type (%)"),
+    ("invoice_payment_days", "30", "Délai de paiement (jours)"),
+)
+
+CMS_KEYS = {"testimonials", "faq"}
+
+
+def ensure_platform_defaults(db: Session, user: User | None = None) -> list[SystemSetting]:
+    from sqlalchemy import select
+
+    existing = {row.key: row for row in list_settings(db)}
+    changed = False
+    for key, value, label in PLATFORM_DEFAULTS:
+        if key in existing:
+            continue
+        db.add(SystemSetting(key=key, value=value, label=label, updated_by=user.id if user else None))
+        changed = True
+    if changed:
+        db.commit()
+    return list_settings(db)
+
+
+def get_json_setting(db: Session, key: str, default=None):
+    import json
+    from sqlalchemy import select
+
+    row = db.scalar(select(SystemSetting).where(SystemSetting.key == key))
+    if not row or not (row.value or "").strip():
+        return default if default is not None else []
+    try:
+        return json.loads(row.value)
+    except json.JSONDecodeError:
+        return default if default is not None else []
+
+
+def put_json_setting(db: Session, user: User, key: str, value, label: str | None = None) -> list | dict:
+    import json
+
+    payload = json.dumps(value, ensure_ascii=False)
+    upsert_setting(db, user, key, payload, label)
+    parsed = get_json_setting(db, key, default=value)
+    return parsed

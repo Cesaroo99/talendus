@@ -262,6 +262,64 @@ def list_documents(db: Session, user: User, owner_type: str | None = None) -> li
     return [serialize_document(r) for r in rows]
 
 
+def list_documents_for_owner(db: Session, owner_type: str, owner_id: str) -> list[PortalDocument]:
+    return list(
+        db.scalars(
+            select(PortalDocument)
+            .where(PortalDocument.owner_type == owner_type, PortalDocument.owner_id == owner_id)
+            .order_by(PortalDocument.created_at.desc())
+        ).all()
+    )
+
+
+def list_all_documents(db: Session) -> list[PortalDocument]:
+    return list(db.scalars(select(PortalDocument).order_by(PortalDocument.created_at.desc())).all())
+
+
+def staff_upload_document(
+    db: Session,
+    user: User,
+    data: bytes,
+    filename: str,
+    kind: str,
+    owner_type: str,
+    owner_id: str,
+) -> PortalDocument:
+    if user.role not in {UserRole.RECRUITER, UserRole.ADMIN, UserRole.FINANCE}:
+        raise AppError(403, "Téléversement réservé à l’équipe Talendus.", "FORBIDDEN")
+    kind = (kind or "other").strip().lower()
+    if kind not in DOC_KINDS:
+        kind = "other"
+    otype = (owner_type or "candidate").strip().lower()
+    if otype not in {"candidate", "company"}:
+        raise AppError(400, "Type de dossier invalide.", "VALIDATION_ERROR")
+    if otype == "candidate":
+        owner = db.get(Candidate, owner_id)
+        if not owner:
+            raise AppError(404, "Candidat introuvable.", "CANDIDATE_NOT_FOUND")
+    else:
+        owner = db.get(Company, owner_id)
+        if not owner:
+            raise AppError(404, "Entreprise introuvable.", "COMPANY_NOT_FOUND")
+    original, stored, mime, size, url = save_bytes(data, filename, category="documents")
+    row = PortalDocument(
+        owner_type=otype,
+        owner_id=owner_id,
+        kind=kind,
+        original_name=original,
+        stored_name=stored,
+        storage_url=url,
+        mime_type=mime,
+        size_bytes=size,
+        created_by=user.id,
+    )
+    db.add(row)
+    audit(db, "document.staff_upload", user, "document", None, metadata={"kind": kind, "owner": otype})
+    db.commit()
+    db.refresh(row)
+    return row
+
+
 def upload_document(db: Session, user: User, data: bytes, filename: str, kind: str, owner_type: str | None = None) -> PortalDocument:
     kind = (kind or "other").strip().lower()
     if kind not in DOC_KINDS:
