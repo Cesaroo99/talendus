@@ -12,9 +12,9 @@
   ];
 
   const PERMS = {
-    admin: ["dashboard", "candidates", "clients", "jobs", "missions", "content", "finance", "analytics", "notifications", "settings", "profile"],
-    recruiter: ["dashboard", "candidates", "clients", "jobs", "missions", "notifications", "settings", "profile"],
-    finance: ["dashboard", "finance", "analytics", "notifications", "settings", "profile"],
+    admin: ["dashboard", "candidates", "clients", "jobs", "hiring", "missions", "messages", "content", "finance", "analytics", "notifications", "settings", "profile"],
+    recruiter: ["dashboard", "candidates", "clients", "jobs", "hiring", "missions", "messages", "notifications", "settings", "profile"],
+    finance: ["dashboard", "finance", "analytics", "messages", "notifications", "settings", "profile"],
     editor: ["content", "notifications", "settings", "profile"]
   };
 
@@ -148,7 +148,11 @@
       placements: [1, 2, 1, 3, 2, 2, 4, 2],
       revenue: [18000, 24000, 15400, 28600, 22100, 19800, 31200, 8640],
       months: ["Jan", "Fév", "Mar", "Avr", "Mai", "Jun", "Jul", "Aoû"]
-    }
+    },
+    hiringRequests: [],
+    applications: [],
+    unreadMessages: 0,
+    live: false
   };
 
   let state = null;
@@ -203,31 +207,25 @@
         var json = await window.TalendusAPI.bootstrap();
         var d = json && json.data;
         if (!d) return false;
-        ["candidates", "clients", "jobs", "missions", "contracts", "notes", "notifications", "activities", "interviews", "invoices", "payments", "jobMatches"].forEach(function (key) {
+        ["candidates", "clients", "jobs", "missions", "hiringRequests", "applications", "contracts", "notes", "notifications", "activities", "interviews", "invoices", "payments", "jobMatches"].forEach(function (key) {
           if (Array.isArray(d[key])) state[key] = d[key];
         });
+        if (d.monthly && typeof d.monthly === "object") state.monthly = d.monthly;
+        if (typeof d.unreadMessages === "number") state.unreadMessages = d.unreadMessages;
+        state.live = true;
         if (Array.isArray(d.users) && d.users.length) {
           var mapped = d.users.filter(function (u) { return ["admin", "recruiter", "finance", "editor"].indexOf(u.role) !== -1; });
-          if (mapped.length) {
-            var byEmail = {};
-            state.users.forEach(function (u) { byEmail[u.email] = u; });
-            mapped.forEach(function (u) {
-              if (byEmail[u.email]) {
-                byEmail[u.email].id = u.id;
-                byEmail[u.email].firstName = u.firstName;
-                byEmail[u.email].lastName = u.lastName;
-                byEmail[u.email].title = u.title;
-              } else {
-                state.users.push(u);
-              }
-            });
-          }
+          if (mapped.length) state.users = mapped;
         }
         persist();
         return true;
       } catch (e) {
         return false;
       }
+    },
+    isLive: function () {
+      var s = this.session();
+      return !!(s && s.access_token);
     },
     subscribe: function (fn) { listeners.push(fn); },
     login: async function (email, password) {

@@ -39,8 +39,8 @@ def _admin_user(user: User = Depends(require_roles(UserRole.ADMIN))) -> User:
 
 
 @router.get("/bootstrap")
-def bootstrap(db: Session = Depends(get_db), _: User = Depends(_staff)):
-    return ok(admin_export.bootstrap(db))
+def bootstrap(db: Session = Depends(get_db), user: User = Depends(_staff)):
+    return ok(admin_export.bootstrap(db, user))
 
 
 @router.post("/candidates")
