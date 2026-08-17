@@ -339,7 +339,6 @@ EMPLOYERS_BODY = (
         actions='<a class="tl-btn" href="contact.html">Confier mon recrutement</a><a class="tl-btn tl-btn-ghost" href="besoin-de-recrutement.html">Décrire mon besoin</a>',
         badges='<span class="tl-badge tl-badge-light">Agence de placement</span> <span class="tl-badge tl-badge-light">Tous secteurs</span>'
     )
-    + proof_stats("fr")
     + problems_section("fr")
     + """
     <section class="tl-section"><div class="container">
@@ -431,6 +430,7 @@ EMPLOYERS_BODY = (
     </div></section>
     """
     + sectors_cloud("fr")
+    + proof_stats("fr")
 )
 write("entreprises.html", wrap(
     "Entreprises | Agence de placement — Talendus",
