@@ -28,7 +28,22 @@ Le code est prêt. Il reste deux actions que seul le propriétaire du compte peu
 
 Le mot de passe initial du compte `lea.super@talendus.ca` est dans Render → le service `talendus-web` → **Environment** → `ADMIN_PASSWORD`. Changez-le à la première connexion (`/admin/`).
 
-Le site sera d’abord disponible en `https://talendus-web-….onrender.com`. Le nom `talendus.ca` s’ajoute ensuite dans Render → **Custom Domain** (DNS chez le registrar).
+Le site sera d’abord disponible en `https://talendus-web.onrender.com`. Pour que `https://talendus.ca` s’ouvre (et reste ouvert) :
+
+1. Dans Render → service **talendus-web** → **Custom Domains** : ajouter `talendus.ca` et `www.talendus.ca`.
+2. Chez Namespro, **désactiver** le transfert de site / parking / « Website Forwarding ». C’est ce qui envoie aujourd’hui le domaine vers `51.222.143.2` avec un certificat SSL Namespro expiré — le navigateur refuse alors la page.
+3. Enregistrements DNS Namespro (serveurs de noms `htns1/2/3.namespro.ca` inchangés) :
+
+| Type | Hôte | Valeur |
+| --- | --- | --- |
+| A | `@` | `216.24.57.1` |
+| CNAME | `www` | `talendus-web.onrender.com` |
+
+Supprimer l’ancien A vers `51.222.143.2`, le CNAME `www` → `talendus.ca`, tout transfert URL, et tout enregistrement **AAAA**.
+4. Dans Render, cliquer **Verify**. Le certificat HTTPS est émis par Render (Let’s Encrypt), pas par Namespro.
+5. Variable d’environnement `FRONTEND_URL=https://talendus.ca` (déjà dans `render.yaml`).
+
+Tant que le DNS n’est pas corrigé, le site reste joignable sur `https://talendus-web.onrender.com`.
 
 ## Technique
 
