@@ -12,7 +12,7 @@ from app.models import (
 )
 from app.models.enums import EmailType, NotificationType, UserRole
 from app.rbac import is_admin
-from app.schemas import CandidateProfileIn, CertificationIn, EducationIn, ExperienceIn
+from app.schemas import AdminCandidatePatchIn, CandidateProfileIn, CertificationIn, EducationIn, ExperienceIn
 from app.services.audit import audit
 from app.services.auth import ensure_candidate
 from app.services.notifications import notify
@@ -72,6 +72,93 @@ def list_for_staff(db: Session) -> list[Candidate]:
             .order_by(Candidate.updated_at.desc())
         ).unique().all()
     )
+
+
+STAFF_PIPELINE = {
+    "nouveau",
+    "a-contacter",
+    "qualifie",
+    "entretien",
+    "presente",
+    "entretien-client",
+    "offre",
+    "place",
+    "refuse",
+    "inactif",
+}
+
+
+def get_staff_candidate(db: Session, candidate_id: str) -> Candidate:
+    profile = db.scalar(
+        select(Candidate)
+        .options(
+            joinedload(Candidate.user),
+            selectinload(Candidate.experiences),
+            selectinload(Candidate.education),
+            selectinload(Candidate.certifications),
+            selectinload(Candidate.resumes),
+        )
+        .where(Candidate.id == candidate_id)
+    )
+    if not profile:
+        raise AppError(404, "Candidat introuvable.", "CANDIDATE_NOT_FOUND")
+    return profile
+
+
+def update_staff_candidate(db: Session, actor: User, candidate_id: str, data: AdminCandidatePatchIn) -> Candidate:
+    profile = get_staff_candidate(db, candidate_id)
+    payload = data.model_dump(exclude_unset=True)
+    user_fields = {key: payload.pop(key) for key in ("first_name", "last_name", "phone") if key in payload}
+    if profile.user and user_fields:
+        for key, value in user_fields.items():
+            setattr(profile.user, key, value)
+    if "pipeline_status" in payload:
+        status = (payload["pipeline_status"] or "").strip()
+        if status and status not in STAFF_PIPELINE:
+            raise AppError(400, "Statut de pipeline invalide.", "VALIDATION_ERROR")
+        payload["pipeline_status"] = status or None
+    for key, value in payload.items():
+        setattr(profile, key, value)
+    audit(db, "candidate.staff_update", actor, "candidate", profile.id)
+    db.commit()
+    return get_staff_candidate(db, profile.id)
+
+
+def upload_cv_for_candidate(db: Session, actor: User, candidate_id: str, data: bytes, filename: str) -> Resume:
+    profile = get_staff_candidate(db, candidate_id)
+    original, stored, mime, size, url = save_resume(data, filename)
+    parse_status = "failed"
+    parse_json = None
+    parsed: dict = {}
+    try:
+        parsed = parse_resume_bytes(data, mime, original)
+        parse_status = parsed.get("status") or "done"
+        parse_json = parse_json_dump(parsed)
+    except Exception:
+        parse_status = "failed"
+        parsed = {}
+    if not (profile.skills or "").strip() and parsed.get("skills"):
+        profile.skills = ", ".join(parsed["skills"])
+    for old in db.scalars(select(Resume).where(Resume.candidate_id == profile.id)):
+        old.is_primary = False
+    row = Resume(
+        candidate_id=profile.id,
+        original_name=original,
+        stored_name=stored,
+        storage_url=url,
+        mime_type=mime,
+        size_bytes=size,
+        is_primary=True,
+        parse_status=parse_status,
+        parse_json=parse_json,
+    )
+    db.add(row)
+    if profile.user:
+        notify(db, profile.user, NotificationType.RESUME_UPDATED, "CV mis à jour", "Talendus a déposé un document dans votre dossier.")
+    audit(db, "candidate.staff_resume_upload", actor, "candidate", profile.id)
+    db.commit()
+    db.refresh(row)
+    return row
 
 
 def update_profile(db: Session, user: User, data: CandidateProfileIn) -> Candidate:

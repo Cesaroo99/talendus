@@ -403,6 +403,26 @@ class AdminCandidateIn(BaseModel):
     password: str | None = Field(default=None, min_length=8, max_length=128)
 
 
+class AdminCandidatePatchIn(BaseModel):
+    first_name: str | None = Field(default=None, min_length=1, max_length=80)
+    last_name: str | None = Field(default=None, min_length=1, max_length=80)
+    phone: str | None = None
+    city: str | None = None
+    title: str | None = None
+    sector: str | None = None
+    availability: str | None = None
+    bio: str | None = None
+    skills: str | None = None
+    languages: str | None = None
+    years_experience: int | None = Field(default=None, ge=0, le=60)
+    experience_level: str | None = None
+    shift_preference: str | None = None
+    desired_salary_min: int | None = None
+    desired_salary_max: int | None = None
+    pipeline_status: str | None = Field(default=None, max_length=40)
+    assigned_recruiter_id: str | None = None
+
+
 class MessageIn(BaseModel):
     recipient_id: str
     body: str = Field(min_length=1, max_length=4000)
@@ -482,6 +502,21 @@ class ContractSignIn(BaseModel):
     signer_name: str = Field(min_length=2, max_length=160)
     signer_email: EmailStr | None = None
     accepted: bool = True
+
+
+class ContractIn(BaseModel):
+    company_id: str
+    type: str = Field(default="Succès", min_length=2, max_length=80)
+    start_date: str | None = None
+    end_date: str | None = None
+    commission_percent: int | None = Field(default=None, ge=0, le=100)
+    terms: str | None = None
+    document_name: str | None = Field(default=None, max_length=255)
+    status: str | None = None
+
+
+class SiteContentIn(BaseModel):
+    items: list[dict] = Field(default_factory=list)
 
 
 class UserPreferenceIn(BaseModel):

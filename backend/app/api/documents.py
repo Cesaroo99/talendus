@@ -6,7 +6,18 @@ from app.database import get_db
 from app.deps import get_current_user
 from app.errors import ok
 from app.models import User
-from app.services.portal import delete_document, get_document_for_user, list_documents, serialize_document, upload_document
+from app.models.enums import UserRole
+from app.rbac import is_admin
+from app.services.portal import (
+    delete_document,
+    get_document_for_user,
+    list_all_documents,
+    list_documents,
+    list_documents_for_owner,
+    serialize_document,
+    staff_upload_document,
+    upload_document,
+)
 from app.services.storage import open_stored
 
 router = APIRouter(prefix="/documents", tags=["documents"])
@@ -15,9 +26,15 @@ router = APIRouter(prefix="/documents", tags=["documents"])
 @router.get("")
 def list_mine(
     owner_type: str | None = None,
+    owner_id: str | None = None,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
+    if owner_id and (is_admin(user) or user.role in {UserRole.RECRUITER, UserRole.FINANCE}):
+        otype = owner_type or "candidate"
+        return ok([serialize_document(row) for row in list_documents_for_owner(db, otype, owner_id)])
+    if (is_admin(user) or user.role in {UserRole.RECRUITER, UserRole.FINANCE}) and owner_type is None and owner_id is None:
+        return ok([serialize_document(row) for row in list_all_documents(db)])
     return ok(list_documents(db, user, owner_type))
 
 
@@ -26,10 +43,14 @@ async def upload(
     file: UploadFile = File(...),
     kind: str = Form(default="other"),
     owner_type: str | None = Form(default=None),
+    owner_id: str | None = Form(default=None),
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
     data = await file.read()
+    if owner_id and (is_admin(user) or user.role in {UserRole.RECRUITER, UserRole.FINANCE}):
+        row = staff_upload_document(db, user, data, file.filename or "document.pdf", kind, owner_type or "candidate", owner_id)
+        return ok(serialize_document(row), message="Document enregistré.")
     row = upload_document(db, user, data, file.filename or "document.pdf", kind, owner_type)
     return ok(serialize_document(row), message="Document enregistré.")
 

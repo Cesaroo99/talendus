@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, File, Query, UploadFile
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -19,9 +19,16 @@ from app.models import (
 )
 from app.models.enums import UserRole
 from app.rbac import PERMISSIONS
-from app.schemas import AdminCandidateIn, SystemSettingIn, UserUpdateIn
+from app.schemas import AdminCandidateIn, AdminCandidatePatchIn, SiteContentIn, SystemSettingIn, UserUpdateIn
 from app.services import admin_export, candidates as cand_svc
-from app.services.settings import list_settings, serialize_setting, upsert_setting
+from app.services.settings import (
+    CMS_KEYS,
+    ensure_platform_defaults,
+    get_json_setting,
+    put_json_setting,
+    serialize_setting,
+    upsert_setting,
+)
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -51,6 +58,89 @@ def create_candidate(
 ):
     profile = cand_svc.create_staff_candidate(db, user, payload)
     return ok({"id": profile.id, "email": payload.email})
+
+
+@router.patch("/candidates/{candidate_id}")
+def patch_candidate(
+    candidate_id: str,
+    payload: AdminCandidatePatchIn,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_roles(UserRole.RECRUITER, UserRole.ADMIN)),
+):
+    profile = cand_svc.update_staff_candidate(db, user, candidate_id, payload)
+    return ok(cand_svc.serialize_candidate(profile, include_private=True), message="Fiche candidat mise à jour.")
+
+
+@router.post("/candidates/{candidate_id}/resume")
+async def upload_candidate_resume(
+    candidate_id: str,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    user: User = Depends(require_roles(UserRole.RECRUITER, UserRole.ADMIN)),
+):
+    data = await file.read()
+    if not data:
+        raise AppError(400, "Fichier vide.", "VALIDATION_ERROR")
+    row = cand_svc.upload_cv_for_candidate(db, user, candidate_id, data, file.filename or "cv.pdf")
+    return ok(
+        {
+            "id": row.id,
+            "original_name": row.original_name,
+            "size_bytes": row.size_bytes,
+            "download_path": f"/api/candidates/resumes/{row.id}/file",
+        },
+        message="Document enregistré.",
+    )
+
+
+@router.get("/site-content/{key}")
+def get_site_content(key: str, db: Session = Depends(get_db), _: User = Depends(_staff)):
+    if key not in CMS_KEYS:
+        raise AppError(404, "Contenu introuvable.", "NOT_FOUND")
+    return ok(get_json_setting(db, f"cms.{key}", default=[]))
+
+
+@router.put("/site-content/{key}")
+def put_site_content(
+    key: str,
+    payload: SiteContentIn,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_roles(UserRole.EDITOR, UserRole.ADMIN, UserRole.RECRUITER)),
+):
+    if key not in CMS_KEYS:
+        raise AppError(404, "Contenu introuvable.", "NOT_FOUND")
+    items = _normalize_cms_items(key, payload.items)
+    stored = put_json_setting(db, user, f"cms.{key}", items, label=f"CMS {key}")
+    return ok(stored, message="Contenu enregistré.")
+
+
+def _normalize_cms_items(key: str, items: list[dict]) -> list[dict]:
+    from app.models.identity import uid
+    from app.models.enums import utcnow
+
+    cleaned = []
+    today = utcnow().strftime("%Y-%m-%d")
+    for raw in items or []:
+        if not isinstance(raw, dict):
+            continue
+        item_id = str(raw.get("id") or uid())
+        status = str(raw.get("status") or "publie")
+        if key == "faq":
+            question = str(raw.get("q") or raw.get("title") or "").strip()
+            answer = str(raw.get("a") or raw.get("body") or "").strip()
+            if not question:
+                continue
+            cleaned.append({"id": item_id, "q": question, "a": answer, "status": status, "updatedAt": today})
+        else:
+            author = str(raw.get("author") or raw.get("title") or "").strip()
+            quote = str(raw.get("quote") or raw.get("body") or "").strip()
+            role = str(raw.get("role") or "").strip()
+            if not author and not quote:
+                continue
+            cleaned.append(
+                {"id": item_id, "author": author, "role": role, "quote": quote, "status": status, "updatedAt": today}
+            )
+    return cleaned
 
 
 @router.get("/stats")
@@ -163,8 +253,9 @@ def permissions(db: Session = Depends(get_db), _: User = Depends(_admin_user)):
 
 
 @router.get("/settings")
-def get_settings(db: Session = Depends(get_db), _: User = Depends(_admin_user)):
-    return ok([serialize_setting(row) for row in list_settings(db)])
+def get_settings(db: Session = Depends(get_db), user: User = Depends(_admin_user)):
+    rows = ensure_platform_defaults(db, user)
+    return ok([serialize_setting(row) for row in rows if not row.key.startswith("cms.")])
 
 
 @router.patch("/settings")

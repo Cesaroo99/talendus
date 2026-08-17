@@ -6,7 +6,7 @@ from app.deps import client_ip, get_current_user, require_roles
 from app.errors import ok
 from app.models import User
 from app.models.enums import UserRole
-from app.schemas import ContractSignIn
+from app.schemas import ContractIn, ContractSignIn
 from app.services import contracts as contracts_service
 
 router = APIRouter(prefix="/contracts", tags=["contracts"])
@@ -15,6 +15,16 @@ router = APIRouter(prefix="/contracts", tags=["contracts"])
 @router.get("")
 def list_contracts(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     return ok([contracts_service.serialize_contract(row) for row in contracts_service.list_contracts(db, user)])
+
+
+@router.post("")
+def create_contract(
+    payload: ContractIn,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_roles(UserRole.RECRUITER, UserRole.ADMIN, UserRole.FINANCE)),
+):
+    row = contracts_service.create_contract(db, user, payload)
+    return ok(contracts_service.serialize_contract(row), message="Mandat créé.")
 
 
 @router.get("/{contract_id}")

@@ -5,9 +5,9 @@ from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.errors import AppError
 from app.models import Company, Contract, ContractSignature, User
-from app.models.enums import UserRole, utcnow
+from app.models.enums import ContractStatus, UserRole, utcnow
 from app.rbac import ADMINS
-from app.schemas import ContractSignIn
+from app.schemas import ContractIn, ContractSignIn
 from app.services.access import company_ids_for_employer
 from app.services.audit import audit
 
@@ -73,6 +73,36 @@ def get_contract(db: Session, user: User, contract_id: str) -> Contract:
     if not _can_access(db, user, row):
         raise AppError(403, "Vous n'avez pas accès à ce contrat.", "FORBIDDEN")
     return row
+
+
+def create_contract(db: Session, user: User, data: ContractIn) -> Contract:
+    if user.role not in {UserRole.RECRUITER, UserRole.FINANCE} | ADMINS:
+        raise AppError(403, "Seule l’équipe Talendus peut créer un mandat.", "FORBIDDEN")
+    company = db.get(Company, data.company_id)
+    if not company:
+        raise AppError(404, "Entreprise introuvable.", "COMPANY_NOT_FOUND")
+    status = ContractStatus.ACTIVE
+    if data.status:
+        try:
+            status = ContractStatus(data.status.upper())
+        except ValueError:
+            raise AppError(400, "Statut de contrat invalide.", "VALIDATION_ERROR")
+    row = Contract(
+        company_id=company.id,
+        type=data.type.strip(),
+        start_date=data.start_date,
+        end_date=data.end_date,
+        commission_percent=data.commission_percent,
+        terms=data.terms,
+        document_name=data.document_name,
+        status=status,
+        recruiter_id=user.id,
+    )
+    db.add(row)
+    db.flush()
+    audit(db, "contract.create", user, "contract", row.id)
+    db.commit()
+    return get_contract(db, user, row.id)
 
 
 def sign_contract(db: Session, user: User, contract_id: str, data: ContractSignIn, ip: str | None) -> Contract:

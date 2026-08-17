@@ -47,6 +47,39 @@
     return !!(window.TalendusAPI && TLStore.isLive && TLStore.isLive());
   }
 
+  function api() {
+    return window.TalendusAPI;
+  }
+
+  function invoiceApiId(i) {
+    return (i && (i.apiId || i.id)) || "";
+  }
+
+  function firstId(list) {
+    return list && list.length ? list[0].id : "";
+  }
+
+  function candLangs(c) {
+    return Array.isArray(c && c.languages) ? c.languages : [];
+  }
+
+  async function setCandidateStatus(cand, next) {
+    if (!cand) return;
+    if (live()) {
+      if (cand.applicationId && CAND_STATUS_TO_APP[next]) {
+        await api().request("/applications/" + cand.applicationId + "/status", { method: "POST", body: { status: CAND_STATUS_TO_APP[next] } });
+      } else {
+        await api().request("/admin/candidates/" + cand.id, { method: "PATCH", body: { pipeline_status: next } });
+      }
+      await refreshLive();
+      return;
+    }
+    TLStore.update(function (st) {
+      var row = st.candidates.find(function (c) { return c.id === cand.id; });
+      if (row) row.status = next;
+    });
+  }
+
   async function refreshLive() {
     if (TLStore.hydrateFromApi) await TLStore.hydrateFromApi();
   }
@@ -415,7 +448,7 @@
       if (f.level && c.level !== f.level) return false;
       if (f.availability && c.availability !== f.availability) return false;
       if (f.status && c.status !== f.status) return false;
-      if (f.lang && c.languages.join(" ").indexOf(f.lang) === -1) return false;
+      if (f.lang && candLangs(c).join(" ").indexOf(f.lang) === -1) return false;
       if (f.from && c.createdAt < f.from) return false;
       if (f.recruiter && c.recruiterId !== f.recruiter) return false;
       return true;
@@ -499,7 +532,7 @@
         <div class="card card-pad"><h3>Informations personnelles</h3>
           <div class="row"><span>Nom</span><b>${U.esc(c.firstName + " " + c.lastName)}</b></div>
           <div class="row"><span>Ville</span><b>${U.esc(c.city)}</b></div>
-          <div class="row"><span>Langues</span><b>${U.esc(c.languages.join(", "))}</b></div>
+          <div class="row"><span>Langues</span><b>${U.esc(candLangs(c).join(", "))}</b></div>
         </div>
         <div class="card card-pad"><h3>Coordonnées</h3>
           <div class="row"><span>Courriel</span><b>${U.esc(c.email)}</b></div>
@@ -514,7 +547,16 @@
         <div class="card card-pad"><h3>Formations</h3>${c.education.map(function (e) { return "<p><b>" + U.esc(e.diploma) + "</b> — " + U.esc(e.school) + " (" + e.year + ")</p>"; }).join("") || "<p>—</p>"}</div>
       </div>`;
     } else if (detailTab === "cv") {
-      body = '<div class="card card-pad"><h3>Documents</h3>' + (docs.map(function (d) { return "<p><i class='fa-regular fa-file'></i> " + U.esc(d.name) + " · " + d.size + "</p>"; }).join("") || "<p>Aucun document. Téléversement simulé.</p>") + '<button class="btn btn-ghost" data-fake-upload>Ajouter un document</button></div>';
+      var docRows = docs.map(function (d) {
+        var href = d.url || "";
+        return "<p><i class='fa-regular fa-file'></i> " + U.esc(d.name) + " · " + U.esc(d.size || "") +
+          (href ? " <button class='btn btn-ghost btn-sm' data-dl-doc='" + U.esc(href) + "' data-dl-name='" + U.esc(d.name) + "'>Télécharger</button>" : "") +
+          "</p>";
+      }).join("");
+      body = '<div class="card card-pad"><h3>Documents</h3>' +
+        (docRows || "<p>Aucun document dans le dossier.</p>") +
+        '<form id="cand-upload" style="margin-top:12px"><input type="file" name="file" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" required> ' +
+        '<button class="btn btn-orange" type="submit">Ajouter un document</button></form></div>';
     } else if (detailTab === "histo") {
       var apps = c.applications || [];
       body = `<div class="card card-pad"><h3>Historique des candidatures</h3>
@@ -582,7 +624,7 @@
       </div>
       <div class="card"><div class="table-wrap"><table class="data">
         <thead><tr><th>Entreprise</th><th>Secteur</th><th>Localisation</th><th>Contact principal</th><th>Missions</th><th>Recrutements</th><th>Statut</th><th>Recruteur</th></tr></thead>
-        <tbody>${rows}</tbody></table></div></div>`;
+        <tbody>${rows || '<tr><td colspan="8">' + U.empty("Aucun client", "Créez une entreprise ou attendez qu’un employeur ouvre un espace.") + "</td></tr>"}</tbody></table></div></div>`;
   }
 
   function viewClient(id) {
@@ -597,7 +639,10 @@
     return `
       <div class="crumbs"><a href="#/clients">Clients</a> / ${U.esc(c.name)}</div>
       <div class="page-head"><div><h1>${U.esc(c.name)}</h1><p>${U.esc(c.sector)} · ${U.esc(c.city)} · ${U.badge(c.status)}</p></div>
-        <div class="actions"><button class="btn btn-ghost" data-add-contract="${id}">Nouveau contrat</button></div></div>
+        <div class="actions">
+          <button class="btn btn-ghost" data-edit-client="${id}">Modifier</button>
+          <button class="btn btn-orange" data-add-contract="${id}">Nouveau contrat</button>
+        </div></div>
       <div class="grid grid-2">
         <div class="card card-pad"><h3>Informations générales</h3>
           <div class="row"><span>Employés</span><b>${c.employees}</b></div>
@@ -619,9 +664,11 @@
       </div>
       <div class="grid grid-2" style="margin-top:16px">
         <div class="card card-pad"><h3>Candidats présentés / placements</h3>${cands.map(function (x) { return '<p><a href="#/candidates/' + x.id + '">' + U.esc(x.firstName + " " + x.lastName) + "</a> " + U.badge(x.status) + "</p>"; }).join("") || "<p>—</p>"}</div>
-        <div class="card card-pad"><h3>Factures & paiements</h3>${inv.map(function (i) { return "<p>" + i.id + " · " + U.money(i.amount) + " " + U.badge(i.status) + "</p>"; }).join("") || "<p>—</p>"}</div>
+        <div class="card card-pad"><h3>Factures & paiements</h3>${inv.map(function (i) { return "<p>" + U.esc(i.id) + " · " + U.money(i.amount) + " " + U.badge(i.status) + "</p>"; }).join("") || "<p>—</p>"}</div>
       </div>
-      <div class="card card-pad" style="margin-top:16px"><h3>Notes internes</h3>${notes.map(function (n) { return '<div class="note">' + U.esc(n.text) + " <span class='meta'>· " + U.esc(n.at) + "</span></div>"; }).join("") || "<p>Aucune note.</p>"}</div>`;
+      <div class="card card-pad" style="margin-top:16px"><h3>Notes internes</h3>${notes.map(function (n) { return '<div class="note">' + U.esc(n.text) + " <span class='meta'>· " + U.esc(n.at) + "</span></div>"; }).join("") || "<p>Aucune note.</p>"}
+        <form id="client-note-form" style="margin-top:12px">${U.field("Nouvelle note", "text", "", "textarea", "full")}<button class="btn btn-orange" type="submit">Enregistrer la note</button></form>
+      </div>`;
   }
 
   /* ---------- Jobs ---------- */
@@ -645,7 +692,7 @@
         <input data-f="q" placeholder="Titre" value="${U.esc(filters.q || "")}">
         <select data-f="status"><option value="">Statut</option>${["brouillon","publiee","suspendue","expiree","archivee"].map(function (s) { return "<option value=\"" + s + "\"" + (filters.status === s ? " selected" : "") + ">" + U.STATUS[s][0] + "</option>"; }).join("")}</select>
       </div>
-      <div class="card"><div class="table-wrap"><table class="data"><thead><tr><th>Titre</th><th>Entreprise</th><th>Localisation</th><th>Secteur</th><th>Type</th><th>Salaire</th><th>Statut</th><th>Candidatures</th><th></th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+      <div class="card"><div class="table-wrap"><table class="data"><thead><tr><th>Titre</th><th>Entreprise</th><th>Localisation</th><th>Secteur</th><th>Type</th><th>Salaire</th><th>Statut</th><th>Candidatures</th><th></th></tr></thead><tbody>${rows || '<tr><td colspan="9">' + U.empty("Aucune offre", "Créez une offre, puis publiez-la pour qu’elle apparaisse sur le site.") + "</td></tr>"}</tbody></table></div></div>`;
   }
 
   function viewJob(id) {
@@ -702,7 +749,7 @@
     return `
       <div class="page-head"><div><h1>Missions</h1><p>Mandats et pipeline — les statuts kanban s’enregistrent dans l’API et se voient dans les espaces.</p></div>
         <div class="actions"><button class="btn btn-orange" data-create="mission">Nouvelle mission</button></div></div>
-      <div class="card"><div class="table-wrap"><table class="data"><thead><tr><th>Mission</th><th>Client</th><th>Poste</th><th>Postes</th><th>Recruteur</th><th>Début</th><th>Échéance</th><th>Statut</th><th>Candidats</th><th>Progression</th><th>Valeur</th><th>Commission</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+      <div class="card"><div class="table-wrap"><table class="data"><thead><tr><th>Mission</th><th>Client</th><th>Poste</th><th>Postes</th><th>Recruteur</th><th>Début</th><th>Échéance</th><th>Statut</th><th>Candidats</th><th>Progression</th><th>Valeur</th><th>Commission</th></tr></thead><tbody>${rows || '<tr><td colspan="12">' + U.empty("Aucune mission", "Créez un mandat ou convertissez un besoin d’entreprise.") + "</td></tr>"}</tbody></table></div></div>`;
   }
 
   function viewMission(id) {
@@ -855,22 +902,31 @@
 
   /* ---------- Content ---------- */
   function viewContent() {
-    var map = { pages: S().pages, blog: [], temoignages: S().testimonials, faq: S().faqs, seo: S().posts };
     var labels = { pages: "Pages du site", blog: "Blog", temoignages: "Témoignages", faq: "FAQ", seo: "Contenu SEO" };
-    var items = map[contentTab] || [];
-    var rows = items.map(function (it) {
-      return `<tr><td><b>${U.esc(it.title || it.q || it.author)}</b></td><td>${U.esc(it.slug || it.seo || it.role || "")}</td><td>${U.badge(it.status)}</td><td>${U.esc(it.updatedAt || "—")}</td>
+    var items = contentTab === "pages" ? (S().pages || []) : contentTab === "temoignages" ? (S().testimonials || []) : contentTab === "faq" ? (S().faqs || []) : [];
+    var rows = "";
+    if (contentTab === "pages") {
+      rows = items.map(function (it) {
+        return "<tr><td><b>" + U.esc(it.title) + "</b></td><td>" + U.esc(it.slug) + "</td><td>" + U.badge(it.status || "publie") + "</td><td>Site public</td>" +
+          '<td><a class="btn btn-ghost btn-sm" href="' + U.esc(it.slug) + '" target="_blank" rel="noopener">Ouvrir</a></td></tr>';
+      }).join("");
+    } else if (contentTab === "seo") {
+      rows = '<tr><td colspan="5">Le SEO des articles se gère dans l’onglet Blog. Les pages ci-contre sont le site déployé — pas un éditeur de HTML.</td></tr>';
+    } else if (contentTab !== "blog") {
+      rows = items.map(function (it) {
+        return `<tr><td><b>${U.esc(it.title || it.q || it.author)}</b></td><td>${U.esc(it.slug || it.seo || it.role || "")}</td><td>${U.badge(it.status)}</td><td>${U.esc(it.updatedAt || "—")}</td>
         <td><button class="btn btn-ghost btn-sm" data-cms="edit:${contentTab}:${it.id}">Modifier</button>
-            <button class="btn btn-ghost btn-sm" data-cms="prev:${contentTab}:${it.id}">Prévisualiser</button>
             <button class="btn btn-ghost btn-sm" data-cms="toggle:${contentTab}:${it.id}">${it.status === "publie" || it.status === "publiee" ? "Dépublier" : "Publier"}</button>
             <button class="btn btn-ghost btn-sm" data-cms="arch:${contentTab}:${it.id}">Archiver</button></td></tr>`;
-    }).join("");
+      }).join("") || '<tr><td colspan="5">Aucun élément. Utilisez « Créer » pour en ajouter un.</td></tr>';
+    }
     if (contentTab === "blog") {
       rows = '<tr><td colspan="5">Chargement des articles…</td></tr>';
     }
+    var canCreate = contentTab === "blog" || contentTab === "temoignages" || contentTab === "faq";
     return `
-      <div class="page-head"><div><h1>Contenu</h1><p>CMS du site public talendus.ca — le blog est enregistré dans l’API (brouillon, publication, programmation).</p></div>
-        <div class="actions"><button class="btn btn-orange" data-cms="new:${contentTab}">Créer</button></div></div>
+      <div class="page-head"><div><h1>Contenu</h1><p>${contentTab === "pages" ? "Pages du site public — le HTML est déployé avec le site. Témoignages, FAQ et blog s’enregistrent ici." : "CMS du site public — blog, témoignages et FAQ sont enregistrés dans l’API."}</p></div>
+        <div class="actions">${canCreate ? '<button class="btn btn-orange" data-cms="new:' + contentTab + '">Créer</button>' : ""}</div></div>
       <div class="tabs">${Object.keys(labels).map(function (k) { return '<button class="tab' + (contentTab === k ? " is-on" : "") + '" data-ctab="' + k + '">' + labels[k] + "</button>"; }).join("")}</div>
       <div class="card"><div class="table-wrap"><table class="data"><thead><tr><th>Titre</th><th>Slug / SEO</th><th>Statut</th><th>MAJ</th><th>Actions</th></tr></thead><tbody id="cms-rows">${rows}</tbody></table></div></div>`;
   }
@@ -906,10 +962,13 @@
     var tabs = { factures: "Factures", paiements: "Paiements", commissions: "Commissions" };
     var body = "";
     if (financeTab === "factures") {
-      body = `<div class="card"><div class="table-wrap"><table class="data"><thead><tr><th>N°</th><th>Client</th><th>Mission</th><th>Montant</th><th>Date</th><th>Échéance</th><th>Statut</th></tr></thead><tbody>${inv.map(function (i) {
+      body = `<div class="card"><div class="table-wrap"><table class="data"><thead><tr><th>N°</th><th>Client</th><th>Mission</th><th>Montant</th><th>Date</th><th>Échéance</th><th>Statut</th><th></th></tr></thead><tbody>${inv.map(function (i) {
         var cl = TLStore.client(i.clientId); var m = TLStore.mission(i.missionId);
-        return "<tr><td>" + i.id + "</td><td>" + U.esc(cl ? cl.name : "—") + "</td><td>" + U.esc(m ? m.title : "—") + "</td><td>" + U.money(i.amount) + "</td><td>" + U.dateFr(i.date) + "</td><td>" + U.dateFr(i.due) + "</td><td>" + U.badge(i.status) + "</td></tr>";
-      }).join("")}</tbody></table></div></div>`;
+        var iid = invoiceApiId(i);
+        var send = (i.status === "brouillon") ? '<button class="btn btn-ghost btn-sm" data-inv-send="' + iid + '">Envoyer</button>' : "";
+        var payBtn = (i.status === "envoyee" || i.status === "en-attente" || i.status === "en-retard") ? '<button class="btn btn-orange btn-sm" data-inv-pay="' + iid + '" data-inv-amount="' + i.amount + '">Encaisser</button>' : "";
+        return "<tr><td>" + U.esc(i.id) + "</td><td>" + U.esc(cl ? cl.name : "—") + "</td><td>" + U.esc(m ? m.title : "—") + "</td><td>" + U.money(i.amount) + "</td><td>" + U.dateFr(i.date) + "</td><td>" + U.dateFr(i.due) + "</td><td>" + U.badge(i.status) + "</td><td>" + send + payBtn + "</td></tr>";
+      }).join("") || '<tr><td colspan="8">' + U.empty("Aucune facture", "Créez une facture depuis le bouton ci-dessus.") + "</td></tr>"}</tbody></table></div></div>`;
     } else if (financeTab === "paiements") {
       var pending = byStatus("en-attente").concat(byStatus("envoyee"));
       var late = byStatus("en-retard");
@@ -988,9 +1047,9 @@
   function viewNotifications() {
     return `<div class="page-head"><div><h1>Notifications</h1><p>Centre d’alertes opérationnelles</p></div>
       <div class="actions"><button class="btn btn-ghost" id="mark-all">Tout marquer lu</button></div></div>
-      <div class="card">${S().notifications.map(function (n) {
+      <div class="card">${S().notifications.length ? S().notifications.map(function (n) {
         return '<div class="n-item ' + (n.read ? "" : "unread") + '"><a href="' + n.href + '"><b>' + U.esc(n.text) + "</b></a><div style='color:var(--steel);font-size:12px'>" + U.esc(n.at) + " · " + n.type + "</div></div>";
-      }).join("")}</div>`;
+      }).join("") : U.empty("Aucune notification", "Les alertes opérationnelles apparaissent ici.")}</div>`;
   }
 
   function viewSettings() {
@@ -1077,7 +1136,13 @@
       <div class="grid grid-2">
         <div class="card card-pad">${U.avatar(me, "lg")}<h3>${U.esc(me.firstName + " " + me.lastName)}</h3>
           <p>${U.esc(me.email)}<br>${roleLabel(me.role)}</p>
-          <p>Modules : ${(TLStore.PERMS[me.role] || []).join(" · ")}</p>
+          <form id="adm-profile" class="form-grid" style="grid-template-columns:1fr">
+            ${U.field("Prénom", "first_name", me.firstName)}
+            ${U.field("Nom", "last_name", me.lastName)}
+            ${U.field("Titre", "title", me.title || "")}
+            ${U.field("Téléphone", "phone", me.phone || "")}
+            <button class="btn btn-orange" type="submit">Enregistrer</button>
+          </form>
         </div>
         <div class="card card-pad"><h3>Statistiques personnelles</h3>
           ${kpi("Candidats suivis", mine.length)}
@@ -1097,15 +1162,18 @@
 
     var body = "";
     if (type === "candidate") {
-      body = '<form id="cf" class="form-grid">' + U.field("Prénom", "firstName") + U.field("Nom", "lastName") + U.field("Courriel", "email", "", "email") + U.field("Téléphone", "phone") + U.field("Ville", "city") + U.field("Poste recherché", "title") + U.field("Secteur", "sector", { options: unique(S().candidates, "sector"), selected: "" }, "select") + U.field("Statut", "status", { options: ["nouveau","a-contacter","qualifie"].map(function (s) { return { v: s, l: U.STATUS[s][0] }; }), selected: "nouveau" }, "select") + "</form>";
+      body = '<form id="cf" class="form-grid">' + U.field("Prénom", "firstName") + U.field("Nom", "lastName") + U.field("Courriel", "email", "", "email") + U.field("Téléphone", "phone") + U.field("Ville", "city") + U.field("Poste recherché", "title") + U.field("Secteur", "sector", { options: unique(S().candidates, "sector").concat(["Production", "Entrepôt", "Maintenance"]), selected: "" }, "select") + U.field("Statut", "status", { options: ["nouveau","a-contacter","qualifie"].map(function (s) { return { v: s, l: U.STATUS[s][0] }; }), selected: "nouveau" }, "select") + "</form>";
     } else if (type === "client") {
       body = '<form id="cf" class="form-grid">' + U.field("Entreprise", "name") + U.field("Secteur", "sector") + U.field("Ville", "city") + U.field("Contact", "contact") + U.field("Courriel", "email") + U.field("Téléphone", "phone") + "</form>";
     } else if (type === "job") {
-      body = '<form id="cf" class="form-grid">' + U.field("Titre", "title") + U.field("Entreprise", "clientId", { options: S().clients.map(function (c) { return { v: c.id, l: c.name }; }), selected: S().clients[0] && S().clients[0].id }, "select") + U.field("Ville", "city") + U.field("Salaire", "salary") + U.field("Description", "description", "", "textarea", "full") + "</form>";
+      if (!S().clients.length) { U.toast("Créez d’abord une entreprise cliente.", "err"); return; }
+      body = '<form id="cf" class="form-grid">' + U.field("Titre", "title") + U.field("Entreprise", "clientId", { options: S().clients.map(function (c) { return { v: c.id, l: c.name }; }), selected: firstId(S().clients) }, "select") + U.field("Ville", "city") + U.field("Salaire", "salary") + U.field("Description", "description", "", "textarea", "full") + "</form>";
     } else if (type === "mission") {
-      body = '<form id="cf" class="form-grid">' + U.field("Titre", "title") + U.field("Client", "clientId", { options: S().clients.map(function (c) { return { v: c.id, l: c.name }; }), selected: S().clients[0].id }, "select") + U.field("Offre", "jobId", { options: S().jobs.map(function (j) { return { v: j.id, l: j.title }; }), selected: S().jobs[0].id }, "select") + U.field("Nombre de postes", "seats", "1", "number") + "</form>";
+      if (!S().clients.length) { U.toast("Créez d’abord une entreprise cliente.", "err"); return; }
+      body = '<form id="cf" class="form-grid">' + U.field("Titre", "title") + U.field("Client", "clientId", { options: S().clients.map(function (c) { return { v: c.id, l: c.name }; }), selected: firstId(S().clients) }, "select") + U.field("Offre", "jobId", { options: [{ v: "", l: "Sans offre liée" }].concat(S().jobs.map(function (j) { return { v: j.id, l: j.title }; })), selected: firstId(S().jobs) }, "select") + U.field("Nombre de postes", "seats", "1", "number") + "</form>";
     } else {
-      body = '<form id="cf" class="form-grid">' + U.field("Client", "clientId", { options: S().clients.map(function (c) { return { v: c.id, l: c.name }; }), selected: S().clients[0].id }, "select") + U.field("Mission", "missionId", { options: S().missions.map(function (m) { return { v: m.id, l: m.title }; }), selected: S().missions[0].id }, "select") + U.field("Montant", "amount", "5000", "number") + "</form>";
+      if (!S().clients.length) { U.toast("Créez d’abord une entreprise cliente.", "err"); return; }
+      body = '<form id="cf" class="form-grid">' + U.field("Client", "clientId", { options: S().clients.map(function (c) { return { v: c.id, l: c.name }; }), selected: firstId(S().clients) }, "select") + U.field("Mission", "missionId", { options: [{ v: "", l: "Sans mission" }].concat(S().missions.map(function (m) { return { v: m.id, l: m.title }; })), selected: "" }, "select") + U.field("Montant", "amount", "5000", "number") + "</form>";
     }
 
     U.modal({
@@ -1126,7 +1194,13 @@
                 title: d.title,
                 sector: d.sector
               });
-              await refreshLive();
+              if (d.status && d.status !== "nouveau") {
+                await refreshLive();
+                var fresh = S().candidates.find(function (c) { return c.email === d.email; });
+                if (fresh) await setCandidateStatus(fresh, d.status);
+              } else {
+                await refreshLive();
+              }
               close();
               U.toast("Candidat créé — visible dans l’espace talent une fois connecté.", "ok");
               render();
@@ -1161,7 +1235,7 @@
             if (type === "mission" && window.TalendusAPI) {
               await window.TalendusAPI.request("/recruiters/missions", {
                 method: "POST",
-                body: { title: d.title, company_id: d.clientId, job_id: d.jobId, seats: Number(d.seats) || 1 }
+                body: { title: d.title, company_id: d.clientId, job_id: d.jobId || null, seats: Number(d.seats) || 1 }
               });
               await TLStore.hydrateFromApi();
               close();
@@ -1272,6 +1346,16 @@
             render();
             return;
           }
+        } else if (live() && dragId) {
+          try {
+            var map = { nouveaux: "nouveau", preselection: "a-contacter", "entretien-talendus": "entretien", presentation: "presente", "entretien-client": "entretien-client", offre: "offre", placement: "place" };
+            await api().request("/admin/candidates/" + dragId, { method: "PATCH", body: { pipeline_status: map[stage] || "nouveau" } });
+            await refreshLive();
+          } catch (err) {
+            U.toast((err && err.message) || "Déplacement non enregistré.", "err");
+            render();
+            return;
+          }
         }
         U.toast("Candidat déplacé.", "ok");
         render();
@@ -1327,12 +1411,8 @@
             try {
               for (var i = 0; i < ids.length; i++) {
                 var cand = TLStore.candidate(ids[i]);
-                var appId = cand && cand.applicationId;
-                if (appId && CAND_STATUS_TO_APP[stt]) {
-                  await window.TalendusAPI.request("/applications/" + appId + "/status", { method: "POST", body: { status: CAND_STATUS_TO_APP[stt] } });
-                }
+                await setCandidateStatus(cand, stt);
               }
-              await refreshLive();
             } catch (err) {
               U.toast((err && err.message) || "Statuts API impossibles.", "err");
               return;
@@ -1517,40 +1597,128 @@
           return;
         }
         var col = { pages: "pages", blog: "posts", temoignages: "testimonials", faq: "faqs", seo: "posts" }[tab];
+        var cmsKey = tab === "temoignages" ? "testimonials" : tab === "faq" ? "faq" : "";
+        if (tab === "pages" || tab === "seo") {
+          U.toast("Ces pages sont le site déployé. Éditez le blog, les témoignages ou la FAQ.", "ok");
+          return;
+        }
         if (action === "new" || action === "edit") {
-          var item = cid ? S()[col].find(function (x) { return x.id === cid; }) : { title: "", q: "", seo: "" };
+          var item = cid ? (S()[col] || []).find(function (x) { return x.id === cid; }) : { title: "", q: "", seo: "" };
           U.modal({
             title: action === "new" ? "Nouveau contenu" : "Éditeur",
-            body: '<form id="ef">' + U.field("Titre / question", "title", item.title || item.q || item.author || "") + U.field("Contenu", "body", item.a || item.quote || item.seo || "", "textarea", "full") + "</form>",
-            footer: '<button class="btn btn-ghost" data-close>Annuler</button><button class="btn btn-orange" id="save">Publier</button>',
+            body: '<form id="ef">' + U.field("Titre / question / auteur", "title", item.title || item.q || item.author || "") + U.field("Contenu", "body", item.a || item.quote || item.seo || "", "textarea", "full") + "</form>",
+            footer: '<button class="btn btn-ghost" data-close>Annuler</button><button class="btn btn-orange" id="save">Enregistrer</button>',
             onMount: function (box, close) {
-              box.querySelector("#save").onclick = function () {
+              box.querySelector("#save").onclick = async function () {
                 var d = U.formData(box.querySelector("#ef"));
-                TLStore.update(function (st) {
-                  if (action === "new") {
-                    st[col].unshift({ id: TLStore.nid("x"), title: d.title, q: d.title, author: d.title, quote: d.body, a: d.body, seo: d.body, slug: "/nouveau", status: "brouillon", updatedAt: "2026-08-16", authorId: TLStore.me().id });
+                var list = (S()[col] || []).slice();
+                if (action === "new") {
+                  list.unshift({ id: TLStore.nid("x"), title: d.title, q: d.title, author: d.title, quote: d.body, a: d.body, seo: d.body, slug: "", status: "publie", updatedAt: new Date().toISOString().slice(0, 10), role: "", authorId: TLStore.me().id });
+                } else {
+                  list = list.map(function (it) {
+                    if (it.id !== cid) return it;
+                    return Object.assign({}, it, { title: d.title, q: d.title, author: d.title, a: d.body, quote: d.body, updatedAt: new Date().toISOString().slice(0, 10) });
+                  });
+                }
+                try {
+                  if (live() && cmsKey) {
+                    await api().request("/admin/site-content/" + cmsKey, { method: "PUT", body: { items: list } });
+                    await refreshLive();
                   } else {
-                    var it = st[col].find(function (x) { return x.id === cid; });
-                    if (it) { it.title = d.title; it.q = d.title; it.a = d.body; it.quote = d.body; it.updatedAt = "2026-08-16"; }
+                    TLStore.update(function (st) { st[col] = list; });
                   }
-                });
-                close(); U.toast("Contenu enregistré.", "ok"); render();
+                  close(); U.toast("Contenu enregistré.", "ok"); render();
+                } catch (err) { U.toast((err && err.message) || "Enregistrement impossible.", "err"); }
               };
             }
           });
-        } else if (action === "prev") {
-          U.modal({ title: "Prévisualisation", body: "<p>Aperçu du contenu destiné au site public.</p>", footer: '<button class="btn btn-ghost" data-close>Fermer</button>' });
         } else if (action === "toggle" || action === "arch") {
-          TLStore.update(function (st) {
-            var it = st[col].find(function (x) { return x.id === cid; });
-            if (!it) return;
-            if (action === "arch") it.status = "archive";
-            else it.status = (it.status === "publie" || it.status === "publiee") ? "brouillon" : "publie";
+          var nextList = (S()[col] || []).map(function (it) {
+            if (it.id !== cid) return it;
+            var copy = Object.assign({}, it);
+            if (action === "arch") copy.status = "archive";
+            else copy.status = (it.status === "publie" || it.status === "publiee") ? "brouillon" : "publie";
+            return copy;
           });
-          U.toast("Statut contenu mis à jour.", "ok"); render();
+          (async function () {
+            try {
+              if (live() && cmsKey) {
+                await api().request("/admin/site-content/" + cmsKey, { method: "PUT", body: { items: nextList } });
+                await refreshLive();
+              } else {
+                TLStore.update(function (st) { st[col] = nextList; });
+              }
+              U.toast("Statut contenu mis à jour.", "ok"); render();
+            } catch (err) { U.toast((err && err.message) || "Mise à jour impossible.", "err"); }
+          })();
         }
+        return;
       }
-      if (t.closest("[data-fake-upload]")) U.toast("Téléversement simulé — brancher le stockage fichiers ensuite.", "ok");
+      var dl = t.closest("[data-dl-doc]");
+      if (dl && api()) {
+        api().download(dl.getAttribute("data-dl-doc").replace(/^\/api/, ""), dl.getAttribute("data-dl-name") || "document").catch(function (err) {
+          U.toast((err && err.message) || "Téléchargement impossible.", "err");
+        });
+        return;
+      }
+      var invSend = t.closest("[data-inv-send]");
+      if (invSend) {
+        (async function () {
+          try {
+            await api().request("/invoices/" + invSend.getAttribute("data-inv-send") + "/send", { method: "POST" });
+            await refreshLive();
+            U.toast("Facture envoyée.", "ok");
+            render();
+          } catch (err) { U.toast((err && err.message) || "Envoi impossible.", "err"); }
+        })();
+        return;
+      }
+      var invPay = t.closest("[data-inv-pay]");
+      if (invPay) {
+        var payId = invPay.getAttribute("data-inv-pay");
+        var amt = invPay.getAttribute("data-inv-amount") || "";
+        U.modal({
+          title: "Encaisser un paiement",
+          body: '<form id="pay-form" class="form-grid">' + U.field("Montant", "amount", amt, "number") + U.field("Méthode", "method", { options: [{ v: "TRANSFER", l: "Virement" }, { v: "CHEQUE", l: "Chèque" }, { v: "CARD", l: "Carte" }, { v: "OTHER", l: "Autre" }], selected: "TRANSFER" }, "select") + "</form>",
+          footer: '<button class="btn btn-ghost" data-close>Annuler</button><button class="btn btn-orange" id="save">Enregistrer</button>',
+          onMount: function (box, close) {
+            box.querySelector("#save").onclick = async function () {
+              var d = U.formData(box.querySelector("#pay-form"));
+              try {
+                await api().request("/invoices/" + payId + "/payments", { method: "POST", body: { amount: Number(d.amount) || 0, method: d.method } });
+                await refreshLive();
+                close(); U.toast("Paiement enregistré.", "ok"); render();
+              } catch (err) { U.toast((err && err.message) || "Paiement impossible.", "err"); }
+            };
+          }
+        });
+        return;
+      }
+      var editCli = t.closest("[data-edit-client]");
+      if (editCli) {
+        var cl = TLStore.client(editCli.getAttribute("data-edit-client"));
+        if (!cl) return;
+        U.modal({
+          title: "Modifier l’entreprise",
+          body: '<form id="cl-form" class="form-grid">' + U.field("Entreprise", "name", cl.name) + U.field("Secteur", "sector", cl.sector) + U.field("Ville", "city", cl.city) + U.field("Contact", "contact", cl.contact) + U.field("Courriel", "email", cl.email) + U.field("Téléphone", "phone", cl.phone) + U.field("Site", "website", cl.website || "") + "</form>",
+          footer: '<button class="btn btn-ghost" data-close>Annuler</button><button class="btn btn-orange" id="save">Enregistrer</button>',
+          onMount: function (box, close) {
+            box.querySelector("#save").onclick = async function () {
+              var d = U.formData(box.querySelector("#cl-form"));
+              try {
+                if (live()) {
+                  await api().request("/companies/" + cl.id, { method: "PATCH", body: { name: d.name, sector: d.sector, city: d.city, contact_name: d.contact, email: d.email || null, phone: d.phone, website: d.website } });
+                  await refreshLive();
+                } else {
+                  TLStore.update(function (st) { Object.assign(st.clients.find(function (x) { return x.id === cl.id; }), d); });
+                }
+                close(); U.toast("Entreprise mise à jour.", "ok"); render();
+              } catch (err) { U.toast((err && err.message) || "Mise à jour impossible.", "err"); }
+            };
+          }
+        });
+        return;
+      }
       var hireConvert = t.closest("[data-hire-convert]");
       if (hireConvert) {
         var hid = hireConvert.getAttribute("data-hire-convert");
@@ -1581,7 +1749,7 @@
             box.querySelector("#save").onclick = async function () {
               var d = U.formData(box.querySelector("#int-form"));
               try {
-                if (window.TalendusAPI) {
+                if (live()) {
                   await window.TalendusAPI.createInterview({
                     candidate_id: cid,
                     scheduled_at: d.scheduled_at,
@@ -1595,7 +1763,8 @@
                   return;
                 }
               } catch (err) {
-                U.toast((err && err.message) || "API indisponible, repli local.", "err");
+                U.toast((err && err.message) || "Planification impossible.", "err");
+                if (live()) return;
               }
               TLStore.update(function (st) {
                 st.interviews.push({ id: TLStore.nid("i"), candidateId: cid, clientId: "", type: "Talendus", at: d.scheduled_at || "2026-08-20 10:00", location: d.location || "Visio", recruiterId: TLStore.me().id });
@@ -1634,23 +1803,62 @@
       }
       var addCt = t.closest("[data-add-contract]");
       if (addCt) {
-        TLStore.update(function (st) {
-          st.contracts.push({ id: TLStore.nid("ct"), clientId: addCt.getAttribute("data-add-contract"), type: "Succès", start: "2026-08-16", end: "2027-08-16", commission: 16, terms: "16 % au succès, garantie 90 jours.", status: "Actif", document: "nouveau-contrat.pdf" });
+        var companyId = addCt.getAttribute("data-add-contract");
+        U.modal({
+          title: "Nouveau mandat",
+          body: '<form id="ct-form" class="form-grid">' +
+            U.field("Type", "type", "Succès") +
+            U.field("Début", "start_date", new Date().toISOString().slice(0, 10), "date") +
+            U.field("Fin", "end_date", "", "date") +
+            U.field("Commission (%)", "commission_percent", "16", "number") +
+            U.field("Conditions", "terms", "16 % au succès, garantie 90 jours.", "textarea", "full") +
+            "</form>",
+          footer: '<button class="btn btn-ghost" data-close>Annuler</button><button class="btn btn-orange" id="save">Créer</button>',
+          onMount: function (box, close) {
+            box.querySelector("#save").onclick = async function () {
+              var d = U.formData(box.querySelector("#ct-form"));
+              try {
+                if (live()) {
+                  await api().createContract({
+                    company_id: companyId,
+                    type: d.type,
+                    start_date: d.start_date,
+                    end_date: d.end_date || null,
+                    commission_percent: Number(d.commission_percent) || 0,
+                    terms: d.terms
+                  });
+                  await refreshLive();
+                } else {
+                  TLStore.update(function (st) {
+                    st.contracts.push({ id: TLStore.nid("ct"), clientId: companyId, type: d.type || "Succès", start: d.start_date, end: d.end_date, commission: Number(d.commission_percent) || 16, terms: d.terms, status: "Actif", document: "" });
+                  });
+                }
+                close(); U.toast("Mandat créé.", "ok"); render();
+              } catch (err) { U.toast((err && err.message) || "Création impossible.", "err"); }
+            };
+          }
         });
-        U.toast("Contrat ajouté.", "ok"); render();
+        return;
       }
       var editC = t.closest("[data-edit-cand]");
       if (editC) {
         var c = TLStore.candidate(editC.getAttribute("data-edit-cand"));
         U.modal({
           title: "Modifier le candidat",
-          body: '<form id="ec" class="form-grid">' + U.field("Ville", "city", c.city) + U.field("Poste", "title", c.title) + U.field("Disponibilité", "availability", c.availability) + "</form>",
+          body: '<form id="ec" class="form-grid">' + U.field("Ville", "city", c.city) + U.field("Poste", "title", c.title) + U.field("Disponibilité", "availability", c.availability) + U.field("Secteur", "sector", c.sector || "") + U.field("Téléphone", "phone", c.phone || "") + "</form>",
           footer: '<button class="btn btn-ghost" data-close>Annuler</button><button class="btn btn-orange" id="save">Enregistrer</button>',
           onMount: function (box, close) {
-            box.querySelector("#save").onclick = function () {
+            box.querySelector("#save").onclick = async function () {
               var d = U.formData(box.querySelector("#ec"));
-              TLStore.update(function (st) { Object.assign(st.candidates.find(function (x) { return x.id === c.id; }), d); });
-              close(); U.toast("Fiche mise à jour.", "ok"); render();
+              try {
+                if (live()) {
+                  await api().request("/admin/candidates/" + c.id, { method: "PATCH", body: { city: d.city, title: d.title, availability: d.availability, sector: d.sector, phone: d.phone } });
+                  await refreshLive();
+                } else {
+                  TLStore.update(function (st) { Object.assign(st.candidates.find(function (x) { return x.id === c.id; }), d); });
+                }
+                close(); U.toast("Fiche mise à jour.", "ok"); render();
+              } catch (err) { U.toast((err && err.message) || "Mise à jour impossible.", "err"); }
             };
           }
         });
@@ -1673,21 +1881,13 @@
         var next = t.value;
         (async function () {
           var cand = TLStore.candidate(id);
-          if (live() && cand && cand.applicationId && CAND_STATUS_TO_APP[next]) {
-            try {
-              await window.TalendusAPI.request("/applications/" + cand.applicationId + "/status", { method: "POST", body: { status: CAND_STATUS_TO_APP[next] } });
-              await refreshLive();
-              U.toast("Statut enregistré — le candidat le voit dans son espace.", "ok");
-              render();
-              return;
-            } catch (err) {
-              U.toast((err && err.message) || "Statut non enregistré.", "err");
-              return;
-            }
+          try {
+            await setCandidateStatus(cand, next);
+            U.toast(live() ? "Statut enregistré — le candidat le voit dans son espace." : "Statut candidat mis à jour.", "ok");
+            render();
+          } catch (err) {
+            U.toast((err && err.message) || "Statut non enregistré.", "err");
           }
-          TLStore.update(function (st) { st.candidates.find(function (c) { return c.id === id; }).status = next; });
-          U.toast("Statut candidat mis à jour.", "ok");
-          render();
         })();
       }
       if (t.hasAttribute("data-hire-status")) {
@@ -1729,6 +1929,56 @@
       });
       U.toast("Note interne enregistrée.", "ok");
       render();
+    };
+    var cnf = document.getElementById("client-note-form");
+    if (cnf) cnf.onsubmit = async function (e) {
+      e.preventDefault();
+      var id = route().id;
+      var text = U.formData(cnf).text;
+      try {
+        if (live()) {
+          await api().request("/recruiters/notes", { method: "POST", body: { entity_type: "client", entity_id: id, text: text } });
+          await refreshLive();
+        } else {
+          TLStore.update(function (st) {
+            st.notes.unshift({ id: TLStore.nid("n"), entity: "client", entityId: id, authorId: TLStore.me().id, text: text, at: new Date().toISOString().slice(0, 16).replace("T", " ") });
+          });
+        }
+        U.toast("Note interne enregistrée.", "ok");
+        render();
+      } catch (err) { U.toast((err && err.message) || "Note non enregistrée.", "err"); }
+    };
+    var up = document.getElementById("cand-upload");
+    if (up) up.onsubmit = async function (e) {
+      e.preventDefault();
+      var file = up.querySelector("[name=file]") && up.querySelector("[name=file]").files[0];
+      if (!file) { U.toast("Choisissez un fichier.", "err"); return; }
+      if (!live()) { U.toast("Connectez-vous à l’API pour déposer un document.", "err"); return; }
+      var fd = new FormData();
+      fd.append("file", file);
+      try {
+        await api().request("/admin/candidates/" + route().id + "/resume", { method: "POST", body: fd });
+        await refreshLive();
+        detailTab = "cv";
+        U.toast("Document enregistré dans le dossier.", "ok");
+        render();
+      } catch (err) { U.toast((err && err.message) || "Téléversement impossible.", "err"); }
+    };
+    var pfme = document.getElementById("adm-profile");
+    if (pfme) pfme.onsubmit = async function (e) {
+      e.preventDefault();
+      var d = U.formData(pfme);
+      try {
+        if (live()) {
+          await api().request("/users/me", { method: "PATCH", body: { first_name: d.first_name, last_name: d.last_name, phone: d.phone, title: d.title } });
+          TLStore.update(function (st) {
+            var me = st.users.find(function (u) { return u.id === TLStore.me().id; });
+            if (me) { me.firstName = d.first_name; me.lastName = d.last_name; me.title = d.title; }
+          });
+        }
+        U.toast("Profil mis à jour.", "ok");
+        render();
+      } catch (err) { U.toast((err && err.message) || "Mise à jour impossible.", "err"); }
     };
     var ma = document.getElementById("mark-all");
     if (ma) ma.onclick = async function () {

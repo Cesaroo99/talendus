@@ -129,6 +129,25 @@
     contact: function (body) { return request("/contact", { method: "POST", body: body }); },
     createInvoice: function (body) { return request("/invoices", { method: "POST", body: body }); },
     createInterview: function (body) { return request("/interviews", { method: "POST", body: body }); },
-    signContract: function (id, body) { return request("/contracts/" + id + "/sign", { method: "POST", body: body }); }
+    signContract: function (id, body) { return request("/contracts/" + id + "/sign", { method: "POST", body: body }); },
+    createContract: function (body) { return request("/contracts", { method: "POST", body: body }); },
+    download: function (path, filename) {
+      var token = getAccess();
+      var headers = { "Accept": "*/*" };
+      if (token) headers.Authorization = "Bearer " + token;
+      return fetch(apiRoot() + path, { headers: headers }).then(function (res) {
+        if (!res.ok) throw new Error("Téléchargement impossible.");
+        return res.blob().then(function (blob) {
+          var url = URL.createObjectURL(blob);
+          var a = document.createElement("a");
+          a.href = url;
+          a.download = filename || "document";
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+        });
+      });
+    }
   };
 })(window);
