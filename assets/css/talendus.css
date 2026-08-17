@@ -801,7 +801,9 @@ a.tl-card:hover, .tl-job-card:hover, .tl-case:hover {
   color: #ffffff !important;
 }
 .tl-calc-result b {
-  font-size: 32px;
+  display: block;
+  margin-top: 4px;
+  font-size: clamp(32px, 4vw, 44px);
   color: #ffb37a !important;
 }
 .tl-calc-wide {
