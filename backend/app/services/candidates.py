@@ -12,7 +12,7 @@ from app.models import (
 )
 from app.models.enums import EmailType, NotificationType, UserRole
 from app.rbac import is_admin
-from app.schemas import AdminCandidatePatchIn, CandidateProfileIn, CertificationIn, EducationIn, ExperienceIn
+from app.schemas import AdminCandidatePatchIn, CandidateProfileIn, CertificationIn, EducationIn, ExperienceIn, PublicTalentProfileIn
 from app.services.audit import audit
 from app.services.auth import ensure_candidate
 from app.services.notifications import notify
@@ -232,6 +232,111 @@ def upload_cv(db: Session, user: User, data: bytes, filename: str) -> Resume:
     db.commit()
     db.refresh(row)
     return row
+
+
+def submit_public_talent(
+    db: Session,
+    data: PublicTalentProfileIn,
+    ip: str | None = None,
+    *,
+    cv_file: bytes | None = None,
+    cv_filename: str | None = None,
+) -> dict:
+    from app.models import UserPreference
+    from app.models.enums import JobSearchStatus
+    from app.security import hash_password, random_password
+    from app.services.email import send_email
+
+    email = str(data.email).lower()
+    user = db.scalar(select(User).where(User.email == email))
+    created = False
+    if user:
+        if user.role != UserRole.CANDIDATE:
+            raise AppError(409, "Ce courriel est déjà utilisé par un autre type de compte.", "EMAIL_TAKEN")
+        if data.phone and not user.phone:
+            user.phone = data.phone
+        if data.first_name and not (user.first_name or "").strip():
+            user.first_name = data.first_name.strip()
+        if data.last_name and not (user.last_name or "").strip():
+            user.last_name = data.last_name.strip()
+    else:
+        created = True
+        password = data.password or random_password()
+        user = User(
+            email=email,
+            password_hash=hash_password(password),
+            first_name=data.first_name.strip(),
+            last_name=(data.last_name or "").strip(),
+            phone=data.phone,
+            role=UserRole.CANDIDATE,
+        )
+        db.add(user)
+        db.flush()
+        db.add(UserPreference(user_id=user.id))
+        send_email(db, user.email, EmailType.WELCOME, "welcome", name=user.first_name, link="espace.html")
+        notify(db, user, NotificationType.ACCOUNT_CREATED, "Compte créé", "Votre dossier a été ouvert chez Talendus.")
+
+    profile = ensure_candidate(db, user)
+    if data.city:
+        profile.city = data.city[:80]
+    if data.title:
+        profile.title = data.title[:120]
+    if data.sector:
+        profile.sector = data.sector[:80]
+    if data.availability:
+        profile.availability = data.availability[:80]
+    notes = []
+    if data.subject:
+        notes.append(f"Objet : {data.subject}")
+    if data.cv_url:
+        notes.append(f"Lien CV : {data.cv_url}")
+    if data.message:
+        notes.append(data.message)
+    extra = "\n".join(notes).strip()
+    if extra:
+        profile.bio = ((profile.bio + "\n\n") if profile.bio else "") + extra
+        if len(profile.bio) > 8000:
+            profile.bio = profile.bio[:8000]
+    if not profile.pipeline_status:
+        profile.pipeline_status = "nouveau"
+    if created:
+        profile.job_search_status = JobSearchStatus.ACTIVE
+    db.flush()
+
+    resume = None
+    if cv_file and cv_filename:
+        resume = upload_cv(db, user, cv_file, cv_filename)
+
+    details = [
+        "Nouveau profil talent" if created else "Mise à jour profil talent",
+        f"Nom : {user.first_name} {user.last_name}".strip(),
+        f"Courriel : {user.email}",
+        f"Téléphone : {user.phone}" if user.phone else "",
+        f"Métier : {profile.title}" if profile.title else "",
+        f"Région : {profile.city}" if profile.city else "",
+        f"CV fichier : {cv_filename}" if cv_file and cv_filename else "",
+        extra,
+    ]
+    body = "\n".join(part for part in details if part)
+    send_email(
+        db,
+        "info@talendus.ca",
+        EmailType.ADMIN,
+        "welcome",
+        name=f"{user.first_name} {user.last_name}".strip() or user.email,
+        link=body[:1500],
+    )
+    audit(
+        db,
+        "public.talent_profile",
+        user,
+        "candidate",
+        profile.id,
+        ip,
+        {"email": user.email, "resume": bool(resume), "created": created},
+    )
+    db.commit()
+    return {"id": profile.id, "resume_id": resume.id if resume else None, "created": created}
 
 
 def serialize_candidate(profile: Candidate, include_private: bool = True) -> dict:

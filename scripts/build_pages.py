@@ -5,7 +5,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from parts import (
     wrap as wrap_page, page_hero, speed_strip, cta_band, faq_html, proof_stats,
-    FAQ_EMPLOYEURS, FAQ_CANDIDATS, FAQ_HOME, homepage_faq,
+    FAQ_EMPLOYEURS, FAQ_CANDIDATS, FAQ_HOME, homepage_faq, cv_file_field,
 )
 from positioning import (
     homepage_after_hero, job_search_filters, employer_need_fields,
@@ -464,14 +464,15 @@ write("candidats.html", wrap(
           </ol>
         </div>
         <div class="col-lg-6 offset-lg-1">
-          <form class="tl-form" action="#" method="post" data-form="contact">
-            <label>Nom</label><input required name="nom">
-            <label>Courriel</label><input type="email" required name="courriel">
-            <label>Téléphone</label><input name="tel">
+          <form class="tl-form" action="#" method="post" data-form="talent-cv" enctype="multipart/form-data">
+            <label>Nom</label><input required name="nom" autocomplete="name">
+            <label>Courriel</label><input type="email" required name="courriel" autocomplete="email">
+            <label>Téléphone</label><input name="tel" autocomplete="tel">
             <label>Métier visé</label>
             <select name="metier">""" + talent_trade_options("fr") + """</select>
             <label>Région</label><input name="region" placeholder="Laval, Montérégie, Québec, télétravail…">
-            <label>Lien vers votre CV (Drive, Dropbox...)</label><input name="cv" placeholder="https://">
+            """ + cv_file_field("fr", required=True) + """
+            <label>Lien vers votre CV <span class="tl-optional">(facultatif)</span></label><input name="cv" placeholder="https://">
             <button class="tl-btn tl-btn-lg" type="submit">Créer mon profil</button>
             <div class="tl-success" role="status"></div>
           </form>
@@ -590,18 +591,20 @@ write("contact.html", wrap(
           <div class="tl-kicker">Talents</div>
           <h2 class="tl-h2">Déposer mon CV ou poser une question</h2>
           <p class="tl-lead">C'est gratuit. Un conseiller vous rappelle si un mandat correspond.</p>
-          <form class="tl-form" action="#" method="post" data-form="contact">
+          <form class="tl-form" action="#" method="post" data-form="talent-cv" enctype="multipart/form-data">
             <input type="hidden" name="profil" value="Candidat, je cherche un poste">
-            <label>Nom</label><input required name="nom">
-            <label>Courriel</label><input type="email" required name="courriel">
-            <label>Téléphone</label><input name="tel">
+            <label>Nom</label><input required name="nom" autocomplete="name">
+            <label>Courriel</label><input type="email" required name="courriel" autocomplete="email">
+            <label>Téléphone</label><input name="tel" autocomplete="tel">
             <label>Objet</label>
             <select name="objet">
               <option>Déposer mon CV</option>
               <option>Rejoindre la banque de talents</option>
               <option>Question sur une offre</option>
             </select>
-            <label>Message</label><textarea required name="message" placeholder="Métier, compétences, ville, type d'emploi"></textarea>
+            """ + cv_file_field("fr", required=False) + """
+            <label>Lien vers votre CV <span class="tl-optional">(facultatif)</span></label><input name="cv" placeholder="https://">
+            <label>Message</label><textarea name="message" placeholder="Métier, compétences, ville, type d'emploi"></textarea>
             <button class="tl-btn tl-btn-lg" type="submit">Créer mon profil</button>
             <div class="tl-success"></div>
           </form>

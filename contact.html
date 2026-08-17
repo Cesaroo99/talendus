@@ -248,18 +248,24 @@ gtag('consent', 'default', {
           <div class="tl-kicker">Talents</div>
           <h2 class="tl-h2">Déposer mon CV ou poser une question</h2>
           <p class="tl-lead">C'est gratuit. Un conseiller vous rappelle si un mandat correspond.</p>
-          <form class="tl-form" action="#" method="post" data-form="contact">
+          <form class="tl-form" action="#" method="post" data-form="talent-cv" enctype="multipart/form-data">
             <input type="hidden" name="profil" value="Candidat, je cherche un poste">
-            <label>Nom</label><input required name="nom">
-            <label>Courriel</label><input type="email" required name="courriel">
-            <label>Téléphone</label><input name="tel">
+            <label>Nom</label><input required name="nom" autocomplete="name">
+            <label>Courriel</label><input type="email" required name="courriel" autocomplete="email">
+            <label>Téléphone</label><input name="tel" autocomplete="tel">
             <label>Objet</label>
             <select name="objet">
               <option>Déposer mon CV</option>
               <option>Rejoindre la banque de talents</option>
               <option>Question sur une offre</option>
             </select>
-            <label>Message</label><textarea required name="message" placeholder="Métier, compétences, ville, type d'emploi"></textarea>
+            <label class="tl-file">
+              <span>Votre CV <span class="tl-optional">(facultatif)</span></span>
+              <input type="file" name="cvfile" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp,application/pdf,image/png,image/jpeg">
+              <span class="tl-file-hint">PDF, Word (DOC, DOCX) ou image (PNG, JPG). 5 Mo max. Le fichier arrive chez Talendus, pas chez les employeurs.</span>
+            </label>
+            <label>Lien vers votre CV <span class="tl-optional">(facultatif)</span></label><input name="cv" placeholder="https://">
+            <label>Message</label><textarea name="message" placeholder="Métier, compétences, ville, type d'emploi"></textarea>
             <button class="tl-btn tl-btn-lg" type="submit">Créer mon profil</button>
             <div class="tl-success"></div>
           </form>
