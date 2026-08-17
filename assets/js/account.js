@@ -17,7 +17,7 @@
       logout: "Sign out", dashboard: "Dashboard", profile: "Profile", apps: "Applications",
       notifs: "Notifications", documents: "Documents", jobs: "Jobs", hiring: "My hiring", messages: "Messages",
       interviews: "Interviews", settings: "Settings", save: "Save", city: "City", title: "Job title",
-      sector: "Sector", skills: "Skills", phone: "Phone", upload: "Upload a PDF, DOC or DOCX",
+      sector: "Sector", skills: "Skills", phone: "Phone", upload: "Upload a PDF, Word or image file (PNG, JPG)",
       emptyApps: "No applications yet.", emptyNotifs: "No notifications.", emptyJobs: "No matching roles yet.",
       emptyMsgs: "No messages yet.", emptyInts: "No interviews scheduled.", emptyDocs: "No documents yet.",
       emptySaved: "No saved jobs.", markAll: "Mark all as read", markRead: "Mark as read",
@@ -85,7 +85,7 @@
       logout: "Déconnexion", dashboard: "Tableau de bord", profile: "Profil", apps: "Candidatures",
       notifs: "Notifications", documents: "Documents", jobs: "Offres", hiring: "Mes recrutements", messages: "Messages",
       interviews: "Entretiens", settings: "Paramètres", save: "Enregistrer", city: "Ville", title: "Titre professionnel",
-      sector: "Secteur", skills: "Compétences", phone: "Téléphone", upload: "Téléverser un PDF, DOC ou DOCX",
+      sector: "Secteur", skills: "Compétences", phone: "Téléphone", upload: "Téléverser un PDF, Word ou une image (PNG, JPG)",
       emptyApps: "Aucune candidature pour le moment.", emptyNotifs: "Aucune notification.",
       emptyJobs: "Aucune offre ne correspond encore à votre recherche.", emptyMsgs: "Aucun message pour le moment.",
       emptyInts: "Aucun entretien planifié.", emptyDocs: "Aucun document pour le moment.",
@@ -728,7 +728,7 @@
           ' <button type="button" class="tl-btn tl-btn-ghost" data-del-cv="' + esc(r.id) + '">' + esc(t.remove) + "</button></li>";
       }).join("") || "<li>-</li>";
       return "<h3>CV</h3><ul>" + cvs + '</ul><form class="tl-form" id="acc-cv"><label>' + esc(t.upload) +
-        '</label><input name="file" type="file" accept=".pdf,.doc,.docx,application/pdf" required><button class="tl-btn" type="submit">' +
+        '</label><input name="file" type="file" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp,application/pdf,image/png,image/jpeg" required><button class="tl-btn" type="submit">' +
         esc(t.replace) + '</button><div class="tl-success"></div></form><h3>' + esc(t.otherDocs) + "</h3><ul>" + list +
         '</ul><form class="tl-form" id="acc-doc"><label>' + esc(t.upload) + '</label><input name="file" type="file" required>' +
         '<select name="kind"><option value="cover_letter">' + esc(t.cover) + '</option><option value="certification">' +

@@ -198,6 +198,43 @@ def test_public_apply_and_search_filters(client):
     assert applied.status_code == 200
 
 
+PNG = (
+    b"\x89PNG\r\n\x1a\n"
+    b"\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89"
+    b"\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n-\xb4"
+    b"\x00\x00\x00\x00IEND\xaeB`\x82"
+)
+
+
+def test_public_apply_uploads_pdf_resume(client):
+    emp = register(client, "cvco@example.com", "EMPLOYER")
+    staff_publish_job(client, emp, title="Cariste", slug="cariste-cv-pdf")
+    applied = client.post(
+        "/api/applications/public",
+        data={
+            "job_slug": "cariste-cv-pdf",
+            "first_name": "Maya",
+            "last_name": "Côté",
+            "email": "maya.cote@example.com",
+            "cover_note": "Disponible de jour.",
+        },
+        files={"file": ("cv.pdf", PDF, "application/pdf")},
+    )
+    assert applied.status_code == 200
+    assert applied.json()["data"]["resume_id"]
+
+
+def test_candidate_can_upload_png_resume(client):
+    cand = register(client, "pngcv@example.com")
+    upload = client.post(
+        "/api/candidates/me/resume",
+        headers=auth_header(cand),
+        files={"file": ("cv.png", PNG, "image/png")},
+    )
+    assert upload.status_code == 200
+    assert upload.json()["data"]["original_name"] == "cv.png"
+
+
 def test_validation_error_format(client):
     res = client.post("/api/auth/login", json={"email": "not-an-email", "password": "x"})
     assert res.status_code == 422

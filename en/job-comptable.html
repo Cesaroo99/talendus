@@ -174,110 +174,161 @@ gtag('consent', 'default', {
 <section class="tl-job-page">
   <div class="container">
     <a class="tl-job-back" href="jobs.html"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> All openings</a>
+    <header class="tl-job-hero">
+      <div class="tl-job-hero-brand">
+        <span class="tl-job-hero-icon" aria-hidden="true"><i class="fa-solid fa-calculator"></i></span>
+        <div>
+          <p class="tl-kicker">Finance · Finance</p>
+          <h1>Accountant</h1>
+        </div>
+      </div>
+      <p class="tl-job-hero-lead">Talendus is recruiting this accountant role for an employer in Quebec City. Apply here: a consultant presents your file. The company never receives your contact details from an open application.</p>
+      <ul class="tl-job-hero-tags">
+        <li>Permanent</li>
+        <li>Mid-level</li>
+        <li>Full-time</li>
+        <li>Via Talendus</li>
+      </ul>
+    </header>
     <div class="tl-job-layout">
       <div class="tl-job-main">
-        <p class="tl-kicker">Quebec City · Permanent</p>
-        <h1>Accountant</h1>
         <ul class="tl-job-facts">
-          <li><span>Location</span><strong>Quebec City</strong></li>
-          <li><span>Pay</span><strong>$55,000 to $70,000</strong></li>
-          <li><span>Schedule</span><strong>Full-time</strong></li>
-          <li><span>Type</span><strong>Permanent</strong></li>
-          <li><span>Experience</span><strong>Mid-level</strong></li>
-          <li><span>Category</span><strong>Finance</strong></li>
+          <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Location</span><strong>Quebec City</strong></li>
+          <li><i class="fa-solid fa-sack-dollar" aria-hidden="true"></i><span>Pay</span><strong>$55,000 to $70,000</strong></li>
+          <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Schedule</span><strong>Full-time</strong></li>
+          <li><i class="fa-solid fa-file-contract" aria-hidden="true"></i><span>Type</span><strong>Permanent</strong></li>
+          <li><i class="fa-solid fa-signal" aria-hidden="true"></i><span>Experience</span><strong>Mid-level</strong></li>
+          <li><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>Category</span><strong>Finance</strong></li>
         </ul>
         <div class="tl-job-prose">
           <h2>The role</h2>
-          <p>Talendus is recruiting a accountant for an employer in Quebec City. Industry: Finance. Skills in focus: Excel, accounting. Applying sends your file to our team, not to the company directly.</p>
+          <p>A accountant mandate in Quebec City, in Finance. Skills in focus: Excel, accounting.</p>
           <h2>Profile we look for</h2>
           <p>Accounting, Excel, relevant diploma.</p>
+          <div class="tl-job-skills"><span>Excel</span><span>accounting</span></div>
           <h2>What the mandate includes</h2>
           <ul>
             <li>Permanent role, full-time</li>
             <li>Pay: $55,000 to $70,000</li>
             <li>A Talendus consultant screens and presents your file</li>
-            <li>The employer does not receive your email or phone number from an open application</li>
+            <li>The employer does not receive your email, phone number or resume from an open application</li>
           </ul>
           <h2>How applying works</h2>
           <ol class="tl-job-steps">
-            <li><strong>You apply here.</strong> Your file reaches Talendus.</li>
-            <li><strong>A consultant reviews it.</strong> We check the fit with the mandate.</li>
-            <li><strong>If it holds, we present you.</strong> We speak to the employer on your behalf.</li>
-            <li><strong>You follow the next steps with us.</strong> Interviews and updates go through Talendus.</li>
+            <li><span class="tl-job-step-n">1</span><div><strong>You apply here with your resume.</strong><p>PDF, Word or image. Your file reaches Talendus.</p></div></li>
+            <li><span class="tl-job-step-n">2</span><div><strong>A consultant reviews it.</strong><p>We check the fit with the mandate before anything is shared.</p></div></li>
+            <li><span class="tl-job-step-n">3</span><div><strong>If it holds, we present you.</strong><p>We speak to the employer on your behalf.</p></div></li>
+            <li><span class="tl-job-step-n">4</span><div><strong>You follow the next steps with us.</strong><p>Interviews and updates go through Talendus.</p></div></li>
           </ol>
         </div>
         <p class="tl-job-alt"><a href="jobs.html">Browse other openings</a> · <a href="candidates.html">Create a talent profile</a></p>
       </div>
       <aside class="tl-job-aside">
         <div class="tl-job-apply-card" id="postuler">
-          <h2>Apply through Talendus</h2>
-          <p>A consultant presents your file. You are not contacting the employer in direct.</p>
-          <form class="tl-form" data-form="apply" data-job-slug="comptable">
+          <p class="tl-job-apply-kicker">Apply</p>
+          <h2>Send your file to Talendus</h2>
+          <p>Upload your resume. A consultant presents your file. You are not contacting the employer in direct.</p>
+          
+          <form class="tl-form" data-form="apply" data-job-slug="comptable" enctype="multipart/form-data">
             <label>Name</label><input name="name" required autocomplete="name">
             <label>Email</label><input type="email" name="email" required autocomplete="email">
             <label>Phone</label><input name="phone" autocomplete="tel">
-            <label>Resume link <span class="tl-optional">(optional)</span></label>
-            <input name="resume" placeholder="https://">
+            <label class="tl-file">
+              <span>Your resume</span>
+              <input type="file" name="cvfile" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp,application/pdf,image/png,image/jpeg" required>
+              <span class="tl-file-hint">PDF, Word (DOC, DOCX) or image (PNG, JPG). 5 MB max. The file goes to Talendus, not to the employer.</span>
+            </label>
             <label>Note for Talendus <span class="tl-optional">(optional)</span></label>
             <textarea name="message" rows="3" maxlength="800" placeholder="Availability, permit, what you want us to know"></textarea>
             <button class="tl-btn tl-btn-lg" type="submit">Send my application</button>
             <div class="tl-success"></div>
           </form>
+
         </div>
       </aside>
     </div>
     <div class="tl-job-related">
       <h2>Other openings</h2>
       <div class="tl-jobs-grid">
-    <a class="tl-job-card" href="job-cariste.html" aria-label="View opening : Forklift operator" data-job="Forklift operator Laval entrepot Permanent $22 to $26/hr Full-time transport forklift intermediaire" data-city="Laval" data-cat="entrepot" data-type="Permanent" data-shift="Full-time" data-salary="$22 to $26/hr" data-sector="transport" data-skills="forklift" data-exp="intermediaire">
-      <div class="tl-job-card-top">
-        <span class="tl-chip orange">Permanent</span>
-        <span class="tl-chip">Mid-level</span>
+    <a class="tl-job-card" href="job-cariste.html" aria-label="View opening and apply : Forklift operator" data-job="Forklift operator Laval entrepot Permanent $22 to $26/hr Full-time transport forklift intermediaire" data-city="Laval" data-cat="entrepot" data-type="Permanent" data-shift="Full-time" data-salary="$22 to $26/hr" data-sector="transport" data-skills="forklift" data-exp="intermediaire">
+      <div class="tl-job-card-banner">
+        <span class="tl-job-card-icon" aria-hidden="true"><i class="fa-solid fa-warehouse"></i></span>
+        <div class="tl-job-card-banner-text">
+          <p class="tl-job-card-cat">Warehouse</p>
+          <p class="tl-job-card-via">Via Talendus</p>
+        </div>
       </div>
-      <h3>Forklift operator</h3>
-      <ul class="tl-job-meta">
-        <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Laval</span></li>
-        <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Full-time</span></li>
-        <li><i class="fa-solid fa-sack-dollar" aria-hidden="true"></i><span>$22 to $26/hr</span></li>
-      </ul>
-      <p class="tl-job-excerpt">Forklift permit, 1 year warehouse experience.</p>
-      <p class="tl-job-card-cat">Warehouse</p>
-      <span class="tl-job-card-cta">View opening</span>
+      <div class="tl-job-card-body">
+        <div class="tl-job-card-top">
+          <span class="tl-chip orange">Permanent</span>
+          <span class="tl-chip">Mid-level</span>
+        </div>
+        <h3>Forklift operator</h3>
+        <dl class="tl-job-facts-mini">
+          <div><dt>Location</dt><dd>Laval</dd></div>
+          <div><dt>Pay</dt><dd>$22 to $26/hr</dd></div>
+          <div><dt>Schedule</dt><dd>Full-time</dd></div>
+        </dl>
+        <p class="tl-job-excerpt-label">Profile we look for</p>
+        <p class="tl-job-excerpt">Forklift permit, 1 year warehouse experience.</p>
+        <div class="tl-job-skills"><span>forklift</span></div>
+      </div>
+      <span class="tl-job-card-cta">View opening and apply</span>
     </a>
-    <a class="tl-job-card" href="job-operateur-production.html" aria-label="View opening : Production operator" data-job="Production operator Longueuil production Permanent $20 to $24/hr Full-time manufacturier production debutant" data-city="Longueuil" data-cat="production" data-type="Permanent" data-shift="Full-time" data-salary="$20 to $24/hr" data-sector="manufacturier" data-skills="production" data-exp="debutant">
-      <div class="tl-job-card-top">
-        <span class="tl-chip orange">Permanent</span>
-        <span class="tl-chip">Entry-level</span>
+    <a class="tl-job-card" href="job-operateur-production.html" aria-label="View opening and apply : Production operator" data-job="Production operator Longueuil production Permanent $20 to $24/hr Full-time manufacturier production debutant" data-city="Longueuil" data-cat="production" data-type="Permanent" data-shift="Full-time" data-salary="$20 to $24/hr" data-sector="manufacturier" data-skills="production" data-exp="debutant">
+      <div class="tl-job-card-banner">
+        <span class="tl-job-card-icon" aria-hidden="true"><i class="fa-solid fa-industry"></i></span>
+        <div class="tl-job-card-banner-text">
+          <p class="tl-job-card-cat">Production</p>
+          <p class="tl-job-card-via">Via Talendus</p>
+        </div>
       </div>
-      <h3>Production operator</h3>
-      <ul class="tl-job-meta">
-        <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Longueuil</span></li>
-        <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Full-time</span></li>
-        <li><i class="fa-solid fa-sack-dollar" aria-hidden="true"></i><span>$20 to $24/hr</span></li>
-      </ul>
-      <p class="tl-job-excerpt">Production experience, ability to follow procedures, teamwork.</p>
-      <p class="tl-job-card-cat">Production</p>
-      <span class="tl-job-card-cta">View opening</span>
+      <div class="tl-job-card-body">
+        <div class="tl-job-card-top">
+          <span class="tl-chip orange">Permanent</span>
+          <span class="tl-chip">Entry-level</span>
+        </div>
+        <h3>Production operator</h3>
+        <dl class="tl-job-facts-mini">
+          <div><dt>Location</dt><dd>Longueuil</dd></div>
+          <div><dt>Pay</dt><dd>$20 to $24/hr</dd></div>
+          <div><dt>Schedule</dt><dd>Full-time</dd></div>
+        </dl>
+        <p class="tl-job-excerpt-label">Profile we look for</p>
+        <p class="tl-job-excerpt">Production experience, ability to follow procedures, teamwork.</p>
+        <div class="tl-job-skills"><span>production</span></div>
+      </div>
+      <span class="tl-job-card-cta">View opening and apply</span>
     </a>
-    <a class="tl-job-card" href="job-soudeur.html" aria-label="View opening : Welder-fitter" data-job="Welder-fitter Drummondville metallurgie Permanent $28 to $34/hr Full-time manufacturier welding intermediaire" data-city="Drummondville" data-cat="metallurgie" data-type="Permanent" data-shift="Full-time" data-salary="$28 to $34/hr" data-sector="manufacturier" data-skills="welding" data-exp="intermediaire">
-      <div class="tl-job-card-top">
-        <span class="tl-chip orange">Permanent</span>
-        <span class="tl-chip">Mid-level</span>
+    <a class="tl-job-card" href="job-soudeur.html" aria-label="View opening and apply : Welder-fitter" data-job="Welder-fitter Drummondville metallurgie Permanent $28 to $34/hr Full-time manufacturier welding intermediaire" data-city="Drummondville" data-cat="metallurgie" data-type="Permanent" data-shift="Full-time" data-salary="$28 to $34/hr" data-sector="manufacturier" data-skills="welding" data-exp="intermediaire">
+      <div class="tl-job-card-banner">
+        <span class="tl-job-card-icon" aria-hidden="true"><i class="fa-solid fa-fire"></i></span>
+        <div class="tl-job-card-banner-text">
+          <p class="tl-job-card-cat">Metals</p>
+          <p class="tl-job-card-via">Via Talendus</p>
+        </div>
       </div>
-      <h3>Welder-fitter</h3>
-      <ul class="tl-job-meta">
-        <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Drummondville</span></li>
-        <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Full-time</span></li>
-        <li><i class="fa-solid fa-sack-dollar" aria-hidden="true"></i><span>$28 to $34/hr</span></li>
-      </ul>
-      <p class="tl-job-excerpt">MIG/TIG welding, blueprint reading, competency cards an asset.</p>
-      <p class="tl-job-card-cat">Metals</p>
-      <span class="tl-job-card-cta">View opening</span>
+      <div class="tl-job-card-body">
+        <div class="tl-job-card-top">
+          <span class="tl-chip orange">Permanent</span>
+          <span class="tl-chip">Mid-level</span>
+        </div>
+        <h3>Welder-fitter</h3>
+        <dl class="tl-job-facts-mini">
+          <div><dt>Location</dt><dd>Drummondville</dd></div>
+          <div><dt>Pay</dt><dd>$28 to $34/hr</dd></div>
+          <div><dt>Schedule</dt><dd>Full-time</dd></div>
+        </dl>
+        <p class="tl-job-excerpt-label">Profile we look for</p>
+        <p class="tl-job-excerpt">MIG/TIG welding, blueprint reading, competency cards an asset.</p>
+        <div class="tl-job-skills"><span>welding</span></div>
+      </div>
+      <span class="tl-job-card-cta">View opening and apply</span>
     </a></div>
     </div>
   </div>
 </section>
-<div class="tl-job-mobile-cta"><a class="tl-btn" href="#postuler">Apply</a></div>
+<div class="tl-job-mobile-cta"><a class="tl-btn" href="#postuler">Apply with my resume</a></div>
 
 <a class="tl-whatsapp" href="https://wa.me/15145550199?text=Hello%20Talendus%2C%20I%20would%20like%20to%20talk%20about%20a%20hiring%20need." target="_blank" rel="noopener noreferrer" aria-label="Message Talendus on WhatsApp">
   <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M19.11 17.47c-.29-.15-1.73-.85-2-.95-.27-.1-.46-.15-.66.15s-.76.95-.93 1.15c-.17.2-.34.22-.63.07-.29-.15-1.22-.45-2.33-1.43-.86-.77-1.44-1.72-1.61-2.01-.17-.29-.02-.45.13-.6.13-.13.29-.34.43-.51.15-.17.2-.29.29-.48.1-.2.05-.36-.02-.51-.07-.15-.66-1.59-.9-2.18-.24-.57-.48-.49-.66-.5h-.56c-.2 0-.51.07-.78.36-.27.29-1.02.99-1.02 2.42s1.05 2.81 1.19 3 .07.15 2.06 3.15c1.64 1.41 2.96 1.85 3.58 2.06.54.17 1.04.15 1.43.09.44-.06 1.73-.71 1.97-1.39.24-.68.24-1.27.17-1.39-.07-.12-.26-.2-.55-.35zM16.03 4.05C9.41 4.05 4.05 9.4 4.05 16.03c0 2.11.55 4.17 1.6 5.99L4 28l6.12-1.6a11.94 11.94 0 0 0 5.91 1.51h.01c6.62 0 11.98-5.36 11.98-11.98 0-3.2-1.25-6.21-3.51-8.47a11.9 11.9 0 0 0-8.48-3.51zm0 21.86h-.01a9.94 9.94 0 0 1-5.06-1.38l-.36-.22-3.63.95.97-3.54-.23-.37a9.93 9.93 0 0 1-1.52-5.32c0-5.48 4.46-9.94 9.95-9.94 2.66 0 5.15 1.04 7.03 2.92a9.87 9.87 0 0 1 2.91 7.02c0 5.49-4.47 9.95-9.95 9.95z"/></svg>

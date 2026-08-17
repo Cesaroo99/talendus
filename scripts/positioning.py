@@ -1366,6 +1366,38 @@ JOB_CAT_LABEL = {
 }
 
 
+JOB_CAT_ICON = {
+    "entrepot": "fa-warehouse",
+    "production": "fa-industry",
+    "metallurgie": "fa-fire",
+    "manufacturier": "fa-gears",
+    "maintenance": "fa-wrench",
+    "supervision": "fa-user-tie",
+    "logistique": "fa-boxes-stacked",
+    "cadres": "fa-briefcase",
+    "technologie": "fa-laptop-code",
+    "finance": "fa-calculator",
+    "ingenierie": "fa-compass-drafting",
+    "transport": "fa-truck",
+    "sante": "fa-heart-pulse",
+    "commerce": "fa-store",
+    "administration": "fa-building",
+    "marketing": "fa-bullhorn",
+}
+
+
+def _job_icon(cat):
+    return JOB_CAT_ICON.get(cat, "fa-briefcase")
+
+
+def _skill_chips(skills):
+    parts = [s.strip() for s in (skills or "").replace(";", ",").split(",") if s.strip()]
+    if not parts:
+        return ""
+    inner = "".join(f"<span>{p}</span>" for p in parts[:6])
+    return f'<div class="tl-job-skills">{inner}</div>'
+
+
 def _job_href(slug, lang="fr"):
     return f"job-{slug}.html" if lang == "en" else f"emploi-{slug}.html"
 
@@ -1375,21 +1407,40 @@ def job_card_html(job, lang="fr"):
     href = _job_href(slug, lang)
     exp_label = JOB_EXP_LABEL[lang].get(exp, exp)
     cat_label = JOB_CAT_LABEL[lang].get(cat, cat)
-    cta = "View opening" if lang == "en" else "Voir l'offre"
+    icon = _job_icon(cat)
+    chips = _skill_chips(skills)
+    if lang == "en":
+        cta = "View opening and apply"
+        via = "Via Talendus"
+        loc_l, pay_l, time_l, profile_l = "Location", "Pay", "Schedule", "Profile we look for"
+    else:
+        cta = "Voir l'offre et postuler"
+        via = "Via Talendus"
+        loc_l, pay_l, time_l, profile_l = "Lieu", "Rémunération", "Horaire", "Profil recherché"
     return f'''
     <a class="tl-job-card" href="{href}" aria-label="{cta} : {title}" data-job="{title} {city} {cat} {typ} {sal} {shift} {sector} {skills} {exp}" data-city="{city}" data-cat="{cat}" data-type="{typ}" data-shift="{shift}" data-salary="{sal}" data-sector="{sector}" data-skills="{skills}" data-exp="{exp}">
-      <div class="tl-job-card-top">
-        <span class="tl-chip orange">{typ}</span>
-        <span class="tl-chip">{exp_label}</span>
+      <div class="tl-job-card-banner">
+        <span class="tl-job-card-icon" aria-hidden="true"><i class="fa-solid {icon}"></i></span>
+        <div class="tl-job-card-banner-text">
+          <p class="tl-job-card-cat">{cat_label}</p>
+          <p class="tl-job-card-via">{via}</p>
+        </div>
       </div>
-      <h3>{title}</h3>
-      <ul class="tl-job-meta">
-        <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>{city}</span></li>
-        <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>{shift}</span></li>
-        <li><i class="fa-solid fa-sack-dollar" aria-hidden="true"></i><span>{sal}</span></li>
-      </ul>
-      <p class="tl-job-excerpt">{req}</p>
-      <p class="tl-job-card-cat">{cat_label}</p>
+      <div class="tl-job-card-body">
+        <div class="tl-job-card-top">
+          <span class="tl-chip orange">{typ}</span>
+          <span class="tl-chip">{exp_label}</span>
+        </div>
+        <h3>{title}</h3>
+        <dl class="tl-job-facts-mini">
+          <div><dt>{loc_l}</dt><dd>{city}</dd></div>
+          <div><dt>{pay_l}</dt><dd>{sal}</dd></div>
+          <div><dt>{time_l}</dt><dd>{shift}</dd></div>
+        </dl>
+        <p class="tl-job-excerpt-label">{profile_l}</p>
+        <p class="tl-job-excerpt">{req}</p>
+        {chips}
+      </div>
       <span class="tl-job-card-cta">{cta}</span>
     </a>'''
 
@@ -1438,11 +1489,51 @@ def jobs_empty_state(lang="fr"):
 """
 
 
+def _apply_form_html(slug, lang="fr"):
+    accept = ".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp,application/pdf,image/png,image/jpeg"
+    if lang == "en":
+        return f"""
+          <form class="tl-form" data-form="apply" data-job-slug="{slug}" enctype="multipart/form-data">
+            <label>Name</label><input name="name" required autocomplete="name">
+            <label>Email</label><input type="email" name="email" required autocomplete="email">
+            <label>Phone</label><input name="phone" autocomplete="tel">
+            <label class="tl-file">
+              <span>Your resume</span>
+              <input type="file" name="cvfile" accept="{accept}" required>
+              <span class="tl-file-hint">PDF, Word (DOC, DOCX) or image (PNG, JPG). 5 MB max. The file goes to Talendus, not to the employer.</span>
+            </label>
+            <label>Note for Talendus <span class="tl-optional">(optional)</span></label>
+            <textarea name="message" rows="3" maxlength="800" placeholder="Availability, permit, what you want us to know"></textarea>
+            <button class="tl-btn tl-btn-lg" type="submit">Send my application</button>
+            <div class="tl-success"></div>
+          </form>
+"""
+    return f"""
+          <form class="tl-form" data-form="apply" data-job-slug="{slug}" enctype="multipart/form-data">
+            <label>Nom</label><input name="nom" required autocomplete="name">
+            <label>Courriel</label><input type="email" name="courriel" required autocomplete="email">
+            <label>Téléphone</label><input name="tel" autocomplete="tel">
+            <label class="tl-file">
+              <span>Votre CV</span>
+              <input type="file" name="cvfile" accept="{accept}" required>
+              <span class="tl-file-hint">PDF, Word (DOC, DOCX) ou image (PNG, JPG). 5 Mo max. Le fichier arrive chez Talendus, pas chez l'employeur.</span>
+            </label>
+            <label>Note pour Talendus <span class="tl-optional">(facultatif)</span></label>
+            <textarea name="message" rows="3" maxlength="800" placeholder="Disponibilité, permis, ce que vous voulez qu'on sache"></textarea>
+            <button class="tl-btn tl-btn-lg" type="submit">Envoyer ma candidature</button>
+            <div class="tl-success"></div>
+          </form>
+"""
+
+
 def job_detail_html(job, related_html, lang="fr"):
     slug, title, city, cat, typ, sal, shift, req, sector, skills, exp = job
     exp_label = JOB_EXP_LABEL[lang].get(exp, exp)
     cat_label = JOB_CAT_LABEL[lang].get(cat, cat)
     sector_label = JOB_CAT_LABEL[lang].get(sector, sector)
+    icon = _job_icon(cat)
+    chips = _skill_chips(skills)
+    form = _apply_form_html(slug, lang)
     if lang == "en":
         listing = "jobs.html"
         talent = "candidates.html"
@@ -1450,55 +1541,61 @@ def job_detail_html(job, related_html, lang="fr"):
 <section class="tl-job-page">
   <div class="container">
     <a class="tl-job-back" href="{listing}"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> All openings</a>
+    <header class="tl-job-hero">
+      <div class="tl-job-hero-brand">
+        <span class="tl-job-hero-icon" aria-hidden="true"><i class="fa-solid {icon}"></i></span>
+        <div>
+          <p class="tl-kicker">{cat_label} · {sector_label}</p>
+          <h1>{title}</h1>
+        </div>
+      </div>
+      <p class="tl-job-hero-lead">Talendus is recruiting this {title.lower()} role for an employer in {city}. Apply here: a consultant presents your file. The company never receives your contact details from an open application.</p>
+      <ul class="tl-job-hero-tags">
+        <li>{typ}</li>
+        <li>{exp_label}</li>
+        <li>{shift}</li>
+        <li>Via Talendus</li>
+      </ul>
+    </header>
     <div class="tl-job-layout">
       <div class="tl-job-main">
-        <p class="tl-kicker">{city} · {typ}</p>
-        <h1>{title}</h1>
         <ul class="tl-job-facts">
-          <li><span>Location</span><strong>{city}</strong></li>
-          <li><span>Pay</span><strong>{sal}</strong></li>
-          <li><span>Schedule</span><strong>{shift}</strong></li>
-          <li><span>Type</span><strong>{typ}</strong></li>
-          <li><span>Experience</span><strong>{exp_label}</strong></li>
-          <li><span>Category</span><strong>{cat_label}</strong></li>
+          <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Location</span><strong>{city}</strong></li>
+          <li><i class="fa-solid fa-sack-dollar" aria-hidden="true"></i><span>Pay</span><strong>{sal}</strong></li>
+          <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Schedule</span><strong>{shift}</strong></li>
+          <li><i class="fa-solid fa-file-contract" aria-hidden="true"></i><span>Type</span><strong>{typ}</strong></li>
+          <li><i class="fa-solid fa-signal" aria-hidden="true"></i><span>Experience</span><strong>{exp_label}</strong></li>
+          <li><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>Category</span><strong>{cat_label}</strong></li>
         </ul>
         <div class="tl-job-prose">
           <h2>The role</h2>
-          <p>Talendus is recruiting a {title.lower()} for an employer in {city}. Industry: {sector_label}. Skills in focus: {skills}. Applying sends your file to our team, not to the company directly.</p>
+          <p>A {title.lower()} mandate in {city}, in {sector_label}. Skills in focus: {skills}.</p>
           <h2>Profile we look for</h2>
           <p>{req}</p>
+          {chips}
           <h2>What the mandate includes</h2>
           <ul>
             <li>{typ} role, {shift.lower()}</li>
             <li>Pay: {sal}</li>
             <li>A Talendus consultant screens and presents your file</li>
-            <li>The employer does not receive your email or phone number from an open application</li>
+            <li>The employer does not receive your email, phone number or resume from an open application</li>
           </ul>
           <h2>How applying works</h2>
           <ol class="tl-job-steps">
-            <li><strong>You apply here.</strong> Your file reaches Talendus.</li>
-            <li><strong>A consultant reviews it.</strong> We check the fit with the mandate.</li>
-            <li><strong>If it holds, we present you.</strong> We speak to the employer on your behalf.</li>
-            <li><strong>You follow the next steps with us.</strong> Interviews and updates go through Talendus.</li>
+            <li><span class="tl-job-step-n">1</span><div><strong>You apply here with your resume.</strong><p>PDF, Word or image. Your file reaches Talendus.</p></div></li>
+            <li><span class="tl-job-step-n">2</span><div><strong>A consultant reviews it.</strong><p>We check the fit with the mandate before anything is shared.</p></div></li>
+            <li><span class="tl-job-step-n">3</span><div><strong>If it holds, we present you.</strong><p>We speak to the employer on your behalf.</p></div></li>
+            <li><span class="tl-job-step-n">4</span><div><strong>You follow the next steps with us.</strong><p>Interviews and updates go through Talendus.</p></div></li>
           </ol>
         </div>
         <p class="tl-job-alt"><a href="{listing}">Browse other openings</a> · <a href="{talent}">Create a talent profile</a></p>
       </div>
       <aside class="tl-job-aside">
         <div class="tl-job-apply-card" id="postuler">
-          <h2>Apply through Talendus</h2>
-          <p>A consultant presents your file. You are not contacting the employer in direct.</p>
-          <form class="tl-form" data-form="apply" data-job-slug="{slug}">
-            <label>Name</label><input name="name" required autocomplete="name">
-            <label>Email</label><input type="email" name="email" required autocomplete="email">
-            <label>Phone</label><input name="phone" autocomplete="tel">
-            <label>Resume link <span class="tl-optional">(optional)</span></label>
-            <input name="resume" placeholder="https://">
-            <label>Note for Talendus <span class="tl-optional">(optional)</span></label>
-            <textarea name="message" rows="3" maxlength="800" placeholder="Availability, permit, what you want us to know"></textarea>
-            <button class="tl-btn tl-btn-lg" type="submit">Send my application</button>
-            <div class="tl-success"></div>
-          </form>
+          <p class="tl-job-apply-kicker">Apply</p>
+          <h2>Send your file to Talendus</h2>
+          <p>Upload your resume. A consultant presents your file. You are not contacting the employer in direct.</p>
+          {form}
         </div>
       </aside>
     </div>
@@ -1508,7 +1605,7 @@ def job_detail_html(job, related_html, lang="fr"):
     </div>
   </div>
 </section>
-<div class="tl-job-mobile-cta"><a class="tl-btn" href="#postuler">Apply</a></div>
+<div class="tl-job-mobile-cta"><a class="tl-btn" href="#postuler">Apply with my resume</a></div>
 """
     listing = "emplois.html"
     talent = "candidats.html"
@@ -1516,55 +1613,61 @@ def job_detail_html(job, related_html, lang="fr"):
 <section class="tl-job-page">
   <div class="container">
     <a class="tl-job-back" href="{listing}"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Toutes les offres</a>
+    <header class="tl-job-hero">
+      <div class="tl-job-hero-brand">
+        <span class="tl-job-hero-icon" aria-hidden="true"><i class="fa-solid {icon}"></i></span>
+        <div>
+          <p class="tl-kicker">{cat_label} · {sector_label}</p>
+          <h1>{title}</h1>
+        </div>
+      </div>
+      <p class="tl-job-hero-lead">Talendus recrute ce poste de {title.lower()} pour un employeur à {city}. Postulez ici : un conseiller présente votre dossier. L'entreprise ne reçoit pas vos coordonnées via une candidature ouverte.</p>
+      <ul class="tl-job-hero-tags">
+        <li>{typ}</li>
+        <li>{exp_label}</li>
+        <li>{shift}</li>
+        <li>Via Talendus</li>
+      </ul>
+    </header>
     <div class="tl-job-layout">
       <div class="tl-job-main">
-        <p class="tl-kicker">{city} · {typ}</p>
-        <h1>{title}</h1>
         <ul class="tl-job-facts">
-          <li><span>Lieu</span><strong>{city}</strong></li>
-          <li><span>Rémunération</span><strong>{sal}</strong></li>
-          <li><span>Horaire</span><strong>{shift}</strong></li>
-          <li><span>Type</span><strong>{typ}</strong></li>
-          <li><span>Expérience</span><strong>{exp_label}</strong></li>
-          <li><span>Catégorie</span><strong>{cat_label}</strong></li>
+          <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Lieu</span><strong>{city}</strong></li>
+          <li><i class="fa-solid fa-sack-dollar" aria-hidden="true"></i><span>Rémunération</span><strong>{sal}</strong></li>
+          <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Horaire</span><strong>{shift}</strong></li>
+          <li><i class="fa-solid fa-file-contract" aria-hidden="true"></i><span>Type</span><strong>{typ}</strong></li>
+          <li><i class="fa-solid fa-signal" aria-hidden="true"></i><span>Expérience</span><strong>{exp_label}</strong></li>
+          <li><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>Catégorie</span><strong>{cat_label}</strong></li>
         </ul>
         <div class="tl-job-prose">
           <h2>Le poste</h2>
-          <p>Talendus recrute un(e) {title.lower()} pour un employeur à {city}. Secteur : {sector_label}. Compétences visées : {skills}. Postuler envoie votre dossier à notre équipe, pas à l'entreprise en direct.</p>
+          <p>Un mandat de {title.lower()} à {city}, en {sector_label}. Compétences visées : {skills}.</p>
           <h2>Profil recherché</h2>
           <p>{req}</p>
+          {chips}
           <h2>Ce que comprend le mandat</h2>
           <ul>
             <li>Poste {typ.lower()}, {shift.lower()}</li>
             <li>Rémunération : {sal}</li>
             <li>Un conseiller Talendus étudie et présente votre dossier</li>
-            <li>L'employeur ne reçoit pas votre courriel ni votre téléphone via une candidature ouverte</li>
+            <li>L'employeur ne reçoit pas votre courriel, téléphone ni CV via une candidature ouverte</li>
           </ul>
           <h2>Comment postuler</h2>
           <ol class="tl-job-steps">
-            <li><strong>Vous postulez ici.</strong> Votre dossier arrive chez Talendus.</li>
-            <li><strong>Un conseiller l'étudie.</strong> Nous vérifions la correspondance avec le mandat.</li>
-            <li><strong>Si ça colle, nous vous présentons.</strong> Nous parlons à l'employeur pour vous.</li>
-            <li><strong>Vous suivez la suite avec nous.</strong> Entretiens et nouvelles passent par Talendus.</li>
+            <li><span class="tl-job-step-n">1</span><div><strong>Vous postulez ici avec votre CV.</strong><p>PDF, Word ou image. Votre dossier arrive chez Talendus.</p></div></li>
+            <li><span class="tl-job-step-n">2</span><div><strong>Un conseiller l'étudie.</strong><p>Nous vérifions la correspondance avec le mandat avant tout partage.</p></div></li>
+            <li><span class="tl-job-step-n">3</span><div><strong>Si ça colle, nous vous présentons.</strong><p>Nous parlons à l'employeur pour vous.</p></div></li>
+            <li><span class="tl-job-step-n">4</span><div><strong>Vous suivez la suite avec nous.</strong><p>Entretiens et nouvelles passent par Talendus.</p></div></li>
           </ol>
         </div>
         <p class="tl-job-alt"><a href="{listing}">Voir les autres offres</a> · <a href="{talent}">Créer un profil talent</a></p>
       </div>
       <aside class="tl-job-aside">
         <div class="tl-job-apply-card" id="postuler">
-          <h2>Postuler via Talendus</h2>
-          <p>Un conseiller présente votre dossier. Vous n'écrivez pas à l'employeur en direct.</p>
-          <form class="tl-form" data-form="apply" data-job-slug="{slug}">
-            <label>Nom</label><input name="nom" required autocomplete="name">
-            <label>Courriel</label><input type="email" name="courriel" required autocomplete="email">
-            <label>Téléphone</label><input name="tel" autocomplete="tel">
-            <label>Lien CV <span class="tl-optional">(facultatif)</span></label>
-            <input name="cv" placeholder="https://">
-            <label>Note pour Talendus <span class="tl-optional">(facultatif)</span></label>
-            <textarea name="message" rows="3" maxlength="800" placeholder="Disponibilité, permis, ce que vous voulez qu'on sache"></textarea>
-            <button class="tl-btn tl-btn-lg" type="submit">Envoyer ma candidature</button>
-            <div class="tl-success"></div>
-          </form>
+          <p class="tl-job-apply-kicker">Candidature</p>
+          <h2>Envoyez votre dossier à Talendus</h2>
+          <p>Téléversez votre CV. Un conseiller présente votre dossier. Vous n'écrivez pas à l'employeur en direct.</p>
+          {form}
         </div>
       </aside>
     </div>
@@ -1574,7 +1677,7 @@ def job_detail_html(job, related_html, lang="fr"):
     </div>
   </div>
 </section>
-<div class="tl-job-mobile-cta"><a class="tl-btn" href="#postuler">Postuler</a></div>
+<div class="tl-job-mobile-cta"><a class="tl-btn" href="#postuler">Postuler avec mon CV</a></div>
 """
 
 
