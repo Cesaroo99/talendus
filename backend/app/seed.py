@@ -254,32 +254,46 @@ def seed_if_empty() -> None:
 
 
 def bootstrap_production_admin(db: Session) -> User | None:
-    """En production : rôles + un seul super-admin. Pas de faux employeurs ni de faux candidats."""
-    existing = db.scalar(select(User).limit(1))
-    if existing:
-        return None
+    """En production : garantir le super-admin ADMIN_EMAIL, même si des candidats se sont déjà inscrits."""
     email = (settings.admin_email or "").strip().lower()
     password = (settings.admin_password or "").strip()
     if not email or "@" not in email:
         raise RuntimeError("ADMIN_EMAIL est obligatoire pour initialiser la production.")
-    if len(password) < 12:
-        raise RuntimeError("ADMIN_PASSWORD (12 caractères minimum) est obligatoire pour initialiser la production.")
-    user = User(
-        email=email,
-        password_hash=hash_password(password),
-        first_name="Léa",
-        last_name="Morin",
-        role=UserRole.SUPER_ADMIN,
-        title="Super administratrice",
-        is_active=True,
-        is_email_verified=True,
-        email_verified_at=utcnow(),
-    )
-    db.add(user)
-    db.flush()
-    db.add(UserPreference(user_id=user.id, locale="fr-CA"))
-    logger.info("Compte super-admin de production créé (%s). Changez le mot de passe après la première connexion.", email)
-    return user
+    user = db.scalar(select(User).where(User.email == email))
+    changed = False
+    if user is None:
+        if len(password) < 12:
+            raise RuntimeError("ADMIN_PASSWORD (12 caractères minimum) est obligatoire pour initialiser la production.")
+        user = User(
+            email=email,
+            password_hash=hash_password(password),
+            first_name="Léa",
+            last_name="Morin",
+            role=UserRole.SUPER_ADMIN,
+            title="Super administratrice",
+            is_active=True,
+            is_email_verified=True,
+            email_verified_at=utcnow(),
+        )
+        db.add(user)
+        db.flush()
+        db.add(UserPreference(user_id=user.id, locale="fr-CA"))
+        logger.info("Compte super-admin de production créé (%s).", email)
+        changed = True
+    else:
+        if user.role not in ADMINS:
+            user.role = UserRole.SUPER_ADMIN
+            user.title = user.title or "Super administratrice"
+            changed = True
+            logger.info("Compte %s promu super-admin de production.", email)
+        if not user.is_active:
+            user.is_active = True
+            changed = True
+        if not user.is_email_verified:
+            user.is_email_verified = True
+            user.email_verified_at = user.email_verified_at or utcnow()
+            changed = True
+    return user if changed else None
 
 
 def _seed(db: Session) -> None:
