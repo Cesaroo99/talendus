@@ -479,22 +479,32 @@ def gateway_orientation_section(lang="fr"):
 <section class="tl-section" id="parcours">
   <div class="container">
     <div class="tl-center" style="max-width:720px;margin:0 auto 36px">
-      <div class="tl-kicker">Two sides. No mix-up.</div>
-      <h2 class="tl-h2">Talendus does not put companies and candidates in the same flow.</h2>
-      <p class="tl-lead">Choose your side. The next pages, the actions and the support follow that choice.</p>
+      <div class="tl-kicker">After you choose</div>
+      <h2 class="tl-h2">Two paths. One intermediary. No direct contact.</h2>
+      <p class="tl-lead">Once that choice is made, Talendus does not work the same way. Here is what actually changes on each side.</p>
     </div>
     <div class="tl-gateway-lanes">
       <article class="tl-gateway-lane is-talent">
-        <span class="tl-kicker">Candidates</span>
-        <h3>You are looking for a job</h3>
-        <p>Create a profile, submit your resume. We study your path and contact you when an opportunity fits. Companies do not receive your email or phone number. It is free.</p>
-        <a class="tl-btn" href="candidates.html" data-set-persona="talent">Create my profile</a>
+        <span class="tl-kicker">On the candidate side</span>
+        <h3>We represent you</h3>
+        <p>You are not dropped into a company inbox. A consultant studies your path, contacts you only when a mandate fits, then presents your file. The employer never receives your email or phone number. Creating a profile is free.</p>
+        <ul class="tl-gateway-points">
+          <li>Your resume is reviewed, not blasted to fifteen employers.</li>
+          <li>You hear from us when there is a real fit — not a generic job alert.</li>
+          <li>Talendus stays your contact through screening and any presentation.</li>
+        </ul>
+        <a class="tl-btn" href="candidates.html" data-set-persona="talent">See how it works for you</a>
       </article>
       <article class="tl-gateway-lane is-hire">
-        <span class="tl-kicker">Employers</span>
-        <h3>You are hiring</h3>
-        <p>Hand us the need. We search, screen and present a qualified shortlist. You do not browse a resume database. You keep the final decision.</p>
-        <a class="tl-btn" href="employers.html" data-set-persona="entreprise">Hand us the search</a>
+        <span class="tl-kicker">On the employer side</span>
+        <h3>We hire for you</h3>
+        <p>You do not browse a resume database or message candidates. You describe the role. We search, screen and bring a qualified shortlist. You keep the final decision.</p>
+        <ul class="tl-gateway-points">
+          <li>One need to hand over — not an account to learn on your own.</li>
+          <li>A shortlist of people we have already qualified, not a pile of CVs.</li>
+          <li>No unmediated contact between your team and the talent.</li>
+        </ul>
+        <a class="tl-btn" href="employers.html" data-set-persona="entreprise">See how it works for you</a>
       </article>
     </div>
   </div>
@@ -504,22 +514,32 @@ def gateway_orientation_section(lang="fr"):
 <section class="tl-section" id="parcours">
   <div class="container">
     <div class="tl-center" style="max-width:720px;margin:0 auto 36px">
-      <div class="tl-kicker">Deux côtés. Aucun mélange.</div>
-      <h2 class="tl-h2">Talendus ne met pas les entreprises et les candidats dans le même parcours.</h2>
-      <p class="tl-lead">Choisissez votre côté. Les pages suivantes, les actions et l'accompagnement suivent ce choix.</p>
+      <div class="tl-kicker">Une fois le côté choisi</div>
+      <h2 class="tl-h2">Deux parcours. Un seul intermédiaire. Aucun contact direct.</h2>
+      <p class="tl-lead">Une fois ce choix fait, Talendus ne travaille pas de la même façon. Voici ce qui change concrètement, de chaque côté.</p>
     </div>
     <div class="tl-gateway-lanes">
       <article class="tl-gateway-lane is-talent">
-        <span class="tl-kicker">Candidats</span>
-        <h3>Vous cherchez un emploi</h3>
-        <p>Créez un profil, déposez votre CV. Nous étudions votre parcours et vous contactons lorsqu'une opportunité correspond. Les entreprises ne reçoivent pas votre courriel ni votre téléphone. C'est gratuit.</p>
-        <a class="tl-btn" href="candidats.html" data-set-persona="talent">Créer mon profil</a>
+        <span class="tl-kicker">Du côté candidats</span>
+        <h3>On vous représente</h3>
+        <p>Vous n'atterrissez pas dans la boîte courriel d'une entreprise. Un conseiller étudie votre parcours, vous contacte seulement si un mandat colle, puis présente votre dossier. L'employeur ne reçoit ni votre courriel ni votre téléphone. Créer un profil est gratuit.</p>
+        <ul class="tl-gateway-points">
+          <li>Votre CV est lu, pas envoyé à l'aveugle chez quinze employeurs.</li>
+          <li>On vous écrit quand ça correspond vraiment — pas une alerte générique.</li>
+          <li>Talendus reste votre interlocuteur jusqu'à une éventuelle présentation.</li>
+        </ul>
+        <a class="tl-btn" href="candidats.html" data-set-persona="talent">Voir comment ça se passe</a>
       </article>
       <article class="tl-gateway-lane is-hire">
-        <span class="tl-kicker">Entreprises</span>
-        <h3>Vous recrutez</h3>
-        <p>Confiez-nous votre besoin. Nous recherchons, présélectionnons et vous présentons une shortlist qualifiée. Vous ne parcourez pas une base de CV. Vous gardez la décision finale.</p>
-        <a class="tl-btn" href="entreprises.html" data-set-persona="entreprise">Confier mon recrutement</a>
+        <span class="tl-kicker">Du côté entreprises</span>
+        <h3>On recrute pour vous</h3>
+        <p>Vous ne fouillez pas une base de CV et vous n'écrivez pas aux talents. Vous décrivez le poste. Nous recherchons, présélectionnons et apportons une shortlist qualifiée. Vous gardez la décision finale.</p>
+        <ul class="tl-gateway-points">
+          <li>Un besoin à nous confier — pas un logiciel à apprendre tout seul.</li>
+          <li>Une shortlist de personnes déjà qualifiées, pas une pile de CV.</li>
+          <li>Aucun échange direct non médié entre votre équipe et les candidats.</li>
+        </ul>
+        <a class="tl-btn" href="entreprises.html" data-set-persona="entreprise">Voir comment ça se passe</a>
       </article>
     </div>
   </div>
