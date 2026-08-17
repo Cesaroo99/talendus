@@ -185,7 +185,7 @@ INDEX_BODY = r"""
                 <h1 data-persona-only="talent">Votre parcours, étudié. Les bonnes opportunités.</h1>
                 <h1 data-persona-only="entreprise">Les bons talents. Plus rapidement. Plus intelligemment.</h1>
                 <div class="space16"></div>
-                <p data-persona-only="gateway">Deux côtés distincts : les entreprises qui recrutent, les personnes qui cherchent un emploi. Choisissez ce qui vous correspond. Talendus reste l'intermédiaire.</p>
+                <p data-persona-only="gateway">Choisissez votre côté pour continuer. Candidats et entreprises n'arrivent pas sur les mêmes pages.</p>
                 <p data-persona-only="talent">Créez votre profil, déposez votre CV. Nous étudions votre parcours et vous contactons lorsqu'une opportunité correspond. Gratuit pour vous. Les entreprises ne reçoivent pas vos coordonnées.</p>
                 <p data-persona-only="entreprise">Confiez-nous votre besoin. Nous recherchons, présélectionnons et vous présentons une shortlist qualifiée. Vous ne parcourez pas une base de CV. Vous gardez la décision finale.</p>
             </div>
@@ -193,13 +193,13 @@ INDEX_BODY = r"""
               <a class="tl-persona-card is-talent" href="candidats.html" data-set-persona="talent">
                 <span class="tl-kicker">Candidats</span>
                 <h2>Je cherche un emploi</h2>
-                <p>Créez votre profil, déposez votre CV. Talendus étudie votre parcours et vous contacte lorsqu'une opportunité correspond. C'est gratuit.</p>
+                <p>Entrez dans le réseau Talendus. Profil, CV, suite du parcours : tout se passe du côté candidats.</p>
                 <span class="tl-persona-go">Créer mon profil <i class="fa-solid fa-arrow-right"></i></span>
               </a>
               <a class="tl-persona-card is-hire" href="entreprises.html" data-set-persona="entreprise">
                 <span class="tl-kicker">Entreprises</span>
                 <h2>Je recrute</h2>
-                <p>Confiez-nous votre besoin. Nous recherchons, présélectionnons et vous présentons une shortlist qualifiée. Vous gardez la décision finale.</p>
+                <p>Transmettez le poste à pourvoir. La recherche, la présélection et la shortlist se font du côté entreprises.</p>
                 <span class="tl-persona-go">Confier mon recrutement <i class="fa-solid fa-arrow-right"></i></span>
               </a>
             </div>

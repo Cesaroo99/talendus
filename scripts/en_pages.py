@@ -97,7 +97,7 @@ INDEX_EN = rf"""
                 <h1 data-persona-only="talent">Your path, studied. The right opportunities.</h1>
                 <h1 data-persona-only="entreprise">The right talent. Faster. Smarter.</h1>
                 <div class="space16"></div>
-                <p data-persona-only="gateway">Two distinct sides: companies that hire, people looking for a job. Choose what fits you. Talendus stays the intermediary.</p>
+                <p data-persona-only="gateway">Pick your side to continue. Candidates and employers do not land on the same pages.</p>
                 <p data-persona-only="talent">Create your profile, submit your resume. We study your path and contact you when an opportunity fits. Free for you. Companies do not receive your contact details.</p>
                 <p data-persona-only="entreprise">Hand us the need. We search, screen and present a qualified shortlist. You do not browse a resume database. You keep the final decision.</p>
             </div>
@@ -105,13 +105,13 @@ INDEX_EN = rf"""
               <a class="tl-persona-card is-talent" href="candidates.html" data-set-persona="talent">
                 <span class="tl-kicker">Candidates</span>
                 <h2>I'm looking for a job</h2>
-                <p>Create your profile, submit your resume. Talendus studies your path and contacts you when an opportunity fits. It's free.</p>
+                <p>Join the Talendus network. Profile, resume and next steps live on the candidate side.</p>
                 <span class="tl-persona-go">Create my profile <i class="fa-solid fa-arrow-right"></i></span>
               </a>
               <a class="tl-persona-card is-hire" href="employers.html" data-set-persona="entreprise">
                 <span class="tl-kicker">Employers</span>
                 <h2>I'm hiring</h2>
-                <p>Hand us the need. We search, screen and present a qualified shortlist. You keep the final decision.</p>
+                <p>Hand us the role to fill. Search, screening and the shortlist live on the employer side.</p>
                 <span class="tl-persona-go">Hand us the search <i class="fa-solid fa-arrow-right"></i></span>
               </a>
             </div>
