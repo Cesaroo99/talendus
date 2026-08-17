@@ -170,26 +170,24 @@ gtag('consent', 'default', {
   <div class="vl-offcanvas-overlay"></div>
 </div>
 
-<section class="tl-page-hero">
+<section class="tl-jobs-hero">
   <div class="container">
-    <span class="tl-badge tl-badge-light">Via Talendus</span>
-    <div class="tl-kicker">Offres d'emploi</div>
-    <h1 class="tl-h1">Des opportunités. Tous secteurs, tous métiers.</h1>
-    <p class="tl-lead">Filtrez, puis postulez. Un conseiller Talendus présente votre dossier à l'employeur. Vous pouvez aussi créer un profil : beaucoup de mandats ne sont pas affichés.</p>
-    <div class="tl-actions"><a class="tl-btn" href="candidats.html#cv">Créer mon profil</a></div>
+    <p class="tl-kicker">Offres d'emploi</p>
+    <h1>Des opportunités, tous secteurs. Postulez via Talendus.</h1>
+    <p class="tl-lead">Filtrez les postes que nous publions, puis envoyez votre dossier à notre équipe. Un conseiller le présente à l'employeur. Vous pouvez aussi créer un profil : beaucoup de mandats n'apparaissent pas.</p>
+    <div class="tl-actions">
+      <a class="tl-btn" href="candidats.html#cv">Créer mon profil</a>
+    </div>
   </div>
 </section>
 
-    <section class="tl-section"><div class="container">
+    <section class="tl-section tl-jobs-board"><div class="container">
       
+      <div class="tl-jobs-toolbar">
       <div class="tl-filters tl-filters-search" data-ai-ready="true">
-        <label class="tl-filter">
+        <label class="tl-filter tl-filter-search">
           <span>Métier ou compétences</span>
           <input id="job-search" placeholder="Développeur, Excel, soudure, gestion de projet…">
-        </label>
-        <label class="tl-filter">
-          <span>Secteur</span>
-          <select id="job-sector"><option value="">Tous les secteurs</option><option value="technologie">Technologie et informatique</option><option value="construction">Construction</option><option value="manufacturier">Manufacturier</option><option value="transport">Transport et logistique</option><option value="commerce">Commerce et vente au détail</option><option value="finance">Finance</option><option value="assurance">Assurance</option><option value="sante">Santé</option><option value="education">Éducation</option><option value="hotellerie">Hôtellerie et restauration</option><option value="immobilier">Immobilier</option><option value="services-pro">Services professionnels</option><option value="marketing">Marketing et communication</option><option value="ingenierie">Ingénierie</option><option value="administration">Administration</option><option value="agriculture">Agriculture</option><option value="energie">Énergie</option><option value="telecom">Télécommunications</option><option value="services-entreprises">Services aux entreprises</option></select>
         </label>
         <label class="tl-filter">
           <span>Localisation</span>
@@ -212,6 +210,10 @@ gtag('consent', 'default', {
           <option value="Contractuel">Contractuel</option>
           <option value="Stage">Stage</option>
         </select>
+        </label>
+        <label class="tl-filter">
+          <span>Secteur</span>
+          <select id="job-sector"><option value="">Tous les secteurs</option><option value="technologie">Technologie et informatique</option><option value="construction">Construction</option><option value="manufacturier">Manufacturier</option><option value="transport">Transport et logistique</option><option value="commerce">Commerce et vente au détail</option><option value="finance">Finance</option><option value="assurance">Assurance</option><option value="sante">Santé</option><option value="education">Éducation</option><option value="hotellerie">Hôtellerie et restauration</option><option value="immobilier">Immobilier</option><option value="services-pro">Services professionnels</option><option value="marketing">Marketing et communication</option><option value="ingenierie">Ingénierie</option><option value="administration">Administration</option><option value="agriculture">Agriculture</option><option value="energie">Énergie</option><option value="telecom">Télécommunications</option><option value="services-entreprises">Services aux entreprises</option></select>
         </label>
         <label class="tl-filter">
           <span>Expérience</span>
@@ -243,156 +245,314 @@ gtag('consent', 'default', {
           </select>
         </label>
       </div>
-      <p class="tl-muted tl-ai-hint">Ces filtres vous aident à parcourir les offres que Talendus publie. Postuler passe toujours par nous : un conseiller présente votre dossier. Le classement intelligent des candidats n'est pas un outil en libre-service pour les entreprises.</p>
+      <div class="tl-jobs-toolbar-foot">
+        <p class="tl-jobs-count" id="job-count"></p>
+        <p class="tl-muted tl-ai-hint">Postuler passe toujours par Talendus : un conseiller présente votre dossier. L'employeur ne reçoit pas vos coordonnées en direct.</p>
+      </div>
+      </div>
 
-      <div class="tl-grid-3" id="job-list">
-    <article class="tl-job-card" data-job="Cariste Laval entrepot Permanent 22 à 26 $/h Temps plein transport conduite de chariot élévateur intermediaire" data-city="Laval" data-cat="entrepot" data-type="Permanent" data-shift="Temps plein" data-salary="22 à 26 $/h" data-sector="transport" data-skills="conduite de chariot élévateur" data-exp="intermediaire">
-      <div class="body">
-        <span class="tl-chip orange">Permanent</span><span class="tl-chip">Laval</span>
-        <h3><a href="emploi-cariste.html">Cariste</a></h3>
-        <p>22 à 26 $/h · Temps plein</p>
-        <a class="tl-split-cta" href="emploi-cariste.html" style="color:var(--tl-orange);margin-top:auto;padding-top:14px">Voir le poste →</a>
+      <div class="tl-jobs-grid" id="job-list">
+    <a class="tl-job-card" href="emploi-cariste.html" aria-label="Voir l'offre : Cariste" data-job="Cariste Laval entrepot Permanent 22 à 26 $/h Temps plein transport conduite de chariot élévateur intermediaire" data-city="Laval" data-cat="entrepot" data-type="Permanent" data-shift="Temps plein" data-salary="22 à 26 $/h" data-sector="transport" data-skills="conduite de chariot élévateur" data-exp="intermediaire">
+      <div class="tl-job-card-top">
+        <span class="tl-chip orange">Permanent</span>
+        <span class="tl-chip">Intermédiaire</span>
       </div>
-    </article>
-    <article class="tl-job-card" data-job="Opérateur de production Longueuil production Permanent 20 à 24 $/h Temps plein manufacturier production debutant" data-city="Longueuil" data-cat="production" data-type="Permanent" data-shift="Temps plein" data-salary="20 à 24 $/h" data-sector="manufacturier" data-skills="production" data-exp="debutant">
-      <div class="body">
-        <span class="tl-chip orange">Permanent</span><span class="tl-chip">Longueuil</span>
-        <h3><a href="emploi-operateur-production.html">Opérateur de production</a></h3>
-        <p>20 à 24 $/h · Temps plein</p>
-        <a class="tl-split-cta" href="emploi-operateur-production.html" style="color:var(--tl-orange);margin-top:auto;padding-top:14px">Voir le poste →</a>
+      <h3>Cariste</h3>
+      <ul class="tl-job-meta">
+        <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Laval</span></li>
+        <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Temps plein</span></li>
+        <li><i class="fa-solid fa-sack-dollar" aria-hidden="true"></i><span>22 à 26 $/h</span></li>
+      </ul>
+      <p class="tl-job-excerpt">Permis chariot élévateur, 1 an d'expérience en entrepôt.</p>
+      <p class="tl-job-card-cat">Entrepôt</p>
+      <span class="tl-job-card-cta">Voir l'offre</span>
+    </a>
+    <a class="tl-job-card" href="emploi-operateur-production.html" aria-label="Voir l'offre : Opérateur de production" data-job="Opérateur de production Longueuil production Permanent 20 à 24 $/h Temps plein manufacturier production debutant" data-city="Longueuil" data-cat="production" data-type="Permanent" data-shift="Temps plein" data-salary="20 à 24 $/h" data-sector="manufacturier" data-skills="production" data-exp="debutant">
+      <div class="tl-job-card-top">
+        <span class="tl-chip orange">Permanent</span>
+        <span class="tl-chip">Débutant</span>
       </div>
-    </article>
-    <article class="tl-job-card" data-job="Soudeur-monteur Drummondville metallurgie Permanent 28 à 34 $/h Temps plein manufacturier soudure intermediaire" data-city="Drummondville" data-cat="metallurgie" data-type="Permanent" data-shift="Temps plein" data-salary="28 à 34 $/h" data-sector="manufacturier" data-skills="soudure" data-exp="intermediaire">
-      <div class="body">
-        <span class="tl-chip orange">Permanent</span><span class="tl-chip">Drummondville</span>
-        <h3><a href="emploi-soudeur.html">Soudeur-monteur</a></h3>
-        <p>28 à 34 $/h · Temps plein</p>
-        <a class="tl-split-cta" href="emploi-soudeur.html" style="color:var(--tl-orange);margin-top:auto;padding-top:14px">Voir le poste →</a>
+      <h3>Opérateur de production</h3>
+      <ul class="tl-job-meta">
+        <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Longueuil</span></li>
+        <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Temps plein</span></li>
+        <li><i class="fa-solid fa-sack-dollar" aria-hidden="true"></i><span>20 à 24 $/h</span></li>
+      </ul>
+      <p class="tl-job-excerpt">Expérience de production, capacité à suivre des procédures, travail d'équipe.</p>
+      <p class="tl-job-card-cat">Production</p>
+      <span class="tl-job-card-cta">Voir l'offre</span>
+    </a>
+    <a class="tl-job-card" href="emploi-soudeur.html" aria-label="Voir l'offre : Soudeur-monteur" data-job="Soudeur-monteur Drummondville metallurgie Permanent 28 à 34 $/h Temps plein manufacturier soudure intermediaire" data-city="Drummondville" data-cat="metallurgie" data-type="Permanent" data-shift="Temps plein" data-salary="28 à 34 $/h" data-sector="manufacturier" data-skills="soudure" data-exp="intermediaire">
+      <div class="tl-job-card-top">
+        <span class="tl-chip orange">Permanent</span>
+        <span class="tl-chip">Intermédiaire</span>
       </div>
-    </article>
-    <article class="tl-job-card" data-job="Machiniste CNC Saint-Jérôme manufacturier Permanent 30 à 38 $/h Temps plein manufacturier usinage CNC senior" data-city="Saint-Jérôme" data-cat="manufacturier" data-type="Permanent" data-shift="Temps plein" data-salary="30 à 38 $/h" data-sector="manufacturier" data-skills="usinage CNC" data-exp="senior">
-      <div class="body">
-        <span class="tl-chip orange">Permanent</span><span class="tl-chip">Saint-Jérôme</span>
-        <h3><a href="emploi-machiniste-cnc.html">Machiniste CNC</a></h3>
-        <p>30 à 38 $/h · Temps plein</p>
-        <a class="tl-split-cta" href="emploi-machiniste-cnc.html" style="color:var(--tl-orange);margin-top:auto;padding-top:14px">Voir le poste →</a>
+      <h3>Soudeur-monteur</h3>
+      <ul class="tl-job-meta">
+        <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Drummondville</span></li>
+        <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Temps plein</span></li>
+        <li><i class="fa-solid fa-sack-dollar" aria-hidden="true"></i><span>28 à 34 $/h</span></li>
+      </ul>
+      <p class="tl-job-excerpt">Soudure MIG/TIG, lecture de plans, cartes de compétences un atout.</p>
+      <p class="tl-job-card-cat">Métallurgie</p>
+      <span class="tl-job-card-cta">Voir l'offre</span>
+    </a>
+    <a class="tl-job-card" href="emploi-machiniste-cnc.html" aria-label="Voir l'offre : Machiniste CNC" data-job="Machiniste CNC Saint-Jérôme manufacturier Permanent 30 à 38 $/h Temps plein manufacturier usinage CNC senior" data-city="Saint-Jérôme" data-cat="manufacturier" data-type="Permanent" data-shift="Temps plein" data-salary="30 à 38 $/h" data-sector="manufacturier" data-skills="usinage CNC" data-exp="senior">
+      <div class="tl-job-card-top">
+        <span class="tl-chip orange">Permanent</span>
+        <span class="tl-chip">Senior</span>
       </div>
-    </article>
-    <article class="tl-job-card" data-job="Électromécanicien Montréal maintenance Permanent 32 à 40 $/h Temps plein ingenierie électromécanique intermediaire" data-city="Montréal" data-cat="maintenance" data-type="Permanent" data-shift="Temps plein" data-salary="32 à 40 $/h" data-sector="ingenierie" data-skills="électromécanique" data-exp="intermediaire">
-      <div class="body">
-        <span class="tl-chip orange">Permanent</span><span class="tl-chip">Montréal</span>
-        <h3><a href="emploi-electromecanicien.html">Électromécanicien</a></h3>
-        <p>32 à 40 $/h · Temps plein</p>
-        <a class="tl-split-cta" href="emploi-electromecanicien.html" style="color:var(--tl-orange);margin-top:auto;padding-top:14px">Voir le poste →</a>
+      <h3>Machiniste CNC</h3>
+      <ul class="tl-job-meta">
+        <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Saint-Jérôme</span></li>
+        <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Temps plein</span></li>
+        <li><i class="fa-solid fa-sack-dollar" aria-hidden="true"></i><span>30 à 38 $/h</span></li>
+      </ul>
+      <p class="tl-job-excerpt">Programmation ou set-up, lecture de dessins, 3 ans d'expérience.</p>
+      <p class="tl-job-card-cat">Manufacturier</p>
+      <span class="tl-job-card-cta">Voir l'offre</span>
+    </a>
+    <a class="tl-job-card" href="emploi-electromecanicien.html" aria-label="Voir l'offre : Électromécanicien" data-job="Électromécanicien Montréal maintenance Permanent 32 à 40 $/h Temps plein ingenierie électromécanique intermediaire" data-city="Montréal" data-cat="maintenance" data-type="Permanent" data-shift="Temps plein" data-salary="32 à 40 $/h" data-sector="ingenierie" data-skills="électromécanique" data-exp="intermediaire">
+      <div class="tl-job-card-top">
+        <span class="tl-chip orange">Permanent</span>
+        <span class="tl-chip">Intermédiaire</span>
       </div>
-    </article>
-    <article class="tl-job-card" data-job="Mécanicien industriel Sherbrooke maintenance Permanent 30 à 36 $/h Temps plein manufacturier mécanique intermediaire" data-city="Sherbrooke" data-cat="maintenance" data-type="Permanent" data-shift="Temps plein" data-salary="30 à 36 $/h" data-sector="manufacturier" data-skills="mécanique" data-exp="intermediaire">
-      <div class="body">
-        <span class="tl-chip orange">Permanent</span><span class="tl-chip">Sherbrooke</span>
-        <h3><a href="emploi-mecanicien-industriel.html">Mécanicien industriel</a></h3>
-        <p>30 à 36 $/h · Temps plein</p>
-        <a class="tl-split-cta" href="emploi-mecanicien-industriel.html" style="color:var(--tl-orange);margin-top:auto;padding-top:14px">Voir le poste →</a>
+      <h3>Électromécanicien</h3>
+      <ul class="tl-job-meta">
+        <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Montréal</span></li>
+        <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Temps plein</span></li>
+        <li><i class="fa-solid fa-sack-dollar" aria-hidden="true"></i><span>32 à 40 $/h</span></li>
+      </ul>
+      <p class="tl-job-excerpt">Dépannage, hydraulique, pneumatique, électricité.</p>
+      <p class="tl-job-card-cat">Maintenance</p>
+      <span class="tl-job-card-cta">Voir l'offre</span>
+    </a>
+    <a class="tl-job-card" href="emploi-mecanicien-industriel.html" aria-label="Voir l'offre : Mécanicien industriel" data-job="Mécanicien industriel Sherbrooke maintenance Permanent 30 à 36 $/h Temps plein manufacturier mécanique intermediaire" data-city="Sherbrooke" data-cat="maintenance" data-type="Permanent" data-shift="Temps plein" data-salary="30 à 36 $/h" data-sector="manufacturier" data-skills="mécanique" data-exp="intermediaire">
+      <div class="tl-job-card-top">
+        <span class="tl-chip orange">Permanent</span>
+        <span class="tl-chip">Intermédiaire</span>
       </div>
-    </article>
-    <article class="tl-job-card" data-job="Journalier d'usine Boucherville production Permanent 18 à 21 $/h Temps plein manufacturier production debutant" data-city="Boucherville" data-cat="production" data-type="Permanent" data-shift="Temps plein" data-salary="18 à 21 $/h" data-sector="manufacturier" data-skills="production" data-exp="debutant">
-      <div class="body">
-        <span class="tl-chip orange">Permanent</span><span class="tl-chip">Boucherville</span>
-        <h3><a href="emploi-journalier-usine.html">Journalier d'usine</a></h3>
-        <p>18 à 21 $/h · Temps plein</p>
-        <a class="tl-split-cta" href="emploi-journalier-usine.html" style="color:var(--tl-orange);margin-top:auto;padding-top:14px">Voir le poste →</a>
+      <h3>Mécanicien industriel</h3>
+      <ul class="tl-job-meta">
+        <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Sherbrooke</span></li>
+        <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Temps plein</span></li>
+        <li><i class="fa-solid fa-sack-dollar" aria-hidden="true"></i><span>30 à 36 $/h</span></li>
+      </ul>
+      <p class="tl-job-excerpt">Entretien préventif, alignement, convoyeurs, fiabilité.</p>
+      <p class="tl-job-card-cat">Maintenance</p>
+      <span class="tl-job-card-cta">Voir l'offre</span>
+    </a>
+    <a class="tl-job-card" href="emploi-journalier-usine.html" aria-label="Voir l'offre : Journalier d'usine" data-job="Journalier d'usine Boucherville production Permanent 18 à 21 $/h Temps plein manufacturier production debutant" data-city="Boucherville" data-cat="production" data-type="Permanent" data-shift="Temps plein" data-salary="18 à 21 $/h" data-sector="manufacturier" data-skills="production" data-exp="debutant">
+      <div class="tl-job-card-top">
+        <span class="tl-chip orange">Permanent</span>
+        <span class="tl-chip">Débutant</span>
       </div>
-    </article>
-    <article class="tl-job-card" data-job="Superviseur de production Trois-Rivières supervision Permanent 70 000 à 85 000 $ Temps plein manufacturier supervision senior" data-city="Trois-Rivières" data-cat="supervision" data-type="Permanent" data-shift="Temps plein" data-salary="70 000 à 85 000 $" data-sector="manufacturier" data-skills="supervision" data-exp="senior">
-      <div class="body">
-        <span class="tl-chip orange">Permanent</span><span class="tl-chip">Trois-Rivières</span>
-        <h3><a href="emploi-superviseur-production.html">Superviseur de production</a></h3>
-        <p>70 000 à 85 000 $ · Temps plein</p>
-        <a class="tl-split-cta" href="emploi-superviseur-production.html" style="color:var(--tl-orange);margin-top:auto;padding-top:14px">Voir le poste →</a>
+      <h3>Journalier d'usine</h3>
+      <ul class="tl-job-meta">
+        <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Boucherville</span></li>
+        <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Temps plein</span></li>
+        <li><i class="fa-solid fa-sack-dollar" aria-hidden="true"></i><span>18 à 21 $/h</span></li>
+      </ul>
+      <p class="tl-job-excerpt">Bonne condition physique, ponctualité, formation interne offerte.</p>
+      <p class="tl-job-card-cat">Production</p>
+      <span class="tl-job-card-cta">Voir l'offre</span>
+    </a>
+    <a class="tl-job-card" href="emploi-superviseur-production.html" aria-label="Voir l'offre : Superviseur de production" data-job="Superviseur de production Trois-Rivières supervision Permanent 70 000 à 85 000 $ Temps plein manufacturier supervision senior" data-city="Trois-Rivières" data-cat="supervision" data-type="Permanent" data-shift="Temps plein" data-salary="70 000 à 85 000 $" data-sector="manufacturier" data-skills="supervision" data-exp="senior">
+      <div class="tl-job-card-top">
+        <span class="tl-chip orange">Permanent</span>
+        <span class="tl-chip">Senior</span>
       </div>
-    </article>
-    <article class="tl-job-card" data-job="Coordonnateur logistique Anjou logistique Permanent 55 000 à 68 000 $ Temps plein transport logistique, WMS intermediaire" data-city="Anjou" data-cat="logistique" data-type="Permanent" data-shift="Temps plein" data-salary="55 000 à 68 000 $" data-sector="transport" data-skills="logistique, WMS" data-exp="intermediaire">
-      <div class="body">
-        <span class="tl-chip orange">Permanent</span><span class="tl-chip">Anjou</span>
-        <h3><a href="emploi-coordonnateur-logistique.html">Coordonnateur logistique</a></h3>
-        <p>55 000 à 68 000 $ · Temps plein</p>
-        <a class="tl-split-cta" href="emploi-coordonnateur-logistique.html" style="color:var(--tl-orange);margin-top:auto;padding-top:14px">Voir le poste →</a>
+      <h3>Superviseur de production</h3>
+      <ul class="tl-job-meta">
+        <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Trois-Rivières</span></li>
+        <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Temps plein</span></li>
+        <li><i class="fa-solid fa-sack-dollar" aria-hidden="true"></i><span>70 000 à 85 000 $</span></li>
+      </ul>
+      <p class="tl-job-excerpt">Leadership d'équipe, KPI, 5 ans en production.</p>
+      <p class="tl-job-card-cat">Supervision</p>
+      <span class="tl-job-card-cta">Voir l'offre</span>
+    </a>
+    <a class="tl-job-card" href="emploi-coordonnateur-logistique.html" aria-label="Voir l'offre : Coordonnateur logistique" data-job="Coordonnateur logistique Anjou logistique Permanent 55 000 à 68 000 $ Temps plein transport logistique, WMS intermediaire" data-city="Anjou" data-cat="logistique" data-type="Permanent" data-shift="Temps plein" data-salary="55 000 à 68 000 $" data-sector="transport" data-skills="logistique, WMS" data-exp="intermediaire">
+      <div class="tl-job-card-top">
+        <span class="tl-chip orange">Permanent</span>
+        <span class="tl-chip">Intermédiaire</span>
       </div>
-    </article>
-    <article class="tl-job-card" data-job="Directeur d'usine Québec cadres Permanent 120 000 à 150 000 $ Temps plein manufacturier direction senior" data-city="Québec" data-cat="cadres" data-type="Permanent" data-shift="Temps plein" data-salary="120 000 à 150 000 $" data-sector="manufacturier" data-skills="direction" data-exp="senior">
-      <div class="body">
-        <span class="tl-chip orange">Permanent</span><span class="tl-chip">Québec</span>
-        <h3><a href="emploi-directeur-usine.html">Directeur d'usine</a></h3>
-        <p>120 000 à 150 000 $ · Temps plein</p>
-        <a class="tl-split-cta" href="emploi-directeur-usine.html" style="color:var(--tl-orange);margin-top:auto;padding-top:14px">Voir le poste →</a>
+      <h3>Coordonnateur logistique</h3>
+      <ul class="tl-job-meta">
+        <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Anjou</span></li>
+        <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Temps plein</span></li>
+        <li><i class="fa-solid fa-sack-dollar" aria-hidden="true"></i><span>55 000 à 68 000 $</span></li>
+      </ul>
+      <p class="tl-job-excerpt">WMS, planification, anglais un atout.</p>
+      <p class="tl-job-card-cat">Logistique</p>
+      <span class="tl-job-card-cta">Voir l'offre</span>
+    </a>
+    <a class="tl-job-card" href="emploi-directeur-usine.html" aria-label="Voir l'offre : Directeur d'usine" data-job="Directeur d'usine Québec cadres Permanent 120 000 à 150 000 $ Temps plein manufacturier direction senior" data-city="Québec" data-cat="cadres" data-type="Permanent" data-shift="Temps plein" data-salary="120 000 à 150 000 $" data-sector="manufacturier" data-skills="direction" data-exp="senior">
+      <div class="tl-job-card-top">
+        <span class="tl-chip orange">Permanent</span>
+        <span class="tl-chip">Senior</span>
       </div>
-    </article>
-    <article class="tl-job-card" data-job="Développeur Montréal technologie Permanent 75 000 à 95 000 $ Temps plein technologie Python, JavaScript intermediaire" data-city="Montréal" data-cat="technologie" data-type="Permanent" data-shift="Temps plein" data-salary="75 000 à 95 000 $" data-sector="technologie" data-skills="Python, JavaScript" data-exp="intermediaire">
-      <div class="body">
-        <span class="tl-chip orange">Permanent</span><span class="tl-chip">Montréal</span>
-        <h3><a href="emploi-developpeur.html">Développeur</a></h3>
-        <p>75 000 à 95 000 $ · Temps plein</p>
-        <a class="tl-split-cta" href="emploi-developpeur.html" style="color:var(--tl-orange);margin-top:auto;padding-top:14px">Voir le poste →</a>
+      <h3>Directeur d'usine</h3>
+      <ul class="tl-job-meta">
+        <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Québec</span></li>
+        <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Temps plein</span></li>
+        <li><i class="fa-solid fa-sack-dollar" aria-hidden="true"></i><span>120 000 à 150 000 $</span></li>
+      </ul>
+      <p class="tl-job-excerpt">P&L, Lean, gestion d'un site 100+ employés. Mandat confidentiel.</p>
+      <p class="tl-job-card-cat">Cadres</p>
+      <span class="tl-job-card-cta">Voir l'offre</span>
+    </a>
+    <a class="tl-job-card" href="emploi-developpeur.html" aria-label="Voir l'offre : Développeur" data-job="Développeur Montréal technologie Permanent 75 000 à 95 000 $ Temps plein technologie Python, JavaScript intermediaire" data-city="Montréal" data-cat="technologie" data-type="Permanent" data-shift="Temps plein" data-salary="75 000 à 95 000 $" data-sector="technologie" data-skills="Python, JavaScript" data-exp="intermediaire">
+      <div class="tl-job-card-top">
+        <span class="tl-chip orange">Permanent</span>
+        <span class="tl-chip">Intermédiaire</span>
       </div>
-    </article>
-    <article class="tl-job-card" data-job="Comptable Québec finance Permanent 55 000 à 70 000 $ Temps plein finance Excel, comptabilité intermediaire" data-city="Québec" data-cat="finance" data-type="Permanent" data-shift="Temps plein" data-salary="55 000 à 70 000 $" data-sector="finance" data-skills="Excel, comptabilité" data-exp="intermediaire">
-      <div class="body">
-        <span class="tl-chip orange">Permanent</span><span class="tl-chip">Québec</span>
-        <h3><a href="emploi-comptable.html">Comptable</a></h3>
-        <p>55 000 à 70 000 $ · Temps plein</p>
-        <a class="tl-split-cta" href="emploi-comptable.html" style="color:var(--tl-orange);margin-top:auto;padding-top:14px">Voir le poste →</a>
+      <h3>Développeur</h3>
+      <ul class="tl-job-meta">
+        <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Montréal</span></li>
+        <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Temps plein</span></li>
+        <li><i class="fa-solid fa-sack-dollar" aria-hidden="true"></i><span>75 000 à 95 000 $</span></li>
+      </ul>
+      <p class="tl-job-excerpt">Python ou JavaScript, 2 ans d'expérience, travail en équipe.</p>
+      <p class="tl-job-card-cat">Technologie</p>
+      <span class="tl-job-card-cta">Voir l'offre</span>
+    </a>
+    <a class="tl-job-card" href="emploi-comptable.html" aria-label="Voir l'offre : Comptable" data-job="Comptable Québec finance Permanent 55 000 à 70 000 $ Temps plein finance Excel, comptabilité intermediaire" data-city="Québec" data-cat="finance" data-type="Permanent" data-shift="Temps plein" data-salary="55 000 à 70 000 $" data-sector="finance" data-skills="Excel, comptabilité" data-exp="intermediaire">
+      <div class="tl-job-card-top">
+        <span class="tl-chip orange">Permanent</span>
+        <span class="tl-chip">Intermédiaire</span>
       </div>
-    </article>
-    <article class="tl-job-card" data-job="Ingénieur Sherbrooke ingenierie Permanent 80 000 à 100 000 $ Temps plein ingenierie gestion de projet senior" data-city="Sherbrooke" data-cat="ingenierie" data-type="Permanent" data-shift="Temps plein" data-salary="80 000 à 100 000 $" data-sector="ingenierie" data-skills="gestion de projet" data-exp="senior">
-      <div class="body">
-        <span class="tl-chip orange">Permanent</span><span class="tl-chip">Sherbrooke</span>
-        <h3><a href="emploi-ingenieur.html">Ingénieur</a></h3>
-        <p>80 000 à 100 000 $ · Temps plein</p>
-        <a class="tl-split-cta" href="emploi-ingenieur.html" style="color:var(--tl-orange);margin-top:auto;padding-top:14px">Voir le poste →</a>
+      <h3>Comptable</h3>
+      <ul class="tl-job-meta">
+        <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Québec</span></li>
+        <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Temps plein</span></li>
+        <li><i class="fa-solid fa-sack-dollar" aria-hidden="true"></i><span>55 000 à 70 000 $</span></li>
+      </ul>
+      <p class="tl-job-excerpt">Comptabilité, Excel, diplôme pertinent.</p>
+      <p class="tl-job-card-cat">Finance</p>
+      <span class="tl-job-card-cta">Voir l'offre</span>
+    </a>
+    <a class="tl-job-card" href="emploi-ingenieur.html" aria-label="Voir l'offre : Ingénieur" data-job="Ingénieur Sherbrooke ingenierie Permanent 80 000 à 100 000 $ Temps plein ingenierie gestion de projet senior" data-city="Sherbrooke" data-cat="ingenierie" data-type="Permanent" data-shift="Temps plein" data-salary="80 000 à 100 000 $" data-sector="ingenierie" data-skills="gestion de projet" data-exp="senior">
+      <div class="tl-job-card-top">
+        <span class="tl-chip orange">Permanent</span>
+        <span class="tl-chip">Senior</span>
       </div>
-    </article>
-    <article class="tl-job-card" data-job="Chauffeur Anjou transport Permanent 22 à 28 $/h Temps plein transport conduite intermediaire" data-city="Anjou" data-cat="transport" data-type="Permanent" data-shift="Temps plein" data-salary="22 à 28 $/h" data-sector="transport" data-skills="conduite" data-exp="intermediaire">
-      <div class="body">
-        <span class="tl-chip orange">Permanent</span><span class="tl-chip">Anjou</span>
-        <h3><a href="emploi-chauffeur.html">Chauffeur</a></h3>
-        <p>22 à 28 $/h · Temps plein</p>
-        <a class="tl-split-cta" href="emploi-chauffeur.html" style="color:var(--tl-orange);margin-top:auto;padding-top:14px">Voir le poste →</a>
+      <h3>Ingénieur</h3>
+      <ul class="tl-job-meta">
+        <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Sherbrooke</span></li>
+        <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Temps plein</span></li>
+        <li><i class="fa-solid fa-sack-dollar" aria-hidden="true"></i><span>80 000 à 100 000 $</span></li>
+      </ul>
+      <p class="tl-job-excerpt">Ingénierie, gestion de projet, 3 ans d'expérience.</p>
+      <p class="tl-job-card-cat">Ingénierie</p>
+      <span class="tl-job-card-cta">Voir l'offre</span>
+    </a>
+    <a class="tl-job-card" href="emploi-chauffeur.html" aria-label="Voir l'offre : Chauffeur" data-job="Chauffeur Anjou transport Permanent 22 à 28 $/h Temps plein transport conduite intermediaire" data-city="Anjou" data-cat="transport" data-type="Permanent" data-shift="Temps plein" data-salary="22 à 28 $/h" data-sector="transport" data-skills="conduite" data-exp="intermediaire">
+      <div class="tl-job-card-top">
+        <span class="tl-chip orange">Permanent</span>
+        <span class="tl-chip">Intermédiaire</span>
       </div>
-    </article>
-    <article class="tl-job-card" data-job="Infirmier Laval sante Permanent 32 à 42 $/h Temps plein sante soins intermediaire" data-city="Laval" data-cat="sante" data-type="Permanent" data-shift="Temps plein" data-salary="32 à 42 $/h" data-sector="sante" data-skills="soins" data-exp="intermediaire">
-      <div class="body">
-        <span class="tl-chip orange">Permanent</span><span class="tl-chip">Laval</span>
-        <h3><a href="emploi-infirmier.html">Infirmier</a></h3>
-        <p>32 à 42 $/h · Temps plein</p>
-        <a class="tl-split-cta" href="emploi-infirmier.html" style="color:var(--tl-orange);margin-top:auto;padding-top:14px">Voir le poste →</a>
+      <h3>Chauffeur</h3>
+      <ul class="tl-job-meta">
+        <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Anjou</span></li>
+        <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Temps plein</span></li>
+        <li><i class="fa-solid fa-sack-dollar" aria-hidden="true"></i><span>22 à 28 $/h</span></li>
+      </ul>
+      <p class="tl-job-excerpt">Permis de conduire valide, ponctualité, dossier de conduite propre.</p>
+      <p class="tl-job-card-cat">Transport</p>
+      <span class="tl-job-card-cta">Voir l'offre</span>
+    </a>
+    <a class="tl-job-card" href="emploi-infirmier.html" aria-label="Voir l'offre : Infirmier" data-job="Infirmier Laval sante Permanent 32 à 42 $/h Temps plein sante soins intermediaire" data-city="Laval" data-cat="sante" data-type="Permanent" data-shift="Temps plein" data-salary="32 à 42 $/h" data-sector="sante" data-skills="soins" data-exp="intermediaire">
+      <div class="tl-job-card-top">
+        <span class="tl-chip orange">Permanent</span>
+        <span class="tl-chip">Intermédiaire</span>
       </div>
-    </article>
-    <article class="tl-job-card" data-job="Vendeur Longueuil commerce Permanent 18 à 24 $/h Temps plein commerce vente debutant" data-city="Longueuil" data-cat="commerce" data-type="Permanent" data-shift="Temps plein" data-salary="18 à 24 $/h" data-sector="commerce" data-skills="vente" data-exp="debutant">
-      <div class="body">
-        <span class="tl-chip orange">Permanent</span><span class="tl-chip">Longueuil</span>
-        <h3><a href="emploi-vendeur.html">Vendeur</a></h3>
-        <p>18 à 24 $/h · Temps plein</p>
-        <a class="tl-split-cta" href="emploi-vendeur.html" style="color:var(--tl-orange);margin-top:auto;padding-top:14px">Voir le poste →</a>
+      <h3>Infirmier</h3>
+      <ul class="tl-job-meta">
+        <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Laval</span></li>
+        <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Temps plein</span></li>
+        <li><i class="fa-solid fa-sack-dollar" aria-hidden="true"></i><span>32 à 42 $/h</span></li>
+      </ul>
+      <p class="tl-job-excerpt">Permis OIIQ, expérience clinique, travail d'équipe.</p>
+      <p class="tl-job-card-cat">Santé</p>
+      <span class="tl-job-card-cta">Voir l'offre</span>
+    </a>
+    <a class="tl-job-card" href="emploi-vendeur.html" aria-label="Voir l'offre : Vendeur" data-job="Vendeur Longueuil commerce Permanent 18 à 24 $/h Temps plein commerce vente debutant" data-city="Longueuil" data-cat="commerce" data-type="Permanent" data-shift="Temps plein" data-salary="18 à 24 $/h" data-sector="commerce" data-skills="vente" data-exp="debutant">
+      <div class="tl-job-card-top">
+        <span class="tl-chip orange">Permanent</span>
+        <span class="tl-chip">Débutant</span>
       </div>
-    </article>
-    <article class="tl-job-card" data-job="Responsable RH Montréal administration Permanent 70 000 à 90 000 $ Temps plein administration RH senior" data-city="Montréal" data-cat="administration" data-type="Permanent" data-shift="Temps plein" data-salary="70 000 à 90 000 $" data-sector="administration" data-skills="RH" data-exp="senior">
-      <div class="body">
-        <span class="tl-chip orange">Permanent</span><span class="tl-chip">Montréal</span>
-        <h3><a href="emploi-responsable-rh.html">Responsable RH</a></h3>
-        <p>70 000 à 90 000 $ · Temps plein</p>
-        <a class="tl-split-cta" href="emploi-responsable-rh.html" style="color:var(--tl-orange);margin-top:auto;padding-top:14px">Voir le poste →</a>
+      <h3>Vendeur</h3>
+      <ul class="tl-job-meta">
+        <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Longueuil</span></li>
+        <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Temps plein</span></li>
+        <li><i class="fa-solid fa-sack-dollar" aria-hidden="true"></i><span>18 à 24 $/h</span></li>
+      </ul>
+      <p class="tl-job-excerpt">Vente au détail, service client, aisance relationnelle.</p>
+      <p class="tl-job-card-cat">Commerce</p>
+      <span class="tl-job-card-cta">Voir l'offre</span>
+    </a>
+    <a class="tl-job-card" href="emploi-responsable-rh.html" aria-label="Voir l'offre : Responsable RH" data-job="Responsable RH Montréal administration Permanent 70 000 à 90 000 $ Temps plein administration RH senior" data-city="Montréal" data-cat="administration" data-type="Permanent" data-shift="Temps plein" data-salary="70 000 à 90 000 $" data-sector="administration" data-skills="RH" data-exp="senior">
+      <div class="tl-job-card-top">
+        <span class="tl-chip orange">Permanent</span>
+        <span class="tl-chip">Senior</span>
       </div>
-    </article>
-    <article class="tl-job-card" data-job="Spécialiste marketing Montréal marketing Permanent 55 000 à 75 000 $ Temps plein marketing marketing intermediaire" data-city="Montréal" data-cat="marketing" data-type="Permanent" data-shift="Temps plein" data-salary="55 000 à 75 000 $" data-sector="marketing" data-skills="marketing" data-exp="intermediaire">
-      <div class="body">
-        <span class="tl-chip orange">Permanent</span><span class="tl-chip">Montréal</span>
-        <h3><a href="emploi-specialiste-marketing.html">Spécialiste marketing</a></h3>
-        <p>55 000 à 75 000 $ · Temps plein</p>
-        <a class="tl-split-cta" href="emploi-specialiste-marketing.html" style="color:var(--tl-orange);margin-top:auto;padding-top:14px">Voir le poste →</a>
+      <h3>Responsable RH</h3>
+      <ul class="tl-job-meta">
+        <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Montréal</span></li>
+        <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Temps plein</span></li>
+        <li><i class="fa-solid fa-sack-dollar" aria-hidden="true"></i><span>70 000 à 90 000 $</span></li>
+      </ul>
+      <p class="tl-job-excerpt">Recrutement, relations de travail, 5 ans en RH.</p>
+      <p class="tl-job-card-cat">Administration</p>
+      <span class="tl-job-card-cta">Voir l'offre</span>
+    </a>
+    <a class="tl-job-card" href="emploi-specialiste-marketing.html" aria-label="Voir l'offre : Spécialiste marketing" data-job="Spécialiste marketing Montréal marketing Permanent 55 000 à 75 000 $ Temps plein marketing marketing intermediaire" data-city="Montréal" data-cat="marketing" data-type="Permanent" data-shift="Temps plein" data-salary="55 000 à 75 000 $" data-sector="marketing" data-skills="marketing" data-exp="intermediaire">
+      <div class="tl-job-card-top">
+        <span class="tl-chip orange">Permanent</span>
+        <span class="tl-chip">Intermédiaire</span>
       </div>
-    </article></div>
-      <p class="tl-muted" id="job-empty" hidden>Aucun poste ne correspond à ces filtres. Créez votre profil : on vous contacte quand un mandat colle.</p>
+      <h3>Spécialiste marketing</h3>
+      <ul class="tl-job-meta">
+        <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Montréal</span></li>
+        <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Temps plein</span></li>
+        <li><i class="fa-solid fa-sack-dollar" aria-hidden="true"></i><span>55 000 à 75 000 $</span></li>
+      </ul>
+      <p class="tl-job-excerpt">Marketing digital, communication, gestion de campagnes.</p>
+      <p class="tl-job-card-cat">Marketing</p>
+      <span class="tl-job-card-cta">Voir l'offre</span>
+    </a></div>
+      
+      <div class="tl-jobs-empty" id="job-empty" hidden>
+        <p>Aucun poste ne correspond à ces filtres.</p>
+        <a class="tl-btn" href="candidats.html#cv">Créer mon profil</a>
+      </div>
+
     </div></section>
     
+<section class="tl-speed">
+  <div class="container">
+    <div class="tl-speed-inner">
+      <div>
+        <span class="tl-badge tl-badge-light">Sans frais pour vous</span>
+        <h2>Talendus étudie votre profil et vous présente aux entreprises quand ça colle.</h2>
+        <p>Vous créez votre profil. Nous comprenons votre parcours. Lorsque votre profil correspond à une opportunité, un conseiller vous contacte, jamais l'employeur en direct.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="tl-cta-band">
+  <div class="container">
+    <span class="tl-badge tl-badge-light">Emploi</span>
+    <h2 class="tl-h2">Prêt à rejoindre Talendus ?</h2>
+    <p>C'est gratuit. Créez votre profil, déposez votre CV. Lorsque votre parcours correspond à une opportunité, un conseiller vous contacte.</p>
+    <div class="tl-actions">
+      <a class="tl-btn tl-btn-lg" href="candidats.html#cv">Créer mon profil</a>
+    </div>
+  </div>
+</section>
+
 <a class="tl-whatsapp" href="https://wa.me/15145550199?text=Bonjour%20Talendus%2C%20je%20souhaite%20discuter%20d%27un%20besoin%20de%20recrutement." target="_blank" rel="noopener noreferrer" aria-label="Écrire à Talendus sur WhatsApp">
   <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M19.11 17.47c-.29-.15-1.73-.85-2-.95-.27-.1-.46-.15-.66.15s-.76.95-.93 1.15c-.17.2-.34.22-.63.07-.29-.15-1.22-.45-2.33-1.43-.86-.77-1.44-1.72-1.61-2.01-.17-.29-.02-.45.13-.6.13-.13.29-.34.43-.51.15-.17.2-.29.29-.48.1-.2.05-.36-.02-.51-.07-.15-.66-1.59-.9-2.18-.24-.57-.48-.49-.66-.5h-.56c-.2 0-.51.07-.78.36-.27.29-1.02.99-1.02 2.42s1.05 2.81 1.19 3 .07.15 2.06 3.15c1.64 1.41 2.96 1.85 3.58 2.06.54.17 1.04.15 1.43.09.44-.06 1.73-.71 1.97-1.39.24-.68.24-1.27.17-1.39-.07-.12-.26-.2-.55-.35zM16.03 4.05C9.41 4.05 4.05 9.4 4.05 16.03c0 2.11.55 4.17 1.6 5.99L4 28l6.12-1.6a11.94 11.94 0 0 0 5.91 1.51h.01c6.62 0 11.98-5.36 11.98-11.98 0-3.2-1.25-6.21-3.51-8.47a11.9 11.9 0 0 0-8.48-3.51zm0 21.86h-.01a9.94 9.94 0 0 1-5.06-1.38l-.36-.22-3.63.95.97-3.54-.23-.37a9.93 9.93 0 0 1-1.52-5.32c0-5.48 4.46-9.94 9.95-9.94 2.66 0 5.15 1.04 7.03 2.92a9.87 9.87 0 0 1 2.91 7.02c0 5.49-4.47 9.95-9.95 9.95z"/></svg>
 </a>
