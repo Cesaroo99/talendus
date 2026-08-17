@@ -13,13 +13,61 @@
   let financeTab = "factures";
   let detailTab = "profil";
 
+  const CAND_STATUS_TO_APP = {
+    nouveau: "SUBMITTED",
+    "a-contacter": "UNDER_REVIEW",
+    qualifie: "SHORTLISTED",
+    entretien: "INTERVIEW",
+    presente: "SHORTLISTED",
+    "entretien-client": "SECOND_INTERVIEW",
+    offre: "OFFER_SENT",
+    place: "HIRED",
+    refuse: "REJECTED",
+    inactif: "WITHDRAWN"
+  };
+  const HIRING_STATUSES = [
+    ["REQUEST_SUBMITTED", "Besoin transmis"],
+    ["UNDER_REVIEW", "Analyse en cours"],
+    ["CLIENT_CONTACTED", "Échange avec l’entreprise"],
+    ["NEEDS_CONFIRMED", "Profil défini"],
+    ["JOB_BEING_PREPARED", "Offre en préparation"],
+    ["CLIENT_VALIDATION", "Validation demandée"],
+    ["JOB_PUBLISHED", "Recherche lancée"],
+    ["SOURCING", "Recherche en cours"],
+    ["SCREENING", "Présélection"],
+    ["INTERVIEWS", "Entretiens Talendus"],
+    ["SHORTLIST", "Shortlist"],
+    ["CLIENT_REVIEW", "Profils à consulter"],
+    ["HIRING", "Décision en cours"],
+    ["CLOSED", "Recrutement terminé"]
+  ];
+  const JOB_ACT_API = { publiee: "publish", suspendue: "pause", archivee: "archive" };
+
+  function live() {
+    return !!(window.TalendusAPI && TLStore.isLive && TLStore.isLive());
+  }
+
+  async function refreshLive() {
+    if (TLStore.hydrateFromApi) await TLStore.hydrateFromApi();
+  }
+
+  function adminHash(href) {
+    if (!href) return "#/notifications";
+    var i = String(href).indexOf("#");
+    if (i >= 0) return href.slice(i);
+    if (String(href).charAt(0) === "#") return href;
+    return "#/notifications";
+  }
+
   const NAV = [
     ["Ops", [
       ["dashboard", "Tableau de bord", "fa-solid fa-grip"],
+      ["hiring", "Besoins", "fa-solid fa-clipboard-list"],
       ["candidates", "Candidats", "fa-solid fa-users"],
       ["clients", "Clients", "fa-solid fa-industry"],
       ["jobs", "Offres d’emploi", "fa-solid fa-briefcase"],
-      ["missions", "Missions", "fa-solid fa-diagram-project"]
+      ["missions", "Missions", "fa-solid fa-diagram-project"],
+      ["messages", "Messages", "fa-solid fa-comments"]
     ]],
     ["Pilotage", [
       ["content", "Contenu", "fa-solid fa-pen-nib"],
@@ -61,7 +109,7 @@
             <img src="../assets/img/logo/logo1.png" alt="Talendus">
             <div style="margin-top:28px"><span class="login-kicker">ATS / CRM interne</span></div>
             <h1>Le centre opérationnel de Talendus.</h1>
-            <p>Candidats, clients, missions, offres, contenu et finance — une seule plateforme pour l’équipe de recrutement industriel.</p>
+            <p>Candidats, clients, missions, offres, besoins et messages — une seule plateforme, liée au site et aux espaces.</p>
           </div>
           <div class="login-meta">
             <div><b>1 200+</b>Talents en réseau</div>
@@ -116,7 +164,16 @@
     var nav = allowedNav().map(function (g) {
       return '<div class="nav-group"><div class="nav-label">' + g[0] + "</div>" + g[1].map(function (i) {
         var active = r.name === i[0] ? " is-active" : "";
-        var count = i[0] === "notifications" && unread() ? '<span class="count">' + unread() + "</span>" : "";
+        var count = "";
+        if (i[0] === "notifications" && unread()) count = '<span class="count">' + unread() + "</span>";
+        if (i[0] === "messages" && (S().unreadMessages || 0)) count = '<span class="count">' + S().unreadMessages + "</span>";
+        if (i[0] === "hiring") {
+          var pending = (S().hiringRequests || S().missions || []).filter(function (m) {
+            var key = m.status || m.statusKey || "";
+            return ["besoin-transmis", "en-analyse", "REQUEST_SUBMITTED", "UNDER_REVIEW"].indexOf(key) !== -1;
+          }).length;
+          if (pending) count = '<span class="count">' + pending + "</span>";
+        }
         return '<a class="nav-item' + active + '" href="#/' + i[0] + '"><i class="' + i[2] + '"></i>' + i[1] + count + "</a>";
       }).join("") + "</div>";
     }).join("");
@@ -129,6 +186,7 @@
             <div>Talendus<small>Back-office</small></div>
           </a>
           ${nav}
+          <div class="live-flag ${live() ? "is-live" : "is-demo"}">${live() ? "Lié à l’application" : "Mode démo local"}</div>
           <div class="sidebar-foot">
             <a class="user-chip" href="#/profile">${U.avatar(me)}<div><b>${U.esc(me.firstName + " " + me.lastName)}</b><span>${U.esc(roleLabel(me.role))}</span></div></a>
             <button class="logout-btn" id="logout"><i class="fa-solid fa-right-from-bracket"></i> Déconnexion</button>
@@ -207,11 +265,16 @@
     drop.onclick = function (ev) {
       var row = ev.target.closest("[data-n]");
       if (!row) return;
+      var nid = row.getAttribute("data-n");
+      var href = adminHash(row.getAttribute("data-href"));
       TLStore.update(function (st) {
-        var n = st.notifications.find(function (x) { return x.id === row.getAttribute("data-n"); });
+        var n = st.notifications.find(function (x) { return x.id === nid; });
         if (n) n.read = true;
       });
-      go(row.getAttribute("data-href"));
+      if (live()) {
+        window.TalendusAPI.request("/notifications/" + nid + "/read", { method: "POST" }).catch(function () {});
+      }
+      go(href);
     };
   }
 
@@ -244,6 +307,7 @@
       ["Clients", S().clients.map(function (c) { return { t: c.name, s: c.city, h: "#/clients/" + c.id, hay: (c.name + c.city + c.sector + c.contact).toLowerCase() }; })],
       ["Offres", S().jobs.map(function (j) { return { t: j.title, s: j.city, h: "#/jobs/" + j.id, hay: (j.title + j.city + j.sector).toLowerCase() }; })],
       ["Missions", S().missions.map(function (m) { return { t: m.title, s: U.dateFr(m.due), h: "#/missions/" + m.id, hay: m.title.toLowerCase() }; })],
+      ["Besoins", hiringList().map(function (h) { return { t: h.title, s: h.company_name || "", h: "#/hiring/" + h.id, hay: (h.title + " " + (h.company_name || "")).toLowerCase() }; })],
       ["Factures", S().invoices.map(function (i) { return { t: i.id, s: U.money(i.amount), h: "#/finance", hay: (i.id + String(i.amount)).toLowerCase() }; })],
       ["Documents", S().documents.map(function (d) { return { t: d.name, s: d.size, h: "#/candidates/" + (d.entityId || ""), hay: d.name.toLowerCase() }; })]
     ];
@@ -266,32 +330,40 @@
   /* ---------- Dashboard ---------- */
   function viewDashboard() {
     var st = S();
+    var today = new Date().toISOString().slice(0, 10);
+    var monthStart = today.slice(0, 7) + "-01";
     var placed = st.candidates.filter(function (c) { return c.status === "place"; }).length;
     var activeJobs = st.jobs.filter(function (j) { return j.status === "publiee"; }).length;
     var activeClients = st.clients.filter(function (c) { return c.status === "Actif"; }).length;
-    var openM = st.missions.filter(function (m) { return m.status === "en-cours"; }).length;
+    var openM = st.missions.filter(function (m) {
+      return ["termine", "pourvue", "annulee", "CLOSED", "FILLED", "CANCELLED"].indexOf(m.status) === -1;
+    }).length;
     var unpaid = st.invoices.filter(function (i) { return i.status === "en-attente" || i.status === "en-retard" || i.status === "envoyee"; });
     var revenue = st.invoices.filter(function (i) { return i.status === "payee"; }).reduce(function (s, i) { return s + i.amount; }, 0);
     var rate = Math.round((placed / Math.max(1, st.candidates.length)) * 100);
-    var newbie = st.candidates.filter(function (c) { return c.createdAt >= "2026-08-01"; }).length;
+    var newbie = st.candidates.filter(function (c) { return (c.createdAt || "") >= monthStart; }).length;
     var bySector = {};
-    st.candidates.forEach(function (c) { bySector[c.sector] = (bySector[c.sector] || 0) + 1; });
+    st.candidates.forEach(function (c) { bySector[c.sector || "Autre"] = (bySector[c.sector || "Autre"] || 0) + 1; });
     var byStatus = {};
     st.candidates.forEach(function (c) { byStatus[c.status] = (byStatus[c.status] || 0) + 1; });
-    var recPerf = ["u-marc", "u-camille", "u-sophie"].map(function (id) {
-      var n = st.candidates.filter(function (c) { return c.recruiterId === id && c.status === "place"; }).length;
-      return { l: TLStore.name(id).split(" ")[0], v: n, c: id === "u-marc" ? "#1e6bff" : id === "u-camille" ? "#ff6b00" : "#0b1f3a" };
+    var recPerf = st.users.filter(function (u) { return u.role === "recruiter" || u.role === "admin"; }).slice(0, 6).map(function (u, i) {
+      var n = st.candidates.filter(function (c) { return c.recruiterId === u.id && c.status === "place"; }).length;
+      return { l: u.firstName, v: n, c: ["#1e6bff", "#ff6b00", "#0b1f3a"][i % 3] };
     });
+    if (!recPerf.length) recPerf = [{ l: "—", v: 0, c: "#1e6bff" }];
+    var needs = (st.hiringRequests || []).filter(function (h) {
+      return ["REQUEST_SUBMITTED", "UNDER_REVIEW", "CLIENT_CONTACTED"].indexOf(h.status) !== -1;
+    }).length;
 
     return `
-      <div class="page-head"><div><h1>Tableau de bord</h1><p>Vue synthétique de l’activité Talendus — ${U.dateFr("2026-08-16")}</p></div>
+      <div class="page-head"><div><h1>Tableau de bord</h1><p>${live() ? "Données live — les mêmes que le site et les espaces candidat / entreprise." : "Vue démo locale."} — ${U.dateFr(today)}</p></div>
         <div class="actions"><button class="btn btn-ghost btn-sm" data-export-dash>Exporter CSV</button></div></div>
       <div class="grid grid-6" style="margin-bottom:16px">
         ${kpi("Candidats", st.candidates.length, "+ " + newbie + " ce mois")}
-        ${kpi("Nouveaux", newbie, "depuis le 1er août")}
+        ${kpi("Nouveaux", newbie, "depuis le 1er du mois")}
         ${kpi("Clients actifs", activeClients, st.clients.length + " au total")}
         ${kpi("Offres actives", activeJobs, st.jobs.length + " au catalogue")}
-        ${kpi("Missions en cours", openM, placed + " placements")}
+        ${kpi("Besoins ouverts", needs || openM, placed + " placements")}
         ${kpi("Taux de placement", rate + " %", U.money(revenue) + " encaissés")}
       </div>
       <div class="grid grid-3" style="margin-bottom:16px">
@@ -435,8 +507,12 @@
     } else if (detailTab === "cv") {
       body = '<div class="card card-pad"><h3>Documents</h3>' + (docs.map(function (d) { return "<p><i class='fa-regular fa-file'></i> " + U.esc(d.name) + " · " + d.size + "</p>"; }).join("") || "<p>Aucun document. Téléversement simulé.</p>") + '<button class="btn btn-ghost" data-fake-upload>Ajouter un document</button></div>';
     } else if (detailTab === "histo") {
+      var apps = c.applications || [];
       body = `<div class="card card-pad"><h3>Historique des candidatures</h3>
-        <p>Offre liée : <a href="#/jobs/${c.jobId}">${U.esc((TLStore.job(c.jobId) || {}).title || "—")}</a></p>
+        ${apps.length ? apps.map(function (a) {
+          var job = TLStore.job(a.jobId) || {};
+          return "<p><a href=\"#/jobs/" + a.jobId + "\">" + U.esc(a.jobTitle || job.title || "Offre") + "</a> — " + U.badge(a.status) + " · " + U.dateFr(a.createdAt) + "</p>";
+        }).join("") : "<p>Offre liée : <a href=\"#/jobs/" + c.jobId + "\">" + U.esc((TLStore.job(c.jobId) || {}).title || "—") + "</a></p>"}
         <h3>Entreprises auxquelles il a été présenté</h3>
         <p>${client ? '<a href="#/clients/' + client.id + '">' + U.esc(client.name) + "</a> — " + U.badge(c.status) : "Pas encore présenté."}</p></div>`;
     } else if (detailTab === "entretiens") {
@@ -576,6 +652,7 @@
           <button class="btn btn-ghost" data-job-act="suspendue:${j.id}">Dépublier</button>
           <button class="btn btn-ghost" data-job-act="archivee:${j.id}">Archiver</button>
           <button class="btn btn-ghost" data-job-act="dup:${j.id}">Dupliquer</button>
+          ${j.slug ? '<a class="btn btn-ghost" href="' + U.esc(j.url || ("/emploi-" + j.slug + ".html")) + '" target="_blank" rel="noopener">Voir sur le site</a>' : ""}
         </div></div>
       <div class="grid grid-2">
         <div class="card card-pad">
@@ -614,7 +691,7 @@
       return `<tr data-go="#/missions/${m.id}"><td><b>${U.esc(m.title)}</b></td><td>${U.esc(cl ? cl.name : "—")}</td><td>${U.esc(job ? job.title : "—")}</td><td>${m.seats}</td><td>${U.esc(TLStore.name(m.recruiterId))}</td><td>${U.dateFr(m.start)}</td><td>${U.dateFr(m.due)}</td><td>${U.badge(m.status)}</td><td>${n}</td><td><div style="background:#eef2f6;border-radius:99px;height:8px;width:80px"><div style="width:${m.progress}%;background:var(--orange);height:8px;border-radius:99px"></div></div> ${m.progress}%</td><td>${U.money(m.value)}</td><td>${U.money(m.commission)}</td></tr>`;
     }).join("");
     return `
-      <div class="page-head"><div><h1>Missions</h1><p>Mandats clients et pipeline de recrutement</p></div>
+      <div class="page-head"><div><h1>Missions</h1><p>Mandats et pipeline — les statuts kanban s’enregistrent dans l’API et se voient dans les espaces.</p></div>
         <div class="actions"><button class="btn btn-orange" data-create="mission">Nouvelle mission</button></div></div>
       <div class="card"><div class="table-wrap"><table class="data"><thead><tr><th>Mission</th><th>Client</th><th>Poste</th><th>Postes</th><th>Recruteur</th><th>Début</th><th>Échéance</th><th>Statut</th><th>Candidats</th><th>Progression</th><th>Valeur</th><th>Commission</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
   }
@@ -644,7 +721,127 @@
       <div class="page-head"><div><h1>${U.esc(m.title)}</h1><p>${U.esc((TLStore.client(m.clientId) || {}).name || "—")} · ${m.seats} poste(s) · échéance ${U.dateFr(m.due)} · ${U.badge(m.status)}</p></div>
         <div class="actions"><span class="badge orange">Valeur ${U.money(m.value)}</span><span class="badge info">Commission ${U.money(m.commission)}</span></div></div>
       <div class="kanban" data-mission="${m.id}">${cols}</div>
-      <p style="color:var(--steel);margin-top:12px">Glissez-déposez les candidats d’une étape à l’autre. Le statut est enregistré dans l’API.</p>`;
+      <p style="color:var(--steel);margin-top:12px">Glissez-déposez les candidats d’une étape à l’autre. Le statut est enregistré dans l’API et se reflète dans les espaces.</p>`;
+  }
+
+  function hiringList() {
+    return S().hiringRequests && S().hiringRequests.length ? S().hiringRequests : (S().missions || []).map(function (m) {
+      return {
+        id: m.id,
+        title: m.title,
+        seats: m.seats,
+        status: m.statusKey || m.status,
+        status_label: m.statusLabel || "",
+        location: m.location,
+        sector: m.sector,
+        job_id: m.jobId,
+        company_id: m.clientId,
+        company_name: (TLStore.client(m.clientId) || {}).name,
+        notes: m.notes,
+        skills: m.skills,
+        salary_display: m.salary
+      };
+    });
+  }
+
+  function viewHiring() {
+    var list = hiringList();
+    var rows = list.map(function (h) {
+      var job = h.job_id ? TLStore.job(h.job_id) : null;
+      return `<tr data-go="#/hiring/${h.id}"><td><b>${U.esc(h.title)}</b></td><td>${U.esc(h.company_name || (TLStore.client(h.company_id) || {}).name || "—")}</td><td>${U.esc(h.location || "")}</td><td>${h.seats || 1}</td><td>${U.badge(h.status)}</td><td>${job ? '<a href="#/jobs/' + job.id + '">' + U.esc(job.title) + "</a> " + U.badge(job.status) : "Pas encore d’offre"}</td></tr>`;
+    }).join("");
+    return `
+      <div class="page-head"><div><h1>Besoins de recrutement</h1><p>Ce que les entreprises transmettent dans leur espace — Talendus convertit, publie, puis présente les profils.</p></div></div>
+      <div class="card"><div class="table-wrap"><table class="data"><thead><tr><th>Besoin</th><th>Entreprise</th><th>Lieu</th><th>Postes</th><th>Statut</th><th>Offre Talendus</th></tr></thead><tbody>${rows || '<tr><td colspan="6">' + U.empty("Aucun besoin", "Les demandes envoyées depuis l’espace entreprise apparaissent ici.") + "</td></tr>"}</tbody></table></div></div>`;
+  }
+
+  function viewHiringDetail(id) {
+    var list = hiringList();
+    var h = list.find(function (x) { return x.id === id; });
+    if (!h) return U.empty("Introuvable", "Ce besoin n’existe pas.");
+    var job = h.job_id ? TLStore.job(h.job_id) : null;
+    var statusOpts = HIRING_STATUSES.map(function (s) {
+      return "<option value=\"" + s[0] + "\"" + (h.status === s[0] ? " selected" : "") + ">" + s[1] + "</option>";
+    }).join("");
+    return `
+      <div class="crumbs"><a href="#/hiring">Besoins</a> / ${U.esc(h.title)}</div>
+      <div class="page-head"><div><h1>${U.esc(h.title)}</h1><p>${U.esc(h.company_name || "")} · ${U.esc(h.location || "")} · ${U.badge(h.status)}</p></div>
+        <div class="actions">
+          ${h.job_id ? "" : '<button class="btn btn-orange" data-hire-convert="' + h.id + '">Créer l’offre (brouillon)</button>'}
+          ${job && job.status !== "publiee" && job.id ? '<button class="btn btn-electric" data-job-act="publiee:' + job.id + '" data-hire-id="' + h.id + '">Publier sur le site</button>' : ""}
+          ${job && job.slug ? '<a class="btn btn-ghost" href="' + U.esc(job.url || ("/emploi-" + job.slug + ".html")) + '" target="_blank" rel="noopener">Voir sur le site</a>' : ""}
+        </div></div>
+      <div class="grid grid-2">
+        <div class="card card-pad">
+          <h3>Brief entreprise</h3>
+          <div class="row"><span>Secteur</span><b>${U.esc(h.sector || "—")}</b></div>
+          <div class="row"><span>Compétences</span><b>${U.esc(h.skills || "—")}</b></div>
+          <div class="row"><span>Rémunération</span><b>${U.esc(h.salary_display || "—")}</b></div>
+          <p>${U.esc(h.notes || h.status_message || "")}</p>
+        </div>
+        <div class="card card-pad">
+          <h3>Statut vu par l’entreprise</h3>
+          <p>${U.esc(h.status_label || h.statusMessage || "")}</p>
+          <label>Mettre à jour le statut</label>
+          <select data-hire-status="${h.id}">${statusOpts}</select>
+          <p style="margin-top:12px">Offre liée : ${job ? '<a href="#/jobs/' + job.id + '">' + U.esc(job.title) + "</a> " + U.badge(job.status) : "Aucune — créez l’offre, puis publiez-la pour qu’elle apparaisse sur emplois.html."}</p>
+        </div>
+      </div>`;
+  }
+
+  function viewMessages() {
+    return `
+      <div class="page-head"><div><h1>Messages</h1><p>Fils avec les candidats et les entreprises — jamais d’échange direct entre eux.</p></div></div>
+      <div class="grid grid-2" id="msg-root"><div class="card card-pad"><p class="sub">Chargement des conversations…</p></div></div>`;
+  }
+
+  async function hydrateMessages() {
+    var root = document.getElementById("msg-root");
+    if (!root || !window.TalendusAPI) return;
+    try {
+      var threads = await window.TalendusAPI.request("/messages");
+      var directory = await window.TalendusAPI.request("/messages/directory");
+      var list = threads.data || [];
+      var people = directory.data || [];
+      var opts = people.map(function (p) {
+        return '<option value="' + U.esc(p.id) + '">' + U.esc((p.first_name || "") + " " + (p.last_name || "") + " · " + (p.role || "")) + "</option>";
+      }).join("");
+      var items = list.map(function (th) {
+        return '<button type="button" class="n-item ' + (th.unread ? "unread" : "") + '" data-open-thread="' + U.esc(th.user_id) + '"><b>' +
+          U.esc((th.first_name || "") + " " + (th.last_name || "")) + "</b><div style='color:var(--steel);font-size:12px'>" + U.esc(th.last_message || "") + "</div></button>";
+      }).join("") || "<p class='sub'>Aucun message pour le moment.</p>";
+      root.innerHTML =
+        '<div class="card card-pad"><div class="card-head"><h3>Conversations</h3></div>' + items + "</div>" +
+        '<div class="card card-pad"><form id="msg-form" class="form-grid" style="grid-template-columns:1fr">' +
+        U.field("Destinataire", "recipient_id", { options: people.map(function (p) { return { v: p.id, l: (p.first_name || "") + " " + (p.last_name || "") + " · " + (p.role || "") }; }), selected: people[0] && people[0].id }, "select") +
+        U.field("Message", "body", "", "textarea", "full") +
+        '<button class="btn btn-orange" type="submit">Envoyer</button></form><div id="msg-thread"></div></div>';
+      var form = document.getElementById("msg-form");
+      if (form) form.onsubmit = function (e) {
+        e.preventDefault();
+        var d = U.formData(form);
+        window.TalendusAPI.request("/messages", { method: "POST", body: { recipient_id: d.recipient_id, body: d.body } }).then(function () {
+          U.toast("Message envoyé.", "ok");
+          hydrateMessages();
+        }).catch(function (err) { U.toast((err && err.message) || "Envoi impossible.", "err"); });
+      };
+      root.querySelectorAll("[data-open-thread]").forEach(function (btn) {
+        btn.onclick = function () {
+          var id = btn.getAttribute("data-open-thread");
+          var select = form && form.querySelector("[name=recipient_id]");
+          if (select) select.value = id;
+          window.TalendusAPI.request("/messages/" + id).then(function (json) {
+            var me = TLStore.me();
+            document.getElementById("msg-thread").innerHTML = (json.data || []).map(function (m) {
+              var mine = me && m.sender_id === me.id;
+              return '<div class="note ' + (mine ? "is-mine" : "") + '"><div class="meta">' + U.esc(m.sender_name || "") + "</div>" + U.esc(m.body) + "</div>";
+            }).join("");
+          });
+        };
+      });
+    } catch (err) {
+      root.innerHTML = "<div class='card card-pad'><p>Impossible de charger les messages. Vérifiez la connexion API.</p></div>";
+    }
   }
 
   /* ---------- Content ---------- */
@@ -768,12 +965,12 @@
       </div>
       <div class="card card-pad" style="margin-top:16px"><h3>Revenus par recruteur</h3>
         <table class="data"><thead><tr><th>Recruteur</th><th>Placements</th><th>Commission reçue</th></tr></thead><tbody>
-        ${["u-marc","u-camille","u-sophie"].map(function (id) {
-          var n = st.candidates.filter(function (c) { return c.recruiterId === id && c.status === "place"; }).length;
-          var recu = st.missions.filter(function (m) { return m.recruiterId === id; }).reduce(function (s, m) {
+        ${st.users.filter(function (u) { return u.role === "recruiter" || u.role === "admin"; }).map(function (u) {
+          var n = st.candidates.filter(function (c) { return c.recruiterId === u.id && c.status === "place"; }).length;
+          var recu = st.missions.filter(function (m) { return m.recruiterId === u.id; }).reduce(function (s, m) {
             return s + st.invoices.filter(function (i) { return i.missionId === m.id && i.status === "payee"; }).reduce(function (a, i) { return a + i.amount; }, 0);
           }, 0);
-          return "<tr><td>" + TLStore.name(id) + "</td><td>" + n + "</td><td>" + U.money(recu) + "</td></tr>";
+          return "<tr><td>" + U.esc(u.firstName + " " + u.lastName) + "</td><td>" + n + "</td><td>" + U.money(recu) + "</td></tr>";
         }).join("")}
         </tbody></table>
       </div>`;
@@ -792,7 +989,7 @@
     var admin = me.role === "admin";
     var access = [
       ["Tableau de bord", true, true, false, true],
-      ["Candidats, clients, offres, missions", true, false, false, true],
+      ["Candidats, clients, offres, besoins, missions, messages", true, false, false, true],
       ["Finance et factures", false, true, false, true],
       ["Contenu du site", false, false, true, true],
       ["Statistiques", false, true, false, true],
@@ -895,7 +1092,7 @@
     } else if (type === "client") {
       body = '<form id="cf" class="form-grid">' + U.field("Entreprise", "name") + U.field("Secteur", "sector") + U.field("Ville", "city") + U.field("Contact", "contact") + U.field("Courriel", "email") + U.field("Téléphone", "phone") + "</form>";
     } else if (type === "job") {
-      body = '<form id="cf" class="form-grid">' + U.field("Titre", "title") + U.field("Entreprise", "clientId", { options: S().clients.map(function (c) { return { v: c.id, l: c.name }; }), selected: S().clients[0].id }, "select") + U.field("Ville", "city") + U.field("Salaire", "salary") + U.field("Description", "description", "", "textarea", "full") + "</form>";
+      body = '<form id="cf" class="form-grid">' + U.field("Titre", "title") + U.field("Entreprise", "clientId", { options: S().clients.map(function (c) { return { v: c.id, l: c.name }; }), selected: S().clients[0] && S().clients[0].id }, "select") + U.field("Ville", "city") + U.field("Salaire", "salary") + U.field("Description", "description", "", "textarea", "full") + "</form>";
     } else if (type === "mission") {
       body = '<form id="cf" class="form-grid">' + U.field("Titre", "title") + U.field("Client", "clientId", { options: S().clients.map(function (c) { return { v: c.id, l: c.name }; }), selected: S().clients[0].id }, "select") + U.field("Offre", "jobId", { options: S().jobs.map(function (j) { return { v: j.id, l: j.title }; }), selected: S().jobs[0].id }, "select") + U.field("Nombre de postes", "seats", "1", "number") + "</form>";
     } else {
@@ -905,9 +1102,9 @@
     U.modal({
       title: "Créer",
       body: body,
-      footer: '<button class="btn btn-ghost" data-close>Annuler</button><button class="btn btn-orange" id="save">Enregistrer</button>',
+      footer: '<button class="btn btn-ghost" data-close>Annuler</button>' + (type === "job" ? '<button class="btn btn-ghost" id="save">Brouillon</button><button class="btn btn-orange" id="save-pub">Créer et publier</button>' : '<button class="btn btn-orange" id="save">Enregistrer</button>'),
       onMount: function (box, close) {
-        box.querySelector("#save").onclick = async function () {
+        async function persistCreate(publish) {
           var d = U.formData(box.querySelector("#cf"));
           try {
             if (type === "candidate" && window.TalendusAPI) {
@@ -920,20 +1117,24 @@
                 title: d.title,
                 sector: d.sector
               });
-              await TLStore.hydrateFromApi();
+              await refreshLive();
               close();
-              U.toast("Candidat créé dans l’API.", "ok");
+              U.toast("Candidat créé — visible dans l’espace talent une fois connecté.", "ok");
               render();
               return;
             }
             if (type === "job" && window.TalendusAPI && d.clientId) {
-              await window.TalendusAPI.request("/jobs", {
+              var created = await window.TalendusAPI.request("/jobs", {
                 method: "POST",
                 body: { title: d.title, company_id: d.clientId, location: d.city, salary_display: d.salary, description: d.description }
               });
-              await TLStore.hydrateFromApi();
+              var job = created && created.data;
+              if (publish && job && job.id) {
+                await window.TalendusAPI.request("/jobs/" + job.id + "/publish", { method: "POST" });
+              }
+              await refreshLive();
               close();
-              U.toast("Offre créée (brouillon).", "ok");
+              U.toast(publish ? "Offre publiée — elle apparaît sur le site public." : "Offre créée (brouillon).", "ok");
               render();
               return;
             }
@@ -972,26 +1173,32 @@
               return;
             }
           } catch (err) {
-            U.toast((err && err.message) || "Enregistrement API impossible, repli local.", "err");
+            U.toast((err && err.message) || "Enregistrement impossible.", "err");
+            if (live()) return;
           }
+          if (live()) return;
           TLStore.update(function (st) {
             if (type === "candidate") {
-              st.candidates.unshift({ id: TLStore.nid("c"), firstName: d.firstName, lastName: d.lastName, email: d.email, phone: d.phone, city: d.city, title: d.title, sector: d.sector, experience: 0, level: "Junior", availability: "Immédiat", status: d.status || "nouveau", languages: ["Français"], recruiterId: me.id, createdAt: "2026-08-16", lastActivity: "2026-08-16", skills: [], salaryMin: 20, salaryMax: 24, shift: "Jour", education: [], experiences: [], bio: "", jobId: "", clientId: "" });
-              st.activities.unshift({ id: TLStore.nid("a"), text: "Nouveau candidat inscrit — " + d.firstName + " " + d.lastName, at: "2026-08-16 12:00" });
+              st.candidates.unshift({ id: TLStore.nid("c"), firstName: d.firstName, lastName: d.lastName, email: d.email, phone: d.phone, city: d.city, title: d.title, sector: d.sector, experience: 0, level: "Junior", availability: "Immédiat", status: d.status || "nouveau", languages: ["Français"], recruiterId: me.id, createdAt: new Date().toISOString().slice(0, 10), lastActivity: new Date().toISOString().slice(0, 10), skills: [], salaryMin: 20, salaryMax: 24, shift: "Jour", education: [], experiences: [], bio: "", jobId: "", clientId: "" });
+              st.activities.unshift({ id: TLStore.nid("a"), text: "Nouveau candidat inscrit — " + d.firstName + " " + d.lastName, at: new Date().toISOString().slice(0, 16).replace("T", " ") });
             } else if (type === "client") {
-              st.clients.unshift({ id: TLStore.nid("cl"), name: d.name, sector: d.sector, city: d.city, contact: d.contact, email: d.email, phone: d.phone, status: "Prospect", recruiterId: me.id, employees: 0, website: "", since: "2026-08-16" });
+              st.clients.unshift({ id: TLStore.nid("cl"), name: d.name, sector: d.sector, city: d.city, contact: d.contact, email: d.email, phone: d.phone, status: "Prospect", recruiterId: me.id, employees: 0, website: "", since: new Date().toISOString().slice(0, 10) });
             } else if (type === "job") {
-              st.jobs.unshift({ id: TLStore.nid("j"), title: d.title, clientId: d.clientId, city: d.city, sector: "Production", type: "Permanent", salary: d.salary, shift: "Quart de jour", status: "brouillon", publishedAt: "", expiresAt: "2026-10-01", applications: 0, experience: "—", skills: "", benefits: "", description: d.description, responsibilities: "", qualifications: "" });
+              st.jobs.unshift({ id: TLStore.nid("j"), title: d.title, clientId: d.clientId, city: d.city, sector: "Production", type: "Permanent", salary: d.salary, shift: "Quart de jour", status: publish ? "publiee" : "brouillon", publishedAt: publish ? new Date().toISOString().slice(0, 10) : "", expiresAt: "", applications: 0, experience: "—", skills: "", benefits: "", description: d.description, responsibilities: "", qualifications: "" });
             } else if (type === "mission") {
-              st.missions.unshift({ id: TLStore.nid("m"), clientId: d.clientId, jobId: d.jobId, title: d.title, seats: Number(d.seats) || 1, recruiterId: me.id, start: "2026-08-16", due: "2026-09-30", status: "en-cours", value: 40000, commission: 6400, progress: 5, stageMap: {} });
+              st.missions.unshift({ id: TLStore.nid("m"), clientId: d.clientId, jobId: d.jobId, title: d.title, seats: Number(d.seats) || 1, recruiterId: me.id, start: new Date().toISOString().slice(0, 10), due: "", status: "en-cours", value: 40000, commission: 6400, progress: 5, stageMap: {} });
             } else {
-              st.invoices.unshift({ id: "F-2026-" + Math.floor(100 + Math.random() * 80), clientId: d.clientId, missionId: d.missionId, amount: Number(d.amount) || 0, date: "2026-08-16", due: "2026-09-15", status: "brouillon" });
+              st.invoices.unshift({ id: "F-2026-" + Math.floor(100 + Math.random() * 80), clientId: d.clientId, missionId: d.missionId, amount: Number(d.amount) || 0, date: new Date().toISOString().slice(0, 10), due: "", status: "brouillon" });
             }
           });
           close();
-          U.toast("Enregistré.", "ok");
+          U.toast("Enregistré en local (mode démo).", "ok");
           render();
-        };
+        }
+        var save = box.querySelector("#save");
+        if (save) save.onclick = function () { persistCreate(false); };
+        var pub = box.querySelector("#save-pub");
+        if (pub) pub.onclick = function () { persistCreate(true); };
       }
     });
   }
@@ -1105,12 +1312,32 @@
       var bulk = t.closest("[data-bulk]");
       if (bulk) {
         var stt = bulk.getAttribute("data-bulk");
-        TLStore.update(function (st) {
-          st.candidates.forEach(function (c) { if (selected.has(c.id)) c.status = stt; });
-        });
-        selected.clear();
-        U.toast("Statuts mis à jour.", "ok");
-        render();
+        var ids = Array.from(selected);
+        (async function () {
+          if (live()) {
+            try {
+              for (var i = 0; i < ids.length; i++) {
+                var cand = TLStore.candidate(ids[i]);
+                var appId = cand && cand.applicationId;
+                if (appId && CAND_STATUS_TO_APP[stt]) {
+                  await window.TalendusAPI.request("/applications/" + appId + "/status", { method: "POST", body: { status: CAND_STATUS_TO_APP[stt] } });
+                }
+              }
+              await refreshLive();
+            } catch (err) {
+              U.toast((err && err.message) || "Statuts API impossibles.", "err");
+              return;
+            }
+          } else {
+            TLStore.update(function (st) {
+              st.candidates.forEach(function (c) { if (selected.has(c.id)) c.status = stt; });
+            });
+          }
+          selected.clear();
+          U.toast("Statuts mis à jour.", "ok");
+          render();
+        })();
+        return;
       }
       var note = t.closest("[data-note]");
       if (note) {
@@ -1119,28 +1346,56 @@
           body: '<form id="nf">' + U.field("Note privée", "text", "", "textarea", "full") + "</form>",
           footer: '<button class="btn btn-ghost" data-close>Annuler</button><button class="btn btn-orange" id="save">Ajouter</button>',
           onMount: function (box, close) {
-            box.querySelector("#save").onclick = function () {
+            box.querySelector("#save").onclick = async function () {
               var text = box.querySelector("[name=text]").value;
+              var entityId = note.getAttribute("data-note");
+              try {
+                if (live()) {
+                  await window.TalendusAPI.request("/recruiters/notes", { method: "POST", body: { entity_type: "candidate", entity_id: entityId, text: text } });
+                  await refreshLive();
+                  close(); U.toast("Note interne enregistrée (invisible pour le candidat).", "ok"); render();
+                  return;
+                }
+              } catch (err) {
+                U.toast((err && err.message) || "Note non enregistrée.", "err");
+                if (live()) return;
+              }
               TLStore.update(function (st) {
-                st.notes.unshift({ id: TLStore.nid("n"), entity: "candidate", entityId: note.getAttribute("data-note"), authorId: TLStore.me().id, text: text, at: "2026-08-16 12:10" });
+                st.notes.unshift({ id: TLStore.nid("n"), entity: "candidate", entityId: entityId, authorId: TLStore.me().id, text: text, at: new Date().toISOString().slice(0, 16).replace("T", " ") });
               });
               close(); U.toast("Note enregistrée.", "ok"); render();
             };
           }
         });
+        return;
       }
       var jobAct = t.closest("[data-job-act]");
       if (jobAct) {
         var parts = jobAct.getAttribute("data-job-act").split(":");
         var act = parts[0], jid = parts[1];
+        var hireId = jobAct.getAttribute("data-hire-id") || "";
         if (act === "dup") {
-          TLStore.update(function (st) {
-            var j = st.jobs.find(function (x) { return x.id === jid; });
-            var copy = JSON.parse(JSON.stringify(j));
-            copy.id = TLStore.nid("j"); copy.title = j.title + " (copie)"; copy.status = "brouillon"; copy.applications = 0;
-            st.jobs.unshift(copy);
-          });
-          U.toast("Offre dupliquée.", "ok"); render();
+          (async function () {
+            if (live()) {
+              try {
+                await window.TalendusAPI.request("/jobs/" + jid + "/duplicate", { method: "POST" });
+                await refreshLive();
+                U.toast("Offre dupliquée (brouillon).", "ok");
+                render();
+              } catch (err) {
+                U.toast((err && err.message) || "Duplication impossible.", "err");
+              }
+              return;
+            }
+            TLStore.update(function (st) {
+              var j = st.jobs.find(function (x) { return x.id === jid; });
+              var copy = JSON.parse(JSON.stringify(j));
+              copy.id = TLStore.nid("j"); copy.title = j.title + " (copie)"; copy.status = "brouillon"; copy.applications = 0;
+              st.jobs.unshift(copy);
+            });
+            U.toast("Offre dupliquée.", "ok"); render();
+          })();
+          return;
         } else if (act === "edit") {
           var j = TLStore.job(jid);
           U.modal({
@@ -1148,8 +1403,19 @@
             body: '<form id="jf" class="form-grid">' + U.field("Titre", "title", j.title) + U.field("Salaire", "salary", j.salary) + U.field("Description", "description", j.description, "textarea", "full") + "</form>",
             footer: '<button class="btn btn-ghost" data-close>Annuler</button><button class="btn btn-orange" id="save">Enregistrer</button>',
             onMount: function (box, close) {
-              box.querySelector("#save").onclick = function () {
+              box.querySelector("#save").onclick = async function () {
                 var d = U.formData(box.querySelector("#jf"));
+                try {
+                  if (live()) {
+                    await window.TalendusAPI.request("/jobs/" + jid, { method: "PATCH", body: { title: d.title, salary_display: d.salary, description: d.description } });
+                    await refreshLive();
+                    close(); U.toast("Offre mise à jour — le site public suit cette fiche.", "ok"); render();
+                    return;
+                  }
+                } catch (err) {
+                  U.toast((err && err.message) || "Mise à jour impossible.", "err");
+                  if (live()) return;
+                }
                 TLStore.update(function (st) {
                   var x = st.jobs.find(function (z) { return z.id === jid; });
                   Object.assign(x, d);
@@ -1158,18 +1424,35 @@
               };
             }
           });
+          return;
         } else {
-          U.confirm("Changer le statut de l’offre ?").then(function (ok) {
+          U.confirm("Changer le statut de l’offre ? Cela se reflète sur le site public.").then(async function (ok) {
             if (!ok) return;
+            var endpoint = JOB_ACT_API[act];
+            if (live() && endpoint) {
+              try {
+                await window.TalendusAPI.request("/jobs/" + jid + "/" + endpoint, { method: "POST" });
+                if (hireId && act === "publiee") {
+                  await window.TalendusAPI.request("/hiring-requests/" + hireId + "/status", { method: "POST", body: { status: "JOB_PUBLISHED" } });
+                }
+                await refreshLive();
+                U.toast(act === "publiee" ? "Offre publiée sur le site." : "Statut de l’offre mis à jour.", "ok");
+                render();
+              } catch (err) {
+                U.toast((err && err.message) || "Action impossible.", "err");
+              }
+              return;
+            }
             TLStore.update(function (st) {
               var x = st.jobs.find(function (z) { return z.id === jid; });
               if (x) {
                 x.status = act;
-                if (act === "publiee") x.publishedAt = "2026-08-16";
+                if (act === "publiee") x.publishedAt = new Date().toISOString().slice(0, 10);
               }
             });
             U.toast("Statut mis à jour.", "ok"); render();
           });
+          return;
         }
       }
       var cms = t.closest("[data-cms]");
@@ -1259,6 +1542,21 @@
         }
       }
       if (t.closest("[data-fake-upload]")) U.toast("Téléversement simulé — brancher le stockage fichiers ensuite.", "ok");
+      var hireConvert = t.closest("[data-hire-convert]");
+      if (hireConvert) {
+        var hid = hireConvert.getAttribute("data-hire-convert");
+        (async function () {
+          try {
+            await window.TalendusAPI.request("/hiring-requests/" + hid + "/convert-to-job", { method: "POST" });
+            await refreshLive();
+            U.toast("Offre créée en brouillon. Publiez-la pour qu’elle apparaisse sur le site.", "ok");
+            render();
+          } catch (err) {
+            U.toast((err && err.message) || "Conversion impossible.", "err");
+          }
+        })();
+        return;
+      }
       var addInt = t.closest("[data-add-int]");
       if (addInt) {
         var cid = addInt.getAttribute("data-add-int");
@@ -1363,34 +1661,88 @@
       }
       if (t.hasAttribute("data-status-cand")) {
         var id = t.getAttribute("data-status-cand");
-        TLStore.update(function (st) { st.candidates.find(function (c) { return c.id === id; }).status = t.value; });
-        U.toast("Statut candidat mis à jour.", "ok");
-        render();
+        var next = t.value;
+        (async function () {
+          var cand = TLStore.candidate(id);
+          if (live() && cand && cand.applicationId && CAND_STATUS_TO_APP[next]) {
+            try {
+              await window.TalendusAPI.request("/applications/" + cand.applicationId + "/status", { method: "POST", body: { status: CAND_STATUS_TO_APP[next] } });
+              await refreshLive();
+              U.toast("Statut enregistré — le candidat le voit dans son espace.", "ok");
+              render();
+              return;
+            } catch (err) {
+              U.toast((err && err.message) || "Statut non enregistré.", "err");
+              return;
+            }
+          }
+          TLStore.update(function (st) { st.candidates.find(function (c) { return c.id === id; }).status = next; });
+          U.toast("Statut candidat mis à jour.", "ok");
+          render();
+        })();
+      }
+      if (t.hasAttribute("data-hire-status")) {
+        var hid = t.getAttribute("data-hire-status");
+        var status = t.value;
+        (async function () {
+          try {
+            await window.TalendusAPI.request("/hiring-requests/" + hid + "/status", { method: "POST", body: { status: status } });
+            await refreshLive();
+            U.toast("Statut mis à jour — l’entreprise le voit dans son espace.", "ok");
+            render();
+          } catch (err) {
+            U.toast((err && err.message) || "Statut non enregistré.", "err");
+          }
+        })();
       }
       if (t.id === "an-rec") { analyticsRecruiter = t.value; render(); }
       if (t.id === "an-sec") { analyticsSector = t.value; render(); }
     };
     var nf = document.getElementById("note-form");
-    if (nf) nf.onsubmit = function (e) {
+    if (nf) nf.onsubmit = async function (e) {
       e.preventDefault();
       var id = route().id;
+      var text = U.formData(nf).text;
+      try {
+        if (live()) {
+          await window.TalendusAPI.request("/recruiters/notes", { method: "POST", body: { entity_type: "candidate", entity_id: id, text: text } });
+          await refreshLive();
+          U.toast("Note interne enregistrée (invisible pour le candidat).", "ok");
+          render();
+          return;
+        }
+      } catch (err) {
+        U.toast((err && err.message) || "Note non enregistrée.", "err");
+        if (live()) return;
+      }
       TLStore.update(function (st) {
-        st.notes.unshift({ id: TLStore.nid("n"), entity: "candidate", entityId: id, authorId: TLStore.me().id, text: U.formData(nf).text, at: "2026-08-16 12:20" });
+        st.notes.unshift({ id: TLStore.nid("n"), entity: "candidate", entityId: id, authorId: TLStore.me().id, text: text, at: new Date().toISOString().slice(0, 16).replace("T", " ") });
       });
       U.toast("Note interne enregistrée.", "ok");
       render();
     };
     var ma = document.getElementById("mark-all");
-    if (ma) ma.onclick = function () {
-      TLStore.update(function (st) { st.notifications.forEach(function (n) { n.read = true; }); });
+    if (ma) ma.onclick = async function () {
+      if (live()) {
+        try {
+          await window.TalendusAPI.request("/notifications/read-all", { method: "POST" });
+          await refreshLive();
+        } catch (err) {
+          U.toast((err && err.message) || "Impossible de marquer lu.", "err");
+          return;
+        }
+      } else {
+        TLStore.update(function (st) { st.notifications.forEach(function (n) { n.read = true; }); });
+      }
       render();
     };
     var rst = document.getElementById("reset-demo");
     if (rst) rst.onclick = function () {
-      U.confirm("Réinitialiser toutes les données de démonstration ?").then(function (ok) {
+      U.confirm("Réinitialiser toutes les données de démonstration ?").then(async function (ok) {
         if (!ok) return;
         TLStore.reset();
-        U.toast("Données réinitialisées.", "ok");
+        if (live()) await refreshLive();
+        U.toast(live() ? "Données rechargées depuis l’API." : "Données réinitialisées.", "ok");
         render();
       });
     };
@@ -1498,6 +1850,9 @@
         else if (r.name === "jobs") inner = viewJobs();
         else if (r.name === "missions" && r.id) inner = viewMission(r.id);
         else if (r.name === "missions") inner = viewMissions();
+        else if (r.name === "hiring" && r.id) inner = viewHiringDetail(r.id);
+        else if (r.name === "hiring") inner = viewHiring();
+        else if (r.name === "messages") inner = viewMessages();
         else if (r.name === "content") inner = viewContent();
         else if (r.name === "finance") inner = viewFinance();
         else if (r.name === "analytics") inner = viewAnalytics();
@@ -1512,6 +1867,7 @@
       var v = document.getElementById("view");
       if (v) { v.innerHTML = inner; bindView(); }
       if (r.name === "content") hydrateBlogCms();
+      if (r.name === "messages") hydrateMessages();
     }, 180);
   }
 

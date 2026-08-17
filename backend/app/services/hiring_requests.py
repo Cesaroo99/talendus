@@ -159,7 +159,7 @@ def _notify_employer(db: Session, row: RecruitmentMission) -> None:
 def _notify_staff(db: Session, row: RecruitmentMission, title: str, message: str) -> None:
     staff = db.scalars(select(User).where(User.role.in_(STAFF_ROLES), User.is_active.is_(True))).all()
     for user in staff:
-        notify(db, user, NotificationType.HIRING_REQUEST, title, message, portal_href(user, "jobs", row.id))
+        notify(db, user, NotificationType.HIRING_REQUEST, title, message, portal_href(user, "hiring", row.id))
 
 
 def create_request(db: Session, user: User, data: HiringRequestIn, ip: str | None = None) -> RecruitmentMission:

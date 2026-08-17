@@ -1,6 +1,6 @@
 """Projection des données API vers le format du back-office Talendus."""
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.models import (
@@ -12,12 +12,14 @@ from app.models import (
     Interview,
     Invoice,
     JobOffer,
+    Message,
     Notification,
     Payment,
     RecruitmentMission,
     User,
 )
-from app.models.enums import ApplicationStatus, InvoiceStatus, JobStatus, MissionStatus
+from app.models.enums import ApplicationStatus, InvoiceStatus, JobStatus, MissionStatus, utcnow
+from app.services.hiring_requests import STATUS_COPY, serialize_request
 from app.services.pipeline import stage_for
 
 APP_STATUS = {
@@ -82,15 +84,14 @@ INTERVIEW_TYPE = {
 
 ROLE = {
     "ADMIN": "admin",
+    "SUPER_ADMIN": "admin",
     "RECRUITER": "recruiter",
     "FINANCE": "finance",
     "EDITOR": "editor",
-    "EMPLOYER": "recruiter",
-    "CANDIDATE": "recruiter",
 }
 
 
-def bootstrap(db: Session) -> dict:
+def bootstrap(db: Session, user: User | None = None) -> dict:
     users = db.scalars(select(User).order_by(User.created_at.asc())).all()
     companies = db.scalars(select(Company).order_by(Company.name.asc())).all()
     jobs = db.scalars(select(JobOffer).options(joinedload(JobOffer.company)).order_by(JobOffer.created_at.desc())).unique().all()
@@ -103,11 +104,16 @@ def bootstrap(db: Session) -> dict:
         )
     ).unique().all()
     missions = db.scalars(
-        select(RecruitmentMission).options(selectinload(RecruitmentMission.linked_jobs)).order_by(RecruitmentMission.created_at.desc())
-    ).all()
+        select(RecruitmentMission)
+        .options(joinedload(RecruitmentMission.company), selectinload(RecruitmentMission.linked_jobs))
+        .order_by(RecruitmentMission.created_at.desc())
+    ).unique().all()
     contracts = db.scalars(select(Contract).options(selectinload(Contract.signatures))).all()
     notes = db.scalars(select(InternalNote).order_by(InternalNote.created_at.desc()).limit(200)).all()
-    notifications = db.scalars(select(Notification).order_by(Notification.created_at.desc()).limit(100)).all()
+    notif_stmt = select(Notification).order_by(Notification.created_at.desc())
+    if user:
+        notif_stmt = notif_stmt.where(Notification.user_id == user.id)
+    notifications = db.scalars(notif_stmt.limit(100)).all()
     applications = db.scalars(
         select(Application).options(joinedload(Application.job), joinedload(Application.candidate)).order_by(Application.created_at.desc())
     ).unique().all()
@@ -118,6 +124,15 @@ def bootstrap(db: Session) -> dict:
         select(Invoice).options(joinedload(Invoice.company), joinedload(Invoice.mission)).order_by(Invoice.created_at.desc())
     ).unique().all()
     payments = db.scalars(select(Payment).options(joinedload(Payment.invoice)).order_by(Payment.created_at.desc())).unique().all()
+
+    unread_messages = 0
+    if user:
+        unread_messages = int(
+            db.scalar(
+                select(func.count()).select_from(Message).where(Message.recipient_id == user.id, Message.is_read.is_(False))
+            )
+            or 0
+        )
 
     from app.services.matching import score_pair
 
@@ -139,12 +154,24 @@ def bootstrap(db: Session) -> dict:
                 }
             )
 
+    published = sum(1 for j in jobs if j.status == JobStatus.PUBLISHED)
+    placed = sum(1 for a in applications if a.status == ApplicationStatus.HIRED)
+    open_missions = sum(
+        1
+        for m in missions
+        if m.status
+        not in {MissionStatus.CLOSED, MissionStatus.FILLED, MissionStatus.CANCELLED}
+    )
     return {
-        "users": [_user(u) for u in users if u.role.value in ROLE],
+        "live": True,
+        "unreadMessages": unread_messages,
+        "users": [_user(u) for u in users if u.role.value in {"ADMIN", "SUPER_ADMIN", "RECRUITER", "FINANCE", "EDITOR"}],
         "clients": [_company(c) for c in companies],
         "jobs": [_job(j, applications) for j in jobs],
         "candidates": [_candidate(c) for c in candidates],
         "missions": [_mission(m, applications) for m in missions],
+        "hiringRequests": [serialize_request(m) for m in missions],
+        "applications": [_application(a) for a in applications[:200]],
         "contracts": [_contract(c) for c in contracts],
         "notes": [_note(n) for n in notes],
         "notifications": [_notification(n) for n in notifications],
@@ -152,6 +179,16 @@ def bootstrap(db: Session) -> dict:
         "invoices": [_invoice(i) for i in invoices],
         "payments": [_payment(p) for p in payments],
         "jobMatches": job_matches,
+        "monthly": _monthly(applications, invoices),
+        "stats": {
+            "candidates": len(candidates),
+            "clients": len(companies),
+            "jobs": len(jobs),
+            "publishedJobs": published,
+            "applications": len(applications),
+            "placements": placed,
+            "openMissions": open_missions,
+        },
         "activities": [
             {
                 "id": a.id,
@@ -214,16 +251,20 @@ def _job(j: JobOffer, applications: list[Application]) -> dict:
         "responsibilities": j.responsibilities or "",
         "qualifications": j.qualifications or "",
         "slug": j.slug,
+        "url": f"/emploi-{j.slug}.html" if j.slug else "",
+        "statusKey": j.status.value if j.status else "",
     }
 
 
 def _candidate(c: Candidate) -> dict:
     user = c.user
-    app = c.applications[0] if c.applications else None
+    apps = sorted(c.applications or [], key=lambda a: a.created_at or utcnow(), reverse=True)
+    app = apps[0] if apps else None
     langs = [x.strip() for x in (c.languages or "Français").split(",") if x.strip()]
     skills = [x.strip() for x in (c.skills or "").split(",") if x.strip()]
     return {
         "id": c.id,
+        "userId": user.id if user else "",
         "firstName": user.first_name if user else "",
         "lastName": user.last_name if user else "",
         "email": user.email if user else "",
@@ -247,7 +288,9 @@ def _candidate(c: Candidate) -> dict:
         "experiences": [{"company": e.company, "role": e.role, "years": e.years or ""} for e in c.experiences],
         "bio": c.bio or "",
         "jobId": app.job_id if app else "",
+        "applicationId": app.id if app else "",
         "clientId": app.job.company_id if app and app.job else "",
+        "applications": [_application(a) for a in apps],
     }
 
 
@@ -296,6 +339,15 @@ def _mission(m: RecruitmentMission, applications: list[Application]) -> dict:
         "progress": m.progress or 0,
         "stageMap": stage_map,
         "pipeline": pipeline,
+        "statusKey": m.status.value if m.status else "",
+        "statusLabel": (STATUS_COPY.get(m.status) or (m.status.value if m.status else "", ""))[0],
+        "location": m.location or "",
+        "sector": m.sector or "",
+        "skills": m.skills or "",
+        "notes": m.notes or "",
+        "contactName": m.contact_name or "",
+        "salary": m.salary_display or "",
+        "contractType": m.contract_type or "",
     }
 
 
@@ -378,4 +430,56 @@ def _notification(n: Notification) -> dict:
         "at": n.created_at.strftime("%Y-%m-%d %H:%M") if n.created_at else "",
         "read": n.is_read,
         "href": n.href or "#/notifications",
+        "userId": n.user_id,
     }
+
+
+def _application(a: Application) -> dict:
+    return {
+        "id": a.id,
+        "applicationId": a.id,
+        "candidateId": a.candidate_id,
+        "jobId": a.job_id,
+        "jobTitle": a.job.title if a.job else "",
+        "status": APP_STATUS.get(a.status, "nouveau"),
+        "statusKey": a.status.value if a.status else "",
+        "stage": stage_for(a.status) or "",
+        "createdAt": a.created_at.strftime("%Y-%m-%d") if a.created_at else "",
+    }
+
+
+def _monthly(applications: list[Application], invoices: list[Invoice]) -> dict:
+    now = utcnow()
+    keys: list[str] = []
+    labels: list[str] = []
+    months_fr = ["Jan", "Fév", "Mar", "Avr", "Mai", "Jun", "Jul", "Aoû", "Sep", "Oct", "Nov", "Déc"]
+    for offset in range(7, -1, -1):
+        year = now.year
+        month = now.month - offset
+        while month <= 0:
+            month += 12
+            year -= 1
+        keys.append(f"{year:04d}-{month:02d}")
+        labels.append(months_fr[month - 1])
+    index = {key: i for i, key in enumerate(keys)}
+    apps = [0] * 8
+    placements = [0] * 8
+    revenue = [0] * 8
+    for row in applications:
+        if not row.created_at:
+            continue
+        key = row.created_at.strftime("%Y-%m")
+        if key not in index:
+            continue
+        apps[index[key]] += 1
+        if row.status == ApplicationStatus.HIRED:
+            placements[index[key]] += 1
+    for invoice in invoices:
+        if invoice.status != InvoiceStatus.PAID:
+            continue
+        key = str(invoice.issued_at or "")[:7]
+        if (not key or len(key) < 7) and invoice.created_at:
+            key = invoice.created_at.strftime("%Y-%m")
+        if key in index:
+            revenue[index[key]] += invoice.amount or 0
+    return {"applications": apps, "placements": placements, "revenue": revenue, "months": labels}

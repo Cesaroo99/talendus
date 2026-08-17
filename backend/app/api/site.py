@@ -10,6 +10,8 @@ from app.config import get_settings
 from app.database import get_db
 from app.errors import AppError, ok
 from app.services import blog as blog_svc
+from app.services.job_pages import render_job_html, static_job_path
+from app.services.jobs import get_public_job
 from app.services.seo import robots_txt, sitemap_xml, tracking_public_config
 
 router = APIRouter(tags=["site"])
@@ -103,3 +105,21 @@ def blog_html(slug: str, db: Session = Depends(get_db)):
         raise
     html = blog_svc.render_post_html(post)
     return HTMLResponse(html)
+
+
+@router.get("/emploi-{slug}.html", include_in_schema=False)
+def job_html_fr(slug: str, db: Session = Depends(get_db)):
+    static = static_job_path(slug, "fr")
+    if static.exists():
+        return FileResponse(static, media_type="text/html; charset=utf-8")
+    job = get_public_job(db, slug)
+    return HTMLResponse(render_job_html(job, "fr"))
+
+
+@router.get("/en/job-{slug}.html", include_in_schema=False)
+def job_html_en(slug: str, db: Session = Depends(get_db)):
+    static = static_job_path(slug, "en")
+    if static.exists():
+        return FileResponse(static, media_type="text/html; charset=utf-8")
+    job = get_public_job(db, slug)
+    return HTMLResponse(render_job_html(job, "en"))
