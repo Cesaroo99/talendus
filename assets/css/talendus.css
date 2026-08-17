@@ -3657,10 +3657,19 @@ button.tl-btn.tl-btn-ghost-dark:hover,
 
 .tl-form .tl-btn:not(.tl-btn-ghost),
 .tl-auth-form .tl-btn:not(.tl-btn-ghost),
-.tl-job-apply-card .tl-btn {
+.tl-job-apply-card .tl-btn:not(.tl-btn-ghost) {
   background: #ff6b00 !important;
   color: #ffffff !important;
   border-color: #ff6b00 !important;
+}
+
+.tl-job-save-row {
+  margin: 12px 0 0;
+}
+.tl-save-hint {
+  margin: 8px 0 0;
+  color: #8a1f11;
+  font-size: 0.95rem;
 }
 
 .tl-oauth-btn.tl-oauth-google,

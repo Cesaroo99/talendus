@@ -33,6 +33,56 @@
     try { return JSON.parse(localStorage.getItem(USER) || "null"); } catch (e) { return null; }
   }
 
+  var refreshPromise = null;
+
+  function getRefresh() {
+    try { return localStorage.getItem(REFRESH) || ""; } catch (e) { return ""; }
+  }
+
+  function isPublicAuthPath(path) {
+    return /\/auth\/(login|register|oauth|forgot-password|reset-password|verify-email|refresh)/.test(path);
+  }
+
+  function expireSession() {
+    clearSession();
+    try { window.dispatchEvent(new CustomEvent("talendus:session-cleared")); } catch (e) {}
+  }
+
+  function refreshAccess() {
+    if (refreshPromise) return refreshPromise;
+    var rt = getRefresh();
+    if (!rt) return Promise.reject(new Error("no-refresh"));
+    refreshPromise = fetch(apiRoot() + "/auth/refresh", {
+      method: "POST",
+      headers: { "Accept": "application/json", "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: rt })
+    }).then(function (res) {
+      return res.json().catch(function () { return {}; }).then(function (json) {
+        if (!res.ok || json.success === false) {
+          throw new Error((json && json.message) || "Session expirée");
+        }
+        setSession(json.data);
+        return (json.data && json.data.access_token) || "";
+      });
+    });
+    refreshPromise = refreshPromise.then(function (token) {
+      refreshPromise = null;
+      return token;
+    }, function (err) {
+      refreshPromise = null;
+      throw err;
+    });
+    return refreshPromise;
+  }
+
+  function failPayload(res, json) {
+    var err = new Error((json && json.message) || "Erreur API");
+    err.code = json && json.code;
+    err.status = res.status;
+    err.payload = json;
+    return err;
+  }
+
   function request(path, opts) {
     opts = opts || {};
     var headers = Object.assign({ "Accept": "application/json" }, opts.headers || {});
@@ -48,16 +98,17 @@
     }).then(function (res) {
       return res.json().catch(function () { return {}; }).then(function (json) {
         if (!res.ok || json.success === false) {
-          var publicAuth = /\/auth\/(login|register|oauth|forgot-password|reset-password|verify-email)/.test(path);
-          if (res.status === 401 && token && !publicAuth) {
-            clearSession();
-            try { window.dispatchEvent(new CustomEvent("talendus:session-cleared")); } catch (e) {}
+          var canRefresh = res.status === 401 && token && !isPublicAuthPath(path) && !opts._retried;
+          if (canRefresh) {
+            return refreshAccess().then(function (next) {
+              return request(path, Object.assign({}, opts, { token: next, _retried: true }));
+            }).catch(function () {
+              expireSession();
+              throw failPayload(res, json);
+            });
           }
-          var err = new Error((json && json.message) || "Erreur API");
-          err.code = json && json.code;
-          err.status = res.status;
-          err.payload = json;
-          throw err;
+          if (res.status === 401 && token && !isPublicAuthPath(path)) expireSession();
+          throw failPayload(res, json);
         }
         return json;
       });

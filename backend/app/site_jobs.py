@@ -360,18 +360,13 @@ def ensure_catalog_job(db: Session, slug: str) -> JobOffer | None:
 
 
 def open_site_job_for_apply(db: Session, slug: str) -> JobOffer | None:
-    """Trouve ou crée l'offre d'une page du site, et la rouvre si besoin pour accepter la candidature."""
+    """Trouve ou crée l'offre d'une page du site. Ne rouvre pas une offre pausée ou archivée."""
     spec = SITE_JOBS_BY_SLUG.get(slug or "")
     if not spec:
         return None
     job = ensure_catalog_job(db, slug)
     if not job:
         return None
-    if job.status != JobStatus.PUBLISHED:
-        job.status = JobStatus.PUBLISHED
-        if not job.published_at:
-            job.published_at = utcnow()
-        db.flush()
     if job.company is None:
         job = _job_with_company(db, slug) or job
     return job

@@ -251,7 +251,6 @@
             var staffMap = { ADMIN: "admin", SUPER_ADMIN: "admin", RECRUITER: "recruiter", FINANCE: "finance", EDITOR: "editor" };
             var mapped = staffMap[apiUser.role];
             if (!mapped) {
-              window.TalendusAPI.clearSession();
               this.lastError = "not-staff";
               return null;
             }
@@ -281,7 +280,6 @@
             return created;
           }
         } catch (e) {
-          if (window.TalendusAPI) window.TalendusAPI.clearSession();
           if (e && e.message === "not-staff") {
             this.lastError = "not-staff";
             return null;
@@ -299,9 +297,36 @@
       sessionStorage.setItem(SESSION, JSON.stringify(session));
       return u;
     },
-    logout: function () {
+    logout: function (opts) {
       sessionStorage.removeItem(SESSION);
-      if (window.TalendusAPI) window.TalendusAPI.clearSession();
+      if (!(opts && opts.keepPublic) && window.TalendusAPI) window.TalendusAPI.clearSession();
+    },
+    restoreFromPublic: function () {
+      if (this.isLive()) return true;
+      if (!window.TalendusAPI) return false;
+      var apiUser = window.TalendusAPI.currentUser();
+      if (!apiUser) return false;
+      var staffMap = { ADMIN: "admin", SUPER_ADMIN: "admin", RECRUITER: "recruiter", FINANCE: "finance", EDITOR: "editor" };
+      var mapped = staffMap[apiUser.role];
+      if (!mapped) return false;
+      var token = "";
+      try { token = localStorage.getItem("talendus_access_token") || ""; } catch (e) { return false; }
+      if (!token) return false;
+      var local = state.users.find(function (x) { return x.email === apiUser.email; });
+      if (!local) {
+        local = {
+          id: apiUser.id,
+          firstName: apiUser.first_name,
+          lastName: apiUser.last_name,
+          email: apiUser.email,
+          role: mapped,
+          title: apiUser.title || "",
+          initials: ((apiUser.first_name || "?").charAt(0) + (apiUser.last_name || "?").charAt(0)).toUpperCase()
+        };
+        state.users.push(local);
+      }
+      sessionStorage.setItem(SESSION, JSON.stringify({ id: local.id, role: local.role, access_token: token }));
+      return true;
     },
     session: function () {
       try { return JSON.parse(sessionStorage.getItem(SESSION) || "null"); } catch (e) { return null; }

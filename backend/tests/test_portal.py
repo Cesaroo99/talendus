@@ -231,3 +231,51 @@ def test_no_direct_link_between_employer_and_candidate(client):
     assert presented.status_code == 200
     assert presented.json()["data"]["candidate"]["email"] is None
     assert "staff_notes" not in presented.json()["data"]
+
+
+def test_save_job_by_catalog_slug(client):
+    cand = register(client, "save-slug@example.com")
+    headers = auth_header(cand)
+    public = client.get("/api/jobs/cariste")
+    assert public.status_code == 200, public.text
+    saved = client.post("/api/jobs/cariste/save", headers=headers)
+    assert saved.status_code == 200, saved.text
+    listed = client.get("/api/jobs/saved", headers=headers)
+    assert any(item["slug"] == "cariste" and item["available"] is True for item in listed.json()["data"])
+    again = client.get("/api/jobs/cariste", headers=headers)
+    assert again.json()["data"]["saved"] is True
+
+
+def test_cannot_save_draft_job(client):
+    emp = register(client, "draft-save-emp@example.com", "EMPLOYER")
+    admin = promote_admin(client, "draft-save-admin@example.com")
+    created = client.post(
+        "/api/jobs",
+        headers=auth_header(admin),
+        json={
+            "title": "Brouillon secret",
+            "location": "Laval",
+            "company_id": client.get("/api/companies/me", headers=auth_header(emp)).json()["data"]["id"],
+            "slug": "brouillon-secret",
+        },
+    )
+    assert created.status_code == 200
+    job_id = created.json()["data"]["id"]
+    cand = register(client, "draft-save-cand@example.com")
+    res = client.post(f"/api/jobs/{job_id}/save", headers=auth_header(cand))
+    assert res.status_code == 404
+    assert res.json()["code"] == "JOB_NOT_FOUND"
+
+
+def test_saved_list_marks_archived_unavailable(client):
+    emp = register(client, "arch-save-emp@example.com", "EMPLOYER")
+    admin = promote_admin(client, "arch-save-admin@example.com")
+    job = staff_publish_job(client, emp, admin, title="Soudeur pause", slug="soudeur-archive-save")
+    cand = register(client, "arch-save-cand@example.com")
+    headers = auth_header(cand)
+    assert client.post(f"/api/jobs/{job['id']}/save", headers=headers).status_code == 200
+    assert client.post(f"/api/jobs/{job['id']}/archive", headers=auth_header(admin)).status_code == 200
+    listed = client.get("/api/jobs/saved", headers=headers)
+    match = next(item for item in listed.json()["data"] if item["id"] == job["id"])
+    assert match["available"] is False
+    assert client.delete(f"/api/jobs/{job['id']}/save", headers=headers).status_code == 200

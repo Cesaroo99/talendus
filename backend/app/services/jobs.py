@@ -31,13 +31,20 @@ def _parse_expires(value: str | None):
 
 
 def _unique_slug(db: Session, base: str, ignore_id: str | None = None) -> str:
+    from app.site_jobs import is_site_job_slug
+
     slug = slugify(base)
     i = 2
     while True:
         q = select(JobOffer).where(JobOffer.slug == slug)
         if ignore_id:
             q = q.where(JobOffer.id != ignore_id)
-        if not db.scalar(q):
+        taken = bool(db.scalar(q))
+        if not taken and is_site_job_slug(slug):
+            current = db.get(JobOffer, ignore_id) if ignore_id else None
+            if not current or current.slug != slug:
+                taken = True
+        if not taken:
             return slug
         slug = f"{slugify(base)}-{i}"
         i += 1
@@ -208,12 +215,26 @@ def search_jobs(
     return list(rows), int(total)
 
 
-def get_public_job(db: Session, slug_or_id: str) -> JobOffer:
-    job = db.scalar(
+def lookup_job(db: Session, slug_or_id: str) -> JobOffer | None:
+    if not slug_or_id:
+        return None
+    return db.scalar(
         select(JobOffer).options(joinedload(JobOffer.company)).where(
             or_(JobOffer.slug == slug_or_id, JobOffer.id == slug_or_id)
         )
     )
+
+
+def get_public_job(db: Session, slug_or_id: str) -> JobOffer:
+    job = lookup_job(db, slug_or_id)
+    if not job:
+        from app.site_jobs import ensure_catalog_job, is_site_job_slug
+
+        if is_site_job_slug(slug_or_id):
+            created = ensure_catalog_job(db, slug_or_id)
+            if created:
+                db.commit()
+                job = lookup_job(db, slug_or_id)
     if not job or job.status not in PUBLIC_JOB_STATUSES:
         raise AppError(404, "Offre introuvable.", "JOB_NOT_FOUND")
     return job

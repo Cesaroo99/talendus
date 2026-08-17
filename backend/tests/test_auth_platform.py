@@ -110,6 +110,21 @@ def test_login_lockout_and_journal(client):
     assert sessions.json()["data"]
 
 
+def test_refresh_rotates_tokens(client):
+    data = register(client, "refresh-me@example.com")
+    old_refresh = data["refresh_token"]
+    res = client.post("/api/auth/refresh", json={"refresh_token": old_refresh})
+    assert res.status_code == 200, res.text
+    tokens = res.json()["data"]
+    assert tokens["access_token"]
+    assert tokens["refresh_token"]
+    assert tokens["refresh_token"] != old_refresh
+    me = client.get("/api/users/me", headers={"Authorization": "Bearer " + tokens["access_token"]})
+    assert me.status_code == 200
+    reused = client.post("/api/auth/refresh", json={"refresh_token": old_refresh})
+    assert reused.status_code == 401
+
+
 def test_job_alerts_and_duplicate_job(client):
     emp = register(client, "alert-emp@example.com", "EMPLOYER")
     admin = promote_admin(client, "alert-admin@example.com")

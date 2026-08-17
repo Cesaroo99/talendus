@@ -16,7 +16,7 @@ from app.models import (
     SavedJob,
     User,
 )
-from app.models.enums import ApplicationStatus, InterviewStatus, JobStatus, NotificationType, UserRole, utcnow
+from app.models.enums import ApplicationStatus, InterviewStatus, JobStatus, NotificationType, PUBLIC_JOB_STATUSES, UserRole, utcnow
 from app.rbac import is_admin
 from app.schemas import CompanyMemberIn, CompanyMemberPatchIn
 from app.services.access import (
@@ -30,7 +30,7 @@ from app.services.access import (
 )
 from app.services.audit import audit
 from app.services.auth import ensure_candidate
-from app.services.jobs import serialize_job
+from app.services.jobs import lookup_job, serialize_job
 from app.services.notifications import notify
 from app.services.storage import delete_stored, save_bytes
 
@@ -191,34 +191,48 @@ def list_saved_jobs(db: Session, user: User) -> list[dict]:
         payload = serialize_job(row.job)
         payload["saved"] = True
         payload["saved_at"] = row.created_at.isoformat() if row.created_at else None
+        payload["available"] = row.job.status in PUBLIC_JOB_STATUSES
         out.append(payload)
     return out
+
+
+def _job_for_bookmark(db: Session, job_id: str) -> JobOffer | None:
+    job = lookup_job(db, job_id)
+    if job:
+        return job
+    from app.site_jobs import ensure_catalog_job, is_site_job_slug
+
+    if is_site_job_slug(job_id):
+        return ensure_catalog_job(db, job_id)
+    return None
 
 
 def save_job(db: Session, user: User, job_id: str) -> dict:
     if user.role != UserRole.CANDIDATE:
         raise AppError(403, "Seuls les candidats peuvent sauvegarder une offre.", "FORBIDDEN")
-    job = db.get(JobOffer, job_id)
-    if not job:
+    job = _job_for_bookmark(db, job_id)
+    if not job or job.status not in PUBLIC_JOB_STATUSES:
         raise AppError(404, "Offre introuvable.", "JOB_NOT_FOUND")
-    existing = db.scalar(select(SavedJob).where(SavedJob.user_id == user.id, SavedJob.job_id == job_id))
+    existing = db.scalar(select(SavedJob).where(SavedJob.user_id == user.id, SavedJob.job_id == job.id))
     if existing:
-        return {"id": existing.id, "job_id": job_id, "saved": True}
-    row = SavedJob(user_id=user.id, job_id=job_id)
+        return {"id": existing.id, "job_id": job.id, "saved": True}
+    row = SavedJob(user_id=user.id, job_id=job.id)
     db.add(row)
-    audit(db, "job.save", user, "job", job_id)
+    audit(db, "job.save", user, "job", job.id)
     db.commit()
     db.refresh(row)
-    return {"id": row.id, "job_id": job_id, "saved": True}
+    return {"id": row.id, "job_id": job.id, "saved": True}
 
 
 def unsave_job(db: Session, user: User, job_id: str) -> dict:
-    row = db.scalar(select(SavedJob).where(SavedJob.user_id == user.id, SavedJob.job_id == job_id))
+    job = _job_for_bookmark(db, job_id)
+    real_id = job.id if job else job_id
+    row = db.scalar(select(SavedJob).where(SavedJob.user_id == user.id, SavedJob.job_id == real_id))
     if row:
         db.delete(row)
-        audit(db, "job.unsave", user, "job", job_id)
+        audit(db, "job.unsave", user, "job", real_id)
         db.commit()
-    return {"job_id": job_id, "saved": False}
+    return {"job_id": real_id, "saved": False}
 
 
 def saved_job_ids(db: Session, user: User, job_ids: list[str]) -> set[str]:

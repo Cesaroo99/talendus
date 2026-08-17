@@ -20,7 +20,7 @@
       sector: "Sector", skills: "Skills", phone: "Phone", upload: "Upload a PDF, Word or image file (PNG, JPG)",
       emptyApps: "No applications yet.", emptyNotifs: "No notifications.", emptyJobs: "No matching roles yet.",
       emptyMsgs: "No messages yet.", emptyInts: "No interviews scheduled.", emptyDocs: "No documents yet.",
-      emptySaved: "No saved jobs.", markAll: "Mark all as read", markRead: "Mark as read",
+      emptySaved: "No saved jobs.", jobUnavailable: "This job is no longer available.", markAll: "Mark all as read", markRead: "Mark as read",
       welcome: "Your candidate workspace", guest: "Sign in to follow your applications.",
       welcomeEmployer: "Your hiring workspace", guestEmployer: "Sign in to follow the profiles Talendus presents.",
       registerEmployer: "Create an employer account",
@@ -120,7 +120,7 @@
       emptyApps: "Aucune candidature pour le moment.", emptyNotifs: "Aucune notification.",
       emptyJobs: "Aucune offre ne correspond encore à votre recherche.", emptyMsgs: "Aucun message pour le moment.",
       emptyInts: "Aucun entretien planifié.", emptyDocs: "Aucun document pour le moment.",
-      emptySaved: "Aucune offre sauvegardée.", markAll: "Tout marquer comme lu", markRead: "Marquer comme lu",
+      emptySaved: "Aucune offre sauvegardée.", jobUnavailable: "Cette offre n'est plus disponible.", markAll: "Tout marquer comme lu", markRead: "Marquer comme lu",
       welcome: "Votre espace candidat", guest: "Connectez-vous pour suivre vos candidatures.",
       welcomeEmployer: "Votre espace employeur", guestEmployer: "Connectez-vous pour suivre les profils que Talendus vous présente.",
       registerEmployer: "Créer un compte employeur",
@@ -472,12 +472,15 @@
     function jobCard(job, extra) {
       job = job || {};
       var href = (isEn ? "/en/job-" : "/emploi-") + (job.slug || "") + ".html";
+      var available = job.available !== false;
+      var detailBtn = available
+        ? '<button type="button" class="tl-btn tl-btn-ghost" data-nav="job" data-id="' + esc(job.slug || job.id) + '">' + esc(t.jobDetail) + "</button>"
+        : '<span class="tl-save-hint">' + esc(t.jobUnavailable) + "</span>";
       return '<article class="tl-list-card"><span class="tl-chip orange">' + esc(statusLabel(job.status || "PUBLISHED")) + "</span>" +
         (job.saved ? '<span class="tl-match-score">' + esc(t.unbookmark) + "</span>" : "") +
         "<h3>" + esc(job.title || "") + "</h3><p class=\"tl-meta\">" + esc(job.company_name || "") + " · " + esc(job.location || "") +
         (job.contract_type ? " · " + esc(job.contract_type) : "") + "</p>" + (extra || "") +
-        '<p><button type="button" class="tl-btn tl-btn-ghost" data-nav="job" data-id="' + esc(job.slug || job.id) + '">' +
-        esc(t.jobDetail) + "</button> " + (job.slug ? '<a class="tl-split-cta" href="' + href + '">' + (isEn ? "Public page →" : "Page publique →") + "</a>" : "") + "</p></article>";
+        "<p>" + detailBtn + " " + (available && job.slug ? '<a class="tl-split-cta" href="' + href + '">' + (isEn ? "Public page →" : "Page publique →") + "</a>" : "") + "</p></article>";
     }
 
     function renderCandidateDashboard(user, dash, profile) {
@@ -624,7 +627,8 @@
           return '<option value="' + opt[0] + '"' + (sort === opt[0] ? " selected" : "") + ">" + esc(opt[1]) + "</option>";
         }).join("") + "</select></div>" +
         '<div><button class="tl-btn" type="submit">' + esc(t.search) + "</button></div></form>";
-      if (!items.length) html += empty(t.noResults);
+      if (payload && payload.error) html += errBox(payload.error);
+      else if (!items.length) html += empty(t.noResults);
       else html += '<div class="tl-list-cards">' + items.map(function (j) { return jobCard(j); }).join("") + "</div>";
       if (meta.pages > 1) {
         html += '<div class="tl-pager"><button type="button" class="tl-btn tl-btn-ghost" data-page="' + Math.max(1, (meta.page || 1) - 1) + '">' + esc(t.prev) +
@@ -667,7 +671,10 @@
         api.request("/jobs?" + params.toString()).then(function (json) {
           state.jobs = json;
           go("jobs");
-        }).catch(function () {});
+        }).catch(function (err) {
+          state.jobs = { data: [], meta: {}, error: (err && err.message) || t.err };
+          go("jobs");
+        });
       }
       if (form) form.addEventListener("submit", function (e) { e.preventDefault(); load(1); });
       root.querySelectorAll("[data-page]").forEach(function (b) { b.onclick = function () { load(b.getAttribute("data-page")); }; });
@@ -676,11 +683,14 @@
         var box = document.getElementById("acc-saved-jobs");
         if (!box) return;
         var items = json.data || [];
-        box.innerHTML = items.length ? '<div class="tl-list-cards">' + items.map(function (j) { return jobCard(j); }).join("") : empty(t.emptySaved);
+        box.innerHTML = items.length ? '<div class="tl-list-cards">' + items.map(function (j) { return jobCard(j); }).join("") + "</div>" : empty(t.emptySaved);
         root.querySelectorAll("[data-nav]").forEach(function (btn) {
           btn.onclick = function () { go(btn.getAttribute("data-nav"), btn.getAttribute("data-id") || ""); };
         });
-      }).catch(function () {});
+      }).catch(function (err) {
+        var box = document.getElementById("acc-saved-jobs");
+        if (box) box.innerHTML = errBox((err && err.message) || t.err);
+      });
     }
 
     function renderJobDetail(job) {
@@ -1275,7 +1285,9 @@
       var saveBtn = document.getElementById("acc-save-job");
       if (saveBtn && state.job) saveBtn.onclick = function () {
         var method = state.job.saved ? "DELETE" : "POST";
-        api.request("/jobs/" + state.job.id + "/save", { method: method }).then(function () { go("job", state.job.slug); });
+        api.request("/jobs/" + state.job.id + "/save", { method: method })
+          .then(function () { go("job", state.job.slug); })
+          .catch(function (err) { flash(document.getElementById("acc-job-msg"), (err && err.message) || t.err, false); });
       };
       var withdraw = document.getElementById("acc-withdraw");
       if (withdraw && state.application) withdraw.onclick = function () {

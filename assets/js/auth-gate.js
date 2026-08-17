@@ -21,7 +21,11 @@
       guestCta: "Sign in", dashboard: "Dashboard", logout: "Sign out",
       workspace: "My workspace", settings: "Settings", notifs: "Notifications",
       accountMenu: "Account menu",
-      saveJob: "Save job", savedJob: "Saved", saveNeedCandidate: "Use a candidate account to save a job.", applyTrack: "Create an account to track this application",
+      saveJob: "Save job", savedJob: "Saved", saveNeedCandidate: "Use a candidate account to save a job.",
+      applyNeedCandidate: "Use a candidate account to apply.",
+      jobClosed: "Applications are paused for this role.",
+      saveFailed: "The job could not be saved.",
+      applyTrack: "Create an account to track this application",
       needAccount: "Create an account to continue",
       err: "Something went wrong.",
       loginLead: "Access your Talendus workspace.",
@@ -45,7 +49,11 @@
       guestCta: "Connexion", dashboard: "Tableau de bord", logout: "Déconnexion",
       workspace: "Mon espace", settings: "Paramètres", notifs: "Notifications",
       accountMenu: "Menu du compte",
-      saveJob: "Sauvegarder", savedJob: "Sauvegardée", saveNeedCandidate: "Utilisez un compte candidat pour sauvegarder une offre.", applyTrack: "Créer un compte pour suivre cette candidature",
+      saveJob: "Sauvegarder", savedJob: "Sauvegardée", saveNeedCandidate: "Utilisez un compte candidat pour sauvegarder une offre.",
+      applyNeedCandidate: "Utilisez un compte candidat pour postuler.",
+      jobClosed: "Les candidatures sont suspendues pour cette offre.",
+      saveFailed: "L’offre n’a pas pu être sauvegardée.",
+      applyTrack: "Créer un compte pour suivre cette candidature",
       needAccount: "Créez un compte pour continuer",
       err: "Une erreur s’est produite.",
       loginLead: "Accédez à votre espace Talendus.",
@@ -179,6 +187,20 @@
       el.className = ok === false ? "tl-success tl-error" : "tl-success";
     }
 
+    function hintSave(msg) {
+      var btn = document.querySelector("[data-save-job]");
+      var host = (btn && btn.parentNode) || document.querySelector(".tl-job-save-row") || document.querySelector(".tl-job-apply-card");
+      if (!host) return;
+      var hint = host.querySelector(".tl-save-hint") || document.querySelector(".tl-save-hint");
+      if (!hint) {
+        hint = document.createElement("p");
+        hint.className = "tl-save-hint";
+        host.appendChild(hint);
+      }
+      hint.hidden = false;
+      hint.textContent = msg || t.saveFailed;
+    }
+
     function shell(bodyHtml, kicker) {
       overlay.setAttribute("aria-label", kicker || t.login);
       return '<div class="tl-auth-shell">' +
@@ -268,13 +290,16 @@
 
     function afterAuth(user) {
       paintSession();
+      paintSaveButtons();
       window.dispatchEvent(new CustomEvent("talendus:auth", { detail: user }));
       if (pending && pending.type === "save") {
         if (user && user.role === "CANDIDATE") {
           var jobId = pending.jobId;
           pending = null;
           closeOverlay();
-          api.saveJob(jobId).then(function () { paintSaveButtons(); }).catch(function () {});
+          api.saveJob(jobId).then(function () { paintSaveButtons(); }).catch(function (err) {
+            hintSave((err && err.message) || t.saveFailed);
+          });
           return;
         }
         flashBox(".tl-success", t.saveNeedCandidate, false);
@@ -376,7 +401,9 @@
       if (user && savingJob && user.role === "CANDIDATE") {
         var jobId = pending.jobId;
         pending = null;
-        api.saveJob(jobId).then(function () { paintSaveButtons(); }).catch(function () {});
+        api.saveJob(jobId).then(function () { paintSaveButtons(); }).catch(function (err) {
+          hintSave((err && err.message) || t.saveFailed);
+        });
         return;
       }
       overlay.hidden = false;
@@ -557,6 +584,7 @@
       if (!user) {
         window.__tlAvatarUrl = "";
         fillSessions(null, 0);
+        paintSaveButtons();
         return;
       }
       fillSessions(user, window.__tlUnread || 0);
@@ -580,10 +608,12 @@
           window.__tlAvatarUrl = "";
           window.__tlUnread = 0;
           fillSessions(null, 0);
+          paintSaveButtons();
           return;
         }
         withUser(user);
       });
+      paintSaveButtons();
     }
 
     function paintSaveButtons() {
@@ -660,21 +690,28 @@
         var jobId = save.getAttribute("data-save-job");
         if (!jobId) return;
         var user = api.currentUser();
+        if (user && user.role !== "CANDIDATE") {
+          hintSave(t.saveNeedCandidate);
+          return;
+        }
         if (user && user.role === "CANDIDATE") {
           var method = save.classList.contains("is-saved") ? "DELETE" : "POST";
           api.request("/jobs/" + jobId + "/save", { method: method }).then(function () {
             paintSaveButtons();
+            var hint = document.querySelector(".tl-save-hint");
+            if (hint) hint.hidden = true;
           }).catch(function (err) {
             if (err && (err.status === 401 || err.status === 403)) {
               pending = { type: "save", jobId: jobId };
               openAuth("login", { role: "CANDIDATE" });
               return;
             }
+            hintSave((err && err.message) || t.saveFailed);
           });
           return;
         }
         pending = { type: "save", jobId: jobId };
-        openAuth(user ? "login" : "register", { role: "CANDIDATE" });
+        openAuth("register", { role: "CANDIDATE" });
       }
     });
 
@@ -682,12 +719,14 @@
       window.__tlAvatarUrl = "";
       window.__tlUnread = 0;
       fillSessions(null, 0);
+      paintSaveButtons();
     });
 
     var hash = parseAuthHash();
     if (hash) {
       if (api.currentUser() && ["login", "register"].indexOf(hash.name) !== -1) {
-        history.replaceState(null, "", location.pathname + location.search + "#/dashboard");
+        history.replaceState(null, "", location.pathname + location.search);
+        goToWorkspace(api.currentUser());
       } else {
         openAuth(hash.name, { token: hash.query.token || "", role: hash.query.role, email: hash.query.email });
       }
@@ -703,18 +742,34 @@
       api.request("/jobs/" + encodeURIComponent(jobSlug)).then(function (payload) {
         var job = payload && payload.data;
         if (!job) return;
-        var host = document.querySelector(".tl-job-apply-card") || document.querySelector("#postuler") || document.querySelector(".tl-page-hero .container") || document.querySelector(".tl-section .container");
-        if (!host || host.querySelector("[data-save-job]")) return;
+        if (job.status && job.status !== "PUBLISHED") {
+          var applyForm = document.querySelector('[data-form="apply"]') || document.querySelector("#postuler form") || document.querySelector(".tl-job-apply-card form");
+          if (applyForm) {
+            applyForm.querySelectorAll("input, textarea, select, button").forEach(function (el) { el.disabled = true; });
+            var note = document.createElement("p");
+            note.className = "tl-save-hint";
+            note.textContent = t.jobClosed;
+            applyForm.appendChild(note);
+          }
+        }
+        var card = document.querySelector(".tl-job-apply-card");
+        var host = card || document.querySelector("#postuler") || document.querySelector(".tl-page-hero .container") || document.querySelector(".tl-section .container");
+        if (!host || document.querySelector("[data-save-job]")) return;
         var btn = document.createElement("button");
         btn.type = "button";
         btn.className = "tl-btn tl-btn-ghost tl-save-job";
         btn.setAttribute("data-save-job", job.id);
         btn.textContent = t.saveJob;
-        host.appendChild(btn);
+        var row = document.createElement("p");
+        row.className = "tl-job-save-row";
+        row.appendChild(btn);
+        if (card && card.parentNode) card.parentNode.insertBefore(row, card.nextSibling);
+        else host.appendChild(row);
         if (job.saved) {
           btn.textContent = t.savedJob;
           btn.classList.add("is-saved");
         }
+        paintSaveButtons();
       }).catch(function () {});
     }
 
