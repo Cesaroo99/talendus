@@ -28,13 +28,14 @@ COPY = {
         "preloader_tag": "Agence de placement · Tous secteurs",
         "preloader_aria": "Chargement Talendus",
         "nav_home": "Accueil",
-        "nav_employers": "Pour les Entreprises",
+        "nav_employers": "Entreprises",
         "nav_why": "Pourquoi Talendus",
         "nav_services": "Services de recrutement",
         "nav_sectors": "Tous les secteurs",
         "nav_calc": "Calculateur d'embauche",
-        "nav_candidates": "Pour les Talents",
-        "nav_jobs": "Offres d'emploi",
+        "nav_candidates": "Talents",
+        "nav_jobs": "Emplois",
+        "nav_jobs_list": "Offres d'emploi",
         "nav_cv": "Déposer mon CV",
         "nav_process": "Comment ça fonctionne",
         "nav_services_top": "Services",
@@ -124,6 +125,7 @@ COPY = {
         "nav_calc": "Hiring calculator",
         "nav_candidates": "For talent",
         "nav_jobs": "Job openings",
+        "nav_jobs_list": "Job openings",
         "nav_cv": "Submit my resume",
         "nav_process": "How it works",
         "nav_services_top": "Services",
@@ -320,7 +322,7 @@ def nav_html(lang):
                               <li class="has-dropdown" data-nav="candidats">
                                 <a href="{h['candidates']}" data-set-persona="talent">{t['nav_candidates']} <span class="tl-nav-caret" aria-hidden="true"><i class="fa-solid fa-angle-down"></i></span></a>
                                   <ul class="sub-menu">
-                                      <li><a href="{h['jobs']}" data-set-persona="talent">{t['nav_jobs']}</a></li>
+                                      <li><a href="{h['jobs']}" data-set-persona="talent">{t['nav_jobs_list']}</a></li>
                                       <li><a href="{h['cv']}" data-set-persona="talent">{t['nav_cv']}</a></li>
                                       <li><a href="{h['process_page']}" data-set-persona="talent">{t['nav_process']}</a></li>
                                       <li><a href="{h['candidates']}#faq" data-set-persona="talent">{t['nav_talent_faq']}</a></li>

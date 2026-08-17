@@ -146,7 +146,7 @@ body:not(.tl-solid-header) .homepage2-body .vl-transparent-header {
 
 .tl-header-bar {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: max-content minmax(0, 1fr) max-content;
   align-items: center;
   column-gap: 12px;
   min-height: 56px;
@@ -186,6 +186,8 @@ body:not(.tl-solid-header) .homepage2-body .vl-transparent-header {
   flex-shrink: 0;
   isolation: isolate;
   z-index: 3;
+  background: var(--tl-navy);
+  padding-left: 8px;
 }
 .tl-mobile-tools {
   display: flex;
@@ -235,6 +237,15 @@ body:not(.tl-solid-header) .homepage2-body .vl-transparent-header {
   white-space: nowrap;
   position: relative;
   color: #fff;
+}
+@media (min-width: 1400px) and (max-width: 1599px) {
+  .homepage2-body .tl-desktop-nav > nav > ul > li > a {
+    padding: 0 6px !important;
+    font-size: 13px !important;
+  }
+  html[lang="fr-CA"] .homepage2-body .tl-desktop-nav > nav > ul > li > a {
+    padding: 0 5px !important;
+  }
 }
 @media (min-width: 1600px) {
   .homepage2-body .tl-desktop-nav > nav > ul > li > a {
@@ -1834,6 +1845,10 @@ table, .tl-job-card p, .tl-card .body p { color: var(--tl-navy); }
   .tl-session-cta {
     padding: 8px 12px !important;
     font-size: 13px !important;
+  }
+  html[lang="fr-CA"] .tl-session-cta {
+    padding: 8px 10px !important;
+    font-size: 12px !important;
   }
 }
 .tl-avatar {
