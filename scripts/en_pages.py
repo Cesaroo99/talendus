@@ -367,7 +367,7 @@ def build_en(write, wrap, page_hero):
         <div class="tl-kicker">Candidate FAQ</div>
         <h2 class="tl-h2">Before you submit your resume</h2>
       </div>
-      {faq_html(FAQ_CANDIDATES_EN)}
+      """ + faq_html(FAQ_CANDIDATES_EN) + """
     </div></section>
     """,
         lang="en",
