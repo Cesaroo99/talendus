@@ -1,5 +1,8 @@
 # Talendus — production (Render)
-# Déploiement automatique depuis `main` uniquement si la CI GitHub (tests) est verte.
+# Déploiement automatique à chaque commit sur `main`.
+# La CI GitHub reste le garde-fou : les PR `cursor/*` ne fusionnent qu'après tests verts.
+# On n'utilise pas checksPass : un squash-merge GitHub (GITHUB_TOKEN) ne relance pas la CI
+# sur main, donc Render ne voyait aucun check et ne déployait pas.
 # Première mise en ligne : Dashboard Render → New → Blueprint → ce dépôt, branche main.
 
 databases:
@@ -20,7 +23,7 @@ services:
     dockerfilePath: ./Dockerfile
     dockerContext: .
     healthCheckPath: /api/health
-    autoDeployTrigger: checksPass
+    autoDeployTrigger: commit
     disk:
       name: talendus-files
       mountPath: /var/data

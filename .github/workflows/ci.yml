@@ -37,6 +37,8 @@ jobs:
       - name: Construire l'image de production
         run: docker build -t talendus:ci .
 
+  # Fusion automatique des PR Cursor vers main. Render déploie ensuite
+  # chaque commit de main (autoDeployTrigger: commit dans render.yaml).
   merge:
     name: Fusionner vers main (après tests)
     if: >
