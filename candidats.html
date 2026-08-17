@@ -113,14 +113,24 @@ gtag('consent', 'default', {
                     <a class="is-active" href="#" lang="fr" hreflang="fr-CA">FR</a>
                     <a class="" href="en/candidates.html" lang="en" hreflang="en-CA">EN</a>
                   </nav>
-                <a href="espace.html" class="tl-account-link" data-account-link data-auth-open="login">Connexion</a>
-                <a href="espace.html" class="tl-account-link tl-register-link" data-auth-open="register">Inscription</a>
+                <div class="tl-session" data-session="desktop">
+                  <a href="espace.html" class="tl-session-login" data-auth-open="login">
+                    <i class="fa-regular fa-user" aria-hidden="true"></i>
+                    <span>Connexion</span>
+                  </a>
+                  <a href="espace.html" class="tl-btn tl-session-cta" data-auth-open="register">Créer un compte</a>
+                </div>
               </div>
               <div class="tl-mobile-tools">
                   <nav class="tl-lang" aria-label="Language / Langue">
                     <a class="is-active" href="#" lang="fr" hreflang="fr-CA">FR</a>
                     <a class="" href="en/candidates.html" lang="en" hreflang="en-CA">EN</a>
                   </nav>
+                  <div class="tl-session tl-session-compact" data-session="mobile">
+                    <a href="espace.html" class="tl-session-icon-btn" data-auth-open="login" aria-label="Connexion">
+                      <i class="fa-regular fa-user" aria-hidden="true"></i>
+                    </a>
+                  </div>
                   <button type="button" class="vl-offcanvas-toggle" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="tl-mobile-nav">
                     <i class="fa-solid fa-bars-staggered"></i>
                   </button>
@@ -150,9 +160,9 @@ gtag('consent', 'default', {
             <span><a href="contact.html"><i class="fa-solid fa-location-dot"></i> Montréal, Québec · sur rendez-vous</a></span>
             <span><a href="https://wa.me/15145550199?text=Bonjour%20Talendus%2C%20je%20souhaite%20discuter%20d%27un%20besoin%20de%20recrutement." target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a></span>
             <p class="tl-offcanvas-note">En semaine, on répond en général en moins de 30 minutes.</p>
-            <div class="vl-offcanvas-cta">
-              <a href="espace.html" class="tl-btn tl-btn-ghost" data-account-link data-auth-open="login">Connexion</a>
-              <a href="espace.html" class="tl-btn" data-auth-open="register">Inscription</a>
+            <div class="vl-offcanvas-cta tl-session tl-session-offcanvas" data-session="offcanvas">
+              <a href="espace.html" class="tl-btn tl-btn-ghost" data-auth-open="login">Connexion</a>
+              <a href="espace.html" class="tl-btn" data-auth-open="register">Créer un compte</a>
             </div>
         </div>
     </div>
