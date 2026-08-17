@@ -24,6 +24,11 @@ services:
     dockerContext: .
     healthCheckPath: /api/health
     autoDeployTrigger: commit
+    # Le DNS Namespro doit pointer ici (pas de transfert URL / parking) :
+    # A @ → 216.24.57.1  ·  CNAME www → talendus-web.onrender.com  ·  aucun AAAA
+    domains:
+      - talendus.ca
+      - www.talendus.ca
     disk:
       name: talendus-files
       mountPath: /var/data
@@ -44,6 +49,8 @@ services:
       - key: TRACKING_ENABLED
         value: "false"
       - key: SEO_CANONICAL_HOST
+        value: https://talendus.ca
+      - key: FRONTEND_URL
         value: https://talendus.ca
       - key: ADMIN_EMAIL
         value: lea.super@talendus.ca
