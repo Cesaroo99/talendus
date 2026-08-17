@@ -16,6 +16,7 @@ from positioning import (
     placement_process_services_section, technology_section, ai_screening_section,
     competitive_advantage_section, augmented_recruiting_section, hiring_need_form_section,
     bad_hire_calculator_section,
+    job_card_html, jobs_listing_header, jobs_empty_state, job_detail_html, related_job_cards,
 )
 from en_pages import build_en
 from seo_pages import write_fr as write_seo_fr
@@ -638,70 +639,30 @@ write("contact.html", wrap(
 ))
 
 # Emplois listing
-cards = []
-for slug, title, city, cat, typ, sal, shift, req, sector, skills, exp in JOBS:
-    cards.append(f'''
-    <article class="tl-job-card" data-job="{title} {city} {cat} {typ} {sal} {shift} {sector} {skills} {exp}" data-city="{city}" data-cat="{cat}" data-type="{typ}" data-shift="{shift}" data-salary="{sal}" data-sector="{sector}" data-skills="{skills}" data-exp="{exp}">
-      <div class="body">
-        <span class="tl-chip orange">{typ}</span><span class="tl-chip">{city}</span>
-        <h3><a href="emploi-{slug}.html">{title}</a></h3>
-        <p>{sal} · {shift}</p>
-        <a class="tl-split-cta" href="emploi-{slug}.html" style="color:var(--tl-orange);margin-top:auto;padding-top:14px">Voir le poste →</a>
-      </div>
-    </article>''')
+cards = "".join(job_card_html(job, "fr") for job in JOBS)
 write("emplois.html", wrap(
     "Offres d'emploi | Opportunités Talendus",
     "Postes accompagnés par Talendus dans tous les secteurs. Postuler envoie votre dossier à notre équipe, pas à l'employeur en direct.",
     "emplois.html",
-    page_hero(
-        "Offres d'emploi", "Des opportunités. Tous secteurs, tous métiers.",
-        "Filtrez, puis postulez. Un conseiller Talendus présente votre dossier à l'employeur. Vous pouvez aussi créer un profil : beaucoup de mandats ne sont pas affichés.",
-        actions='<a class="tl-btn" href="candidats.html#cv">Créer mon profil</a>',
-        badges='<span class="tl-badge tl-badge-light">Via Talendus</span>'
-    )
+    jobs_listing_header("fr")
     + f"""
-    <section class="tl-section"><div class="container">
+    <section class="tl-section tl-jobs-board"><div class="container">
       {job_search_filters("fr")}
-      <div class="tl-grid-3" id="job-list">{''.join(cards)}</div>
-      <p class="tl-muted" id="job-empty" hidden>Aucun poste ne correspond à ces filtres. Créez votre profil : on vous contacte quand un mandat colle.</p>
+      <div class="tl-jobs-grid" id="job-list">{cards}</div>
+      {jobs_empty_state("fr")}
     </div></section>
     """
+    + SPEED_TALENT
+    + CTA_TALENT
 ))
 
-for slug, title, city, cat, typ, sal, shift, req, sector, skills, exp in JOBS:
+for job in JOBS:
+    slug, title, city, cat, typ, sal, shift, req, sector, skills, exp = job
     write(f"emploi-{slug}.html", wrap(
         f"{title} à {city} | Emploi | Talendus",
         f"Poste de {title} à {city}, Québec. {typ}. Postulez via Talendus : un conseiller présente votre dossier. Agence de placement, tous secteurs.",
         f"emploi-{slug}.html",
-        page_hero(
-            f"{city} · {typ}", title, f"{sal} · {shift} · Recrutement Talendus",
-            actions='<a class="tl-btn" href="#postuler">Postuler</a>',
-            badges='<span class="tl-badge tl-badge-light">Offre Talendus</span>'
-        )
-        + f"""
-        <section class="tl-section"><div class="container">
-          <div class="row g-4">
-            <div class="col-lg-7">
-              <h2 class="tl-h2">Le poste</h2>
-              <p class="tl-lead">Talendus recrute un(e) {title.lower()} pour un employeur à {city}. Secteur : {sector}. Compétences : {skills}. Postuler envoie votre dossier à notre équipe, pas à l'entreprise en direct.</p>
-              <h3>Profil recherché</h3>
-              <p>{req}</p>
-              <h3>Ce que nous offrons</h3>
-              <ul><li>Poste {typ.lower()}</li><li>Rémunération : {sal}</li><li>Horaire : {shift}</li><li>Accompagnement Talendus jusqu'à l'embauche</li></ul>
-              <p><a href="emplois.html">← Toutes les offres</a> · <a href="candidats.html">Espace talents</a></p>
-            </div>
-            <div class="col-lg-4 offset-lg-1" id="postuler">
-              <h3>Postuler</h3>
-              <form class="tl-form" data-form="apply" data-job-slug="{slug}"><label>Nom</label><input name="nom" required>
-              <label>Courriel</label><input type="email" name="courriel" required>
-              <label>Téléphone</label><input name="tel">
-              <label>Lien CV</label><input name="cv" placeholder="https://">
-              <button class="tl-btn tl-btn-lg" type="submit">Postuler</button>
-              <div class="tl-success"></div></form>
-            </div>
-          </div>
-        </div></section>
-        """,
+        job_detail_html(job, related_job_cards(JOBS, slug, "fr"), "fr"),
         extra_json_ld=job_ld(title, city, slug, typ, sal, req),
         og_type="article",
     ))

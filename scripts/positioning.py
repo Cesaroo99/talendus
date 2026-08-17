@@ -1101,14 +1101,11 @@ def job_search_filters(lang="fr"):
           <option value="Internship">Internship</option>
         """
         return f"""
+      <div class="tl-jobs-toolbar">
       <div class="tl-filters tl-filters-search" data-ai-ready="true">
-        <label class="tl-filter">
+        <label class="tl-filter tl-filter-search">
           <span>Role or skills</span>
           <input id="job-search" placeholder="Developer, Excel, welding, project management…">
-        </label>
-        <label class="tl-filter">
-          <span>Industry</span>
-          <select id="job-sector">{sectors}</select>
         </label>
         <label class="tl-filter">
           <span>Location</span>
@@ -1124,6 +1121,10 @@ def job_search_filters(lang="fr"):
         <label class="tl-filter">
           <span>Job type</span>
           <select id="job-type">{types}</select>
+        </label>
+        <label class="tl-filter">
+          <span>Industry</span>
+          <select id="job-sector">{sectors}</select>
         </label>
         <label class="tl-filter">
           <span>Experience</span>
@@ -1155,7 +1156,11 @@ def job_search_filters(lang="fr"):
           </select>
         </label>
       </div>
-      <p class="tl-muted tl-ai-hint">These filters help you browse openings Talendus publishes. Applying still goes through us: a consultant presents your file. Intelligent ranking of candidates for employers is not a self-serve feature.</p>
+      <div class="tl-jobs-toolbar-foot">
+        <p class="tl-jobs-count" id="job-count"></p>
+        <p class="tl-muted tl-ai-hint">Applying still goes through Talendus: a consultant presents your file. The employer never receives your contact details directly.</p>
+      </div>
+      </div>
 """
     sectors = _options(SECTOR_EXAMPLES["fr"], "Tous les secteurs")
     types = """
@@ -1167,14 +1172,11 @@ def job_search_filters(lang="fr"):
           <option value="Stage">Stage</option>
         """
     return f"""
+      <div class="tl-jobs-toolbar">
       <div class="tl-filters tl-filters-search" data-ai-ready="true">
-        <label class="tl-filter">
+        <label class="tl-filter tl-filter-search">
           <span>Métier ou compétences</span>
           <input id="job-search" placeholder="Développeur, Excel, soudure, gestion de projet…">
-        </label>
-        <label class="tl-filter">
-          <span>Secteur</span>
-          <select id="job-sector">{sectors}</select>
         </label>
         <label class="tl-filter">
           <span>Localisation</span>
@@ -1190,6 +1192,10 @@ def job_search_filters(lang="fr"):
         <label class="tl-filter">
           <span>Type d'emploi</span>
           <select id="job-type">{types}</select>
+        </label>
+        <label class="tl-filter">
+          <span>Secteur</span>
+          <select id="job-sector">{sectors}</select>
         </label>
         <label class="tl-filter">
           <span>Expérience</span>
@@ -1221,7 +1227,11 @@ def job_search_filters(lang="fr"):
           </select>
         </label>
       </div>
-      <p class="tl-muted tl-ai-hint">Ces filtres vous aident à parcourir les offres que Talendus publie. Postuler passe toujours par nous : un conseiller présente votre dossier. Le classement intelligent des candidats n'est pas un outil en libre-service pour les entreprises.</p>
+      <div class="tl-jobs-toolbar-foot">
+        <p class="tl-jobs-count" id="job-count"></p>
+        <p class="tl-muted tl-ai-hint">Postuler passe toujours par Talendus : un conseiller présente votre dossier. L'employeur ne reçoit pas vos coordonnées en direct.</p>
+      </div>
+      </div>
 """
 
 
@@ -1329,3 +1339,250 @@ def talent_trade_options(lang="fr"):
 # Conservé pour les imports existants (pages services, etc.).
 def ai_coming_soon(lang="fr"):
     return ai_engine_section(lang)
+
+
+JOB_EXP_LABEL = {
+    "fr": {"debutant": "Débutant", "intermediaire": "Intermédiaire", "senior": "Senior"},
+    "en": {"debutant": "Entry-level", "intermediaire": "Mid-level", "senior": "Senior"},
+}
+
+JOB_CAT_LABEL = {
+    "fr": {
+        "entrepot": "Entrepôt", "production": "Production", "metallurgie": "Métallurgie",
+        "manufacturier": "Manufacturier", "maintenance": "Maintenance", "supervision": "Supervision",
+        "logistique": "Logistique", "cadres": "Cadres", "technologie": "Technologie",
+        "finance": "Finance", "ingenierie": "Ingénierie", "transport": "Transport",
+        "sante": "Santé", "commerce": "Commerce", "administration": "Administration",
+        "marketing": "Marketing",
+    },
+    "en": {
+        "entrepot": "Warehouse", "production": "Production", "metallurgie": "Metals",
+        "manufacturier": "Manufacturing", "maintenance": "Maintenance", "supervision": "Supervision",
+        "logistique": "Logistics", "cadres": "Leadership", "technologie": "Technology",
+        "finance": "Finance", "ingenierie": "Engineering", "transport": "Transportation",
+        "sante": "Healthcare", "commerce": "Retail", "administration": "Administration",
+        "marketing": "Marketing",
+    },
+}
+
+
+def _job_href(slug, lang="fr"):
+    return f"job-{slug}.html" if lang == "en" else f"emploi-{slug}.html"
+
+
+def job_card_html(job, lang="fr"):
+    slug, title, city, cat, typ, sal, shift, req, sector, skills, exp = job
+    href = _job_href(slug, lang)
+    exp_label = JOB_EXP_LABEL[lang].get(exp, exp)
+    cat_label = JOB_CAT_LABEL[lang].get(cat, cat)
+    cta = "View opening" if lang == "en" else "Voir l'offre"
+    return f'''
+    <a class="tl-job-card" href="{href}" aria-label="{cta} : {title}" data-job="{title} {city} {cat} {typ} {sal} {shift} {sector} {skills} {exp}" data-city="{city}" data-cat="{cat}" data-type="{typ}" data-shift="{shift}" data-salary="{sal}" data-sector="{sector}" data-skills="{skills}" data-exp="{exp}">
+      <div class="tl-job-card-top">
+        <span class="tl-chip orange">{typ}</span>
+        <span class="tl-chip">{exp_label}</span>
+      </div>
+      <h3>{title}</h3>
+      <ul class="tl-job-meta">
+        <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>{city}</span></li>
+        <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>{shift}</span></li>
+        <li><i class="fa-solid fa-sack-dollar" aria-hidden="true"></i><span>{sal}</span></li>
+      </ul>
+      <p class="tl-job-excerpt">{req}</p>
+      <p class="tl-job-card-cat">{cat_label}</p>
+      <span class="tl-job-card-cta">{cta}</span>
+    </a>'''
+
+
+def jobs_listing_header(lang="fr"):
+    if lang == "en":
+        return """
+<section class="tl-jobs-hero">
+  <div class="container">
+    <p class="tl-kicker">Job openings</p>
+    <h1>Opportunities in every industry. Apply through Talendus.</h1>
+    <p class="tl-lead">Filter the roles we publish, then send your file to our team. A consultant presents it to the employer. You can also create a profile: many mandates are never posted.</p>
+    <div class="tl-actions">
+      <a class="tl-btn" href="candidates.html#cv">Create my profile</a>
+    </div>
+  </div>
+</section>
+"""
+    return """
+<section class="tl-jobs-hero">
+  <div class="container">
+    <p class="tl-kicker">Offres d'emploi</p>
+    <h1>Des opportunités, tous secteurs. Postulez via Talendus.</h1>
+    <p class="tl-lead">Filtrez les postes que nous publions, puis envoyez votre dossier à notre équipe. Un conseiller le présente à l'employeur. Vous pouvez aussi créer un profil : beaucoup de mandats n'apparaissent pas.</p>
+    <div class="tl-actions">
+      <a class="tl-btn" href="candidats.html#cv">Créer mon profil</a>
+    </div>
+  </div>
+</section>
+"""
+
+
+def jobs_empty_state(lang="fr"):
+    if lang == "en":
+        return """
+      <div class="tl-jobs-empty" id="job-empty" hidden>
+        <p>No roles match these filters.</p>
+        <a class="tl-btn" href="candidates.html#cv">Create my profile</a>
+      </div>
+"""
+    return """
+      <div class="tl-jobs-empty" id="job-empty" hidden>
+        <p>Aucun poste ne correspond à ces filtres.</p>
+        <a class="tl-btn" href="candidats.html#cv">Créer mon profil</a>
+      </div>
+"""
+
+
+def job_detail_html(job, related_html, lang="fr"):
+    slug, title, city, cat, typ, sal, shift, req, sector, skills, exp = job
+    exp_label = JOB_EXP_LABEL[lang].get(exp, exp)
+    cat_label = JOB_CAT_LABEL[lang].get(cat, cat)
+    sector_label = JOB_CAT_LABEL[lang].get(sector, sector)
+    if lang == "en":
+        listing = "jobs.html"
+        talent = "candidates.html"
+        return f"""
+<section class="tl-job-page">
+  <div class="container">
+    <a class="tl-job-back" href="{listing}"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> All openings</a>
+    <div class="tl-job-layout">
+      <div class="tl-job-main">
+        <p class="tl-kicker">{city} · {typ}</p>
+        <h1>{title}</h1>
+        <ul class="tl-job-facts">
+          <li><span>Location</span><strong>{city}</strong></li>
+          <li><span>Pay</span><strong>{sal}</strong></li>
+          <li><span>Schedule</span><strong>{shift}</strong></li>
+          <li><span>Type</span><strong>{typ}</strong></li>
+          <li><span>Experience</span><strong>{exp_label}</strong></li>
+          <li><span>Category</span><strong>{cat_label}</strong></li>
+        </ul>
+        <div class="tl-job-prose">
+          <h2>The role</h2>
+          <p>Talendus is recruiting a {title.lower()} for an employer in {city}. Industry: {sector_label}. Skills in focus: {skills}. Applying sends your file to our team, not to the company directly.</p>
+          <h2>Profile we look for</h2>
+          <p>{req}</p>
+          <h2>What the mandate includes</h2>
+          <ul>
+            <li>{typ} role, {shift.lower()}</li>
+            <li>Pay: {sal}</li>
+            <li>A Talendus consultant screens and presents your file</li>
+            <li>The employer does not receive your email or phone number from an open application</li>
+          </ul>
+          <h2>How applying works</h2>
+          <ol class="tl-job-steps">
+            <li><strong>You apply here.</strong> Your file reaches Talendus.</li>
+            <li><strong>A consultant reviews it.</strong> We check the fit with the mandate.</li>
+            <li><strong>If it holds, we present you.</strong> We speak to the employer on your behalf.</li>
+            <li><strong>You follow the next steps with us.</strong> Interviews and updates go through Talendus.</li>
+          </ol>
+        </div>
+        <p class="tl-job-alt"><a href="{listing}">Browse other openings</a> · <a href="{talent}">Create a talent profile</a></p>
+      </div>
+      <aside class="tl-job-aside">
+        <div class="tl-job-apply-card" id="postuler">
+          <h2>Apply through Talendus</h2>
+          <p>A consultant presents your file. You are not contacting the employer in direct.</p>
+          <form class="tl-form" data-form="apply" data-job-slug="{slug}">
+            <label>Name</label><input name="name" required autocomplete="name">
+            <label>Email</label><input type="email" name="email" required autocomplete="email">
+            <label>Phone</label><input name="phone" autocomplete="tel">
+            <label>Resume link <span class="tl-optional">(optional)</span></label>
+            <input name="resume" placeholder="https://">
+            <label>Note for Talendus <span class="tl-optional">(optional)</span></label>
+            <textarea name="message" rows="3" maxlength="800" placeholder="Availability, permit, what you want us to know"></textarea>
+            <button class="tl-btn tl-btn-lg" type="submit">Send my application</button>
+            <div class="tl-success"></div>
+          </form>
+        </div>
+      </aside>
+    </div>
+    <div class="tl-job-related">
+      <h2>Other openings</h2>
+      <div class="tl-jobs-grid">{related_html}</div>
+    </div>
+  </div>
+</section>
+<div class="tl-job-mobile-cta"><a class="tl-btn" href="#postuler">Apply</a></div>
+"""
+    listing = "emplois.html"
+    talent = "candidats.html"
+    return f"""
+<section class="tl-job-page">
+  <div class="container">
+    <a class="tl-job-back" href="{listing}"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Toutes les offres</a>
+    <div class="tl-job-layout">
+      <div class="tl-job-main">
+        <p class="tl-kicker">{city} · {typ}</p>
+        <h1>{title}</h1>
+        <ul class="tl-job-facts">
+          <li><span>Lieu</span><strong>{city}</strong></li>
+          <li><span>Rémunération</span><strong>{sal}</strong></li>
+          <li><span>Horaire</span><strong>{shift}</strong></li>
+          <li><span>Type</span><strong>{typ}</strong></li>
+          <li><span>Expérience</span><strong>{exp_label}</strong></li>
+          <li><span>Catégorie</span><strong>{cat_label}</strong></li>
+        </ul>
+        <div class="tl-job-prose">
+          <h2>Le poste</h2>
+          <p>Talendus recrute un(e) {title.lower()} pour un employeur à {city}. Secteur : {sector_label}. Compétences visées : {skills}. Postuler envoie votre dossier à notre équipe, pas à l'entreprise en direct.</p>
+          <h2>Profil recherché</h2>
+          <p>{req}</p>
+          <h2>Ce que comprend le mandat</h2>
+          <ul>
+            <li>Poste {typ.lower()}, {shift.lower()}</li>
+            <li>Rémunération : {sal}</li>
+            <li>Un conseiller Talendus étudie et présente votre dossier</li>
+            <li>L'employeur ne reçoit pas votre courriel ni votre téléphone via une candidature ouverte</li>
+          </ul>
+          <h2>Comment postuler</h2>
+          <ol class="tl-job-steps">
+            <li><strong>Vous postulez ici.</strong> Votre dossier arrive chez Talendus.</li>
+            <li><strong>Un conseiller l'étudie.</strong> Nous vérifions la correspondance avec le mandat.</li>
+            <li><strong>Si ça colle, nous vous présentons.</strong> Nous parlons à l'employeur pour vous.</li>
+            <li><strong>Vous suivez la suite avec nous.</strong> Entretiens et nouvelles passent par Talendus.</li>
+          </ol>
+        </div>
+        <p class="tl-job-alt"><a href="{listing}">Voir les autres offres</a> · <a href="{talent}">Créer un profil talent</a></p>
+      </div>
+      <aside class="tl-job-aside">
+        <div class="tl-job-apply-card" id="postuler">
+          <h2>Postuler via Talendus</h2>
+          <p>Un conseiller présente votre dossier. Vous n'écrivez pas à l'employeur en direct.</p>
+          <form class="tl-form" data-form="apply" data-job-slug="{slug}">
+            <label>Nom</label><input name="nom" required autocomplete="name">
+            <label>Courriel</label><input type="email" name="courriel" required autocomplete="email">
+            <label>Téléphone</label><input name="tel" autocomplete="tel">
+            <label>Lien CV <span class="tl-optional">(facultatif)</span></label>
+            <input name="cv" placeholder="https://">
+            <label>Note pour Talendus <span class="tl-optional">(facultatif)</span></label>
+            <textarea name="message" rows="3" maxlength="800" placeholder="Disponibilité, permis, ce que vous voulez qu'on sache"></textarea>
+            <button class="tl-btn tl-btn-lg" type="submit">Envoyer ma candidature</button>
+            <div class="tl-success"></div>
+          </form>
+        </div>
+      </aside>
+    </div>
+    <div class="tl-job-related">
+      <h2>Autres opportunités</h2>
+      <div class="tl-jobs-grid">{related_html}</div>
+    </div>
+  </div>
+</section>
+<div class="tl-job-mobile-cta"><a class="tl-btn" href="#postuler">Postuler</a></div>
+"""
+
+
+def related_job_cards(jobs, current_slug, lang="fr"):
+    current = next((j for j in jobs if j[0] == current_slug), None)
+    if not current:
+        return ""
+    same = [j for j in jobs if j[0] != current_slug and (j[3] == current[3] or j[8] == current[8])]
+    rest = [j for j in jobs if j[0] != current_slug and j not in same]
+    picked = (same + rest)[:3]
+    return "".join(job_card_html(j, lang) for j in picked)

@@ -125,7 +125,7 @@
         var job = payload && payload.data;
         var url = job && job.share && (isEn ? job.share.linkedin_en : job.share.linkedin);
         if (!url) return;
-        var host = document.querySelector(".tl-page-hero .container") || document.querySelector(".tl-section .container");
+        var host = document.querySelector(".tl-job-main") || document.querySelector(".tl-page-hero .container") || document.querySelector(".tl-section .container");
         if (!host || host.querySelector(".tl-share-linkedin")) return;
         var a = document.createElement("a");
         a.className = "tl-share-linkedin";
@@ -174,14 +174,18 @@
           var slug = form.getAttribute("data-job-slug") || jobSlugFromPage();
           var user = api.currentUser && api.currentUser();
           var send = (user && user.role === "CANDIDATE")
-            ? api.apply({ job_slug: slug, cover_note: formValue(form, ["cv", "resume"]) || null })
+            ? api.apply({
+                job_slug: slug,
+                cover_note: formValue(form, ["message", "note"]) || null
+              })
             : api.applyPublic({
                 job_slug: slug,
                 first_name: person.first,
                 last_name: person.last,
                 email: formValue(form, ["courriel", "email"]),
                 phone: formValue(form, ["tel", "telephone", "phone"]) || null,
-                cv_url: formValue(form, ["cv", "resume"]) || null
+                cv_url: formValue(form, ["cv", "resume"]) || null,
+                cover_note: formValue(form, ["message", "note"]) || null
               });
           send.then(function () {
             showFormMessage(form, fallback, false);
@@ -319,7 +323,8 @@
       var ex = (exp && exp.value) || "";
       var minSal = sal && sal.value ? Number(sal.value) : 0;
       var shown = 0;
-      document.querySelectorAll("[data-job]").forEach(function (card) {
+      var root = document.getElementById("job-list") || document;
+      root.querySelectorAll("[data-job]").forEach(function (card) {
         var hay = (card.getAttribute("data-job") || "").toLowerCase();
         var ok = (!q || hay.indexOf(q.toLowerCase()) !== -1)
           && (!c || hay.indexOf(c.toLowerCase()) !== -1)
@@ -340,6 +345,12 @@
         if (ok) shown += 1;
       });
       if (empty) empty.hidden = shown !== 0;
+      var countEl = document.getElementById("job-count");
+      if (countEl) {
+        countEl.textContent = isEn
+          ? (shown + " opening" + (shown === 1 ? "" : "s"))
+          : (shown + " offre" + (shown > 1 ? "s" : ""));
+      }
     }
     var searchTimer = null;
     function filterJobsAndTrack() {
@@ -355,6 +366,7 @@
       if (el) el.addEventListener("input", filterJobsAndTrack);
       if (el) el.addEventListener("change", filterJobsAndTrack);
     });
+    if (document.getElementById("job-list")) filterJobs();
 
     var jobList = document.getElementById("job-list");
     if (jobList && window.TalendusAPI) {
@@ -362,15 +374,56 @@
         var items = (payload && payload.data) || [];
         if (!items.length) return;
         var prefix = isEn ? "/en/job-" : "/emploi-";
+        var expLabel = {
+          debutant: isEn ? "Entry-level" : "Débutant",
+          intermediaire: isEn ? "Mid-level" : "Intermédiaire",
+          senior: isEn ? "Senior" : "Senior"
+        };
+        var catLabel = {
+          entrepot: isEn ? "Warehouse" : "Entrepôt",
+          production: "Production",
+          metallurgie: isEn ? "Metals" : "Métallurgie",
+          manufacturier: isEn ? "Manufacturing" : "Manufacturier",
+          maintenance: "Maintenance",
+          supervision: "Supervision",
+          logistique: isEn ? "Logistics" : "Logistique",
+          cadres: isEn ? "Leadership" : "Cadres",
+          technologie: isEn ? "Technology" : "Technologie",
+          finance: "Finance",
+          ingenierie: isEn ? "Engineering" : "Ingénierie",
+          transport: isEn ? "Transportation" : "Transport",
+          sante: isEn ? "Healthcare" : "Santé",
+          commerce: isEn ? "Retail" : "Commerce",
+          administration: "Administration",
+          marketing: "Marketing"
+        };
         jobList.innerHTML = items.map(function (job) {
           var href = prefix + job.slug + ".html";
           var salary = job.salary_display || "";
           var shiftVal = job.shift || "";
-          var hay = [job.title, job.location, job.sector, job.contract_type, salary, shiftVal, job.skills].join(" ");
-          var share = (job.share && job.share.linkedin)
-            ? '<a class="tl-share-linkedin" href="' + escapeHtml(job.share.linkedin) + '" target="_blank" rel="noopener noreferrer">' + (isEn ? "Share on LinkedIn" : "Partager sur LinkedIn") + "</a>"
-            : "";
-          return '<article class="tl-job-card" data-job="' + escapeHtml(hay) + '" data-city="' + escapeHtml(job.location || "") + '" data-cat="' + escapeHtml((job.sector || "").toLowerCase()) + '" data-type="' + escapeHtml(job.contract_type || "") + '" data-shift="' + escapeHtml(shiftVal) + '" data-salary="' + escapeHtml(salary) + '"><div class="body"><span class="tl-chip orange">' + escapeHtml(job.contract_type || "") + '</span><span class="tl-chip">' + escapeHtml(job.location || "") + '</span><h3><a href="' + href + '">' + escapeHtml(job.title) + '</a></h3><p>' + escapeHtml([salary, shiftVal].filter(Boolean).join(" · ")) + "</p>" + share + '<p class="tl-job-card-actions"><a class="tl-split-cta" href="' + href + '" style="color:var(--tl-orange)">' + (isEn ? "View role →" : "Voir le poste →") + '</a> <button type="button" class="tl-text-btn" data-save-job="' + escapeHtml(job.id) + '">' + (isEn ? "Save" : "Sauvegarder") + "</button></p></div></article>";
+          var loc = job.location || "";
+          var typ = job.contract_type || "";
+          var sector = job.sector || "";
+          var skills = job.skills || "";
+          var exp = job.experience_level || "";
+          var cat = job.category || sector || "";
+          var hay = [job.title, loc, cat, sector, typ, salary, shiftVal, skills, exp].join(" ");
+          var excerpt = job.summary || job.qualifications || job.description || skills || "";
+          if (excerpt.length > 180) excerpt = excerpt.slice(0, 177) + "…";
+          var shownCat = catLabel[String(cat).toLowerCase()] || cat;
+          var cta = isEn ? "View opening" : "Voir l'offre";
+          return '<a class="tl-job-card" href="' + href + '" aria-label="' + escapeHtml(cta + " : " + job.title) + '" data-job="' + escapeHtml(hay) + '" data-city="' + escapeHtml(loc) + '" data-cat="' + escapeHtml(String(cat).toLowerCase()) + '" data-type="' + escapeHtml(typ) + '" data-shift="' + escapeHtml(shiftVal) + '" data-salary="' + escapeHtml(salary) + '" data-sector="' + escapeHtml(sector.toLowerCase()) + '" data-exp="' + escapeHtml(String(exp).toLowerCase()) + '">' +
+            '<div class="tl-job-card-top"><span class="tl-chip orange">' + escapeHtml(typ) + '</span>' +
+            (expLabel[exp] ? '<span class="tl-chip">' + escapeHtml(expLabel[exp]) + "</span>" : "") + "</div>" +
+            "<h3>" + escapeHtml(job.title) + "</h3>" +
+            '<ul class="tl-job-meta">' +
+              (loc ? '<li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>' + escapeHtml(loc) + "</span></li>" : "") +
+              (shiftVal ? '<li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>' + escapeHtml(shiftVal) + "</span></li>" : "") +
+              (salary ? '<li><i class="fa-solid fa-sack-dollar" aria-hidden="true"></i><span>' + escapeHtml(salary) + "</span></li>" : "") +
+            "</ul>" +
+            (excerpt ? '<p class="tl-job-excerpt">' + escapeHtml(excerpt) + "</p>" : "") +
+            (shownCat ? '<p class="tl-job-card-cat">' + escapeHtml(shownCat) + "</p>" : "") +
+            '<span class="tl-job-card-cta">' + cta + "</span></a>";
         }).join("");
         filterJobs();
       }).catch(function () {});
