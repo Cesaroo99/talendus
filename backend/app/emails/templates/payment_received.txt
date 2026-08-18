@@ -1,0 +1,10 @@
+Subject: Paiement reçu — facture {{number}}
+{{name}},
+
+Nous confirmons la réception d'un paiement de {{amount}} CAD pour la facture {{number}}.
+
+Statut : {{status}}
+Votre espace : {{link}}
+
+Merci.
+Talendus · info@talendus.ca

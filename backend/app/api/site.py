@@ -34,6 +34,30 @@ def favicon():
     return FileResponse(icon, media_type="image/png", headers={"Cache-Control": "public, max-age=86400"})
 
 
+@router.get("/manifest.webmanifest", include_in_schema=False)
+def web_manifest():
+    path = SITE_ROOT / "manifest.webmanifest"
+    if not path.exists():
+        raise AppError(404, "Page introuvable.", "NOT_FOUND")
+    return FileResponse(
+        path,
+        media_type="application/manifest+json",
+        headers={"Cache-Control": "public, max-age=3600"},
+    )
+
+
+@router.get("/sw.js", include_in_schema=False)
+def service_worker():
+    path = SITE_ROOT / "sw.js"
+    if not path.exists():
+        raise AppError(404, "Page introuvable.", "NOT_FOUND")
+    return FileResponse(
+        path,
+        media_type="text/javascript; charset=utf-8",
+        headers={"Cache-Control": "no-cache", "Service-Worker-Allowed": "/"},
+    )
+
+
 @router.get("/robots.txt", include_in_schema=False)
 def robots():
     return PlainTextResponse(robots_txt(), media_type="text/plain; charset=utf-8")

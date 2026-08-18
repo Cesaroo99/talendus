@@ -780,4 +780,44 @@ def build_en(write, wrap, page_hero):
         lang="en",
         alt="solutions-rh.html",
     ))
+    write("en/app.html", wrap(
+        "Talendus apps | Android and iPhone",
+        "Install Talendus on your phone. Candidate or employer workspace, messages, invoices, contracts and click-to-call. Android and iOS.",
+        "en/app.html",
+        page_hero(
+            "Apps",
+            "Talendus in your pocket.",
+            "Add Talendus to your home screen. This is the official app, served by our site — no App Store or Play Store required.",
+            actions='<a class="tl-btn" href="tel:+15145550199">Call</a><a class="tl-btn tl-btn-ghost" href="https://wa.me/15145550199?text=Hello%20Talendus%2C%20I%20would%20like%20to%20talk%20about%20a%20hiring%20need." target="_blank" rel="noopener noreferrer">WhatsApp</a>',
+            badges='<span class="tl-badge tl-badge-light">Android</span> <span class="tl-badge tl-badge-light">iPhone</span>',
+        )
+        + """
+    <section class="tl-section"><div class="container">
+      <div class="tl-app-grid">
+        <article class="tl-app-card">
+          <h3>Android</h3>
+          <p>Open talendus.ca in Chrome. Use the Install banner, or the menu → Install app. The Talendus icon lands on the home screen.</p>
+          <p>Native Android sources live in <code>mobile/android</code> if you later compile an APK in-house.</p>
+        </article>
+        <article class="tl-app-card">
+          <h3>iPhone and iPad</h3>
+          <p>Open talendus.ca in Safari. Share → Add to Home Screen. iOS opens Talendus full screen, without the address bar.</p>
+          <p>The iOS project (WKWebView) is in <code>mobile/ios</code> for Xcode.</p>
+        </article>
+        <article class="tl-app-card">
+          <h3>Talent</h3>
+          <p>Profile, resume, applications, messages with your consultant. Employers never get your contact details.</p>
+          <p><a class="tl-btn" href="account.html">Open my workspace</a></p>
+        </article>
+        <article class="tl-app-card">
+          <h3>Employers</h3>
+          <p>Mandates, shortlists, contracts to sign, PDF invoices, payment by transfer recorded by Talendus — Stripe is optional.</p>
+          <p><a class="tl-btn" href="account-employer.html">Employer workspace</a></p>
+        </article>
+      </div>
+    </div></section>
+    """,
+        lang="en",
+        alt="app.html",
+    ))
     write_seo_en(write, wrap, page_hero, CTA)

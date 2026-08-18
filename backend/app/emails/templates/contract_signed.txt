@@ -1,0 +1,9 @@
+Subject: Mandat signé — {{company}}
+{{name}},
+
+Le mandat de recrutement pour {{company}} a été signé par {{signer}}.
+
+Une copie PDF est disponible dans l'espace employeur :
+{{link}}
+
+Talendus · info@talendus.ca

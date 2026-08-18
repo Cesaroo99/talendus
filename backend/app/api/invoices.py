@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, Request
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -8,6 +9,7 @@ from app.models import User
 from app.models.enums import UserRole
 from app.schemas import InvoiceIn, PaymentIn, RefundIn
 from app.services import invoices as invoices_service
+from app.services import pdf_docs
 from app.services import stripe_billing
 
 router = APIRouter(prefix="/invoices", tags=["invoices"])
@@ -41,6 +43,18 @@ def create_invoice(
 @router.get("/{invoice_id}")
 def get_invoice(invoice_id: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     return ok(invoices_service.serialize_invoice(invoices_service.get_invoice(db, user, invoice_id)))
+
+
+@router.get("/{invoice_id}/pdf")
+def invoice_pdf(invoice_id: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    row = invoices_service.get_invoice(db, user, invoice_id)
+    data = pdf_docs.invoice_pdf(row)
+    filename = f"{row.number or 'facture'}.pdf"
+    return Response(
+        content=data,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @router.post("/{invoice_id}/send")

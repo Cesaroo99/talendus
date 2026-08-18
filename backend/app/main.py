@@ -16,6 +16,7 @@ from app.errors import AppError, app_error_handler, http_error_handler, unhandle
 from app.middleware import RateLimitMiddleware, SecurityHeadersMiddleware, SeoRedirectMiddleware
 from app.seed import seed_if_empty
 from app.services.email import start_worker
+from app.services.scheduler import start_ops_worker
 
 settings = get_settings()
 logger = logging.getLogger("talendus")
@@ -46,6 +47,7 @@ async def lifespan(_app: FastAPI):
         if settings.app_env != "test":
             seed_if_empty()
             start_worker()
+            start_ops_worker()
     except Exception:
         logger.exception("Démarrage base/seed en échec — le site public reste servi")
     logger.info("Talendus API ready env=%s", settings.app_env)

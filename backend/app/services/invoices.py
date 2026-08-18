@@ -64,6 +64,8 @@ def serialize_invoice(row: Invoice) -> dict:
         "paid_amount": paid,
         "company_name": row.company.name if row.company else None,
         "mission_title": row.mission.title if row.mission else None,
+        "pdf_path": f"/api/invoices/{row.id}/pdf",
+        "pay_hint": "Virement ou chèque à l’ordre de Talendus. L’encaissement est enregistré par notre équipe.",
         "lines": [serialize_line(line) for line in (row.lines or [])],
         "payments": [serialize_payment(p) for p in (row.payments or [])],
     }
@@ -208,6 +210,8 @@ def create_invoice(db: Session, user: User, data: InvoiceIn, ip: str | None) -> 
 
 
 def send_invoice(db: Session, user: User, invoice_id: str) -> Invoice:
+    from app.services.ops_notify import frontend, message_company, notify_company
+
     _finance(user)
     row = get_invoice(db, user, invoice_id)
     if row.status == InvoiceStatus.CANCELLED:
@@ -216,7 +220,34 @@ def send_invoice(db: Session, user: User, invoice_id: str) -> Invoice:
     if not row.issued_at:
         row.issued_at = utcnow().date().isoformat()
     audit(db, "invoice.send", user, "invoice", row.id)
+    total = row.amount_total if row.amount_total is not None else row.amount
+    company_name = row.company.name if row.company else "votre entreprise"
+    notify_company(
+        db,
+        row.company_id,
+        title="Nouvelle facture Talendus",
+        message=f"La facture {row.number} ({total} CAD) est disponible.",
+        section="invoices",
+        template="invoice_sent",
+        ctx={
+            "name": company_name,
+            "number": row.number,
+            "amount": str(total),
+            "due": row.due_date or "sur réception",
+            "link": f"{frontend()}/espace-employeur.html#/invoices",
+        },
+        item_id=row.id,
+    )
     db.commit()
+    try:
+        message_company(
+            db,
+            user,
+            row.company_id,
+            f"La facture {row.number} ({total} CAD) a été émise. Téléchargez le PDF dans Factures. Paiement par virement ou chèque.",
+        )
+    except Exception:
+        pass
     return get_invoice(db, user, row.id)
 
 
@@ -245,6 +276,25 @@ def add_payment(db: Session, user: User, invoice_id: str, data: PaymentIn, ip: s
     elif row.status in {InvoiceStatus.DRAFT, InvoiceStatus.SENT}:
         row.status = InvoiceStatus.PENDING
     audit(db, "invoice.payment", user, "invoice", row.id, ip, {"amount": data.amount})
+    if row.status == InvoiceStatus.PAID:
+        from app.services.ops_notify import frontend, notify_company
+
+        notify_company(
+            db,
+            row.company_id,
+            title="Paiement reçu",
+            message=f"Le paiement de la facture {row.number} a été enregistré.",
+            section="invoices",
+            template="payment_received",
+            ctx={
+                "name": row.company.name if row.company else "votre entreprise",
+                "number": row.number,
+                "amount": str(data.amount),
+                "status": row.status.value,
+                "link": f"{frontend()}/espace-employeur.html#/invoices",
+            },
+            item_id=row.id,
+        )
     db.commit()
     return get_invoice(db, user, row.id)
 
@@ -253,17 +303,39 @@ def mark_overdue(db: Session) -> int:
     today = utcnow().date().isoformat()
     rows = list(
         db.scalars(
-            select(Invoice).where(
+            select(Invoice)
+            .options(joinedload(Invoice.company))
+            .where(
                 Invoice.status.in_([InvoiceStatus.SENT, InvoiceStatus.PENDING]),
                 Invoice.due_date.is_not(None),
                 Invoice.due_date < today,
             )
-        ).all()
+        ).unique().all()
     )
+    if not rows:
+        return 0
+    from app.services.ops_notify import frontend, notify_company
+
     for row in rows:
         row.status = InvoiceStatus.OVERDUE
-    if rows:
-        db.commit()
+        total = row.amount_total if row.amount_total is not None else row.amount
+        notify_company(
+            db,
+            row.company_id,
+            title="Facture en retard",
+            message=f"La facture {row.number} est échue.",
+            section="invoices",
+            template="invoice_overdue",
+            ctx={
+                "name": row.company.name if row.company else "votre entreprise",
+                "number": row.number,
+                "amount": str(total),
+                "due": row.due_date or "-",
+                "link": f"{frontend()}/espace-employeur.html#/invoices",
+            },
+            item_id=row.id,
+        )
+    db.commit()
     return len(rows)
 
 

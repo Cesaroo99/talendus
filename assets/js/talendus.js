@@ -605,5 +605,51 @@
         closeMenu();
       });
     });
+
+    (function setupPwa() {
+      var standalone = window.matchMedia && window.matchMedia("(display-mode: standalone)").matches;
+      if (window.navigator && window.navigator.standalone) standalone = true;
+      if (standalone) document.documentElement.classList.add("tl-standalone");
+      if ("serviceWorker" in navigator && location.protocol.indexOf("http") === 0) {
+        navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(function () {});
+      }
+      if (standalone || /\/admin\//.test(location.pathname)) return;
+      var dismissed = false;
+      try { dismissed = localStorage.getItem("talendus_install_dismissed") === "1"; } catch (e) {}
+      var deferred = null;
+      window.addEventListener("beforeinstallprompt", function (e) {
+        e.preventDefault();
+        deferred = e;
+        showInstall(true);
+      });
+      function showInstall(canNative) {
+        if (dismissed || document.querySelector(".tl-install-banner")) return;
+        var box = document.createElement("div");
+        box.className = "tl-install-banner is-on";
+        box.setAttribute("role", "dialog");
+        var appHref = isEn ? "app.html" : "app.html";
+        if (location.pathname.indexOf("/en/") === 0) appHref = "/en/app.html";
+        else appHref = "/app.html";
+        box.innerHTML = "<p>" + (isEn
+          ? "Install the Talendus app on your phone. Jobs, profile, messages and click-to-call — Android and iPhone."
+          : "Installez l'appli Talendus sur votre téléphone. Offres, profil, messages et appel direct — Android et iPhone.") +
+          "</p><div class=\"tl-actions\">" +
+          (canNative ? "<button type=\"button\" class=\"tl-btn\" data-install-native>" + (isEn ? "Install" : "Installer") + "</button>" : "") +
+          "<a class=\"tl-btn" + (canNative ? " tl-btn-ghost" : "") + "\" href=\"" + appHref + "\">" + (isEn ? "How to install" : "Comment installer") + "</a>" +
+          "<button type=\"button\" class=\"tl-btn tl-btn-ghost\" data-install-dismiss>" + (isEn ? "Later" : "Plus tard") + "</button></div>";
+        document.body.appendChild(box);
+        box.querySelector("[data-install-dismiss]").addEventListener("click", function () {
+          box.remove();
+          try { localStorage.setItem("talendus_install_dismissed", "1"); } catch (err) {}
+        });
+        var nativeBtn = box.querySelector("[data-install-native]");
+        if (nativeBtn) nativeBtn.addEventListener("click", function () {
+          if (!deferred) return;
+          deferred.prompt();
+          deferred.userChoice.finally(function () { deferred = null; box.remove(); });
+        });
+      }
+      setTimeout(function () { showInstall(!!deferred); }, 9000);
+    })();
   });
 })();

@@ -1,5 +1,8 @@
 SITE = "https://talendus.ca"
 WA_HREF = "https://wa.me/15145550199?text="
+PHONE_E164 = "15145550199"
+PHONE_TEL = "tel:+15145550199"
+PHONE_DISPLAY = "514 555-0199"
 OG_IMAGE = "assets/img/all-images/industry/usine-equipe.jpg"
 
 import html as html_lib
@@ -99,6 +102,8 @@ COPY = {
         "terms": "Conditions",
         "sticky_consult": "Réserver un appel",
         "wa_label": "Écrire à Talendus sur WhatsApp",
+        "call_label": "Appeler Talendus",
+        "app_install": "Installer l'appli",
         "speed_kicker": "Le mandat",
         "speed_h2": "Nous faisons le travail de recherche. Vous gardez le choix final.",
         "speed_p": "Pas une pile de CV à trier. Vous décrivez le poste ; Talendus recherche, présélectionne et vous présente une shortlist qualifiée, quel que soit votre secteur.",
@@ -189,6 +194,8 @@ COPY = {
         "terms": "Terms",
         "sticky_consult": "Book a call",
         "wa_label": "Message Talendus on WhatsApp",
+        "call_label": "Call Talendus",
+        "app_install": "Install the app",
         "speed_kicker": "The mandate",
         "speed_h2": "We do the search. You keep the final choice.",
         "speed_p": "Not a stack of resumes to sort. You describe the role; Talendus searches, screens and presents a qualified shortlist, whatever your industry.",
@@ -236,6 +243,7 @@ HREFS = {
         "geo_laval": "recrutement-industriel-laval.html",
         "geo_long": "recrutement-industriel-longueuil.html",
         "geo_qc": "recrutement-industriel-quebec.html",
+        "app": "app.html",
     },
     "en": {
         "home": "index.html",
@@ -270,6 +278,7 @@ HREFS = {
         "geo_laval": "industrial-recruiting-laval.html",
         "geo_long": "industrial-recruiting-longueuil.html",
         "geo_qc": "industrial-recruiting-quebec.html",
+        "app": "app.html",
     },
 }
 
@@ -386,6 +395,13 @@ def whatsapp_fab(lang):
 </a>"""
 
 
+def call_fab(lang):
+    t = COPY[lang]
+    return f"""<a class="tl-call" href="{PHONE_TEL}" aria-label="{t['call_label']}">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 10.8c1.4 2.7 3.9 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1.1-.3 1.2.4 2.5.6 3.8.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.6.6 3.8.1.4 0 .8-.3 1.1L6.6 10.8z"/></svg>
+</a>"""
+
+
 def head(title, description, canonical, extra_css="", lang="fr", alt_path="", robots="index,follow", extra_json_ld=None, og_type="website", og_image=""):
     t = COPY[lang]
     a = pfx(lang)
@@ -482,6 +498,12 @@ gtag('consent', 'default', {
      <meta name="twitter:description" content="{safe_desc}">
      <meta name="twitter:image" content="{og_abs}">
      <meta name="theme-color" content="#0b1f3a">
+     <meta name="apple-mobile-web-app-capable" content="yes">
+     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+     <meta name="apple-mobile-web-app-title" content="Talendus">
+     <meta name="mobile-web-app-capable" content="yes">
+    <link rel="manifest" href="{a}manifest.webmanifest">
+    <link rel="apple-touch-icon" href="{a}assets/img/logo/fav-logo1.png">
     <link rel="shortcut icon" href="{a}assets/img/logo/fav-logo1.png" type="image/png">
     <link rel="stylesheet" href="{a}assets/css/plugins/bootstrap.min.css">
     <link rel="stylesheet" href="{a}assets/css/plugins/aos.css">
@@ -566,7 +588,7 @@ def header(solid=True, lang="fr", alt_url="", persona="gateway"):
             <h3 class="vl-offcanvas-sm-title">Talendus</h3>
             <p class="tl-offcanvas-tagline">{t['tagline']}</p>
             <div class="space20"></div>
-            <span><a href="tel:+15145550199"><i class="fa-solid fa-phone"></i> 514 555-0199</a></span>
+            <span><a href="{PHONE_TEL}"><i class="fa-solid fa-phone"></i> {PHONE_DISPLAY}</a></span>
             <span><a href="mailto:info@talendus.ca"><i class="fa-regular fa-envelope"></i> info@talendus.ca</a></span>
             <span><a href="{h['contact']}"><i class="fa-solid fa-location-dot"></i> {t['offcanvas_place']}</a></span>
             <span><a href="{wa_link(lang)}" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a></span>
@@ -660,6 +682,7 @@ def cta_band(lang="fr", persona="gateway"):
 def footer(lang="fr"):
     t, h, a = COPY[lang], HREFS[lang], pfx(lang)
     return f"""
+{call_fab(lang)}
 {whatsapp_fab(lang)}
 <div class="vl-footer2-section-area">
   <div class="container">
@@ -703,9 +726,10 @@ def footer(lang="fr"):
         <div class="footer-widget-area">
           <h3>{t['footer_contact']}</h3>
           <ul>
-            <li><a href="tel:+15145550199">514 555-0199</a></li>
+            <li><a href="{PHONE_TEL}">{PHONE_DISPLAY}</a></li>
             <li><a href="mailto:info@talendus.ca">info@talendus.ca</a></li>
             <li><a href="{wa_link(lang)}" target="_blank" rel="noopener noreferrer">WhatsApp</a></li>
+            <li><a href="{h['app']}">{t['app_install']}</a></li>
             <li>{t['footer_hours']}</li>
             <li><a href="{h['contact']}">{t['footer_place']}</a></li>
             <li><a href="{h['geo_mtl']}">{'Montréal' if lang == 'fr' else 'Montreal'}</a></li>

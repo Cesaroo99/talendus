@@ -41,6 +41,8 @@ def serialize_contract(row: Contract) -> dict:
         "esign_status": row.esign_status,
         "signed": bool(latest),
         "signature": serialize_signature(latest) if latest else None,
+        "pdf_path": f"/api/contracts/{row.id}/pdf",
+        "company_name": row.company.name if row.company else None,
     }
 
 
@@ -87,21 +89,52 @@ def create_contract(db: Session, user: User, data: ContractIn) -> Contract:
             status = ContractStatus(data.status.upper())
         except ValueError:
             raise AppError(400, "Statut de contrat invalide.", "VALIDATION_ERROR")
+    from app.services.ops_notify import frontend, message_company, notify_company
+    from app.services.pdf_docs import DEFAULT_MANDATE_TERMS
+
+    terms = (data.terms or "").strip() or DEFAULT_MANDATE_TERMS
+    if data.commission_percent:
+        terms = f"Commission : {data.commission_percent} %.\n\n" + terms
     row = Contract(
         company_id=company.id,
         type=data.type.strip(),
         start_date=data.start_date,
         end_date=data.end_date,
         commission_percent=data.commission_percent,
-        terms=data.terms,
-        document_name=data.document_name,
+        terms=terms,
+        document_name=data.document_name or "mandat-talendus.pdf",
         status=status,
         recruiter_id=user.id,
     )
     db.add(row)
     db.flush()
     audit(db, "contract.create", user, "contract", row.id)
+    notify_company(
+        db,
+        company.id,
+        title="Mandat Talendus à signer",
+        message="Un mandat de recrutement est prêt. Ouvrez-le, lisez le PDF et signez dans votre espace.",
+        section="contracts",
+        template="contract_to_sign",
+        ctx={
+            "name": company.name,
+            "company": company.name,
+            "type": row.type,
+            "percent": str(row.commission_percent or "-"),
+            "link": f"{frontend()}/espace-employeur.html#/contracts",
+        },
+        item_id=row.id,
+    )
     db.commit()
+    try:
+        message_company(
+            db,
+            user,
+            company.id,
+            f"Un mandat « {row.type} » est prêt à signer dans Contrats. Signature électronique interne Talendus, sans DocuSign.",
+        )
+    except Exception:
+        pass
     return get_contract(db, user, row.id)
 
 
@@ -133,6 +166,24 @@ def sign_contract(db: Session, user: User, contract_id: str, data: ContractSignI
         )
     )
     audit(db, "contract.sign", user, "contract", row.id, ip, {"hash": digest})
+    from app.services.ops_notify import frontend, notify_company
+
+    company_name = row.company.name if row.company else "l'entreprise"
+    notify_company(
+        db,
+        row.company_id,
+        title="Mandat signé",
+        message=f"Le mandat a été signé par {name}.",
+        section="contracts",
+        template="contract_signed",
+        ctx={
+            "name": company_name,
+            "company": company_name,
+            "signer": name,
+            "link": f"{frontend()}/espace-employeur.html#/contracts",
+        },
+        item_id=row.id,
+    )
     db.commit()
     db.expire_all()
     return get_contract(db, user, row.id)

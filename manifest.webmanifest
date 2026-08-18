@@ -1,0 +1,45 @@
+{
+  "name": "Talendus",
+  "short_name": "Talendus",
+  "description": "Agence de placement Talendus. Profil, offres, messages, contrats et appel direct.",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0b1f3a",
+  "theme_color": "#0b1f3a",
+  "lang": "fr-CA",
+  "icons": [
+    {
+      "src": "/assets/img/logo/fav-logo1.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/img/logo/logo1.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Espace candidat",
+      "short_name": "Candidat",
+      "url": "/espace.html",
+      "icons": [{ "src": "/assets/img/logo/fav-logo1.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Espace employeur",
+      "short_name": "Entreprise",
+      "url": "/espace-employeur.html",
+      "icons": [{ "src": "/assets/img/logo/fav-logo1.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Appeler Talendus",
+      "short_name": "Appel",
+      "url": "tel:+15145550199"
+    }
+  ]
+}

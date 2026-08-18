@@ -65,6 +65,7 @@ def alt_for(slug):
         "recrutement-industriel-laval.html": "en/industrial-recruiting-laval.html",
         "recrutement-industriel-longueuil.html": "en/industrial-recruiting-longueuil.html",
         "recrutement-industriel-quebec.html": "en/industrial-recruiting-quebec.html",
+        "app.html": "en/app.html",
     }
     if slug in special:
         return special[slug]
@@ -887,6 +888,45 @@ for old, new in [("about.html", "a-propos.html"), ("service.html", "services.htm
                     f'<section class="tl-section"><div class="container"><p>Cette page a été déplacée. <a href="{new}">Continuer</a></p><script>location.replace("{new}");</script></div></section>',
                     robots="noindex,nofollow"))
 
+write("app.html", wrap(
+    "Applis Talendus | Android et iPhone",
+    "Installez Talendus sur votre téléphone. Espace candidat ou employeur, messages, factures, contrats et appel direct. Android et iOS.",
+    "app.html",
+    page_hero(
+        "Applis",
+        "Talendus dans votre poche.",
+        "Ajoutez Talendus à l'écran d'accueil. C'est l'application officielle, servie par notre site — sans App Store ni Google Play obligatoires.",
+        actions='<a class="tl-btn" href="tel:+15145550199">Appeler</a><a class="tl-btn tl-btn-ghost" href="https://wa.me/15145550199?text=Bonjour%20Talendus%2C%20je%20souhaite%20discuter%20d%27un%20besoin%20de%20recrutement." target="_blank" rel="noopener noreferrer">WhatsApp</a>',
+        badges='<span class="tl-badge tl-badge-light">Android</span> <span class="tl-badge tl-badge-light">iPhone</span>'
+    )
+    + """
+    <section class="tl-section"><div class="container">
+      <div class="tl-app-grid">
+        <article class="tl-app-card">
+          <h3>Android</h3>
+          <p>Ouvrez talendus.ca dans Chrome. Le bandeau « Installer » apparaît, ou Menu → Installer l'application. L'icône Talendus se pose sur l'écran d'accueil, comme une appli du Play Store.</p>
+          <p>Les sources natives (noyau Android) sont dans le dépôt, dossier <code>mobile/android</code>, pour une compilation APK interne si vous le souhaitez.</p>
+        </article>
+        <article class="tl-app-card">
+          <h3>iPhone et iPad</h3>
+          <p>Ouvrez talendus.ca dans Safari. Bouton Partager → Sur l'écran d'accueil. iOS lance Talendus en plein écran, sans barre d'adresse.</p>
+          <p>Le projet iOS (WKWebView) est dans <code>mobile/ios</code> pour Xcode, si une fiche App Store devient utile plus tard.</p>
+        </article>
+        <article class="tl-app-card">
+          <h3>Candidats</h3>
+          <p>Profil, CV, candidatures, messages avec votre conseiller, notifications. Les employeurs n'ont jamais vos coordonnées.</p>
+          <p><a class="tl-btn" href="espace.html">Ouvrir mon espace</a></p>
+        </article>
+        <article class="tl-app-card">
+          <h3>Entreprises</h3>
+          <p>Mandats, shortlists, contrats à signer, factures PDF, paiement par virement enregistré par Talendus — sans Stripe obligatoire.</p>
+          <p><a class="tl-btn" href="espace-employeur.html">Espace employeur</a></p>
+        </article>
+      </div>
+    </div></section>
+    """
+))
+
 write_seo_fr(write, wrap, page_hero, CTA_HIRE)
 build_en(write, wrap, page_hero)
 
@@ -905,6 +945,7 @@ pairs = [
     ("contact.html", "en/contact.html"),
     ("confidentialite.html", "en/privacy.html"),
     ("conditions.html", "en/terms.html"),
+    ("app.html", "en/app.html"),
     ("recrutement-industriel.html", "en/industrial-recruiting.html"),
     ("recrutement-manufacturier.html", "en/manufacturing-recruiting.html"),
     ("recrutement-technique.html", "en/technical-recruiting.html"),
