@@ -49,7 +49,7 @@ class Settings(BaseSettings):
     s3_access_key: str = ""
     s3_secret_key: str = ""
     s3_prefix: str = "talendus"
-    stripe_enabled: bool = True
+    stripe_enabled: bool = False
     stripe_secret_key: str = ""
     stripe_webhook_secret: str = ""
     stripe_publishable_key: str = ""
@@ -63,6 +63,9 @@ class Settings(BaseSettings):
     seed_password: str = "talendus"
     default_currency: str = "CAD"
     default_tax_rate_bp: int = 14975
+    public_phone_e164: str = "15145550199"
+    public_phone_display: str = "514 555-0199"
+    public_email: str = "info@talendus.ca"
 
     integrations_timeout_seconds: int = 15
     integrations_max_retries: int = 2

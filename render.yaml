@@ -66,3 +66,11 @@ services:
         generateValue: true
       - key: ADMIN_PASSWORD
         generateValue: true
+      - key: STRIPE_ENABLED
+        value: "false"
+      - key: PUBLIC_EMAIL
+        value: info@talendus.ca
+      - key: PUBLIC_PHONE_E164
+        value: "15145550199"
+      - key: PUBLIC_PHONE_DISPLAY
+        value: "514 555-0199"

@@ -134,6 +134,24 @@ PROVIDERS: tuple[ProviderSpec, ...] = (
         implemented=False,
         notes="Interface prête. Fournisseur (DocuSign / autre) à brancher avec un compte API.",
     ),
+    ProviderSpec(
+        name="google_login",
+        category="auth",
+        label="Connexion Google",
+        env_vars=("google_oauth_client_id",),
+        description="Bouton Continuer avec Google. Sans identifiant, la connexion se fait par courriel.",
+        implemented=True,
+        notes="GOOGLE_OAUTH_CLIENT_ID dans Render. Aucun secret n'est envoyé au navigateur au-delà de cet identifiant public.",
+    ),
+    ProviderSpec(
+        name="linkedin_login",
+        category="auth",
+        label="Connexion LinkedIn",
+        env_vars=("linkedin_oauth_client_id",),
+        description="Connexion LinkedIn, distincte de l'import d'offres.",
+        implemented=True,
+        notes="LINKEDIN_OAUTH_CLIENT_ID. Le bouton n'apparaît que si cet identifiant est présent.",
+    ),
 )
 
 
@@ -150,6 +168,8 @@ def _enabled(name: str) -> bool:
         "google_maps": settings.google_maps_enabled,
         "openai": settings.openai_enabled,
         "esignature": settings.esignature_enabled,
+        "google_login": bool(settings.google_oauth_client_id),
+        "linkedin_login": bool(settings.linkedin_oauth_client_id),
     }
     return bool(mapping.get(name, False))
 
@@ -161,15 +181,17 @@ def _configured(spec: ProviderSpec) -> bool:
         return (get_settings().storage_backend or "").lower() == "s3" and bool(get_settings().s3_bucket)
     if spec.name == "indeed":
         return bool(_secret("indeed_api_key") or _secret("indeed_publisher_id"))
+    if spec.name == "google_login":
+        return bool(_secret("google_oauth_client_id"))
+    if spec.name == "linkedin_login":
+        return bool(_secret("linkedin_oauth_client_id"))
     return _has_all(spec.env_vars)
 
 
 def _state(spec: ProviderSpec) -> str:
     configured = _configured(spec)
     enabled = _enabled(spec.name)
-    if spec.name == "email":
-        return "active" if configured else "prepared"
-    if spec.name == "s3":
+    if spec.name in {"email", "s3", "google_login", "linkedin_login"}:
         return "active" if configured else "prepared"
     if spec.name == "stripe":
         if configured and enabled:
@@ -238,7 +260,7 @@ def require_configured(name: str) -> dict:
 
 def require_active(name: str) -> dict:
     status = require_configured(name)
-    if not status["enabled"] and name not in {"email", "s3"}:
+    if not status["enabled"] and name not in {"email", "s3", "google_login", "linkedin_login"}:
         raise IntegrationError(
             f"{status['label']} est désactivé.",
             "INTEGRATION_DISABLED",

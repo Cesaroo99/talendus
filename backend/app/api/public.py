@@ -12,6 +12,7 @@ from app.models import EmailLog, User
 from app.models.enums import EmailType, UserRole
 from app.schemas import ContactIn, PublicTalentProfileIn
 from app.services.audit import audit
+from app.services.capabilities import public_services
 from app.services.email import send_email
 from app.services import candidates as cand_svc
 
@@ -22,6 +23,12 @@ router = APIRouter(tags=["public"])
 def health():
     """Liveness : ne touche pas la base. Render s'en sert ; un 502 ici coupe tout le site."""
     return ok({"status": "ok", "service": "talendus-api", "env": get_settings().app_env})
+
+
+@router.get("/services")
+def public_site_services():
+    """État public des services (paiements, contact, connexion) — aucun secret."""
+    return ok(public_services())
 
 
 @router.get("/ready")
