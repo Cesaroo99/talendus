@@ -1,0 +1,11 @@
+{
+  "appId": "ca.talendus.app",
+  "appName": "Talendus",
+  "webDir": "www",
+  "server": {
+    "url": "https://talendus.ca",
+    "cleartext": false
+  },
+  "android": { "allowMixedContent": false },
+  "ios": { "contentInset": "automatic" }
+}

@@ -1,0 +1,23 @@
+name: Talendus
+options:
+  bundleIdPrefix: ca.talendus
+  deploymentTarget:
+    iOS: "16.0"
+  xcodeVersion: "15.0"
+settings:
+  PRODUCT_BUNDLE_IDENTIFIER: ca.talendus.app
+targets:
+  Talendus:
+    type: application
+    platform: iOS
+    sources:
+      - path: Talendus
+    info:
+      path: Talendus/Info.plist
+      properties:
+        CFBundleDisplayName: Talendus
+        CFBundleShortVersionString: "1.0"
+        CFBundleVersion: "1"
+        UILaunchScreen: {}
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: false

@@ -37,6 +37,7 @@ _EMPLOYER_ROUTES = {
     "dashboard": "dashboard",
     "documents": "documents",
     "notifs": "notifs",
+    "contracts": "contracts",
 }
 
 

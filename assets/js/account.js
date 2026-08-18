@@ -69,7 +69,12 @@
       sms: "SMS (coming soon)", wa: "WhatsApp (coming soon)", push: "Push (coming soon)",
       profilePublic: "Allow a public professional summary", changeEmail: "Email address is used to sign in.",
       emptyInbox: "No profiles presented yet. Talendus will share qualified shortlists.", emptyInvoices: "No invoices.",
-      pay: "Pay by card", pipeline: "Pipeline",
+      pay: "Record a card payment", pipeline: "Pipeline",
+      contracts: "Contracts", emptyContracts: "No mandate yet.",
+      sign: "Sign electronically", signed: "Signed", unsigned: "To sign",
+      acceptTerms: "I accept the terms of this mandate",
+      transferHint: "Pay by bank transfer or cheque to Talendus. No payment processor required.",
+      downloadPdf: "Download PDF",
       mediate: "All contact with candidates goes through Talendus. You cannot write to them or schedule interviews directly.",
       mediateCandidate: "Talendus is your only contact. Employers never receive your email or phone number.",
       writeTalendus: "Write to your Talendus consultant",
@@ -170,6 +175,11 @@
       profilePublic: "Autoriser un résumé professionnel visible", changeEmail: "Le courriel sert à vous connecter.",
       emptyInbox: "Aucun dossier présenté pour le moment. Talendus vous transmet les profils qualifiés.", emptyInvoices: "Aucune facture.",
       pay: "Payer par carte", pipeline: "Pipeline",
+      contracts: "Contrats", emptyContracts: "Aucun mandat pour le moment.",
+      sign: "Signer électroniquement", signed: "Signé", unsigned: "À signer",
+      acceptTerms: "J’accepte les conditions de ce mandat",
+      transferHint: "Réglez par virement ou chèque à l’ordre de Talendus. Aucun intermédiaire de paiement n’est requis.",
+      downloadPdf: "Télécharger le PDF",
       mediate: "Tout contact avec les candidats passe par Talendus. Vous ne pouvez pas leur écrire ni planifier d’entretien directement.",
       mediateCandidate: "Talendus est votre seul interlocuteur. Les employeurs ne reçoivent jamais votre courriel ni votre téléphone.",
       writeTalendus: "Écrire à votre conseiller Talendus",
@@ -323,6 +333,7 @@
       if (name === "alerts" || name === "alertes") return { name: "alerts", id: id || "" };
       if (name === "ats") return { name: "pipeline", id: id || "" };
       if (name === "billing" || name === "facturation") return { name: "invoices", id: id || "" };
+      if (name === "contrats" || name === "mandats") return { name: "contracts", id: id || "" };
       return { name: name || "dashboard", id: id || "" };
     }
     function currentRoute() {
@@ -375,6 +386,7 @@
         if (!state.company || state.company.can_read_invoices !== false) {
           items.push(["invoices", t.billing, "fa-file-invoice-dollar"]);
         }
+        items.push(["contracts", t.contracts, "fa-file-signature"]);
         items.push(["notifs", t.notifs, "fa-bell", unreadN], ["settings", t.settings, "fa-gear"]);
         return items;
       }
@@ -1147,13 +1159,31 @@
     function renderInvoices(rows) {
       if (!rows || !rows.length) return empty(t.emptyInvoices);
       var payable = { SENT: 1, PENDING: 1, OVERDUE: 1 };
-      return '<div class="tl-table-wrap"><table class="tl-portal-table"><thead><tr><th>' + esc(t.invoices) + "</th><th>" + esc(t.salary) +
+      return '<p class="tl-mediate">' + esc(t.transferHint) + "</p>" +
+        '<div class="tl-table-wrap"><table class="tl-portal-table"><thead><tr><th>' + esc(t.invoices) + "</th><th>" + esc(t.salary) +
         "</th><th></th><th></th></tr></thead><tbody>" + rows.map(function (inv) {
         var pay = payable[inv.status] ? '<button type="button" class="tl-btn" data-pay="' + esc(inv.id) + '">' + esc(t.pay) + "</button>" : "";
+        var pdf = inv.pdf_path ? '<button type="button" class="tl-btn tl-btn-ghost" data-dl="' + esc(inv.pdf_path) + '" data-dl-name="' + esc((inv.number || "facture") + ".pdf") + '">' + esc(t.downloadPdf) + "</button>" : "";
         return "<tr><td data-label=\"" + esc(t.invoices) + "\">" + esc(inv.number || inv.id) +
           "</td><td data-label=\"" + esc(t.salary) + "\">" + esc(money(inv.amount_total || inv.amount)) +
-          "</td><td><span class=\"tl-chip\">" + esc(statusLabel(inv.status)) + "</span></td><td>" + pay + "</td></tr>";
+          "</td><td><span class=\"tl-chip\">" + esc(statusLabel(inv.status)) + "</span></td><td>" + pdf + " " + pay + "</td></tr>";
       }).join("") + "</tbody></table></div><div class=\"tl-success\" id=\"acc-inv-msg\"></div>";
+    }
+
+    function renderContracts(rows) {
+      if (!rows || !rows.length) return empty(t.emptyContracts);
+      return rows.map(function (c) {
+        var pdf = c.pdf_path ? '<button type="button" class="tl-btn tl-btn-ghost" data-dl="' + esc(c.pdf_path) + '" data-dl-name="' + esc(c.document_name || "mandat.pdf") + '">' + esc(t.downloadPdf) + "</button>" : "";
+        var sign = c.signed
+          ? '<span class="tl-chip">' + esc(t.signed) + "</span>"
+          : '<form class="tl-form" data-sign-contract="' + esc(c.id) + '"><label class="tl-check"><input type="checkbox" name="accepted" required> ' + esc(t.acceptTerms) +
+            "</label><input name=\"signer_name\" required placeholder=\"" + esc(t.first) + "\"><button class=\"tl-btn\" type=\"submit\">" + esc(t.sign) + "</button></form>";
+        return '<article class="tl-card" style="margin-bottom:16px"><div class="body"><h3>' + esc(c.type || t.contracts) +
+          " · " + esc(c.company_name || "") + "</h3><p class=\"tl-meta\">" + esc(c.start_date || "") + " → " + esc(c.end_date || "") +
+          (c.commission_percent ? " · " + esc(String(c.commission_percent)) + " %" : "") + "</p>" +
+          '<pre class="tl-prose" style="white-space:pre-wrap;font-family:inherit;max-height:220px;overflow:auto">' + esc(c.terms || "") +
+          "</pre><p>" + pdf + "</p>" + sign + "</div></article>";
+      }).join("") + '<div class="tl-success" id="acc-contract-msg"></div>';
     }
 
     function renderPipeline(apps) {
@@ -1265,9 +1295,25 @@
           api.request("/invoices/" + btn.getAttribute("data-pay") + "/checkout", { method: "POST" }).then(function (json) {
             var url = json && json.data && json.data.checkout_url;
             if (url) window.location.href = url;
-            else flash(document.getElementById("acc-inv-msg"), t.success, true);
+            else flash(document.getElementById("acc-inv-msg"), t.transferHint, true);
           }).catch(function (err) {
-            flash(document.getElementById("acc-inv-msg"), (err && err.message) || t.err, false);
+            flash(document.getElementById("acc-inv-msg"), (err && err.message) || t.transferHint, false);
+          });
+        };
+      });
+      root.querySelectorAll("[data-sign-contract]").forEach(function (form) {
+        form.onsubmit = function (e) {
+          e.preventDefault();
+          var id = form.getAttribute("data-sign-contract");
+          var accepted = form.querySelector("[name=accepted]");
+          api.request("/contracts/" + id + "/sign", {
+            method: "POST",
+            body: {
+              accepted: !!(accepted && accepted.checked),
+              signer_name: (form.querySelector("[name=signer_name]") || {}).value || ""
+            }
+          }).then(function () { go("contracts"); }).catch(function (err) {
+            flash(document.getElementById("acc-contract-msg"), (err && err.message) || t.err, false);
           });
         };
       });
@@ -1406,6 +1452,7 @@
           else if (route.name === "inbox" || route.name === "candidates") p = unwrap(api.request("/applications")).then(renderInbox);
           else if (route.name === "pipeline") p = unwrap(api.request("/applications")).then(renderPipeline);
           else if (route.name === "invoices") p = unwrap(api.request("/invoices")).then(renderInvoices);
+          else if (route.name === "contracts") p = unwrap(api.request("/contracts")).then(renderContracts);
           else if (route.name === "candidate") p = unwrap(api.request("/candidates/" + route.id)).then(function (c) {
             return mediateNote() + "<h3>" + esc((c.first_name || "") + " " + (c.last_name || "")) + "</h3><p>" + esc(c.title || "") + " · " + esc(c.city || "") +
               "</p><p>" + esc(c.skills || "") + "</p>" + ((c.resumes || []).map(function (r) {

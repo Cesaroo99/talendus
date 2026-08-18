@@ -1058,37 +1058,50 @@ a.tl-card:hover, .tl-job-card:hover, .tl-case:hover {
 }
 .tl-lang a:hover:not(.is-active) { background: rgba(255,255,255,.12); }
 
-/* WhatsApp FAB */
-.tl-whatsapp {
+/* WhatsApp + Call FABs */
+.tl-whatsapp,
+.tl-call {
   position: fixed;
   right: 18px;
-  bottom: 86px;
   z-index: 46;
   width: 58px;
   height: 58px;
   border-radius: 50%;
-  background: #25d366;
   color: #fff !important;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 12px 28px rgba(37, 211, 102, .38);
   transition: transform .2s ease, box-shadow .2s ease;
 }
-.tl-whatsapp svg { width: 30px; height: 30px; fill: currentColor; }
-.tl-whatsapp:hover {
+.tl-whatsapp {
+  bottom: 20px;
+  background: #25d366;
+  box-shadow: 0 12px 28px rgba(37, 211, 102, .38);
+}
+.tl-call {
+  bottom: 88px;
+  background: var(--tl-navy);
+  box-shadow: 0 12px 28px rgba(11, 31, 58, .35);
+}
+.tl-whatsapp svg,
+.tl-call svg { width: 28px; height: 28px; fill: currentColor; }
+.tl-whatsapp:hover,
+.tl-call:hover {
   transform: translateY(-3px) scale(1.04);
   color: #fff !important;
-  box-shadow: 0 16px 32px rgba(37, 211, 102, .48);
 }
-.tl-whatsapp::after {
+.tl-whatsapp:hover { box-shadow: 0 16px 32px rgba(37, 211, 102, .48); }
+.tl-call:hover { box-shadow: 0 16px 32px rgba(232, 93, 37, .35); background: var(--tl-orange); }
+.tl-whatsapp::after,
+.tl-call::after {
   content: "";
   position: absolute;
   inset: -4px;
   border-radius: 50%;
-  border: 2px solid rgba(37, 211, 102, .45);
   animation: tl-wa-pulse 2.4s ease-out infinite;
 }
+.tl-whatsapp::after { border: 2px solid rgba(37, 211, 102, .45); }
+.tl-call::after { border: 2px solid rgba(11, 31, 58, .28); animation-delay: 1.1s; }
 @keyframes tl-wa-pulse {
   0% { transform: scale(.92); opacity: .8; }
   100% { transform: scale(1.25); opacity: 0; }
@@ -1746,6 +1759,7 @@ a.tl-card:hover, .tl-job-card:hover, .tl-case:hover {
   margin-top: 8px;
 }
 .tl-whatsapp { bottom: 20px; }
+.tl-call { bottom: 88px; }
 .tl-offcanvas-tagline {
   color: rgba(255,255,255,.88);
   font-size: 14px;
@@ -3642,6 +3656,9 @@ a.tl-job-card:hover .tl-job-card-cta::after {
   body:has(.tl-job-mobile-cta) .tl-whatsapp {
     bottom: 86px;
   }
+  body:has(.tl-job-mobile-cta) .tl-call {
+    bottom: 154px;
+  }
 }
 .tl-gateway-hero .hero2-heading p + p {
   margin-top: 8px;
@@ -3786,6 +3803,48 @@ button.tl-btn.tl-btn-ghost-dark:hover,
   color: #ffffff !important;
   border-color: #0a66c2 !important;
 }
+
+.tl-install-banner {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: 168px;
+  z-index: 60;
+  max-width: 440px;
+  margin: 0 auto;
+  background: #0b1f3a;
+  color: #fff;
+  border-radius: 16px;
+  padding: 14px 16px;
+  box-shadow: 0 16px 40px rgba(11, 31, 58, .35);
+  display: none;
+}
+.tl-install-banner.is-on { display: block; }
+.tl-install-banner p { margin: 0 0 10px; font-size: 14px; line-height: 1.45; color: #fff; }
+.tl-install-banner .tl-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.tl-install-banner .tl-btn { margin: 0; }
+.tl-app-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+.tl-app-card {
+  background: #fff;
+  border: 1px solid var(--tl-line);
+  border-radius: 16px;
+  padding: 22px;
+}
+.tl-app-card h3 { margin: 0 0 8px; }
+@media (max-width: 759px) {
+  .tl-app-grid { grid-template-columns: 1fr; }
+  .tl-install-banner { bottom: 168px; left: 12px; right: 12px; }
+}
+@media (display-mode: standalone) {
+  .tl-whatsapp { bottom: 24px; }
+  .tl-call { bottom: 92px; }
+  .tl-install-banner { display: none !important; }
+}
+
 
 
 

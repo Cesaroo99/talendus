@@ -967,7 +967,8 @@
         var iid = invoiceApiId(i);
         var send = (i.status === "brouillon") ? '<button class="btn btn-ghost btn-sm" data-inv-send="' + iid + '">Envoyer</button>' : "";
         var payBtn = (i.status === "envoyee" || i.status === "en-attente" || i.status === "en-retard") ? '<button class="btn btn-orange btn-sm" data-inv-pay="' + iid + '" data-inv-amount="' + i.amount + '">Encaisser</button>' : "";
-        return "<tr><td>" + U.esc(i.id) + "</td><td>" + U.esc(cl ? cl.name : "—") + "</td><td>" + U.esc(m ? m.title : "—") + "</td><td>" + U.money(i.amount) + "</td><td>" + U.dateFr(i.date) + "</td><td>" + U.dateFr(i.due) + "</td><td>" + U.badge(i.status) + "</td><td>" + send + payBtn + "</td></tr>";
+        var pdf = iid ? '<button class="btn btn-ghost btn-sm" data-dl-doc="/api/invoices/' + iid + '/pdf" data-dl-name="' + U.esc(i.id) + '.pdf">PDF</button>' : "";
+        return "<tr><td>" + U.esc(i.id) + "</td><td>" + U.esc(cl ? cl.name : "—") + "</td><td>" + U.esc(m ? m.title : "—") + "</td><td>" + U.money(i.amount) + "</td><td>" + U.dateFr(i.date) + "</td><td>" + U.dateFr(i.due) + "</td><td>" + U.badge(i.status) + "</td><td>" + pdf + send + payBtn + "</td></tr>";
       }).join("") || '<tr><td colspan="8">' + U.empty("Aucune facture", "Créez une facture depuis le bouton ci-dessus.") + "</td></tr>"}</tbody></table></div></div>`;
     } else if (financeTab === "paiements") {
       var pending = byStatus("en-attente").concat(byStatus("envoyee"));

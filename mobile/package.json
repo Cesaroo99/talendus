@@ -1,0 +1,9 @@
+{
+  "name": "talendus-mobile",
+  "private": true,
+  "description": "Coques natives Talendus (Android / iOS) autour du site.",
+  "scripts": {
+    "cap:android": "npx cap add android",
+    "cap:ios": "npx cap add ios"
+  }
+}

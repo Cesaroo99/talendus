@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, Request
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -8,6 +9,7 @@ from app.models import User
 from app.models.enums import UserRole
 from app.schemas import ContractIn, ContractSignIn
 from app.services import contracts as contracts_service
+from app.services import pdf_docs
 
 router = APIRouter(prefix="/contracts", tags=["contracts"])
 
@@ -30,6 +32,20 @@ def create_contract(
 @router.get("/{contract_id}")
 def get_contract(contract_id: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     return ok(contracts_service.serialize_contract(contracts_service.get_contract(db, user, contract_id)))
+
+
+@router.get("/{contract_id}/pdf")
+def contract_pdf(contract_id: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    row = contracts_service.get_contract(db, user, contract_id)
+    data = pdf_docs.contract_pdf(row)
+    filename = row.document_name or "mandat-talendus.pdf"
+    if not filename.lower().endswith(".pdf"):
+        filename += ".pdf"
+    return Response(
+        content=data,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @router.post("/{contract_id}/sign")

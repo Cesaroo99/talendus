@@ -138,6 +138,13 @@ async def talent_profile(request: Request, db: Session = Depends(get_db)):
     return ok(result, message="Profil reçu. Un conseiller Talendus vous rejoint sous peu.")
 
 
+@router.post("/ops/tick")
+def ops_tick(_: User = Depends(require_roles(UserRole.ADMIN, UserRole.FINANCE, UserRole.RECRUITER))):
+    from app.services.scheduler import run_ops_tick
+
+    return ok(run_ops_tick(), message="Relances internes exécutées.")
+
+
 emails_router = APIRouter(prefix="/emails", tags=["emails"])
 
 
