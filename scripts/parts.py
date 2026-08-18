@@ -503,8 +503,9 @@ gtag('consent', 'default', {
      <meta name="apple-mobile-web-app-title" content="Talendus">
      <meta name="mobile-web-app-capable" content="yes">
     <link rel="manifest" href="{a}manifest.webmanifest">
-    <link rel="apple-touch-icon" href="{a}assets/img/logo/fav-logo1.png">
-    <link rel="shortcut icon" href="{a}assets/img/logo/fav-logo1.png" type="image/png">
+    <link rel="apple-touch-icon" sizes="180x180" href="{a}assets/img/logo/apple-touch-icon.png">
+    <link rel="icon" sizes="192x192" href="{a}assets/img/logo/icon-192.png" type="image/png">
+    <link rel="shortcut icon" href="{a}assets/img/logo/icon-192.png" type="image/png">
     <link rel="stylesheet" href="{a}assets/css/plugins/bootstrap.min.css">
     <link rel="stylesheet" href="{a}assets/css/plugins/aos.css">
     <link rel="stylesheet" href="{a}assets/css/plugins/fontawesome.css">
@@ -1029,6 +1030,95 @@ def cv_file_field(lang="fr", required=True):
               <input type="file" name="cvfile" accept="{CV_FILE_ACCEPT}"{req}>
               <span class="tl-file-hint">{hint}</span>
             </label>"""
+
+
+def install_board(lang="fr"):
+    """Guide visuel d'ajout à l'écran d'accueil, sans jargon technique."""
+    a = pfx(lang)
+    if lang == "en":
+        already = "Talendus is already on your home screen. Tap the icon to open it."
+        title = "Three small steps"
+        lead = "Then Talendus opens like your other apps — no store visit needed."
+        safari = "On iPhone, open this page in Safari (the blue compass icon), then follow the steps."
+        add = "Add to home screen"
+        android_h = "On Android"
+        ios_h = "On iPhone"
+        a1_t, a1_p = "Tap the menu", "The three dots at the top right of the screen."
+        a2_t, a2_p = "Tap Add to home screen", "Some phones say Install app. Same idea."
+        a3_t, a3_p = "Confirm", "The Talendus icon appears on your home screen. Done."
+        i1_t, i1_p = "Tap Share", "The square with the arrow pointing up, at the bottom of the screen."
+        i2_t, i2_p = "Tap Add to Home Screen", "Scroll the list if you do not see it right away."
+        i3_t, i3_p = "Tap Add", "The Talendus icon appears on your home screen. Done."
+        after = "You can then open Talendus from the icon, like any other app."
+    else:
+        already = "Talendus est déjà sur votre écran d'accueil. Touchez l'icône pour l'ouvrir."
+        title = "Trois petits gestes"
+        lead = "Ensuite, Talendus s'ouvre comme vos autres applis — sans passer par une boutique."
+        safari = "Sur iPhone, ouvrez cette page avec Safari (l'icône boussole bleue), puis suivez les gestes."
+        add = "Ajouter à l'écran d'accueil"
+        android_h = "Sur Android"
+        ios_h = "Sur iPhone"
+        a1_t, a1_p = "Touchez le menu", "Les trois points en haut à droite de l'écran."
+        a2_t, a2_p = "Touchez Ajouter à l'écran d'accueil", "Certains téléphones disent Installer l'application. C'est la même chose."
+        a3_t, a3_p = "Confirmez", "L'icône Talendus apparaît sur votre écran d'accueil. C'est fini."
+        i1_t, i1_p = "Touchez Partager", "Le carré avec la flèche vers le haut, en bas de l'écran."
+        i2_t, i2_p = "Touchez Sur l'écran d'accueil", "Faites glisser la liste si vous ne le voyez pas tout de suite."
+        i3_t, i3_p = "Touchez Ajouter", "L'icône Talendus apparaît sur votre écran d'accueil. C'est fini."
+        after = "Vous pourrez ensuite ouvrir Talendus depuis l'icône, comme n'importe quelle appli."
+    share_svg = """<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="14" y="18" width="20" height="22" rx="4" fill="none" stroke="currentColor" stroke-width="3"/><path d="M24 6v22" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M16 14l8-8 8 8" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>"""
+    menu_svg = """<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="12" r="3.5" fill="currentColor"/><circle cx="24" cy="24" r="3.5" fill="currentColor"/><circle cx="24" cy="36" r="3.5" fill="currentColor"/></svg>"""
+    home_svg = """<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="8" y="8" width="32" height="32" rx="8" fill="#0b1f3a"/><circle cx="24" cy="24" r="11" fill="#fff"/><path d="M17.5 20.2h13v3.2h-4.8v9.1h-3.4v-9.1h-4.8z" fill="#0b1f3a"/></svg>"""
+    check_svg = """<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="16" fill="#ff6b00"/><path d="M16 24.5l5 5 11-12" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>"""
+
+    def step(num, heading, text, glyph):
+        return f"""
+        <li>
+          <span class="tl-install-step-num">{num}</span>
+          <div class="tl-install-step-copy">
+            <h3>{heading}</h3>
+            <p>{text}</p>
+          </div>
+          <div class="tl-install-glyph" aria-hidden="true">{glyph}</div>
+        </li>"""
+
+    return f"""
+    <section class="tl-section tl-install-section" id="tl-install-board">
+      <div class="container">
+        <div class="tl-install-canvas">
+          <div class="tl-install-hero-card">
+            <div class="tl-install-icon-preview" aria-hidden="true">
+              <img src="{a}assets/img/logo/icon-192.png" width="72" height="72" alt="">
+              <span>Talendus</span>
+            </div>
+            <p class="tl-install-already" data-install-already hidden>{already}</p>
+            <h2>{title}</h2>
+            <p>{lead}</p>
+            <p class="tl-install-safari-note" data-install-safari hidden>{safari}</p>
+            <button type="button" class="tl-btn" data-install-now>{add}</button>
+          </div>
+          <div class="tl-install-lanes">
+            <article class="tl-install-lane" data-install-android>
+              <h3>{android_h}</h3>
+              <ol class="tl-install-steps">
+                {step(1, a1_t, a1_p, menu_svg)}
+                {step(2, a2_t, a2_p, home_svg)}
+                {step(3, a3_t, a3_p, check_svg)}
+              </ol>
+            </article>
+            <article class="tl-install-lane" data-install-ios>
+              <h3>{ios_h}</h3>
+              <ol class="tl-install-steps">
+                {step(1, i1_t, i1_p, share_svg)}
+                {step(2, i2_t, i2_p, home_svg)}
+                {step(3, i3_t, i3_p, check_svg)}
+              </ol>
+            </article>
+          </div>
+          <p class="tl-muted tl-install-after">{after}</p>
+        </div>
+      </div>
+    </section>
+    """
 
 
 def wrap(title, desc, slug, body, solid=True, lang="fr", alt="", robots="index,follow", extra_json_ld=None, og_type="website", og_image="", persona=None):
