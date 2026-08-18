@@ -607,49 +607,169 @@
     });
 
     (function setupPwa() {
-      var standalone = window.matchMedia && window.matchMedia("(display-mode: standalone)").matches;
-      if (window.navigator && window.navigator.standalone) standalone = true;
+      var DISMISS_KEY = "talendus_install_dismissed_at";
+      var ASKED_KEY = "talendus_install_asked";
+      var ua = (navigator.userAgent || "").toLowerCase();
+      var isIos = /iphone|ipad|ipod/.test(ua);
+      var isAndroid = /android/.test(ua);
+      var isMobile = isIos || isAndroid || ((navigator.maxTouchPoints || 0) > 1 && window.innerWidth < 900);
+      var isChromeIos = isIos && /crios/.test(ua);
+      var isSafariIos = isIos && /safari/.test(ua) && !/crios|fxios|edgios/.test(ua);
+      var standalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) ||
+        !!(window.navigator && window.navigator.standalone);
       if (standalone) document.documentElement.classList.add("tl-standalone");
-      if ("serviceWorker" in navigator && location.protocol.indexOf("http") === 0) {
+      if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1")) {
         navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(function () {});
       }
-      if (standalone || /\/admin\//.test(location.pathname)) return;
+
+      var board = document.getElementById("tl-install-board");
+      if (board) {
+        if (standalone) {
+          board.querySelectorAll("[data-install-already]").forEach(function (el) { el.hidden = false; });
+        }
+        if (isChromeIos || (isIos && !isSafariIos)) {
+          board.querySelectorAll("[data-install-safari]").forEach(function (el) { el.hidden = false; });
+        }
+        if (isAndroid) {
+          board.querySelectorAll("[data-install-ios]").forEach(function (el) { el.hidden = true; });
+        } else if (isIos) {
+          board.querySelectorAll("[data-install-android]").forEach(function (el) { el.hidden = true; });
+          board.querySelectorAll("[data-install-now]").forEach(function (el) { el.hidden = true; });
+        }
+      }
+
       var dismissed = false;
-      try { dismissed = localStorage.getItem("talendus_install_dismissed") === "1"; } catch (e) {}
+      try {
+        var until = parseInt(localStorage.getItem(DISMISS_KEY) || "0", 10);
+        dismissed = until > Date.now();
+        if (localStorage.getItem("talendus_install_dismissed") === "1") dismissed = true;
+      } catch (e) {}
+
       var deferred = null;
+      window.TalendusInstall = {
+        prompt: function () { return runInstall(); }
+      };
+
+      function rememberDismiss(days) {
+        try {
+          localStorage.setItem(DISMISS_KEY, String(Date.now() + (days || 14) * 24 * 60 * 60 * 1000));
+          sessionStorage.setItem(ASKED_KEY, "1");
+        } catch (err) {}
+        dismissed = true;
+      }
+
+      function askedThisVisit() {
+        try { return sessionStorage.getItem(ASKED_KEY) === "1"; } catch (e) { return false; }
+      }
+
+      function hideBanner() {
+        var box = document.querySelector(".tl-install-banner");
+        if (box) box.remove();
+      }
+
+      function runInstall() {
+        rememberDismiss(14);
+        hideBanner();
+        if (deferred && typeof deferred.prompt === "function") {
+          var ev = deferred;
+          deferred = null;
+          return ev.prompt().then(function () {
+            return ev.userChoice;
+          }).then(function (choice) {
+            if (choice && choice.outcome === "accepted") rememberDismiss(365);
+            else openGuide();
+          }).catch(function () { openGuide(); });
+        }
+        openGuide();
+        return Promise.resolve();
+      }
+
+      function openGuide() {
+        if (board) {
+          board.scrollIntoView({ behavior: "smooth", block: "start" });
+          return;
+        }
+        if (document.querySelector(".tl-install-sheet")) return;
+        var href = location.pathname.indexOf("/en/") === 0 ? "/en/app.html" : "/app.html";
+        var sheet = document.createElement("div");
+        sheet.className = "tl-install-sheet is-on";
+        sheet.setAttribute("role", "dialog");
+        sheet.setAttribute("aria-modal", "true");
+        sheet.innerHTML =
+          "<div class=\"tl-install-sheet-card\">" +
+            "<button type=\"button\" class=\"tl-auth-close\" data-install-close aria-label=\"" + (isEn ? "Close" : "Fermer") + "\"><i class=\"fa-solid fa-xmark\" aria-hidden=\"true\"></i></button>" +
+            "<div class=\"tl-install-icon-preview\" aria-hidden=\"true\"><img src=\"/assets/img/logo/icon-192.png\" width=\"64\" height=\"64\" alt=\"\"><span>Talendus</span></div>" +
+            "<h2>" + (isEn ? "Add Talendus to your home screen" : "Ajoutez Talendus à l'écran d'accueil") + "</h2>" +
+            (isIos
+              ? "<ol class=\"tl-install-steps tl-install-steps-sheet\">" +
+                "<li><span class=\"tl-install-step-num\">1</span><div><h3>" + (isEn ? "Tap Share" : "Touchez Partager") + "</h3><p>" + (isEn ? "The square with the arrow pointing up, at the bottom." : "Le carré avec la flèche vers le haut, en bas de l'écran.") + "</p></div></li>" +
+                "<li><span class=\"tl-install-step-num\">2</span><div><h3>" + (isEn ? "Tap Add to Home Screen" : "Touchez Sur l'écran d'accueil") + "</h3><p>" + (isEn ? "Scroll the list if you do not see it." : "Faites glisser la liste si vous ne le voyez pas.") + "</p></div></li>" +
+                "<li><span class=\"tl-install-step-num\">3</span><div><h3>" + (isEn ? "Tap Add" : "Touchez Ajouter") + "</h3><p>" + (isEn ? "The Talendus icon appears. Done." : "L'icône Talendus apparaît. C'est fini.") + "</p></div></li></ol>" +
+                (isChromeIos || !isSafariIos ? "<p class=\"tl-install-safari-note\">" + (isEn ? "On iPhone, open this page in Safari (the blue compass icon)." : "Sur iPhone, ouvrez cette page avec Safari (l'icône boussole bleue).") + "</p>" : "")
+              : "<ol class=\"tl-install-steps tl-install-steps-sheet\">" +
+                "<li><span class=\"tl-install-step-num\">1</span><div><h3>" + (isEn ? "Tap the menu" : "Touchez le menu") + "</h3><p>" + (isEn ? "The three dots at the top right." : "Les trois points en haut à droite.") + "</p></div></li>" +
+                "<li><span class=\"tl-install-step-num\">2</span><div><h3>" + (isEn ? "Tap Add to home screen" : "Touchez Ajouter à l'écran d'accueil") + "</h3><p>" + (isEn ? "Some phones say Install app." : "Certains téléphones disent Installer l'application.") + "</p></div></li>" +
+                "<li><span class=\"tl-install-step-num\">3</span><div><h3>" + (isEn ? "Confirm" : "Confirmez") + "</h3><p>" + (isEn ? "The Talendus icon appears. Done." : "L'icône Talendus apparaît. C'est fini.") + "</p></div></li></ol>") +
+            "<p class=\"tl-install-sheet-actions\"><a class=\"tl-btn tl-btn-ghost\" href=\"" + href + "\">" + (isEn ? "See the full guide" : "Voir le guide illustré") + "</a></p>" +
+          "</div>";
+        document.body.appendChild(sheet);
+        function close() { sheet.remove(); }
+        sheet.querySelector("[data-install-close]").addEventListener("click", close);
+        sheet.addEventListener("click", function (e) { if (e.target === sheet) close(); });
+      }
+
+      document.querySelectorAll("[data-install-now]").forEach(function (btn) {
+        btn.addEventListener("click", function (e) {
+          e.preventDefault();
+          runInstall();
+        });
+      });
+
       window.addEventListener("beforeinstallprompt", function (e) {
         e.preventDefault();
         deferred = e;
-        showInstall(true);
+        var nativeBtn = document.querySelector("[data-install-now]");
+        if (nativeBtn) nativeBtn.classList.add("is-ready");
+        maybeShowBanner();
       });
-      function showInstall(canNative) {
-        if (dismissed || document.querySelector(".tl-install-banner")) return;
+      window.addEventListener("appinstalled", function () {
+        rememberDismiss(365);
+        hideBanner();
+        var sheet = document.querySelector(".tl-install-sheet");
+        if (sheet) sheet.remove();
+      });
+
+      function showBanner() {
+        if (document.querySelector(".tl-install-banner")) return;
         var box = document.createElement("div");
         box.className = "tl-install-banner is-on";
         box.setAttribute("role", "dialog");
-        var appHref = isEn ? "app.html" : "app.html";
-        if (location.pathname.indexOf("/en/") === 0) appHref = "/en/app.html";
-        else appHref = "/app.html";
+        box.setAttribute("aria-label", isEn ? "Add Talendus to your phone" : "Ajouter Talendus au téléphone");
         box.innerHTML = "<p>" + (isEn
-          ? "Install the Talendus app on your phone. Jobs, profile, messages and click-to-call — Android and iPhone."
-          : "Installez l'appli Talendus sur votre téléphone. Offres, profil, messages et appel direct — Android et iPhone.") +
+          ? "Add Talendus to your home screen. Then it opens like your other apps."
+          : "Ajoutez Talendus à l'écran d'accueil. Ensuite, ça s'ouvre comme vos autres applis.") +
           "</p><div class=\"tl-actions\">" +
-          (canNative ? "<button type=\"button\" class=\"tl-btn\" data-install-native>" + (isEn ? "Install" : "Installer") + "</button>" : "") +
-          "<a class=\"tl-btn" + (canNative ? " tl-btn-ghost" : "") + "\" href=\"" + appHref + "\">" + (isEn ? "How to install" : "Comment installer") + "</a>" +
-          "<button type=\"button\" class=\"tl-btn tl-btn-ghost\" data-install-dismiss>" + (isEn ? "Later" : "Plus tard") + "</button></div>";
+          "<button type=\"button\" class=\"tl-btn\" data-install-native>" + (isEn ? "Add" : "Ajouter") + "</button>" +
+          "<button type=\"button\" class=\"tl-btn tl-btn-ghost\" data-install-dismiss>" + (isEn ? "Not now" : "Pas maintenant") + "</button></div>";
         document.body.appendChild(box);
         box.querySelector("[data-install-dismiss]").addEventListener("click", function () {
-          box.remove();
-          try { localStorage.setItem("talendus_install_dismissed", "1"); } catch (err) {}
+          hideBanner();
+          rememberDismiss(14);
         });
-        var nativeBtn = box.querySelector("[data-install-native]");
-        if (nativeBtn) nativeBtn.addEventListener("click", function () {
-          if (!deferred) return;
-          deferred.prompt();
-          deferred.userChoice.finally(function () { deferred = null; box.remove(); });
+        box.querySelector("[data-install-native]").addEventListener("click", function () {
+          runInstall();
         });
       }
-      setTimeout(function () { showInstall(!!deferred); }, 9000);
+
+      function maybeShowBanner() {
+        if (standalone || dismissed || askedThisVisit()) return;
+        if (/\/admin\//.test(location.pathname)) return;
+        if (board) return;
+        if (!isMobile) return;
+        showBanner();
+      }
+
+      setTimeout(maybeShowBanner, 4000);
     })();
   });
 })();

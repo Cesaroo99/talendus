@@ -1,12 +1,14 @@
-const CACHE = "talendus-app-v1";
+const CACHE = "talendus-app-v2";
 const PRECACHE = [
   "/",
   "/offline.html",
   "/app.html",
+  "/manifest.webmanifest",
   "/assets/css/talendus.css",
   "/assets/js/talendus.js",
   "/assets/js/api.js",
-  "/assets/img/logo/fav-logo1.png"
+  "/assets/img/logo/icon-192.png",
+  "/assets/img/logo/apple-touch-icon.png"
 ];
 
 self.addEventListener("install", function (event) {

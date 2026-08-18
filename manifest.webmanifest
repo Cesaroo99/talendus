@@ -1,26 +1,43 @@
 {
+  "id": "/",
   "name": "Talendus",
   "short_name": "Talendus",
-  "description": "Agence de placement Talendus. Profil, offres, messages, contrats et appel direct.",
+  "description": "Talendus sur votre téléphone : offres, profil, messages et appel direct.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait-primary",
   "background_color": "#0b1f3a",
   "theme_color": "#0b1f3a",
   "lang": "fr-CA",
+  "dir": "ltr",
+  "categories": ["business"],
+  "prefer_related_applications": false,
   "icons": [
     {
-      "src": "/assets/img/logo/fav-logo1.png",
+      "src": "/assets/img/logo/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/assets/img/logo/logo1.png",
+      "src": "/assets/img/logo/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/img/logo/icon-192-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/assets/img/logo/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "shortcuts": [
@@ -28,18 +45,13 @@
       "name": "Espace candidat",
       "short_name": "Candidat",
       "url": "/espace.html",
-      "icons": [{ "src": "/assets/img/logo/fav-logo1.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/assets/img/logo/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Espace employeur",
       "short_name": "Entreprise",
       "url": "/espace-employeur.html",
-      "icons": [{ "src": "/assets/img/logo/fav-logo1.png", "sizes": "192x192" }]
-    },
-    {
-      "name": "Appeler Talendus",
-      "short_name": "Appel",
-      "url": "tel:+15145550199"
+      "icons": [{ "src": "/assets/img/logo/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }

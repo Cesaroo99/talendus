@@ -942,8 +942,7 @@
           settingsCard(t.settingsNotifs, "", events) +
           settingsCard(t.notifyChannels, t.notifyChannelsHint,
             settingsCheck("notify_email", prefs.notify_email !== false, t.emailNotif, "") +
-            settingsCheck("notify_in_app", prefs.notify_in_app !== false, t.inApp, "") +
-            '<p class="tl-meta">' + esc(t.sms) + " · " + esc(t.wa) + "</p>") +
+            settingsCheck("notify_in_app", prefs.notify_in_app !== false, t.inApp, "")) +
           '<button class="tl-btn" type="submit">' + esc(t.save) + '</button><div class="tl-success"></div></form>';
       } else if (tab === "privacy") {
         body = '<form class="tl-form" id="acc-privacy">' +

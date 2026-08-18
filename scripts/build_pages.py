@@ -6,6 +6,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from parts import (
     wrap as wrap_page, page_hero, speed_strip, cta_band, faq_html, proof_stats,
     FAQ_EMPLOYEURS, FAQ_CANDIDATS, FAQ_HOME, homepage_faq, cv_file_field,
+    install_board,
 )
 from positioning import (
     homepage_after_hero, job_search_filters, employer_need_fields,
@@ -890,36 +891,27 @@ for old, new in [("about.html", "a-propos.html"), ("service.html", "services.htm
 
 write("app.html", wrap(
     "Applis Talendus | Android et iPhone",
-    "Installez Talendus sur votre téléphone. Espace candidat ou employeur, messages, factures, contrats et appel direct. Android et iOS.",
+    "Ajoutez Talendus à l'écran d'accueil de votre téléphone. Trois petits gestes, puis l'icône Talendus est prête.",
     "app.html",
     page_hero(
-        "Applis",
+        "Sur votre téléphone",
         "Talendus dans votre poche.",
-        "Ajoutez Talendus à l'écran d'accueil. C'est l'application officielle, servie par notre site — sans App Store ni Google Play obligatoires.",
-        actions='<a class="tl-btn" href="tel:+15145550199">Appeler</a><a class="tl-btn tl-btn-ghost" href="https://wa.me/15145550199?text=Bonjour%20Talendus%2C%20je%20souhaite%20discuter%20d%27un%20besoin%20de%20recrutement." target="_blank" rel="noopener noreferrer">WhatsApp</a>',
+        "Ajoutez Talendus à l'écran d'accueil. Ensuite, ça s'ouvre comme vos autres applis.",
+        actions='<a class="tl-btn" href="#tl-install-board">Voir les 3 gestes</a><a class="tl-btn tl-btn-ghost" href="espace.html">Ouvrir mon espace</a>',
         badges='<span class="tl-badge tl-badge-light">Android</span> <span class="tl-badge tl-badge-light">iPhone</span>'
     )
+    + install_board("fr")
     + """
     <section class="tl-section"><div class="container">
       <div class="tl-app-grid">
         <article class="tl-app-card">
-          <h3>Android</h3>
-          <p>Ouvrez talendus.ca dans Chrome. Le bandeau « Installer » apparaît, ou Menu → Installer l'application. L'icône Talendus se pose sur l'écran d'accueil, comme une appli du Play Store.</p>
-          <p>Les sources natives (noyau Android) sont dans le dépôt, dossier <code>mobile/android</code>, pour une compilation APK interne si vous le souhaitez.</p>
-        </article>
-        <article class="tl-app-card">
-          <h3>iPhone et iPad</h3>
-          <p>Ouvrez talendus.ca dans Safari. Bouton Partager → Sur l'écran d'accueil. iOS lance Talendus en plein écran, sans barre d'adresse.</p>
-          <p>Le projet iOS (WKWebView) est dans <code>mobile/ios</code> pour Xcode, si une fiche App Store devient utile plus tard.</p>
-        </article>
-        <article class="tl-app-card">
           <h3>Candidats</h3>
-          <p>Profil, CV, candidatures, messages avec votre conseiller, notifications. Les employeurs n'ont jamais vos coordonnées.</p>
+          <p>Profil, CV, candidatures et messages avec votre conseiller. Les employeurs n'ont jamais vos coordonnées.</p>
           <p><a class="tl-btn" href="espace.html">Ouvrir mon espace</a></p>
         </article>
         <article class="tl-app-card">
           <h3>Entreprises</h3>
-          <p>Mandats, shortlists, contrats à signer, factures PDF, paiement par virement enregistré par Talendus — sans Stripe obligatoire.</p>
+          <p>Mandats, profils présentés, contrats à signer et factures. Le contact avec les candidats passe toujours par Talendus.</p>
           <p><a class="tl-btn" href="espace-employeur.html">Espace employeur</a></p>
         </article>
       </div>

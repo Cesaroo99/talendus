@@ -28,10 +28,11 @@ def _portal_page(relative: str):
 
 @router.get("/favicon.ico", include_in_schema=False)
 def favicon():
-    icon = SITE_ROOT / "assets" / "img" / "logo" / "fav-logo1.png"
-    if not icon.exists():
-        raise AppError(404, "Page introuvable.", "NOT_FOUND")
-    return FileResponse(icon, media_type="image/png", headers={"Cache-Control": "public, max-age=86400"})
+    for name in ("icon-192.png", "apple-touch-icon.png", "fav-logo1.png"):
+        icon = SITE_ROOT / "assets" / "img" / "logo" / name
+        if icon.exists():
+            return FileResponse(icon, media_type="image/png", headers={"Cache-Control": "public, max-age=86400"})
+    raise AppError(404, "Page introuvable.", "NOT_FOUND")
 
 
 @router.get("/manifest.webmanifest", include_in_schema=False)
@@ -53,7 +54,7 @@ def service_worker():
         raise AppError(404, "Page introuvable.", "NOT_FOUND")
     return FileResponse(
         path,
-        media_type="text/javascript; charset=utf-8",
+        media_type="application/javascript; charset=utf-8",
         headers={"Cache-Control": "no-cache", "Service-Worker-Allowed": "/"},
     )
 
