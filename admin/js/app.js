@@ -106,6 +106,7 @@
       ["content", "Contenu", "fa-solid fa-pen-nib"],
       ["finance", "Finance", "fa-solid fa-file-invoice-dollar"],
       ["analytics", "Statistiques", "fa-solid fa-chart-line"],
+      ["services", "Services", "fa-solid fa-plug"],
       ["notifications", "Notifications", "fa-solid fa-bell"]
     ]],
     ["Compte", [
@@ -1045,6 +1046,43 @@
       </div>`;
   }
 
+  function viewServices() {
+    return `
+      <div class="page-head"><div><h1>Services</h1><p>Ce qui fonctionne aujourd’hui, ce qui attend une clé dans Render, et ce qu’il n’est pas nécessaire d’acheter.</p></div></div>
+      <div id="svc-todos"></div>
+      <div id="svc-grid" class="svc-grid"><p class="sub">Chargement…</p></div>`;
+  }
+
+  function svcStateLabel(state) {
+    return { active: "En service", configured: "Clés présentes, pas encore allumé", prepared: "Pas encore branché" }[state] || state;
+  }
+
+  async function hydrateServices() {
+    var grid = document.getElementById("svc-grid");
+    var todos = document.getElementById("svc-todos");
+    if (!grid) return;
+    if (!live()) {
+      grid.innerHTML = U.empty("Hors ligne", "Connectez-vous au serveur pour voir l’état réel des services.");
+      return;
+    }
+    try {
+      var json = await api().request("/integrations/overview");
+      var data = json.data || {};
+      if (todos) {
+        todos.innerHTML = (data.todos || []).map(function (item) {
+          return '<article class="svc-todo"><h3>' + U.esc(item.title) + "</h3><p>" + U.esc(item.detail) + "</p></article>";
+        }).join("") || '<article class="svc-todo is-ok"><h3>Rien d’urgent</h3><p>Les services essentiels de l’agence tournent. Le reste est facultatif.</p></article>';
+      }
+      grid.innerHTML = (data.providers || []).map(function (row) {
+        return '<article class="svc-card is-' + U.esc(row.state) + '">' +
+          "<header><h3>" + U.esc(row.label) + '</h3><span class="svc-pill">' + U.esc(svcStateLabel(row.state)) + "</span></header>" +
+          "<p>" + U.esc(row.next_step || row.message || "") + "</p></article>";
+      }).join("");
+    } catch (err) {
+      grid.innerHTML = "<p>Impossible de lire les services. Réessayez.</p>";
+    }
+  }
+
   function viewNotifications() {
     return `<div class="page-head"><div><h1>Notifications</h1><p>Centre d’alertes opérationnelles</p></div>
       <div class="actions"><button class="btn btn-ghost" id="mark-all">Tout marquer lu</button></div></div>
@@ -1062,6 +1100,7 @@
       ["Finance et factures", false, true, false, true],
       ["Contenu du site", false, false, true, true],
       ["Statistiques", false, true, false, true],
+      ["Services (courriel, paiement, Google…)", false, true, false, true],
       ["Notifications internes", true, true, true, true],
       ["Paramètres du compte", true, true, true, true],
       ["Paramètres de la plateforme", false, false, false, true]
@@ -2116,6 +2155,7 @@
         else if (r.name === "content") inner = viewContent();
         else if (r.name === "finance") inner = viewFinance();
         else if (r.name === "analytics") inner = viewAnalytics();
+        else if (r.name === "services") inner = viewServices();
         else if (r.name === "notifications") inner = viewNotifications();
         else if (r.name === "settings") inner = viewSettings();
         else if (r.name === "profile") inner = viewProfile();
@@ -2128,6 +2168,7 @@
       if (v) { v.innerHTML = inner; bindView(); }
       if (r.name === "content") hydrateBlogCms();
       if (r.name === "messages") hydrateMessages();
+      if (r.name === "services") hydrateServices();
     }, 180);
   }
 

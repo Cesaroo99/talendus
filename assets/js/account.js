@@ -10,6 +10,12 @@
     var api = window.TalendusAPI;
     var isEn = (document.documentElement.lang || "").toLowerCase().indexOf("en") === 0;
     document.body.classList.add("tl-portal-active");
+    var siteServices = { payments: { transfer: true, card: false, paypal: false } };
+    var servicesReady = api.services
+      ? api.services().then(function (json) {
+          if (json && json.data) siteServices = json.data;
+        }).catch(function () {})
+      : Promise.resolve();
 
     var t = isEn ? {
       login: "Sign in", register: "Create an account", email: "Email", password: "Password",
@@ -69,7 +75,7 @@
       sms: "SMS (coming soon)", wa: "WhatsApp (coming soon)", push: "Push (coming soon)",
       profilePublic: "Allow a public professional summary", changeEmail: "Email address is used to sign in.",
       emptyInbox: "No profiles presented yet. Talendus will share qualified shortlists.", emptyInvoices: "No invoices.",
-      pay: "Record a card payment", pipeline: "Pipeline",
+      pay: "Record a card payment", payPal: "Pay with PayPal", pipeline: "Pipeline",
       contracts: "Contracts", emptyContracts: "No mandate yet.",
       sign: "Sign electronically", signed: "Signed", unsigned: "To sign",
       acceptTerms: "I accept the terms of this mandate",
@@ -174,7 +180,7 @@
       sms: "SMS (prochainement)", wa: "WhatsApp (prochainement)", push: "Push (prochainement)",
       profilePublic: "Autoriser un résumé professionnel visible", changeEmail: "Le courriel sert à vous connecter.",
       emptyInbox: "Aucun dossier présenté pour le moment. Talendus vous transmet les profils qualifiés.", emptyInvoices: "Aucune facture.",
-      pay: "Payer par carte", pipeline: "Pipeline",
+      pay: "Payer par carte", payPal: "Payer avec PayPal", pipeline: "Pipeline",
       contracts: "Contrats", emptyContracts: "Aucun mandat pour le moment.",
       sign: "Signer électroniquement", signed: "Signé", unsigned: "À signer",
       acceptTerms: "J’accepte les conditions de ce mandat",
@@ -1161,7 +1167,13 @@
       return '<p class="tl-mediate">' + esc(t.transferHint) + "</p>" +
         '<div class="tl-table-wrap"><table class="tl-portal-table"><thead><tr><th>' + esc(t.invoices) + "</th><th>" + esc(t.salary) +
         "</th><th></th><th></th></tr></thead><tbody>" + rows.map(function (inv) {
-        var pay = payable[inv.status] ? '<button type="button" class="tl-btn" data-pay="' + esc(inv.id) + '">' + esc(t.pay) + "</button>" : "";
+        var pay = "";
+        if (payable[inv.status] && siteServices.payments && siteServices.payments.card) {
+          pay += '<button type="button" class="tl-btn" data-pay="' + esc(inv.id) + '">' + esc(t.pay) + "</button>";
+        }
+        if (payable[inv.status] && siteServices.payments && siteServices.payments.paypal) {
+          pay += ' <button type="button" class="tl-btn tl-btn-ghost" data-pay-paypal="' + esc(inv.id) + '">' + esc(t.payPal) + "</button>";
+        }
         var pdf = inv.pdf_path ? '<button type="button" class="tl-btn tl-btn-ghost" data-dl="' + esc(inv.pdf_path) + '" data-dl-name="' + esc((inv.number || "facture") + ".pdf") + '">' + esc(t.downloadPdf) + "</button>" : "";
         return "<tr><td data-label=\"" + esc(t.invoices) + "\">" + esc(inv.number || inv.id) +
           "</td><td data-label=\"" + esc(t.salary) + "\">" + esc(money(inv.amount_total || inv.amount)) +
@@ -1292,6 +1304,17 @@
       root.querySelectorAll("[data-pay]").forEach(function (btn) {
         btn.onclick = function () {
           api.request("/invoices/" + btn.getAttribute("data-pay") + "/checkout", { method: "POST" }).then(function (json) {
+            var url = json && json.data && json.data.checkout_url;
+            if (url) window.location.href = url;
+            else flash(document.getElementById("acc-inv-msg"), t.transferHint, true);
+          }).catch(function (err) {
+            flash(document.getElementById("acc-inv-msg"), (err && err.message) || t.transferHint, false);
+          });
+        };
+      });
+      root.querySelectorAll("[data-pay-paypal]").forEach(function (btn) {
+        btn.onclick = function () {
+          api.request("/invoices/" + btn.getAttribute("data-pay-paypal") + "/paypal", { method: "POST" }).then(function (json) {
             var url = json && json.data && json.data.checkout_url;
             if (url) window.location.href = url;
             else flash(document.getElementById("acc-inv-msg"), t.transferHint, true);
@@ -1450,7 +1473,7 @@
           });
           else if (route.name === "inbox" || route.name === "candidates") p = unwrap(api.request("/applications")).then(renderInbox);
           else if (route.name === "pipeline") p = unwrap(api.request("/applications")).then(renderPipeline);
-          else if (route.name === "invoices") p = unwrap(api.request("/invoices")).then(renderInvoices);
+          else if (route.name === "invoices") p = Promise.all([unwrap(api.request("/invoices")), servicesReady]).then(function (r) { return renderInvoices(r[0]); });
           else if (route.name === "contracts") p = unwrap(api.request("/contracts")).then(renderContracts);
           else if (route.name === "candidate") p = unwrap(api.request("/candidates/" + route.id)).then(function (c) {
             return mediateNote() + "<h3>" + esc((c.first_name || "") + " " + (c.last_name || "")) + "</h3><p>" + esc(c.title || "") + " · " + esc(c.city || "") +

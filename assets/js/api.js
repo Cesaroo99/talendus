@@ -179,6 +179,7 @@
     myApplications: function () { return request("/applications/me"); },
     notifications: function (unread) { return request("/notifications" + (unread ? "?unread=true" : "")); },
     contact: function (body) { return request("/contact", { method: "POST", body: body }); },
+    services: function () { return request("/services"); },
     createInvoice: function (body) { return request("/invoices", { method: "POST", body: body }); },
     createInterview: function (body) { return request("/interviews", { method: "POST", body: body }); },
     signContract: function (id, body) { return request("/contracts/" + id + "/sign", { method: "POST", body: body }); },

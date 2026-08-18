@@ -96,6 +96,42 @@
 
     var isEn = (document.documentElement.lang || "").toLowerCase().indexOf("en") === 0;
 
+    function applyPublicContact(data) {
+      var c = data && data.contact;
+      if (!c || c.demo) return;
+      var e164 = String(c.phone_e164 || "").replace(/\D/g, "");
+      if (!e164) return;
+      var tel = "tel:+" + e164;
+      var waBase = "https://wa.me/" + e164;
+      var display = c.phone_display || "";
+      var email = c.email || "";
+      document.querySelectorAll('a[href^="tel:"]').forEach(function (a) {
+        a.setAttribute("href", tel);
+        if (display && /514\s*555/.test(a.textContent || "")) a.textContent = display;
+      });
+      document.querySelectorAll('a[href*="wa.me/"]').forEach(function (a) {
+        var keep = "";
+        try { keep = new URL(a.getAttribute("href"), location.origin).search; } catch (err) {}
+        a.setAttribute("href", waBase + keep);
+      });
+      if (email) {
+        document.querySelectorAll('a[href^="mailto:"]').forEach(function (a) {
+          var href = a.getAttribute("href") || "";
+          if (href.indexOf("info@talendus.ca") === -1) return;
+          a.setAttribute("href", "mailto:" + email);
+          if ((a.textContent || "").indexOf("info@talendus.ca") !== -1) a.textContent = email;
+        });
+      }
+    }
+
+    if (window.TalendusAPI && window.TalendusAPI.services) {
+      window.TalendusAPI.services().then(function (json) {
+        window.TalendusServices = json.data || {};
+        applyPublicContact(json.data);
+        try { window.dispatchEvent(new CustomEvent("talendus:services", { detail: json.data })); } catch (e) {}
+      }).catch(function () {});
+    }
+
     function escapeHtml(value) {
       return String(value == null ? "" : value)
         .replace(/&/g, "&amp;")

@@ -14,6 +14,7 @@ from app.integrations.maps.google import GoogleMapsService
 from app.integrations.messaging.whatsapp import WhatsAppService
 from app.integrations.payments.paypal import PayPalService
 from app.integrations.registry import catalog, provider_status
+from app.services.capabilities import staff_overview
 from app.integrations.schemas import (
     AiCompleteIn,
     DistanceIn,
@@ -37,6 +38,11 @@ def list_integrations(_: User = Depends(_staff)):
     return ok(catalog())
 
 
+@router.get("/overview")
+def integrations_overview(_: User = Depends(_staff)):
+    return ok(staff_overview())
+
+
 @router.get("/linkedin")
 def linkedin_public_status():
     status = provider_status("linkedin")
@@ -44,12 +50,12 @@ def linkedin_public_status():
         {
             "configured": status["configured"],
             "share_enabled": True,
-            "posting_enabled": status["configured"],
+            "posting_enabled": status["state"] == "active",
             "state": status["state"],
             "message": (
-                "Publication LinkedIn prête (OAuth configuré)."
-                if status["configured"]
-                else "Partage d’offre via URL LinkedIn disponible. La publication automatique nécessite LINKEDIN_CLIENT_ID et LINKEDIN_CLIENT_SECRET."
+                "Publication automatique LinkedIn possible."
+                if status["state"] == "active"
+                else "Partage d’offre via un lien LinkedIn disponible. L’import automatique d’offres exige un accès partenaire, pas seulement des identifiants."
             ),
         }
     )
