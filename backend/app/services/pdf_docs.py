@@ -5,7 +5,7 @@ from __future__ import annotations
 from app.models import Contract, Invoice
 
 DEFAULT_MANDATE_TERMS = """Objet
-Talendus agit comme agence de placement. L'entreprise confie un besoin de recrutement. Talendus recherche, présélectionne et présente les profils. L'entreprise conserve la décision d'embauche. Aucun contact direct n'est organisé hors de Talendus.
+Talendus agit comme agence de placement. L'entreprise confie un besoin de recrutement. Talendus recherche, présélectionne et présente les profils. Un conseiller coordonne les échanges. L'entreprise conserve la décision d'embauche.
 
 Honoraires
 Commission calculée sur la rémunération annuelle brute du candidat placé, payable à l'embauche selon le pourcentage indiqué au présent mandat.

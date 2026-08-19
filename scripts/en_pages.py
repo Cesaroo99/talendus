@@ -98,7 +98,7 @@ INDEX_EN = rf"""
                 <h1 data-persona-only="entreprise">The right talent. Faster. Smarter.</h1>
                 <div class="space16"></div>
                 <p data-persona-only="gateway">Pick your side to continue. Candidates and employers do not land on the same pages.</p>
-                <p data-persona-only="talent">Create your profile, submit your resume. We study your path and contact you when an opportunity fits. Free for you. Companies do not receive your contact details.</p>
+                <p data-persona-only="talent">Create your profile, submit your resume. We study your path and contact you when an opportunity fits. Free for you. Call or write — a consultant takes it from there.</p>
                 <p data-persona-only="entreprise">Hand us the need. We search, screen and present a qualified shortlist. You do not browse a resume database. You keep the final decision.</p>
             </div>
             <div class="tl-persona-cards" data-persona-only="gateway">
@@ -150,7 +150,7 @@ def build_en(write, wrap, page_hero):
     <p>Too many companies lose weeks looking for the right people, sorting too many applications, or letting a process drag. Too many talented people send resumes into the void. Hiring deserves better than a job board or software you have to operate alone.</p>
     <p>Talendus was designed as a next-generation placement agency: generalist, human and technological. When a company has a need, it hands it to us. We take on the search and the screening. Artificial intelligence is already at the heart of our internal tools: it speeds up analysis, search and some screening steps. Consultants stay there to understand, qualify and present. The company keeps the final decision.</p>
     <h2 class="tl-h2">What we do</h2>
-    <p>We connect companies and talent. Developers, accountants, welders, nurses, drivers, HR managers, and many other roles, in every industry. A consultant presents the files. Candidates and employers stay on their own side. There is no unmediated direct channel.</p>
+    <p>We connect companies and talent. Developers, accountants, welders, nurses, drivers, HR managers, and many other roles, in every industry. A consultant presents the files and stays available on both sides: talent, call us for a mandate; employers, hand us a need.</p>
     <p>We hire better, faster and more intelligently with AI: “we hire” means Talendus runs the search and screening for the company. “Faster”: our tools and AI already accelerate certain steps. “More intelligently”: data, technology, AI and human expertise, together, today.</p>
     <h2 class="tl-h2">What we are not</h2>
     <p>Not a job board where the company browses a database. Not a marketplace. Not a self-serve ATS. Not software that promises a perfect candidate without a human. Technology stays in service of the Talendus process.</p>
@@ -715,8 +715,8 @@ def build_en(write, wrap, page_hero):
         "en/how-it-works.html",
         page_hero(
             "Talent",
-            "From profile to a possible introduction, Talendus stays in the middle.",
-            "Create your account, submit your resume, apply to openings if you wish. We study your path, may contact you, and talk to the company for you. Your contact details never go out on their own.",
+            "From profile to a possible introduction, a consultant stays with you.",
+            "Create your account, submit your resume, apply to openings if you wish. We study your path, call you when a mandate fits, and move forward with you. Call or write whenever you want us on it.",
             actions='<a class="tl-btn" href="account.html" data-auth-open="register">Create my profile</a>',
         )
         + candidate_journey_section("en"),
@@ -797,12 +797,12 @@ def build_en(write, wrap, page_hero):
       <div class="tl-app-grid">
         <article class="tl-app-card">
           <h3>Talent</h3>
-          <p>Profile, resume, applications and messages with your consultant. Employers never get your contact details.</p>
+          <p>Profile, resume, applications and messages with your consultant. They call you for a real mandate. Write to us whenever you want to move forward.</p>
           <p><a class="tl-btn" href="account.html">Open my workspace</a></p>
         </article>
         <article class="tl-app-card">
           <h3>Employers</h3>
-          <p>Mandates, presented files, contracts to sign and invoices. Contact with candidates always goes through Talendus.</p>
+          <p>Mandates, presented files, contracts to sign and invoices. A consultant takes your hire: describe the role, we call you back.</p>
           <p><a class="tl-btn" href="account-employer.html">Employer workspace</a></p>
         </article>
       </div>

@@ -77,15 +77,15 @@ def render_job_html(job: JobOffer, lang: str = "fr") -> str:
 
     kicker = "Job opening" if is_en else "Offre d’emploi"
     lead = (
-        "A Talendus consultant reviews your file and presents it when it matches the mandate. You do not write to the employer directly."
+        "A Talendus consultant reviews your file and calls you when it matches the mandate. Apply here to move forward."
         if is_en
-        else "Un conseiller Talendus étudie votre dossier et le présente s’il correspond au mandat. Vous n’écrivez pas à l’employeur en direct."
+        else "Un conseiller Talendus étudie votre dossier et vous rappelle s’il correspond au mandat. Postulez ici pour avancer."
     )
     apply_title = "Send your file to Talendus" if is_en else "Envoyez votre dossier à Talendus"
     apply_lead = (
-        "Upload your résumé. A consultant presents your file. You do not write to the employer directly."
+        "Upload your résumé. A consultant studies your file and gets back to you. Call us if you want to move faster."
         if is_en
-        else "Téléversez votre CV. Un conseiller présente votre dossier. Vous n’écrivez pas à l’employeur en direct."
+        else "Téléversez votre CV. Un conseiller étudie votre dossier et vous relance. Appelez-nous si vous voulez aller plus vite."
     )
     submit = "Submit my application" if is_en else "Envoyer ma candidature"
     jobs_href = "/en/jobs.html" if is_en else "/emplois.html"

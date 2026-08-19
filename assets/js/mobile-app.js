@@ -15,10 +15,11 @@
     hello: "Hello",
     welcomeTitle: "How can Talendus help you?",
     welcomeLead: "Choose once. You will only see what matches that choice.",
+    tagline: "Placement agency · Every industry",
     talent: "I am looking for work",
-    talentHint: "A consultant presents you. Companies never get your email or phone.",
+    talentHint: "A consultant follows you. Submit your resume — we call you when a real mandate fits.",
     employer: "I want to hire",
-    employerHint: "Hand us a need. Talendus searches and presents the files.",
+    employerHint: "Hand us a hiring need. We search, present files, and a consultant calls you back.",
     next: "Continue",
     haveAccount: "I already have an account",
     createAccount: "Create my account",
@@ -41,7 +42,7 @@
     emptyJobs: "No roles to show yet.",
     apply: "Ask Talendus to present me",
     applied: "Request sent to your consultant.",
-    emptyMsgs: "Write to your consultant. That is your only contact.",
+    emptyMsgs: "Write to your consultant. They follow your file with you.",
     write: "Your message",
     send: "Send",
     loading: "Loading…",
@@ -69,8 +70,8 @@
     emptyHiring: "No hiring request yet. Start with one role.",
     emptyThread: "No messages in this conversation yet.",
     consultant: "Your consultant",
-    mediate: "Companies never receive your contact details.",
-    mediateEmployer: "You do not contact candidates directly. Talendus presents the files.",
+    mediate: "A consultant studies your file and gets back to you. Call or write whenever you want to move forward.",
+    mediateEmployer: "A consultant takes your hire. Describe the role — we call you back with a shortlist.",
     loginTalentLead: "Sign in to your talent space.",
     loginEmployerLead: "Sign in to your hiring space.",
     loginGenericLead: "Sign in. We open the space that matches your account.",
@@ -134,7 +135,8 @@
     companyProfile: "Company",
     emptyPipeline: "No file presented yet.",
     appDetail: "Application",
-    history: "Follow-up"
+    history: "Follow-up",
+    space: "Your space"
   } : {
     home: "Accueil",
     jobs: "Offres",
@@ -144,10 +146,11 @@
     hello: "Bonjour",
     welcomeTitle: "Comment Talendus peut vous aider ?",
     welcomeLead: "Choisissez une fois. Ensuite, vous ne voyez que ce qui correspond à votre situation.",
+    tagline: "Agence de placement · Tous secteurs",
     talent: "Je cherche un emploi",
-    talentHint: "Un conseiller vous présente. Les entreprises n’ont jamais votre courriel ni votre téléphone.",
+    talentHint: "Un conseiller vous suit. Déposez votre CV, on vous rappelle pour un vrai mandat.",
     employer: "Je recrute",
-    employerHint: "Vous confiez un besoin. Talendus cherche et vous présente les dossiers.",
+    employerHint: "Confiez-nous un besoin. On cherche, on vous présente des dossiers, un conseiller vous rappelle.",
     next: "Continuer",
     haveAccount: "J’ai déjà un compte",
     createAccount: "Créer mon compte",
@@ -170,7 +173,7 @@
     emptyJobs: "Aucune offre à afficher pour le moment.",
     apply: "Demander à être présenté",
     applied: "Demande envoyée à votre conseiller.",
-    emptyMsgs: "Écrivez à votre conseiller. C’est votre seul contact.",
+    emptyMsgs: "Écrivez à votre conseiller. Il suit votre dossier avec vous.",
     write: "Votre message",
     send: "Envoyer",
     loading: "Chargement…",
@@ -198,8 +201,8 @@
     emptyHiring: "Aucun besoin pour le moment. Commencez par un poste.",
     emptyThread: "Aucun message dans cette conversation.",
     consultant: "Votre conseiller",
-    mediate: "Les entreprises n’ont jamais vos coordonnées.",
-    mediateEmployer: "Vous n’écrivez pas aux candidats. Talendus présente les dossiers.",
+    mediate: "Un conseiller étudie votre dossier et vous relance. Appelez-nous ou écrivez-nous dès que vous voulez avancer.",
+    mediateEmployer: "Un conseiller prend votre recrutement. Décrivez le poste, on vous rappelle avec une shortlist.",
     loginTalentLead: "Entrez dans votre espace talent.",
     loginEmployerLead: "Entrez dans votre espace entreprise.",
     loginGenericLead: "Connectez-vous. On ouvre l’espace qui correspond à votre compte.",
@@ -263,7 +266,8 @@
     companyProfile: "Entreprise",
     emptyPipeline: "Aucun dossier présenté pour le moment.",
     appDetail: "Candidature",
-    history: "Suivi"
+    history: "Suivi",
+    space: "Votre espace"
   };
 
   var state = {
@@ -305,6 +309,12 @@
     hire: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M8 8V6h8v2"/><path d="M12 12v4"/><path d="M10 14h4"/></svg>',
     bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9a6 6 0 1112 0c0 7 3 7 3 7H3s3 0 3-7"/><path d="M10 19a2 2 0 004 0"/></svg>'
   };
+  var MARK = '<svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg"><path fill="#ffffff" fill-rule="evenodd" d="M18 1.5c9.113 0 16.5 7.387 16.5 16.5S27.113 34.5 18 34.5 1.5 27.113 1.5 18 8.887 1.5 18 1.5zm-7.25 9.75h14.5a1.75 1.75 0 1 1 0 3.5h-5.5v12.75a1.75 1.75 0 1 1-3.5 0V14.75h-5.5a1.75 1.75 0 1 1 0-3.5z"/></svg>';
+  function brandOrbit(cls) {
+    return '<div class="tn-orbit' + (cls ? " " + cls : "") + '" aria-hidden="true">' +
+      '<span class="tn-ring tn-ring-a"></span><span class="tn-ring tn-ring-b"></span><span class="tn-ring tn-ring-c"></span>' +
+      '<div class="tn-mark">' + MARK + "</div></div>";
+  }
 
   function esc(v) {
     return String(v == null ? "" : v)
@@ -441,13 +451,13 @@
 
   function topBar() {
     var unread = unreadCount();
-    return '<header class="tn-top"><div class="tn-brand"><img src="/assets/img/logo/icon-192.png" width="32" height="32" alt=""><span>Talendus</span></div>' +
+    return '<header class="tn-top"><div class="tn-brand">' + brandOrbit("is-sm") + "<span>Talendus</span></div>" +
       '<div class="tn-top-actions"><a class="tn-icon-btn" href="#/notifs" aria-label="' + esc(t.notifs) + '">' + icons.bell +
       (unread ? '<span class="tn-badge">' + unread + "</span>" : "") + "</a>" +
       '<a class="tn-icon-btn" href="' + telHref() + '" aria-label="' + esc(t.call) + '">' + icons.phone + "</a></div></header>";
   }
   function gateBar() {
-    return '<header class="tn-top tn-top-gate"><div class="tn-brand"><img src="/assets/img/logo/icon-192.png" width="32" height="32" alt=""><span>Talendus</span></div></header>';
+    return "";
   }
   function tabs() {
     if (!state.user) return "";
@@ -471,8 +481,11 @@
 
   function welcomeView() {
     return '<div class="tn-gate">' +
-      "<h1 class=\"tn-title\">" + esc(t.welcomeTitle) + "</h1>" +
-      '<p class="tn-lead">' + esc(t.welcomeLead) + "</p>" +
+      brandOrbit() +
+      '<p class="tn-word">Talendus</p>' +
+      '<p class="tn-tag">' + esc(t.tagline) + "</p>" +
+      "<h1 class=\"tn-title tn-title-light\">" + esc(t.welcomeTitle) + "</h1>" +
+      '<p class="tn-lead tn-lead-light">' + esc(t.welcomeLead) + "</p>" +
       '<a class="tn-persona" href="#/register/talent" data-choose="talent">' +
         '<span class="tn-persona-icon" aria-hidden="true">' + icons.talent + "</span>" +
         "<span><strong>" + esc(t.talent) + "</strong><em>" + esc(t.talentHint) + "</em></span>" +
@@ -495,17 +508,18 @@
       ? (employer ? t.loginEmployerLead : persona === "talent" ? t.loginTalentLead : t.loginGenericLead)
       : (employer ? t.registerEmployerLead : t.registerTalentLead);
     var title = login ? t.login : (employer ? t.employer : t.talent);
+    var head = '<div class="tn-gate">' + brandOrbit("is-md") + '<p class="tn-word">Talendus</p>';
     if (login) {
-      return back + "<h1 class=\"tn-title\">" + esc(title) + "</h1><p class=\"tn-lead\">" + esc(lead) + "</p>" + flash() +
+      return head + '<div class="tn-sheet">' + back + "<h1 class=\"tn-title\">" + esc(title) + "</h1><p class=\"tn-lead\">" + esc(lead) + "</p>" + flash() +
         '<form class="tn-form" data-login>' +
         "<label for=\"tn-email\">" + esc(t.email) + '</label><input id="tn-email" name="email" type="email" autocomplete="username" inputmode="email" required>' +
         "<label for=\"tn-pass\">" + esc(t.password) + '</label><input id="tn-pass" name="password" type="password" autocomplete="current-password" required minlength="8">' +
         '<button class="tn-btn" type="submit">' + esc(t.submitLogin) + "</button></form>" +
         '<form class="tn-forgot" data-forgot><input type="hidden" name="email" id="tn-forgot-email"><button type="submit" class="tn-text-link">' + esc(t.forgot) + "</button></form>" +
         '<p class="tn-note">' + esc(t.needAccount) + ' <a href="#/welcome">' + esc(t.changeChoice) + "</a></p>" +
-        helpLine();
+        helpLine() + "</div></div>";
     }
-    return back + "<h1 class=\"tn-title\">" + esc(title) + "</h1><p class=\"tn-lead\">" + esc(lead) + "</p>" + flash() +
+    return head + '<div class="tn-sheet">' + back + "<h1 class=\"tn-title\">" + esc(title) + "</h1><p class=\"tn-lead\">" + esc(lead) + "</p>" + flash() +
       '<form class="tn-form" data-register data-role="' + (employer ? "EMPLOYER" : "CANDIDATE") + '">' +
       "<label>" + esc(t.first) + '</label><input name="first_name" autocomplete="given-name" required>' +
       "<label>" + esc(t.last) + '</label><input name="last_name" autocomplete="family-name" required>' +
@@ -514,7 +528,7 @@
       (employer ? "<label>" + esc(t.company) + '</label><input name="company_name" autocomplete="organization" required>' : "") +
       '<button class="tn-btn" type="submit">' + esc(t.submitRegister) + "</button></form>" +
       '<p class="tn-note">' + esc(t.haveAccount) + ' <a href="#/login">' + esc(t.login) + "</a></p>" +
-      helpLine();
+      helpLine() + "</div></div>";
   }
 
   function jobCard(job) {
@@ -535,7 +549,7 @@
     if (isEmployer()) {
       var unsigned = (state.contracts || []).filter(function (c) { return !c.signed; }).length;
       var due = (state.invoices || []).filter(function (inv) { return inv.status !== "PAID" && inv.status !== "CANCELLED"; }).length;
-      return "<h1 class=\"tn-title\">" + esc(t.hello) + (name ? " " + esc(name) : "") + "</h1>" +
+      return '<p class="tn-kicker">' + esc(t.space) + "</p><h1 class=\"tn-title\">" + esc(t.hello) + (name ? " " + esc(name) : "") + "</h1>" +
         '<p class="tn-lead">' + esc(t.mediateEmployer) + "</p>" + flash() +
         interviewCard() +
         '<div class="tn-stats"><div class="tn-stat"><b>' + esc(stats.active_jobs || state.hiring.length || 0) + "</b><span>" + esc(t.hiring) + "</span></div>" +
@@ -548,7 +562,7 @@
     }
     var pct = (dash.completeness && dash.completeness.percent) || 0;
     var matches = (dash.matches || []).map(function (row) { return jobCard(row.job || row); }).join("");
-    return "<h1 class=\"tn-title\">" + esc(t.hello) + (name ? " " + esc(name) : "") + "</h1>" +
+    return '<p class="tn-kicker">' + esc(t.space) + "</p><h1 class=\"tn-title\">" + esc(t.hello) + (name ? " " + esc(name) : "") + "</h1>" +
       '<p class="tn-note">' + esc(t.mediate) + "</p>" + flash() +
       '<section class="tn-card tn-file-card"><p class="tn-meta">' + esc(t.completeness) + " · " + pct + "%</p>" +
       '<div class="tn-progress"><span style="width:' + pct + '%"></span></div>' +
@@ -821,10 +835,36 @@
     root.innerHTML = chrome + '<main id="tn-screen" class="tn-screen">' + screenHtml() + "</main>" + tabs();
   }
 
+  var FRESH_MS = 25000;
+  var fetchedAt = {};
+  function isFresh(key) {
+    return !!(fetchedAt[key] && (Date.now() - fetchedAt[key]) < FRESH_MS);
+  }
+  function stamp(key) {
+    fetchedAt[key] = Date.now();
+  }
+  function bustCache(keys) {
+    if (!keys) { fetchedAt = {}; return; }
+    keys.forEach(function (k) { delete fetchedAt[k]; });
+  }
+  function pull(key, runner, field, asList) {
+    if (isFresh(key) && state[field] != null) return Promise.resolve();
+    return runner().then(function (json) {
+      var value = dataOf(json);
+      state[field] = asList ? (value || []) : value;
+      stamp(key);
+    }).catch(function () {
+      if (state[field] == null) state[field] = asList ? [] : null;
+    });
+  }
+
   function loadJobs(q) {
     state.query = q || "";
+    var key = "jobs:" + (q || "");
+    if (isFresh(key) && state.jobs && state.jobs.length) return Promise.resolve();
     return api.jobs({ q: q || "", page_size: 20, sort: "published_at" }).then(function (json) {
       state.jobs = dataOf(json) || [];
+      stamp(key);
     }).catch(function () { state.jobs = []; });
   }
 
@@ -832,28 +872,54 @@
     state.user = api.currentUser();
     if (!state.user) {
       state.dash = null;
-      state.jobs = [];
+      bustCache();
       return Promise.resolve();
     }
-    var tasks = [
-      api.request("/messages").then(function (json) { state.threads = dataOf(json) || []; }).catch(function () { state.threads = []; }),
-      api.request("/messages/directory").then(function (json) { state.directory = dataOf(json) || []; }).catch(function () { state.directory = []; }),
-      api.notifications().then(function (json) { state.notifs = dataOf(json) || []; }).catch(function () { state.notifs = []; }),
-      api.request("/interviews").then(function (json) { state.interviews = dataOf(json) || []; }).catch(function () { state.interviews = []; })
-    ];
+    var name = route().name;
+    var tasks = [];
+    function need(key, runner, field, asList) {
+      tasks.push(pull(key, runner, field, asList));
+    }
+    need("notifs", function () { return api.notifications(); }, "notifs", true);
     if (isCandidate()) {
-      tasks.push(api.request("/candidates/me/dashboard").then(function (json) { state.dash = dataOf(json); }).catch(function () {}));
-      tasks.push(api.profile().then(function (json) { state.profile = dataOf(json); }).catch(function () {}));
-      tasks.push(api.myApplications().then(function (json) { state.apps = dataOf(json) || []; }).catch(function () { state.apps = []; }));
-      tasks.push(api.request("/jobs/saved").then(function (json) { state.saved = dataOf(json) || []; }).catch(function () { state.saved = []; }));
-      tasks.push(api.request("/alerts").then(function (json) { state.alerts = dataOf(json) || []; }).catch(function () { state.alerts = []; }));
+      if (name === "home" || name === "me" || name === "apps") {
+        need("candDash", function () { return api.request("/candidates/me/dashboard"); }, "dash", false);
+      }
+      if (name === "me") need("profile", function () { return api.profile(); }, "profile", false);
+      if (name === "me" || name === "apps" || name === "app") {
+        need("apps", function () { return api.myApplications(); }, "apps", true);
+      }
+      if (name === "saved" || name === "job") {
+        need("saved", function () { return api.request("/jobs/saved"); }, "saved", true);
+      }
+      if (name === "alerts") need("alerts", function () { return api.request("/alerts"); }, "alerts", true);
+      if (name === "interviews" || name === "home") {
+        need("interviews", function () { return api.request("/interviews"); }, "interviews", true);
+      }
     } else if (isEmployer()) {
-      tasks.push(api.request("/companies/me/dashboard").then(function (json) { state.dash = dataOf(json); }).catch(function () {}));
-      tasks.push(api.request("/hiring-requests").then(function (json) { state.hiring = dataOf(json) || []; }).catch(function () { state.hiring = []; }));
-      tasks.push(api.request("/applications").then(function (json) { state.inbox = dataOf(json) || []; }).catch(function () { state.inbox = []; }));
-      tasks.push(api.request("/invoices").then(function (json) { state.invoices = dataOf(json) || []; }).catch(function () { state.invoices = []; }));
-      tasks.push(api.request("/contracts").then(function (json) { state.contracts = dataOf(json) || []; }).catch(function () { state.contracts = []; }));
-      tasks.push(api.request("/companies/me").then(function (json) { state.company = dataOf(json); }).catch(function () { state.company = null; }));
+      if (name === "home" || name === "me") {
+        need("empDash", function () { return api.request("/companies/me/dashboard"); }, "dash", false);
+      }
+      if (name === "home" || name === "hiring") {
+        need("hiring", function () { return api.request("/hiring-requests"); }, "hiring", true);
+      }
+      if (name === "home" || name === "inbox" || name === "pipeline") {
+        need("inbox", function () { return api.request("/applications"); }, "inbox", true);
+      }
+      if (name === "home" || name === "invoices") {
+        need("invoices", function () { return api.request("/invoices"); }, "invoices", true);
+      }
+      if (name === "home" || name === "contracts") {
+        need("contracts", function () { return api.request("/contracts"); }, "contracts", true);
+      }
+      if (name === "company") need("company", function () { return api.request("/companies/me"); }, "company", false);
+      if (name === "interviews" || name === "home") {
+        need("interviews", function () { return api.request("/interviews"); }, "interviews", true);
+      }
+    }
+    if (name === "messages") {
+      need("threads", function () { return api.request("/messages"); }, "threads", true);
+      need("directory", function () { return api.request("/messages/directory"); }, "directory", true);
     }
     return Promise.all(tasks);
   }
@@ -880,9 +946,13 @@
   function loadRoute() {
     state.user = api.currentUser();
     if (!syncHash()) return Promise.resolve();
+    render();
     var r = route();
     var pending = [loadSessionData()];
-    if (state.user && isCandidate() && (r.name === "home" || r.name === "jobs")) pending.push(loadJobs(state.query));
+    if (state.user && isCandidate() && (r.name === "home" || r.name === "jobs")) {
+      var haveMatches = !!(state.dash && (state.dash.matches || []).length);
+      if (r.name === "jobs" || !haveMatches) pending.push(loadJobs(state.query));
+    }
     if (state.user && isCandidate() && r.name === "job" && r.id) {
       pending.push(api.request("/jobs/" + encodeURIComponent(r.id)).then(function (json) { state.job = dataOf(json); }).catch(function () { state.job = null; }));
     }
@@ -938,6 +1008,7 @@
   }
   function done(msg) {
     setNotice(msg || "");
+    bustCache();
     return loadRoute();
   }
 
@@ -1031,6 +1102,7 @@
       api.logout().then(function () {
         state.user = null;
         state.mismatch = "";
+        bustCache();
         setPersona("");
         setNotice("");
         go("#/welcome");
@@ -1126,12 +1198,17 @@
   });
 
   window.addEventListener("hashchange", loadRoute);
-  if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
-    navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(function () {});
+  function registerSw() {
+    if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
+      navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(function () {});
+    }
   }
+  if (window.requestIdleCallback) window.requestIdleCallback(registerSw, { timeout: 2500 });
+  else setTimeout(registerSw, 1200);
   api.services().then(function (json) {
     var data = dataOf(json) || {};
     if (data.contact) state.contact = data.contact;
-  }).catch(function () {}).then(hydrateSession).then(loadRoute).catch(function () { render(); });
+  }).catch(function () {});
+  hydrateSession().then(loadRoute).catch(function () { render(); });
   render();
 })();

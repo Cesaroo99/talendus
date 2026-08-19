@@ -74,7 +74,7 @@ COPY = {
         "cta_gateway_p": "Cherchez-vous un emploi, ou avez-vous un poste à pourvoir ? Choisissez. Talendus est l'intermédiaire.",
         "speed_kicker_talent": "Sans frais pour vous",
         "speed_h2_talent": "Talendus étudie votre profil et vous présente aux entreprises quand ça colle.",
-        "speed_p_talent": "Vous créez votre profil. Nous comprenons votre parcours. Lorsque votre profil correspond à une opportunité, un conseiller vous contacte, jamais l'employeur en direct.",
+        "speed_p_talent": "Vous créez votre profil. Nous comprenons votre parcours. Lorsqu'une opportunité correspond, un conseiller vous rappelle. Appelez-nous ou écrivez-nous dès que vous voulez avancer.",
         "nav_svc_industrial": "Recrutement industriel",
         "nav_svc_mfg": "Recrutement manufacturier",
         "nav_svc_tech": "Recrutement technique",
@@ -166,7 +166,7 @@ COPY = {
         "cta_gateway_p": "Looking for a job, or filling a role? Pick a side. Talendus is the intermediary.",
         "speed_kicker_talent": "Free for you",
         "speed_h2_talent": "Talendus studies your profile and introduces you when it actually fits.",
-        "speed_p_talent": "You create your profile. We understand your path. When it matches an opportunity, a consultant contacts you, never the employer directly.",
+        "speed_p_talent": "You create your profile. We understand your path. When an opportunity fits, a consultant calls you. Call or write whenever you want to move forward.",
         "nav_svc_industrial": "Industrial recruiting",
         "nav_svc_mfg": "Manufacturing recruiting",
         "nav_svc_tech": "Technical recruiting",
@@ -821,7 +821,7 @@ def faq_html(items, open_first=True):
 
 FAQ_HOME = [
     ("Comment fonctionne Talendus ?",
-     "Talendus est une agence de placement. L'entreprise confie un besoin de recrutement. Nous recherchons, analysons, présélectionnons et qualifions les profils, puis nous présentons une shortlist. L'entreprise étudie ces dossiers et prend la décision finale. Côté candidat, vous créez un profil : nous vous contactons lorsque votre parcours correspond à une opportunité. Il n'y a pas de contact direct non médié entre l'employeur et le candidat."),
+     "Talendus est une agence de placement. L'entreprise confie un besoin de recrutement. Nous recherchons, analysons, présélectionnons et qualifions les profils, puis nous présentons une shortlist. L'entreprise étudie ces dossiers et prend la décision finale. Côté candidat, vous créez un profil : nous vous contactons lorsque votre parcours correspond à une opportunité. Un conseiller reste votre contact à chaque étape : appelez-nous, écrivez-nous ou ouvrez votre espace."),
     ("Talendus est-il limité à certains secteurs ?",
      "Non. Talendus recrute pour tous les secteurs et tous les types de métiers. Technologie, santé, finance, construction, commerce, industrie, services : ce sont des exemples, pas des limites. PME, startups ou plus grandes organisations : l'accompagnement s'adapte au besoin, pas à une spécialisation unique."),
     ("Utilisez-vous réellement l'intelligence artificielle ?",
@@ -881,17 +881,17 @@ FAQ_CANDIDATS = [
     ("Dois-je déposer mon CV ?",
      "Oui, c'est le moyen le plus clair pour que nous comprenions votre parcours. Sans CV, nous pouvons tout de même ouvrir un profil, mais l'analyse et une éventuelle présentation à une entreprise seront plus limitées."),
     ("Comment Talendus utilise-t-il mon profil ?",
-     "Pour comprendre votre parcours et vous considérer pour des mandats pertinents. Nous ne vendons pas vos données. Les entreprises ne reçoivent pas votre courriel ni votre téléphone. Un conseiller présente votre dossier uniquement lorsque l'adéquation tient, et avec votre accord dans le processus habituel."),
+     "Pour comprendre votre parcours et vous considérer pour des mandats pertinents. Nous ne vendons pas vos données. Un conseiller étudie votre dossier, vous rappelle quand un mandat colle, et avance avec vous. Contactez-nous dès que vous voulez qu'on s'en occupe."),
     ("Puis-je être contacté pour une opportunité ?",
      "Oui. Même sans offre affichée, votre profil reste actif. Lorsque votre parcours correspond à un besoin, Talendus peut vous joindre, échanger, puis éventuellement vous présenter. Vous n'êtes pas obligé d'accepter."),
     ("Est-ce que Talendus me présente directement aux entreprises ?",
-     "Pas sans étape. Nous étudions d'abord le fit. Souvent, un échange avec nous précède toute présentation. Vous n'êtes pas envoyé à l'aveugle chez quinze employeurs. Quand nous présentons, l'entreprise voit un dossier qualifié, pas vos coordonnées en libre accès."),
+     "Pas sans étape. Nous étudions d'abord le fit. Souvent, un échange avec nous précède toute présentation. Vous n'êtes pas envoyé à l'aveugle chez quinze employeurs. Quand nous présentons, l'entreprise voit un dossier déjà travaillé par un conseiller qui vous a parlé."),
     ("Comment se déroule une présélection ?",
      "Nous comparons votre parcours aux critères du poste : compétences, expérience, localisation, motivations. Nous pouvons vous poser des questions ou vous rencontrer. Si ça ne colle pas, nous ne forçons pas une entrevue inutile. Si ça colle, nous préparons la présentation."),
     ("Puis-je postuler aux offres disponibles ?",
-     "Oui. Les offres publiées sur Talendus sont des mandats que nous accompagnons. Postuler envoie votre dossier à notre équipe, pas à l'employeur en direct. Un conseiller fait le pont et suit la suite avec vous."),
+     "Oui. Les offres publiées sur Talendus sont des mandats que nous accompagnons. Postuler envoie votre dossier à notre équipe. Un conseiller vous rappelle, fait le pont et suit la suite avec vous."),
     ("Comment suivre mon parcours ?",
-     "Dans votre espace candidat : profil, CV, candidatures, messages avec Talendus, entretiens planifiés. Vous échangez avec nous, pas avec l'entreprise via une messagerie ouverte. C'est gratuit pour vous ; les honoraires sont payés par l'employeur."),
+     "Dans votre espace candidat : profil, CV, candidatures, messages avec Talendus, entretiens planifiés. Votre conseiller vous tient au courant. Écrivez-nous dès que vous avez une question. C'est gratuit pour vous ; les honoraires sont payés par l'employeur."),
     ("Dois-je payer pour vos services ?",
      "Non. Créer un profil, déposer un CV, postuler et être accompagné jusqu'à une éventuelle embauche est gratuit pour les talents."),
     ("M'enverrez-vous sur des entrevues au hasard ?",
@@ -900,7 +900,7 @@ FAQ_CANDIDATS = [
 
 FAQ_HOME_EN = [
     ("How does Talendus work?",
-     "Talendus is a placement agency. A company hands us a hiring need. We search, analyse, screen and qualify profiles, then present a shortlist. The company reviews those files and makes the final decision. As a candidate, you create a profile: we contact you when your path matches an opportunity. There is no unmediated contact between employer and candidate."),
+     "Talendus is a placement agency. A company hands us a hiring need. We search, analyse, screen and qualify profiles, then present a shortlist. The company reviews those files and makes the final decision. As a candidate, you create a profile: we contact you when your path matches an opportunity. A consultant stays your contact at every step: call us, write to us, or open your space."),
     ("Is Talendus limited to certain industries?",
      "No. Talendus hires across every industry and every kind of role. Technology, healthcare, finance, construction, retail, manufacturing, services: those are examples, not limits. SMEs, startups or larger organizations: support follows the need, not a single specialty."),
     ("Do you actually use artificial intelligence?",
@@ -960,7 +960,7 @@ def homepage_faq(lang="fr"):
         gateway = [
             FAQ_HOME_EN[0],
             ("I'm looking for a job, what should I do?",
-             "Create a profile and submit your resume. Talendus studies your path and contacts you when an opportunity fits. Companies do not receive your email or phone number. It is free."),
+             "Create a profile and submit your resume. Talendus studies your path and contacts you when an opportunity fits. It is free. Call us or write — a consultant takes it from there."),
             ("I'm hiring, what should I do?",
              "Hand us the need: role, criteria, conditions. Talendus searches, screens and presents a qualified shortlist. You do not browse a resume database. You keep the final decision."),
             FAQ_HOME_EN[1],
@@ -972,7 +972,7 @@ def homepage_faq(lang="fr"):
         gateway = [
             FAQ_HOME[0],
             ("Je cherche un emploi : que dois-je faire ?",
-             "Créez un profil et déposez votre CV. Talendus étudie votre parcours et vous contacte lorsqu'une opportunité correspond. Les entreprises ne reçoivent pas votre courriel ni votre téléphone. C'est gratuit."),
+             "Créez un profil et déposez votre CV. Talendus étudie votre parcours et vous contacte lorsqu'une opportunité correspond. C'est gratuit. Appelez-nous ou écrivez-nous : un conseiller s'en occupe."),
             ("Je recrute : que dois-je faire ?",
              "Confiez-nous le besoin : poste, critères, conditions. Talendus recherche, présélectionne et présente une shortlist qualifiée. Vous ne parcourez pas une base de CV. Vous gardez la décision finale."),
             FAQ_HOME[1],
@@ -1009,17 +1009,17 @@ FAQ_CANDIDATES_EN = [
     ("Do I have to submit my resume?",
      "Yes, it is the clearest way for us to understand your path. Without a resume we can still open a profile, but analysis and a possible introduction to a company will be more limited."),
     ("How does Talendus use my profile?",
-     "To understand your career and consider you for relevant mandates. We do not sell your data. Companies do not receive your email or phone number. A consultant presents your file only when the fit holds, and through the usual process with your involvement."),
+     "To understand your career and consider you for relevant mandates. We do not sell your data. A consultant studies your file, calls you when a mandate fits, and moves forward with you. Contact us whenever you want us on it."),
     ("Can I be contacted about an opportunity?",
      "Yes. Even without a posted job, your profile stays active. When your path matches a need, Talendus can reach you, talk, then possibly introduce you. You are not obliged to accept."),
     ("Does Talendus introduce me directly to companies?",
-     "Not without a step first. We study the fit. Often a conversation with us precedes any introduction. You are not sent blindly to fifteen employers. When we present, the company sees a qualified file, not your contact details in the open."),
+     "Not without a step first. We study the fit. Often a conversation with us precedes any introduction. You are not sent blindly to fifteen employers. When we present, the company sees a file already worked by a consultant who has spoken with you."),
     ("How does screening work?",
      "We compare your path to the role: skills, experience, location, motivations. We may ask questions or meet you. If it does not fit, we do not force a useless interview. If it holds, we prepare the introduction."),
     ("Can I apply to posted jobs?",
-     "Yes. Openings published on Talendus are mandates we support. Applying sends your file to our team, not to the employer directly. A consultant bridges and follows up with you."),
+     "Yes. Openings published on Talendus are mandates we support. Applying sends your file to our team. A consultant calls you, bridges the process and follows up with you."),
     ("How do I follow my path?",
-     "In your candidate workspace: profile, resume, applications, messages with Talendus, scheduled interviews. You talk to us, not to the company through an open inbox. It is free for you; fees are paid by the employer."),
+     "In your candidate workspace: profile, resume, applications, messages with Talendus, scheduled interviews. Your consultant keeps you posted. Write to us as soon as you have a question. It is free for you; fees are paid by the employer."),
     ("Do I pay for your services?",
      "No. Creating a profile, submitting a resume, applying and being supported through to a possible hire is free for talent."),
     ("Will you send me to random interviews?",
@@ -1032,7 +1032,7 @@ CV_FILE_ACCEPT = ".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp,application/pdf,image/pn
 def cv_file_field(lang="fr", required=True):
     req = " required" if required else ""
     if lang == "en":
-        hint = "PDF, Word (DOC, DOCX) or image (PNG, JPG). 5 MB max. The file goes to Talendus, not to employers."
+        hint = "PDF, Word (DOC, DOCX) or image (PNG, JPG). 5 MB max. The file reaches Talendus. A consultant calls you back."
         label = "Your resume" + (" *" if required else "")
         optional = "" if required else ' <span class="tl-optional">(optional)</span>'
         return f"""<label class="tl-file">
@@ -1040,7 +1040,7 @@ def cv_file_field(lang="fr", required=True):
               <input type="file" name="cvfile" accept="{CV_FILE_ACCEPT}"{req}>
               <span class="tl-file-hint">{hint}</span>
             </label>"""
-    hint = "PDF, Word (DOC, DOCX) ou image (PNG, JPG). 5 Mo max. Le fichier arrive chez Talendus, pas chez les employeurs."
+    hint = "PDF, Word (DOC, DOCX) ou image (PNG, JPG). 5 Mo max. Le fichier arrive chez Talendus. Un conseiller vous rappelle."
     label = "Votre CV" + (" *" if required else "")
     optional = "" if required else ' <span class="tl-optional">(facultatif)</span>'
     return f"""<label class="tl-file">
@@ -1155,18 +1155,21 @@ def native_app_page(lang="fr"):
         title = "Talendus"
         desc = "Jobs, your file and your Talendus consultant, on your phone."
         loading = "Loading Talendus"
+        tag = "Placement agency · Every industry"
         html_lang = "en-CA"
         path = "/en/m.html"
-        alt = "https://talendus.ca/m.html"
         prefix = "../"
     else:
         title = "Talendus"
         desc = "Les offres, votre dossier et votre conseiller Talendus, sur votre téléphone."
         loading = "Chargement Talendus"
+        tag = "Agence de placement · Tous secteurs"
         html_lang = "fr-CA"
         path = "/m.html"
-        alt = "https://talendus.ca/en/m.html"
         prefix = ""
+    mark = """<svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+            <path fill="#ffffff" fill-rule="evenodd" d="M18 1.5c9.113 0 16.5 7.387 16.5 16.5S27.113 34.5 18 34.5 1.5 27.113 1.5 18 8.887 1.5 18 1.5zm-7.25 9.75h14.5a1.75 1.75 0 1 1 0 3.5h-5.5v12.75a1.75 1.75 0 1 1-3.5 0V14.75h-5.5a1.75 1.75 0 1 1 0-3.5z"/>
+          </svg>"""
     return f"""<!DOCTYPE html>
 <html lang="{html_lang}">
 <head>
@@ -1186,9 +1189,19 @@ def native_app_page(lang="fr"):
   <link rel="icon" href="{prefix}assets/img/logo/icon-192.png" type="image/png">
   <link rel="stylesheet" href="{prefix}assets/css/mobile-app.css">
 </head>
-<body class="tl-native">
+<body class="tl-native tn-gated">
   <div id="tl-native-app" aria-live="polite">
-    <main class="tn-screen" id="tn-screen"><p class="tn-empty">{loading}</p></main>
+    <div class="tn-splash" role="status" aria-label="{loading}">
+      <div class="tn-orbit" aria-hidden="true">
+        <span class="tn-ring tn-ring-a"></span>
+        <span class="tn-ring tn-ring-b"></span>
+        <span class="tn-ring tn-ring-c"></span>
+        <div class="tn-mark">{mark}</div>
+      </div>
+      <p class="tn-word">Talendus</p>
+      <p class="tn-tag">{tag}</p>
+      <div class="tn-splash-bar" aria-hidden="true"><span></span></div>
+    </div>
   </div>
   <script src="{prefix}assets/js/api.js"></script>
   <script src="{prefix}assets/js/mobile-app.js"></script>

@@ -210,7 +210,7 @@ Les événements (compte créé, candidature, changement de statut, CV, entretie
 
 Espace candidat public : `/espace.html` (EN : `/en/account.html`) — profil, CV, correspondances, candidatures, entretiens, messages, notifications.
 
-Espace employeur : `/espace-employeur.html` (EN : `/en/account-employer.html`) — entreprise, offres, inbox (dossiers présentés par Talendus, lecture seule), pipeline, factures (Checkout Stripe si configuré). Aucun contact direct employeur–candidat : messagerie, entretiens et changements de statut passent par le staff. Le kanban admin `/admin/` enregistre les déplacements via `POST /api/applications/{id}/status` ; `GET /api/admin/bootstrap` fournit `stageMap` et `pipeline`.
+Espace employeur : `/espace-employeur.html` (EN : `/en/account-employer.html`) — entreprise, offres, inbox (dossiers présentés par Talendus), pipeline, factures (Checkout Stripe si configuré). Un conseiller coordonne messagerie, entretiens et changements de statut. Le kanban admin `/admin/` enregistre les déplacements via `POST /api/applications/{id}/status` ; `GET /api/admin/bootstrap` fournit `stageMap` et `pipeline`.
 
 À la publication d’une offre, les candidats actifs au-dessus de `JOB_MATCH_MIN_SCORE` reçoivent une notification `JOB_MATCH` (respect des préférences `notify_match` / `notify_in_app`).
 
