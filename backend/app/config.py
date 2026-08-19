@@ -113,6 +113,10 @@ class Settings(BaseSettings):
     seo_canonical_host: str = "https://talendus.ca"
     google_site_verification: str = ""
 
+    vapid_public_key: str = ""
+    vapid_private_key: str = ""
+    vapid_mailto: str = ""
+
     @field_validator("database_url", mode="before")
     @classmethod
     def _normalize_database_url(cls, value: str) -> str:

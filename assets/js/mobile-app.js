@@ -209,7 +209,11 @@
     verifyTitle: "Confirming your email…",
     verifyOk: "Email verified. You can sign in.",
     networkErr: "Cannot reach Talendus. Check your connection and try again.",
-    sessionLost: "Sign-in could not be saved on this device. Try again."
+    sessionLost: "Sign-in could not be saved on this device. Try again.",
+    pushLead: "Get Talendus updates in your phone’s notification bar.",
+    pushEnable: "Enable phone notifications",
+    notifyPush: "Phone notification bar",
+    pushOn: "Updates will appear in your notification bar."
   } : {
     home: "Accueil",
     jobs: "Offres",
@@ -413,7 +417,11 @@
     verifyTitle: "Vérification du courriel…",
     verifyOk: "Courriel vérifié. Vous pouvez vous connecter.",
     networkErr: "Impossible de joindre Talendus. Vérifiez la connexion, puis réessayez.",
-    sessionLost: "La connexion n’a pas pu être enregistrée sur cet appareil. Réessayez."
+    sessionLost: "La connexion n’a pas pu être enregistrée sur cet appareil. Réessayez.",
+    pushLead: "Recevez les suivis Talendus dans la barre de notifications du téléphone.",
+    pushEnable: "Activer les notifications du téléphone",
+    notifyPush: "Barre de notifications du téléphone",
+    pushOn: "Les suivis apparaîtront dans la barre de notifications."
   };
 
   var state = {
@@ -809,6 +817,7 @@
       var needs = state.hiring || [];
       return '<p class="tn-kicker">' + esc(t.space) + "</p><h1 class=\"tn-title\">" + esc(t.hello) + (name ? " " + esc(name) : "") + "</h1>" +
         flash() +
+        pushBanner() +
         '<div class="tn-stats">' +
         statLink("#/hiring", stats.active_jobs || needs.length || 0, t.hiring) +
         statLink("#/inbox", stats.applications || 0, t.presented) +
@@ -835,7 +844,7 @@
         '<a class="tn-btn" href="#/profile">' + esc(t.completeFile) + "</a></section>";
     }
     return '<p class="tn-kicker">' + esc(t.space) + "</p><h1 class=\"tn-title\">" + esc(t.hello) + (name ? " " + esc(name) : "") + "</h1>" +
-      flash() + next + interviewCard() +
+      flash() + pushBanner() + next + interviewCard() +
       '<div class="tn-stats">' +
       statLink("#/apps", stats.applications || 0, t.statsApps) +
       statLink("#/interviews", stats.interviews || 0, t.statsInterviews) +
@@ -1063,6 +1072,7 @@
       '<button class="tn-btn" type="submit">' + esc(t.changePass) + "</button></form>" +
       '<form class="tn-form" data-prefs><p class="tn-meta">' + esc(t.prefs) + "</p>" +
       check("notify_in_app", t.notifyApp, p.notify_in_app !== false) +
+      check("notify_push", t.notifyPush, p.notify_push || pushAllowed()) +
       check("notify_email", t.notifyEmail, p.notify_email !== false) +
       check("notify_application", t.notifyApps, p.notify_application !== false) +
       check("notify_message", t.notifyMsgs, p.notify_message !== false) +
@@ -1325,7 +1335,9 @@
       need("threads", function () { return api.request("/messages"); }, "threads", true);
       need("directory", function () { return api.request("/messages/directory"); }, "directory", true);
     }
-    return Promise.all(tasks);
+    return Promise.all(tasks).then(function () {
+      quietPushSync();
+    });
   }
 
   function syncHash() {
@@ -1402,6 +1414,7 @@
       setPersona(isEmployer(user) ? "employer" : "talent");
       setNotice("");
       go("#/home");
+      enablePush(false);
       return loadRoute();
     });
   }
@@ -1431,6 +1444,14 @@
   }
 
   root.addEventListener("click", function (e) {
+    if (e.target.closest("[data-enable-push]")) {
+      e.preventDefault();
+      enablePush(true).then(function (ok) {
+        if (ok) setNotice(t.pushOn);
+        render();
+      }).catch(fail);
+      return;
+    }
     var choose = e.target.closest("[data-choose]");
     if (choose) setPersona(choose.getAttribute("data-choose"));
     var applyBtn = e.target.closest("[data-apply]");
@@ -1687,10 +1708,13 @@
         notify_email: !!(form.notify_email && form.notify_email.checked),
         notify_application: !!(form.notify_application && form.notify_application.checked),
         notify_message: !!(form.notify_message && form.notify_message.checked),
-        notify_interview: !!(form.notify_interview && form.notify_interview.checked)
+        notify_interview: !!(form.notify_interview && form.notify_interview.checked),
+        notify_push: !!(form.notify_push && form.notify_push.checked)
       };
       if (form.notify_match) prefs.notify_match = !!form.notify_match.checked;
-      api.request("/users/me/preferences", { method: "PATCH", body: prefs }).then(function () { done(t.saved); }).catch(fail);
+      api.request("/users/me/preferences", { method: "PATCH", body: prefs }).then(function () {
+        return prefs.notify_push ? enablePush(true) : disablePush();
+      }).then(function () { done(t.saved); }).catch(fail);
     } else if (form.matches("[data-company]")) {
       e.preventDefault();
       if (!isEmployer()) return;
@@ -1704,6 +1728,117 @@
   });
 
   window.addEventListener("hashchange", loadRoute);
+  function urlBase64ToUint8Array(base64String) {
+    var padding = "=".repeat((4 - base64String.length % 4) % 4);
+    var base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+    var rawData = atob(base64);
+    var outputArray = new Uint8Array(rawData.length);
+    for (var i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+    return outputArray;
+  }
+  function nativePush() {
+    try { return window.TalendusNative && typeof window.TalendusNative.showNotification === "function"; } catch (e) { return false; }
+  }
+  function pushAllowed() {
+    try {
+      if (nativePush() && typeof window.TalendusNative.notificationsEnabled === "function") {
+        if (window.TalendusNative.notificationsEnabled()) return true;
+      }
+    } catch (e) {}
+    return typeof Notification !== "undefined" && Notification.permission === "granted";
+  }
+  function pushBanner() {
+    if (!state.user) return "";
+    try { if (localStorage.getItem("talendus_push_ok") === "1") return ""; } catch (e) {}
+    if (pushAllowed()) return "";
+    if (typeof Notification !== "undefined" && Notification.permission === "denied" && !nativePush()) return "";
+    if (typeof Notification === "undefined" && !nativePush()) return "";
+    return '<div class="tn-card tn-push-card"><p class="tn-meta">' + esc(t.pushLead) +
+      '</p><button type="button" class="tn-btn" data-enable-push>' + esc(t.pushEnable) + "</button></div>";
+  }
+  function seenPushIds() {
+    try { return JSON.parse(localStorage.getItem("talendus_push_seen") || "[]"); } catch (e) { return []; }
+  }
+  function storeSeenPush(ids) {
+    try { localStorage.setItem("talendus_push_seen", JSON.stringify(ids.slice(-80))); } catch (e) {}
+  }
+  function mirrorUnreadToNative(rows) {
+    if (!nativePush()) return;
+    rows = rows || state.notifs || [];
+    var seen = seenPushIds();
+    var primed = false;
+    try { primed = localStorage.getItem("talendus_push_primed") === "1"; } catch (e) {}
+    if (!primed) {
+      rows.forEach(function (n) { if (n && n.id && seen.indexOf(n.id) === -1) seen.push(n.id); });
+      storeSeenPush(seen);
+      try { localStorage.setItem("talendus_push_primed", "1"); } catch (e) {}
+      return;
+    }
+    var changed = false;
+    rows.forEach(function (n) {
+      if (!n || n.is_read || seen.indexOf(n.id) !== -1) return;
+      seen.push(n.id);
+      changed = true;
+      try { window.TalendusNative.showNotification(n.title || "Talendus", n.message || "", n.href || "/m.html#/notifs"); } catch (err) {}
+    });
+    if (changed) storeSeenPush(seen);
+  }
+  function enablePush(interactive) {
+    if (!state.user && !api.currentUser()) return Promise.resolve(false);
+    if (nativePush()) {
+      try { if (window.TalendusNative.requestPermission) window.TalendusNative.requestPermission(); } catch (e) {}
+      try { localStorage.setItem("talendus_push_ok", "1"); } catch (e) {}
+    }
+    if (!("serviceWorker" in navigator) || !("PushManager" in window) || typeof Notification === "undefined") {
+      return Promise.resolve(!!nativePush());
+    }
+    var ask = Notification.permission === "granted"
+      ? Promise.resolve("granted")
+      : (interactive ? Notification.requestPermission() : Promise.resolve(Notification.permission));
+    return ask.then(function (perm) {
+      if (perm !== "granted") return !!nativePush();
+      return navigator.serviceWorker.ready.then(function (reg) {
+        return api.request("/push/vapid-public-key").then(function (json) {
+          var key = dataOf(json) && dataOf(json).public_key;
+          if (!key) return false;
+          return reg.pushManager.getSubscription().then(function (existing) {
+            return existing || reg.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: urlBase64ToUint8Array(key)
+            });
+          }).then(function (sub) {
+            var raw = sub.toJSON();
+            if (!raw.endpoint || !raw.keys) return false;
+            return api.request("/push/subscribe", {
+              method: "POST",
+              body: { endpoint: raw.endpoint, keys: { p256dh: raw.keys.p256dh, auth: raw.keys.auth } }
+            }).then(function () {
+              try { localStorage.setItem("talendus_push_ok", "1"); } catch (e) {}
+              return true;
+            });
+          });
+        });
+      });
+    }).catch(function () { return !!nativePush(); });
+  }
+  function disablePush() {
+    try { localStorage.removeItem("talendus_push_ok"); } catch (e) {}
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) return Promise.resolve();
+    return navigator.serviceWorker.ready.then(function (reg) {
+      return reg.pushManager.getSubscription().then(function (sub) {
+        if (!sub) return;
+        var endpoint = sub.endpoint;
+        return sub.unsubscribe().catch(function () {}).then(function () {
+          return api.request("/push/subscribe", { method: "DELETE", body: { endpoint: endpoint } }).catch(function () {});
+        });
+      });
+    }).catch(function () {});
+  }
+  function quietPushSync() {
+    if (!state.user) return;
+    if (typeof Notification !== "undefined" && Notification.permission === "granted") enablePush(false);
+    mirrorUnreadToNative();
+  }
   function registerSw() {
     if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
       navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(function () {});
