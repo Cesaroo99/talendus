@@ -12,6 +12,7 @@ from app.services.access import company_ids_for_employer
 from app.services.audit import audit
 from app.services.auth import ensure_candidate
 from app.services.email import send_email
+from app.services.labels import interview_status_label, interview_type_label
 from app.services.notifications import notify, portal_href
 
 CALL_TYPES = {
@@ -62,8 +63,9 @@ def serialize_interview(row: Interview, viewer: User | None = None) -> dict:
         "meeting_url": None if (viewer and viewer.role == UserRole.EMPLOYER) else row.meeting_url,
         "meeting_provider": row.meeting_provider,
         "type": row.type.value,
-        "type_label": TYPE_LABEL.get(row.type, row.type.value),
+        "type_label": interview_type_label(row.type, viewer) if viewer else TYPE_LABEL.get(row.type, row.type.value),
         "status": row.status.value,
+        "status_label": interview_status_label(row.status, viewer),
         "notes": None if hide_notes else row.notes,
         "reminder_sent_at": row.reminder_sent_at.isoformat() if row.reminder_sent_at else None,
         "candidate_name": user.full_name if user else None,

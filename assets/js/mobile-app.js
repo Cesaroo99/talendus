@@ -5,8 +5,8 @@
   if (!root) return;
 
   var PERSONA_KEY = "talendus_mobile_persona";
-  var isEn = (document.documentElement.lang || "").toLowerCase().indexOf("en") === 0;
-  var t = isEn ? {
+  var LANG_KEY = "talendus_locale";
+  var EN = {
     home: "Home",
     jobs: "Jobs",
     hiring: "Needs",
@@ -232,8 +232,12 @@
     joinCall: "Join the call",
     callAudio: "Audio call",
     callVideo: "Video call",
+    langTitle: "Language",
+    langFr: "Français",
+    langEn: "English",
     callConnecting: "Connecting the interview…"
-  } : {
+  };
+  var FR = {
     home: "Accueil",
     jobs: "Offres",
     hiring: "Besoins",
@@ -459,8 +463,39 @@
     joinCall: "Rejoindre l’appel",
     callAudio: "Appel audio",
     callVideo: "Appel vidéo",
+    langTitle: "Langue",
+    langFr: "Français",
+    langEn: "English",
     callConnecting: "Connexion à l’entretien…"
   };
+
+  function pageIsEn() {
+    var lang = (document.documentElement.lang || "").toLowerCase();
+    var path = (location.pathname || "").toLowerCase();
+    return lang.indexOf("en") === 0 || path.indexOf("/en/") === 0;
+  }
+  function storedLocale() {
+    try { return localStorage.getItem(LANG_KEY) || ""; } catch (e) { return ""; }
+  }
+  function detectLang() {
+    var stored = storedLocale().toLowerCase();
+    if (stored.indexOf("en") === 0) return true;
+    if (stored.indexOf("fr") === 0) return false;
+    return pageIsEn();
+  }
+  var isEn = detectLang();
+  var t = isEn ? EN : FR;
+  document.documentElement.lang = isEn ? "en-CA" : "fr-CA";
+  function applyLocale(locale, persist) {
+    var wantEn = String(locale || "").toLowerCase().indexOf("en") === 0;
+    isEn = wantEn;
+    t = isEn ? EN : FR;
+    document.documentElement.lang = isEn ? "en-CA" : "fr-CA";
+    try { localStorage.setItem(LANG_KEY, isEn ? "en-CA" : "fr-CA"); } catch (e) {}
+    if (persist && state.user) {
+      api.request("/users/me/preferences", { method: "PATCH", body: { locale: isEn ? "en-CA" : "fr-CA" } }).catch(function () {});
+    }
+  }
 
   var state = {
     user: api.currentUser(),
@@ -635,27 +670,62 @@
     return '<p class="tn-help">' + esc(t.help) + ' <a href="' + telHref() + '">' + esc(state.contact.phone_display || t.call) + "</a></p>";
   }
   function statusLabel(s) {
-    var key = String(s || "").toUpperCase();
+    var key = String(s || "").toUpperCase().replace(/-/g, "_");
     var fr = {
-      SENT: "Envoyée", SUBMITTED: "Envoyée", RECEIVED: "Reçue", REVIEW: "À l’étude", UNDER_REVIEW: "À l’étude",
-      SHORTLISTED: "Présélection", PRESELECT: "Présélection", INTERVIEW: "Entretien",
-      SECOND_INTERVIEW: "2e entretien", OFFER_SENT: "Offre",
+      SENT: "Envoyée", SUBMITTED: "Candidature envoyée", RECEIVED: "Reçue", REVIEW: "À l’étude",
+      UNDER_REVIEW: "À l’étude", SHORTLISTED: "Présélection", PRESELECT: "Présélection",
+      INTERVIEW: "Entretien", SECOND_INTERVIEW: "2e entretien", OFFER_SENT: "Offre d’emploi",
       SCHEDULED: "Planifié", CONFIRMED: "Confirmé", CANCELLED: "Annulé", COMPLETED: "Terminé",
-      HIRED: "Embauché", REJECTED: "Non retenu", WITHDRAWN: "Retirée", PRESENTED: "Présenté",
-      OPEN: "Ouvert", NEW: "Nouveau", IN_PROGRESS: "En cours", CLOSED: "Clos",
+      NO_SHOW: "Absent", HIRED: "Embauchée", REJECTED: "Non retenue", WITHDRAWN: "Retirée",
+      PRESENTED: "Présenté", OPEN: "Ouvert", NEW: "Nouveau", IN_PROGRESS: "En cours", CLOSED: "Clos",
       PAID: "Payée", PENDING: "En attente", OVERDUE: "En retard", SENT_INV: "Envoyée",
-      PUBLISHED: "Publié", DRAFT: "Brouillon"
+      PUBLISHED: "Publiée", DRAFT: "Brouillon", PAUSED: "En pause", ARCHIVED: "Archivée",
+      REQUEST_SUBMITTED: "Besoin transmis", CLIENT_CONTACTED: "Échange avec Talendus",
+      NEEDS_CONFIRMED: "Profil défini", JOB_BEING_PREPARED: "Offre en préparation",
+      CLIENT_VALIDATION: "Validation demandée", JOB_PUBLISHED: "Recherche lancée",
+      SOURCING: "Recherche en cours", SCREENING: "Présélection en cours",
+      INTERVIEWS: "Entretiens Talendus", SHORTLIST: "Shortlist disponible",
+      CLIENT_REVIEW: "Profils à consulter", HIRING: "Décision en cours",
+      TALENDUS: "Talendus", CLIENT: "Client", PHONE: "Téléphone", VIDEO: "Visio",
+      ONSITE: "Sur place", OFFER: "Offre", OWNER: "Propriétaire", ADMIN: "Administrateur",
+      HR: "RH", RECRUITER: "Recruteur", MEMBER: "Membre", BILLING: "Facturation",
+      NOUVEAUX: "Nouveau", PRESELECTION: "Présélection", ENTRETIEN_TALENDUS: "Entretien",
+      PRESENTATION: "Présenté", ENTRETIEN_CLIENT: "Entretien client", PLACEMENT: "Embauchée",
+      PENDING_VALIDATION: "En validation", REFUNDED: "Remboursée", FILLED: "Pourvu",
+      ACTIVE: "Actif", EXPIRED: "Expiré"
     };
     var en = {
-      SENT: "Sent", SUBMITTED: "Sent", RECEIVED: "Received", REVIEW: "Under review", UNDER_REVIEW: "Under review",
-      SHORTLISTED: "Shortlist", PRESELECT: "Shortlist", INTERVIEW: "Interview",
-      SECOND_INTERVIEW: "Second interview", OFFER_SENT: "Offer",
+      SENT: "Sent", SUBMITTED: "Submitted", RECEIVED: "Received", REVIEW: "Under review",
+      UNDER_REVIEW: "Under review", SHORTLISTED: "Shortlisted", PRESELECT: "Shortlist",
+      INTERVIEW: "Interview", SECOND_INTERVIEW: "Second interview", OFFER_SENT: "Offer sent",
       SCHEDULED: "Scheduled", CONFIRMED: "Confirmed", CANCELLED: "Cancelled", COMPLETED: "Done",
-      HIRED: "Hired", REJECTED: "Not retained", WITHDRAWN: "Withdrawn", PRESENTED: "Presented",
-      OPEN: "Open", NEW: "New", IN_PROGRESS: "In progress", CLOSED: "Closed",
-      PAID: "Paid", PENDING: "Pending", OVERDUE: "Overdue", PUBLISHED: "Published", DRAFT: "Draft"
+      NO_SHOW: "No-show", HIRED: "Hired", REJECTED: "Not retained", WITHDRAWN: "Withdrawn",
+      PRESENTED: "Presented", OPEN: "Open", NEW: "New", IN_PROGRESS: "In progress", CLOSED: "Closed",
+      PAID: "Paid", PENDING: "Pending", OVERDUE: "Overdue", PUBLISHED: "Published", DRAFT: "Draft",
+      PAUSED: "Paused", ARCHIVED: "Archived", REQUEST_SUBMITTED: "Need submitted",
+      CLIENT_CONTACTED: "Talking with Talendus", NEEDS_CONFIRMED: "Profile defined",
+      JOB_BEING_PREPARED: "Offer being prepared", CLIENT_VALIDATION: "Validation requested",
+      JOB_PUBLISHED: "Search launched", SOURCING: "Search in progress",
+      SCREENING: "Screening", INTERVIEWS: "Talendus interviews", SHORTLIST: "Shortlist ready",
+      CLIENT_REVIEW: "Profiles to review", HIRING: "Your decision",
+      TALENDUS: "Talendus", CLIENT: "Client", PHONE: "Phone", VIDEO: "Video",
+      ONSITE: "On site", OFFER: "Offer", OWNER: "Owner", ADMIN: "Administrator",
+      HR: "HR", RECRUITER: "Recruiter", MEMBER: "Member", BILLING: "Billing",
+      NOUVEAUX: "New", PRESELECTION: "Shortlist", ENTRETIEN_TALENDUS: "Interview",
+      PRESENTATION: "Presented", ENTRETIEN_CLIENT: "Client interview", PLACEMENT: "Hired",
+      PENDING_VALIDATION: "Pending validation", REFUNDED: "Refunded", FILLED: "Filled",
+      ACTIVE: "Active", EXPIRED: "Expired"
     };
-    return (isEn ? en : fr)[key] || s || "";
+    var mapped = (isEn ? en : fr)[key];
+    if (mapped) return mapped;
+    if (/^[A-Z0-9_]+$/.test(key) && key.length > 1) return "";
+    return s || "";
+  }
+  function langSwitch() {
+    return '<div class="tn-langs" role="group" aria-label="' + esc(t.langTitle) + '">' +
+      '<button type="button" class="tn-lang' + (isEn ? "" : " is-on") + '" data-locale="fr-CA">' + esc(t.langFr) + "</button>" +
+      '<button type="button" class="tn-lang' + (isEn ? " is-on" : "") + '" data-locale="en-CA">' + esc(t.langEn) + "</button>" +
+      "</div>";
   }
   function optionLabel(item) {
     if (!item) return "";
@@ -811,7 +881,7 @@
     if (!row) return "";
     var href = canJoinCall(row) ? ("#/call/" + encodeURIComponent(row.id) + (row.call_video === false ? "?video=0" : "?video=1")) : "#/interviews";
     return '<a class="tn-job" href="' + href + '"><h3>' + esc(t.nextInterview) + "</h3><p class=\"tn-meta\">" +
-      esc(when(row.scheduled_at) + (row.location ? " · " + row.location : "") + (row.type_label ? " · " + row.type_label : "")) + "</p></a>";
+      esc(when(row.scheduled_at) + (row.location ? " · " + row.location : "") + (row.type ? " · " + (statusLabel(row.type) || row.type_label || "") : "")) + "</p></a>";
   }
 
   function topBar() {
@@ -878,7 +948,7 @@
         '<span class="tn-persona-icon" aria-hidden="true">' + icons.hire + "</span>" +
         "<span><strong>" + esc(t.employer) + "</strong></span>" +
         '<span class="tn-chevron" aria-hidden="true">' + icons.chevron + "</span></a>" +
-      helpLine() + "</div>";
+      helpLine() + langSwitch() + "</div>";
   }
 
   function authView() {
@@ -968,7 +1038,7 @@
         (needs.length ? "<h2 class=\"tn-section\">" + esc(t.myNeeds) + "</h2><div class=\"tn-grid\">" +
           needs.slice(0, 3).map(function (row) {
             return '<a class="tn-job" href="#/need/' + encodeURIComponent(row.id) + '"><h3>' + esc(row.title) + '</h3><p class="tn-meta">' +
-              esc([row.location, statusLabel(row.status_label || row.status)].filter(Boolean).join(" · ")) + "</p></a>";
+              esc([row.location, statusLabel(row.status) || row.status_label].filter(Boolean).join(" · ")) + "</p></a>";
           }).join("") + "</div>" : "") +
         dashNotifs();
     }
@@ -1067,7 +1137,7 @@
       '<div class="tn-grid tn-stack">' + (state.hiring.map(function (row) {
         return '<a class="tn-job" href="#/need/' + encodeURIComponent(row.id) + '"><h3>' + esc(row.title) + '</h3><p class="tn-meta">' +
           esc([row.location, row.sector, row.seats ? (row.seats + " " + t.seats) : ""].filter(Boolean).join(" · ")) +
-          '</p><span class="tn-status">' + esc(statusLabel(row.status_label || row.status)) + "</span></a>";
+          '</p><span class="tn-status">' + esc(statusLabel(row.status) || row.status_label || "") + "</span></a>";
       }).join("") || '<div class="tn-empty">' + esc(t.emptyHiring) + "</div>") + "</div>";
   }
   function needView() {
@@ -1120,7 +1190,7 @@
           esc(row.id) + '">' + esc(t.cancelInterview) + "</button></div>";
       }
       var job = row.job || {};
-      return '<div class="tn-job"><h3>' + esc(job.title || row.job_title || row.type_label || t.interviews) + "</h3><p class=\"tn-meta\">" +
+      return '<div class="tn-job"><h3>' + esc(job.title || row.job_title || statusLabel(row.type) || row.type_label || t.interviews) + "</h3><p class=\"tn-meta\">" +
         esc([when(row.scheduled_at), row.location, statusLabel(row.status)].filter(Boolean).join(" · ")) + "</p>" + actions + "</div>";
     }), "#/me");
   }
@@ -1225,6 +1295,7 @@
       return '<label class="tn-check"><input type="checkbox" name="' + name + '"' + (on ? " checked" : "") + "> " + esc(label) + "</label>";
     }
     return backTo("#/me") + "<h1 class=\"tn-title\">" + esc(t.settings) + "</h1>" + flash() +
+      '<div class="tn-card"><p class="tn-meta">' + esc(t.langTitle) + "</p>" + langSwitch() + "</div>" +
       '<form class="tn-form" data-password><label>' + esc(t.currentPass) + '</label><input name="current_password" type="password" required autocomplete="current-password">' +
       "<label>" + esc(t.newPass) + '</label><input name="new_password" type="password" required minlength="8" autocomplete="new-password">' +
       '<button class="tn-btn" type="submit">' + esc(t.changePass) + "</button></form>" +
@@ -1466,6 +1537,7 @@
     function need(key, runner, field, asList) {
       tasks.push(pull(key, runner, field, asList));
     }
+    need("prefs", function () { return api.request("/users/me/preferences"); }, "prefs", false);
     need("notifs", function () { return api.notifications(); }, "notifs", true);
     if (isCandidate()) {
       if (name === "home" || name === "me" || name === "apps") {
@@ -1567,6 +1639,7 @@
       pending.push(api.verifyEmail(r.id).then(function () { setNotice(t.verifyOk); }).catch(fail));
     }
     return Promise.all(pending).then(function () {
+      if (!storedLocale() && state.prefs && state.prefs.locale) applyLocale(state.prefs.locale, false);
       if (!syncHash()) return;
       render();
       syncCallScreen();
@@ -1587,6 +1660,7 @@
       if (chosen === "employer" && isCandidate(user)) state.mismatch = t.wrongPersonaTalent;
       setPersona(isEmployer(user) ? "employer" : "talent");
       setNotice("");
+      applyLocale(isEn ? "en-CA" : "fr-CA", true);
       go("#/home");
       enablePush(true);
       return loadRoute();
@@ -1619,6 +1693,13 @@
   }
 
   root.addEventListener("click", function (e) {
+    var locBtn = e.target.closest("[data-locale]");
+    if (locBtn) {
+      e.preventDefault();
+      applyLocale(locBtn.getAttribute("data-locale"), !!state.user);
+      render();
+      return;
+    }
     if (e.target.closest("[data-enable-push]")) {
       e.preventDefault();
       enablePush(true).then(function (ok) {
