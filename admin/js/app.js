@@ -84,6 +84,15 @@
     if (TLStore.hydrateFromApi) await TLStore.hydrateFromApi();
   }
 
+  function callButtons(i) {
+    if (!i || !i.in_app_call) return "";
+    var html = ' <button type="button" class="btn btn-ghost btn-sm" data-join-call="' + U.esc(i.id) + '" data-video="0">Audio</button>';
+    if (i.call_video !== false) {
+      html += ' <button type="button" class="btn btn-sm btn-orange" data-join-call="' + U.esc(i.id) + '" data-video="1">Vidéo</button>';
+    }
+    return html;
+  }
+
   function adminHash(href) {
     if (!href) return "#/notifications";
     var i = String(href).indexOf("#");
@@ -568,7 +577,9 @@
         <h3>Entreprises auxquelles il a été présenté</h3>
         <p>${client ? '<a href="#/clients/' + client.id + '">' + U.esc(client.name) + "</a> — " + U.badge(c.status) : "Pas encore présenté."}</p></div>`;
     } else if (detailTab === "entretiens") {
-      body = '<div class="card card-pad"><h3>Entretiens</h3>' + (ints.map(function (i) { return "<p><b>" + U.esc(i.type) + "</b> — " + U.esc(i.at) + " · " + U.esc(i.location) + "</p>"; }).join("") || "<p>Aucun entretien.</p>") + '<button class="btn btn-orange" data-add-int="' + id + '">Planifier</button></div>';
+      body = '<div class="card card-pad"><h3>Entretiens</h3>' + (ints.map(function (i) {
+        return "<p><b>" + U.esc(i.type) + "</b> — " + U.esc(i.at) + " · " + U.esc(i.location) + callButtons(i) + "</p>";
+      }).join("") || "<p>Aucun entretien.</p>") + '<button class="btn btn-orange" data-add-int="' + id + '">Planifier</button></div>';
     } else if (detailTab === "notes") {
       body = '<div class="card card-pad"><h3>Notes internes (invisibles pour le candidat)</h3>' + notes.map(function (n) {
         return '<div class="note"><div class="meta">' + U.esc(TLStore.name(n.authorId)) + " · " + U.esc(n.at) + "</div>" + U.esc(n.text) + "</div>";
@@ -1409,6 +1420,19 @@
     if (!view) return;
     view.onclick = function (e) {
       var t = e.target;
+      var joinCall = t.closest("[data-join-call]");
+      if (joinCall) {
+        if (!window.TalendusCall) {
+          U.toast("L’appel n’est pas chargé. Rechargez la page.", "err");
+          return;
+        }
+        window.TalendusCall.start({
+          interviewId: joinCall.getAttribute("data-join-call"),
+          video: joinCall.getAttribute("data-video") !== "0",
+          onHangup: function () {}
+        });
+        return;
+      }
       var goEl = t.closest("[data-go]");
       if (goEl) { go(goEl.getAttribute("data-go")); return; }
       var sort = t.closest("[data-sort]");
