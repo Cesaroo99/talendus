@@ -433,7 +433,7 @@ def why_talendus_section(lang="fr"):
             ("Receive qualified applications", "The aim is to cut noise and put your attention on relevant profiles. A shortlist you can actually review is worth more than a hundred unread resumes."),
             ("A search already strengthened by AI", "Talendus already uses AI internally to analyse resumes, skills and criteria faster. You benefit from that work without operating the tools yourself. They are not a self-serve engine for you to hunt candidates on Talendus."),
             ("A human selection", "Profiles are not forwarded automatically. Consultants review, speak with people when needed, and qualify what we present. Fit is more than keywords on a resume."),
-            ("One contact", "You hand the need to Talendus and work with a consultant through to the decision. Candidates and companies stay on their own side. We remain the intermediary."),
+            ("One contact", "You hand the need to Talendus and work with a consultant through to the decision. Call us, describe the role, we search and come back with files you can actually review."),
         ]
         cta = "Hand us the search"
         href = "contact.html"
@@ -445,7 +445,7 @@ def why_talendus_section(lang="fr"):
             ("Recevez des candidatures qualifiées", "L'objectif est de réduire le bruit et de concentrer votre attention sur des profils pertinents. Une shortlist que vous pouvez vraiment étudier vaut mieux qu'une centaine de CV non lus."),
             ("Une recherche déjà renforcée par l'IA", "Talendus utilise déjà l'intelligence artificielle en interne pour analyser plus vite les parcours, les compétences et les critères. Vous bénéficiez de ce travail sans opérer les outils vous-même. Ils ne sont pas un moteur en libre-service pour que vous chassiez des candidats sur Talendus."),
             ("Une sélection humaine", "Les profils ne sont pas transmis automatiquement. Les conseillers étudient, échangent si besoin, et qualifient ce que nous présentons. L'adéquation dépasse les mots-clés d'un CV."),
-            ("Un interlocuteur unique", "Vous confiez votre besoin à Talendus et travaillez avec un conseiller jusqu'à la décision. Candidats et entreprises restent chacun de leur côté. Nous restons l'intermédiaire."),
+            ("Un interlocuteur unique", "Vous confiez votre besoin à Talendus et travaillez avec un conseiller jusqu'à la décision. Appelez-nous, décrivez le poste, on cherche et on revient avec des dossiers que vous pouvez vraiment étudier."),
         ]
         cta = "Confier mon recrutement"
         href = "contact.html"
@@ -480,29 +480,29 @@ def gateway_orientation_section(lang="fr"):
   <div class="container">
     <div class="tl-center" style="max-width:720px;margin:0 auto 36px">
       <div class="tl-kicker">After you choose</div>
-      <h2 class="tl-h2">Two paths. One intermediary. No direct contact.</h2>
+      <h2 class="tl-h2">Two paths. One agency. A consultant for each side.</h2>
       <p class="tl-lead">Once that choice is made, Talendus does not work the same way. Here is what actually changes on each side.</p>
     </div>
     <div class="tl-gateway-lanes">
       <article class="tl-gateway-lane is-talent">
         <span class="tl-kicker">On the candidate side</span>
         <h3>We represent you</h3>
-        <p>You are not dropped into a company inbox. A consultant studies your path, contacts you only when a mandate fits, then presents your file. The employer never receives your email or phone number. Creating a profile is free.</p>
+        <p>You are not dropped into a company inbox. A consultant studies your path, calls you when a mandate fits, then presents your file. Creating a profile is free. Write to us or call — we take it from there.</p>
         <ul class="tl-gateway-points">
           <li>Your resume is reviewed, not blasted to fifteen employers.</li>
           <li>You hear from us when there is a real fit — not a generic job alert.</li>
-          <li>Talendus stays your contact through screening and any presentation.</li>
+          <li>A consultant stays with you through screening and any presentation. Call us anytime.</li>
         </ul>
         <a class="tl-btn" href="candidates.html" data-set-persona="talent">See how it works for you</a>
       </article>
       <article class="tl-gateway-lane is-hire">
         <span class="tl-kicker">On the employer side</span>
         <h3>We hire for you</h3>
-        <p>You do not browse a resume database or message candidates. You describe the role. We search, screen and bring a qualified shortlist. You keep the final decision.</p>
+        <p>You do not browse a resume database. You describe the role. We search, screen and bring a qualified shortlist. You keep the final decision. A consultant calls you back.</p>
         <ul class="tl-gateway-points">
           <li>One need to hand over — not an account to learn on your own.</li>
           <li>A shortlist of people we have already qualified, not a pile of CVs.</li>
-          <li>No unmediated contact between your team and the talent.</li>
+          <li>One consultant for your hire: call us, we open the search.</li>
         </ul>
         <a class="tl-btn" href="employers.html" data-set-persona="entreprise">See how it works for you</a>
       </article>
@@ -515,29 +515,29 @@ def gateway_orientation_section(lang="fr"):
   <div class="container">
     <div class="tl-center" style="max-width:720px;margin:0 auto 36px">
       <div class="tl-kicker">Une fois le côté choisi</div>
-      <h2 class="tl-h2">Deux parcours. Un seul intermédiaire. Aucun contact direct.</h2>
+      <h2 class="tl-h2">Deux parcours. Une agence. Un conseiller pour chaque besoin.</h2>
       <p class="tl-lead">Une fois ce choix fait, Talendus ne travaille pas de la même façon. Voici ce qui change concrètement, de chaque côté.</p>
     </div>
     <div class="tl-gateway-lanes">
       <article class="tl-gateway-lane is-talent">
         <span class="tl-kicker">Du côté candidats</span>
         <h3>On vous représente</h3>
-        <p>Vous n'atterrissez pas dans la boîte courriel d'une entreprise. Un conseiller étudie votre parcours, vous contacte seulement si un mandat colle, puis présente votre dossier. L'employeur ne reçoit ni votre courriel ni votre téléphone. Créer un profil est gratuit.</p>
+        <p>Vous n'atterrissez pas dans la boîte courriel d'une entreprise. Un conseiller étudie votre parcours, vous rappelle quand un mandat colle, puis présente votre dossier. Créer un profil est gratuit. Écrivez-nous ou appelez : on s'en occupe.</p>
         <ul class="tl-gateway-points">
           <li>Votre CV est lu, pas envoyé à l'aveugle chez quinze employeurs.</li>
           <li>On vous écrit quand ça correspond vraiment — pas une alerte générique.</li>
-          <li>Talendus reste votre interlocuteur jusqu'à une éventuelle présentation.</li>
+          <li>Un conseiller vous suit jusqu'à une présentation. Appelez-nous quand vous voulez.</li>
         </ul>
         <a class="tl-btn" href="candidats.html" data-set-persona="talent">Voir comment ça se passe</a>
       </article>
       <article class="tl-gateway-lane is-hire">
         <span class="tl-kicker">Du côté entreprises</span>
         <h3>On recrute pour vous</h3>
-        <p>Vous ne fouillez pas une base de CV et vous n'écrivez pas aux talents. Vous décrivez le poste. Nous recherchons, présélectionnons et apportons une shortlist qualifiée. Vous gardez la décision finale.</p>
+        <p>Vous ne fouillez pas une base de CV. Vous décrivez le poste. Nous recherchons, présélectionnons et apportons une shortlist qualifiée. Vous gardez la décision finale. Un conseiller vous rappelle.</p>
         <ul class="tl-gateway-points">
           <li>Un besoin à nous confier — pas un logiciel à apprendre tout seul.</li>
           <li>Une shortlist de personnes déjà qualifiées, pas une pile de CV.</li>
-          <li>Aucun échange direct non médié entre votre équipe et les candidats.</li>
+          <li>Un conseiller pour votre recrutement : appelez-nous, on ouvre la recherche.</li>
         </ul>
         <a class="tl-btn" href="entreprises.html" data-set-persona="entreprise">Voir comment ça se passe</a>
       </article>
@@ -816,9 +816,9 @@ def placement_process_services_section(lang="fr"):
             ("Talent search", "Talendus looks for people who match the company's need, not a public dump of every resume we hold. We draw on our network, known profiles, applications received and, when useful, a framed posting. People already in a role can be approached discreetly, without internal noise. Internal tools, including artificial intelligence, help our teams cover more ground, treat large volumes of information and spot correspondences worth a human look. You do not browse a candidate database and you do not operate a search engine. You describe the role; we open the search on your behalf, then we come back with profiles that actually relate to the mandate."),
             ("Screening", "Identified profiles are analysed and filtered against skills, experience, qualifications, location and the criteria we agreed with you. AI can help with a first pass, with structuring information and with prioritizing files for review. A Talendus consultant then verifies what holds and drops what does not. What fails that filter never reaches your desk. Screening is a professional step, not an automatic reject and not a pile of unread resumes left for you to sort. The aim is to reduce noise so your time goes to people worth meeting."),
             ("Qualification", "Talendus does not merely forward resumes. We structure qualification around the path, consistency with the role, skills, experience, motivations, availability, expectations and other criteria defined with you. AI can help process and analyse information faster, including synthesizing what a file actually shows. Final qualification stays human: a consultant weighs what a CV cannot say, speaks with the person when needed, and decides whether a file is ready to present. You receive a reasoned file, not a raw document dumped into your inbox."),
-            ("Interviews", "When needed, Talendus talks with candidates before a file reaches you: path, motivations, fit with the role and the conditions of the mandate. Your interviews then involve people already qualified, not a first filter of dozens of unvetted applications. You run your own process; we remain the intermediary. Candidates and companies do not contact each other outside Talendus. We coordinate the exchanges, keep context, and stay available so neither side is left alone in front of a listing or a resume pile."),
+            ("Interviews", "When needed, Talendus talks with candidates before a file reaches you: path, motivations, fit with the role and the conditions of the mandate. Your interviews then involve people already qualified, not a first filter of dozens of unvetted applications. You run your own process; a consultant coordinates the exchanges, keeps context, and stays available so you can focus on the people worth meeting."),
             ("Shortlist", "We present a qualified selection of relevant profiles, not a massive list. Each file is one we are prepared to stand behind after search, analysis and human review. Relevance is the product; volume is not. You study those files, meet people according to your process, and choose. Talendus does not hire in your place. We make the final choice possible (and faster) by doing the search and screening first, with internal tools and AI accelerating some of that work without transferring it onto you."),
-            ("Placement", "Talendus supports the introduction through to the planned hiring steps: presentation of the file, follow-up with both sides, coordination of exchanges and, on permanent mandates, onboarding follow-up at 30, 60 and 90 days. We stay between the company and the talent. There is no unmediated channel and no self-serve inbox. Fees are success-based, per the agreement, with a replacement guarantee on permanent mandates. Placement is the close of a recruiting process we ran for you, not access to software you would have to operate yourself."),
+            ("Placement", "Talendus supports the introduction through to the planned hiring steps: presentation of the file, follow-up with both sides, coordination of exchanges and, on permanent mandates, onboarding follow-up at 30, 60 and 90 days. A consultant stays with you until the hire. Fees are success-based, per the agreement, with a replacement guarantee on permanent mandates. Placement is the close of a recruiting process we ran for you, not access to software you would have to operate yourself."),
             ("AI-accelerated search", "Talendus already uses its artificial-intelligence tools to accelerate certain search and analysis steps: resume reading, skills extraction, relating a profile to a role, synthesis and internal prioritization. These tools sit inside our process; they are not a product you log into. You benefit from that power through the quality and speed of the Talendus service. Consultants remain essential to qualify, contact, interview and present. The company keeps the final decision. AI helps us work better, faster and more intelligently, it does not replace the agency."),
         ]
         kicker, heading, lead = (
@@ -831,9 +831,9 @@ def placement_process_services_section(lang="fr"):
             ("Recherche de talents", "Talendus recherche les profils correspondant au besoin de l'entreprise, pas un dépôt public de tous les CV que nous détenons. Nous mobilisons le réseau, les profils déjà connus, les candidatures reçues et, lorsque c'est utile, une offre cadrée. Les personnes déjà en poste peuvent être approchées discrètement, sans bruit interne. Les outils internes, dont l'intelligence artificielle, aident nos équipes à couvrir davantage de terrain, à traiter de grands volumes d'informations et à faire ressortir des correspondances qui méritent une revue humaine. Vous ne parcourez pas une base de candidats et vous n'opérez pas un moteur de recherche. Vous décrivez le poste ; nous ouvrons la recherche pour votre compte, puis nous revenons avec des profils réellement liés au mandat."),
             ("Présélection", "Les profils identifiés sont analysés et filtrés : compétences, expérience, qualifications, localisation et critères convenus avec vous. L'IA peut aider à un premier passage, à structurer l'information et à prioriser les dossiers à examiner. Un conseiller Talendus vérifie ensuite ce qui tient et écarte ce qui ne correspond pas. Ce qui échoue ce filtre n'arrive pas sur votre bureau. La présélection est une étape professionnelle, pas un rejet automatique et pas une pile de CV non lus à trier vous-même. L'objectif est de réduire le bruit pour que votre temps aille aux personnes à rencontrer."),
             ("Qualification", "Talendus ne se contente pas d'envoyer des CV. Nous structurons la qualification autour du parcours, de la cohérence avec le poste, des compétences, de l'expérience, des motivations, de la disponibilité, des attentes et des autres critères définis avec vous. L'IA peut contribuer au traitement et à l'analyse de l'information, y compris en synthétisant ce qu'un dossier montre vraiment. La qualification finale reste humaine : un conseiller pèse ce qu'un CV ne dit pas, échange avec la personne lorsque c'est nécessaire, et décide si un dossier est prêt à être présenté. Vous recevez un dossier raisonné, pas un document brut déposé dans votre boîte."),
-            ("Entretiens", "Lorsque c'est nécessaire, Talendus échange avec les candidats avant qu'un dossier vous parvienne : parcours, motivations, adéquation avec le poste et conditions du mandat. Vos entretiens portent ensuite sur des personnes déjà qualifiées, pas sur un premier filtre de dizaines de candidatures non vérifiées. Vous organisez votre processus ; nous restons l'intermédiaire. Candidats et entreprises ne se contactent pas hors de Talendus. Nous coordonnons les échanges, conservons le contexte et restons disponibles pour qu'aucun des deux côtés ne soit laissé seul devant une annonce ou une pile de CV."),
+            ("Entretiens", "Lorsque c'est nécessaire, Talendus échange avec les candidats avant qu'un dossier vous parvienne : parcours, motivations, adéquation avec le poste et conditions du mandat. Vos entretiens portent ensuite sur des personnes déjà qualifiées, pas sur un premier filtre de dizaines de candidatures non vérifiées. Vous organisez votre processus ; un conseiller coordonne les échanges, conserve le contexte et reste disponible pour que vous puissiez vous concentrer sur les personnes à rencontrer."),
             ("Shortlist", "Nous présentons une sélection de profils qualifiés et pertinents, pas une liste massive. Chaque dossier est un profil que nous sommes prêts à défendre après recherche, analyse et revue humaine. La pertinence est le produit ; le volume ne l'est pas. Vous étudiez ces dossiers, rencontrez les personnes selon votre processus, et choisissez. Talendus n'embauche pas à votre place. Nous rendons le choix final possible (et plus rapide) en menant d'abord la recherche et la présélection, avec des outils internes et l'IA qui accélèrent une partie de ce travail sans le transférer vers vous."),
-            ("Placement", "Talendus accompagne la mise en relation jusqu'aux étapes prévues du recrutement : présentation du dossier, suivi auprès des deux parties, coordination des échanges et, sur les mandats permanents, suivi d'intégration à 30, 60 et 90 jours. Nous restons entre l'entreprise et le talent. Il n'y a pas de canal direct non médié ni de messagerie en libre-service. Les honoraires sont au succès, selon l'entente, avec une garantie de remplacement sur les mandats permanents. Le placement clôt un processus de recrutement que nous avons mené pour vous, ce n'est pas l'accès à un logiciel que vous auriez à opérer vous-même."),
+            ("Placement", "Talendus accompagne la mise en relation jusqu'aux étapes prévues du recrutement : présentation du dossier, suivi auprès des deux parties, coordination des échanges et, sur les mandats permanents, suivi d'intégration à 30, 60 et 90 jours. Un conseiller reste avec vous jusqu'à l'embauche. Les honoraires sont au succès, selon l'entente, avec une garantie de remplacement sur les mandats permanents. Le placement clôt un processus de recrutement que nous avons mené pour vous, ce n'est pas l'accès à un logiciel que vous auriez à opérer vous-même."),
             ("Recherche accélérée par l'IA", "Talendus utilise déjà ses outils d'intelligence artificielle pour accélérer certaines étapes de la recherche et de l'analyse : lecture des CV, extraction des compétences, rapprochement d'un profil et d'un poste, synthèse et priorisation interne. Ces outils restent dans notre processus ; ce n'est pas un produit auquel vous vous connectez. Vous bénéficiez de cette puissance à travers la qualité et la rapidité du service Talendus. Les conseillers restent essentiels pour qualifier, contacter, interviewer et présenter. L'entreprise garde la décision finale. L'IA nous aide à travailler mieux, plus vite et plus intelligemment, elle ne remplace pas l'agence."),
         ]
         kicker, heading, lead = (
@@ -926,25 +926,25 @@ def candidate_journey_section(lang="fr"):
         kicker, heading = "Your path", "From profile to a possible introduction."
         steps = [
             ("01", "Create your profile", "Name, role, region, skills and preferences. Five minutes to enter the Talendus network. This is not a public CV dump: it is a file our team can study."),
-            ("02", "Submit your resume", "A link or an upload. We use it to understand your path. Companies do not receive the document until we present you, and they still do not get your direct contact details."),
+            ("02", "Submit your resume", "A link or an upload. We use it to understand your path. A consultant reads it and calls you when a mandate actually fits."),
             ("03", "Skills and preferences", "What you know how to do, where you can work, the kind of role you want. The clearer this is, the more useful our search for you becomes."),
             ("04", "Opportunities", "You can browse openings we publish and apply. Many mandates never appear: your profile stays active and we can contact you when a fit appears."),
             ("05", "Identified for a role", "When your profile matches a need, Talendus can reach out. We do not send you blindly to fifteen employers."),
-            ("06", "Talk with Talendus", "A consultant is your contact. Screening, questions, sometimes an interview with us, before any introduction to a company."),
-            ("07", "Presented when it fits", "If the fit holds, we present your file. You keep control: you can decline. The company chooses. We remain in the middle."),
-            ("08", "Follow your path", "In your workspace: applications, messages with Talendus, interviews we schedule. No direct employer inbox."),
+            ("06", "Talk with Talendus", "A consultant is your contact. Screening, questions, sometimes an interview with us, then we present you when it fits. Call or write whenever you want news."),
+            ("07", "Presented when it fits", "If the fit holds, we present your file. You keep control: you can decline. The company chooses. Your consultant stays with you."),
+            ("08", "Follow your path", "In your workspace: applications, messages with Talendus, interviews we schedule. Write to your consultant as soon as you have a question."),
         ]
     else:
         kicker, heading = "Votre parcours", "Du profil à une présentation éventuelle."
         steps = [
             ("01", "Créer votre profil", "Nom, métier, région, compétences et préférences. Cinq minutes pour entrer dans le réseau Talendus. Ce n'est pas un dépôt public de CV : c'est un dossier que notre équipe peut étudier."),
-            ("02", "Déposer votre CV", "Un lien ou un fichier. Nous l'utilisons pour comprendre votre parcours. Les entreprises ne reçoivent le document que lorsque nous vous présentons, et elles n'ont toujours pas vos coordonnées directes."),
+            ("02", "Déposer votre CV", "Un lien ou un fichier. Nous l'utilisons pour comprendre votre parcours. Un conseiller le lit et vous rappelle quand un mandat correspond vraiment."),
             ("03", "Compétences et préférences", "Ce que vous savez faire, où vous pouvez travailler, le type de poste visé. Plus c'est clair, plus notre recherche pour vous est utile."),
             ("04", "Opportunités", "Vous pouvez consulter les offres que nous publions et postuler. Beaucoup de mandats n'apparaissent pas : votre profil reste actif et nous pouvons vous contacter lorsqu'une correspondance se présente."),
             ("05", "Identifié pour un poste", "Lorsque votre profil correspond à un besoin, Talendus peut vous joindre. Nous ne vous envoyons pas à l'aveugle chez quinze employeurs."),
-            ("06", "Échanger avec Talendus", "Un conseiller est votre interlocuteur. Analyse, questions, parfois un entretien avec nous, avant toute présentation à une entreprise."),
-            ("07", "Présenté si ça colle", "Si l'adéquation tient, nous présentons votre dossier. Vous gardez la main : vous pouvez refuser. L'entreprise choisit. Nous restons au milieu."),
-            ("08", "Suivre votre parcours", "Dans votre espace : candidatures, messages avec Talendus, entretiens que nous planifions. Pas de boîte de réception employeur en direct."),
+            ("06", "Échanger avec Talendus", "Un conseiller est votre interlocuteur. Analyse, questions, parfois un entretien avec nous, puis nous vous présentons si ça colle. Appelez ou écrivez dès que vous voulez des nouvelles."),
+            ("07", "Présenté si ça colle", "Si l'adéquation tient, nous présentons votre dossier. Vous gardez la main : vous pouvez refuser. L'entreprise choisit. Votre conseiller reste avec vous."),
+            ("08", "Suivre votre parcours", "Dans votre espace : candidatures, messages avec Talendus, entretiens que nous planifions. Écrivez à votre conseiller dès que vous avez une question."),
         ]
     cards = "".join(
         f'<div class="tl-step"><span>{n}</span><h3>{t}</h3><p>{p}</p></div>'
@@ -1178,7 +1178,7 @@ def job_search_filters(lang="fr"):
       </div>
       <div class="tl-jobs-toolbar-foot">
         <p class="tl-jobs-count" id="job-count"></p>
-        <p class="tl-muted tl-ai-hint">Applying still goes through Talendus: a consultant presents your file. The employer never receives your contact details directly.</p>
+        <p class="tl-muted tl-ai-hint">Apply here: a consultant reviews your file and calls you. The simplest way to move forward.</p>
       </div>
       </div>
 """
@@ -1249,7 +1249,7 @@ def job_search_filters(lang="fr"):
       </div>
       <div class="tl-jobs-toolbar-foot">
         <p class="tl-jobs-count" id="job-count"></p>
-        <p class="tl-muted tl-ai-hint">Postuler passe toujours par Talendus : un conseiller présente votre dossier. L'employeur ne reçoit pas vos coordonnées en direct.</p>
+        <p class="tl-muted tl-ai-hint">Postulez ici : un conseiller étudie votre dossier et vous rappelle. Le plus simple pour avancer.</p>
       </div>
       </div>
 """
@@ -1472,7 +1472,7 @@ def jobs_listing_header(lang="fr"):
   <div class="container">
     <p class="tl-kicker">Job openings</p>
     <h1>Opportunities in every industry. Apply through Talendus.</h1>
-    <p class="tl-lead">Filter the roles we publish, then send your file to our team. A consultant presents it to the employer. You can also create a profile: many mandates are never posted.</p>
+    <p class="tl-lead">Filter the roles we publish, then send your file to our team. A consultant reviews it and calls you. You can also create a profile: many mandates are never posted.</p>
     <div class="tl-actions">
       <a class="tl-btn" href="candidates.html#cv">Create my profile</a>
     </div>
@@ -1484,7 +1484,7 @@ def jobs_listing_header(lang="fr"):
   <div class="container">
     <p class="tl-kicker">Offres d'emploi</p>
     <h1>Des opportunités, tous secteurs. Postulez via Talendus.</h1>
-    <p class="tl-lead">Filtrez les postes que nous publions, puis envoyez votre dossier à notre équipe. Un conseiller le présente à l'employeur. Vous pouvez aussi créer un profil : beaucoup de mandats n'apparaissent pas.</p>
+    <p class="tl-lead">Filtrez les postes que nous publions, puis envoyez votre dossier à notre équipe. Un conseiller l'étudie et vous rappelle. Vous pouvez aussi créer un profil : beaucoup de mandats n'apparaissent pas.</p>
     <div class="tl-actions">
       <a class="tl-btn" href="candidats.html#cv">Créer mon profil</a>
     </div>
@@ -1520,7 +1520,7 @@ def _apply_form_html(slug, lang="fr"):
             <label class="tl-file">
               <span>Your resume</span>
               <input type="file" name="cvfile" accept="{accept}" required>
-              <span class="tl-file-hint">PDF, Word (DOC, DOCX) or image (PNG, JPG). 5 MB max. The file goes to Talendus, not to the employer.</span>
+              <span class="tl-file-hint">PDF, Word (DOC, DOCX) or image (PNG, JPG). 5 MB max. The file reaches Talendus. A consultant calls you back.</span>
             </label>
             <label>Note for Talendus <span class="tl-optional">(optional)</span></label>
             <textarea name="message" rows="3" maxlength="800" placeholder="Availability, permit, what you want us to know"></textarea>
@@ -1536,7 +1536,7 @@ def _apply_form_html(slug, lang="fr"):
             <label class="tl-file">
               <span>Votre CV</span>
               <input type="file" name="cvfile" accept="{accept}" required>
-              <span class="tl-file-hint">PDF, Word (DOC, DOCX) ou image (PNG, JPG). 5 Mo max. Le fichier arrive chez Talendus, pas chez l'employeur.</span>
+              <span class="tl-file-hint">PDF, Word (DOC, DOCX) ou image (PNG, JPG). 5 Mo max. Le fichier arrive chez Talendus. Un conseiller vous rappelle.</span>
             </label>
             <label>Note pour Talendus <span class="tl-optional">(facultatif)</span></label>
             <textarea name="message" rows="3" maxlength="800" placeholder="Disponibilité, permis, ce que vous voulez qu'on sache"></textarea>
@@ -1569,7 +1569,7 @@ def job_detail_html(job, related_html, lang="fr"):
           <h1>{title}</h1>
         </div>
       </div>
-      <p class="tl-job-hero-lead">Talendus is recruiting this {title.lower()} role for an employer in {city}. Apply here: a consultant presents your file. The company never receives your contact details from an open application.</p>
+      <p class="tl-job-hero-lead">Talendus is recruiting this {title.lower()} role for an employer in {city}. Apply here: a consultant reviews your file and calls you. The simplest way to move forward.</p>
       <ul class="tl-job-hero-tags">
         <li>{typ}</li>
         <li>{exp_label}</li>
@@ -1597,8 +1597,8 @@ def job_detail_html(job, related_html, lang="fr"):
           <ul>
             <li>{typ} role, {shift.lower()}</li>
             <li>Pay: {sal}</li>
-            <li>A Talendus consultant screens and presents your file</li>
-            <li>The employer does not receive your email, phone number or resume from an open application</li>
+            <li>A Talendus consultant screens your file and calls you</li>
+            <li>If it fits, we present you and stay with you through the next steps</li>
           </ul>
           <h2>How applying works</h2>
           <ol class="tl-job-steps">
@@ -1614,7 +1614,7 @@ def job_detail_html(job, related_html, lang="fr"):
         <div class="tl-job-apply-card" id="postuler">
           <p class="tl-job-apply-kicker">Apply</p>
           <h2>Send your file to Talendus</h2>
-          <p>Upload your resume. A consultant presents your file. You are not contacting the employer in direct.</p>
+          <p>Upload your resume. A consultant studies your file and gets back to you. Call us if you want to move faster.</p>
           {form}
         </div>
       </aside>
@@ -1641,7 +1641,7 @@ def job_detail_html(job, related_html, lang="fr"):
           <h1>{title}</h1>
         </div>
       </div>
-      <p class="tl-job-hero-lead">Talendus recrute ce poste de {title.lower()} pour un employeur à {city}. Postulez ici : un conseiller présente votre dossier. L'entreprise ne reçoit pas vos coordonnées via une candidature ouverte.</p>
+      <p class="tl-job-hero-lead">Talendus recrute ce poste de {title.lower()} pour un employeur à {city}. Postulez ici : un conseiller étudie votre dossier et vous rappelle. Le plus simple pour avancer.</p>
       <ul class="tl-job-hero-tags">
         <li>{typ}</li>
         <li>{exp_label}</li>
@@ -1669,8 +1669,8 @@ def job_detail_html(job, related_html, lang="fr"):
           <ul>
             <li>Poste {typ.lower()}, {shift.lower()}</li>
             <li>Rémunération : {sal}</li>
-            <li>Un conseiller Talendus étudie et présente votre dossier</li>
-            <li>L'employeur ne reçoit pas votre courriel, téléphone ni CV via une candidature ouverte</li>
+            <li>Un conseiller Talendus étudie votre dossier et vous rappelle</li>
+            <li>Si ça colle, nous vous présentons et restons avec vous pour la suite</li>
           </ul>
           <h2>Comment postuler</h2>
           <ol class="tl-job-steps">
@@ -1686,7 +1686,7 @@ def job_detail_html(job, related_html, lang="fr"):
         <div class="tl-job-apply-card" id="postuler">
           <p class="tl-job-apply-kicker">Candidature</p>
           <h2>Envoyez votre dossier à Talendus</h2>
-          <p>Téléversez votre CV. Un conseiller présente votre dossier. Vous n'écrivez pas à l'employeur en direct.</p>
+          <p>Téléversez votre CV. Un conseiller étudie votre dossier et vous relance. Appelez-nous si vous voulez aller plus vite.</p>
           {form}
         </div>
       </aside>

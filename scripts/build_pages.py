@@ -189,7 +189,7 @@ INDEX_BODY = r"""
                 <h1 data-persona-only="entreprise">Les bons talents. Plus rapidement. Plus intelligemment.</h1>
                 <div class="space16"></div>
                 <p data-persona-only="gateway">Choisissez votre côté pour continuer. Candidats et entreprises n'arrivent pas sur les mêmes pages.</p>
-                <p data-persona-only="talent">Créez votre profil, déposez votre CV. Nous étudions votre parcours et vous contactons lorsqu'une opportunité correspond. Gratuit pour vous. Les entreprises ne reçoivent pas vos coordonnées.</p>
+                <p data-persona-only="talent">Créez votre profil, déposez votre CV. Nous étudions votre parcours et vous contactons lorsqu'une opportunité correspond. Gratuit pour vous. Appelez-nous ou écrivez-nous : un conseiller s'en occupe.</p>
                 <p data-persona-only="entreprise">Confiez-nous votre besoin. Nous recherchons, présélectionnons et vous présentons une shortlist qualifiée. Vous ne parcourez pas une base de CV. Vous gardez la décision finale.</p>
             </div>
             <div class="tl-persona-cards" data-persona-only="gateway">
@@ -239,7 +239,7 @@ simple_page(
     <p>Trop d'entreprises perdent des semaines à chercher les bonnes personnes, à trier trop de candidatures, ou à laisser un processus s'éterniser. Trop de talents envoient des CV dans le vide. Le recrutement mérite mieux qu'un tableau d'affichage ou qu'un logiciel que l'on doit apprendre à utiliser seul.</p>
     <p>Talendus a été conçu comme une agence de placement nouvelle génération : généraliste, humaine et technologique. Lorsqu'une entreprise a un besoin, elle nous le transmet. Nous prenons en charge la recherche et la présélection. L'intelligence artificielle est déjà au cœur de nos outils internes : elle accélère l'analyse, la recherche et certaines étapes de présélection. Les conseillers restent là pour comprendre, qualifier et présenter. L'entreprise garde la décision finale.</p>
     <h2 class="tl-h2">Ce que nous faisons</h2>
-    <p>Nous rapprochons les entreprises et les talents. Développeurs, comptables, soudeurs, infirmiers, chauffeurs, responsables RH, gestionnaires, et bien d'autres métiers, dans tous les secteurs. Un conseiller présente les dossiers. Candidats et employeurs restent chacun de leur côté. Il n'y a pas de canal direct non médié.</p>
+    <p>Nous rapprochons les entreprises et les talents. Développeurs, comptables, soudeurs, infirmiers, chauffeurs, responsables RH, gestionnaires, et bien d'autres métiers, dans tous les secteurs. Un conseiller présente les dossiers et reste disponible des deux côtés : talents, appelez-nous pour un mandat ; entreprises, confiez-nous un besoin.</p>
     <p>Nous recrutons mieux, plus vite et plus intelligemment grâce à l'IA : « nous recrutons » signifie que Talendus mène la recherche et la présélection pour le compte de l'entreprise. « Plus vite » : nos outils et l'IA accélèrent déjà certaines étapes. « Plus intelligemment » : données, technologie, IA et expertise humaine, ensemble, dès aujourd'hui.</p>
     <h2 class="tl-h2">Ce que nous ne sommes pas</h2>
     <p>Pas un job board où l'entreprise parcourt une base. Pas une marketplace. Pas un ATS en libre-service. Pas un logiciel qui promet un candidat parfait sans humain. La technologie reste au service du processus Talendus.</p>
@@ -271,7 +271,7 @@ simple_page(
           <li>Suivi d'intégration 30/60/90 jours.</li>
           <li>Garantie de remplacement sur les mandats permanents.</li>
           <li>L'IA accélère notre travail interne ; la qualification reste humaine.</li>
-          <li>Aucun contact direct employeur–candidat hors de Talendus.</li>
+          <li>Un conseiller disponible des deux côtés : talents et entreprises, contactez-nous selon votre besoin.</li>
         </ul>
       </div>
       <div class="col-lg-6">
@@ -648,7 +648,7 @@ write("contact.html", wrap(
 cards = "".join(job_card_html(job, "fr") for job in JOBS)
 write("emplois.html", wrap(
     "Offres d'emploi | Opportunités Talendus",
-    "Postes accompagnés par Talendus dans tous les secteurs. Postuler envoie votre dossier à notre équipe, pas à l'employeur en direct.",
+    "Postes accompagnés par Talendus dans tous les secteurs. Postulez : un conseiller étudie votre dossier et vous rappelle.",
     "emplois.html",
     jobs_listing_header("fr")
     + f"""
@@ -837,8 +837,8 @@ simple_page(
     "Créez votre profil, déposez votre CV, soyez considéré pour des opportunités. Talendus présente votre dossier. Gratuit pour les talents.",
     "comment-ca-fonctionne.html",
     "Talents",
-    "Du profil à une présentation éventuelle, Talendus reste au milieu.",
-    "Créez votre espace, déposez votre CV, postulez aux offres si vous le souhaitez. Nous étudions votre parcours, pouvons vous contacter, et parlons à l'entreprise à votre place. Vous n'envoyez jamais vos coordonnées en direct.",
+    "Du profil à une présentation éventuelle, un conseiller reste avec vous.",
+    "Créez votre espace, déposez votre CV, postulez aux offres si vous le souhaitez. Nous étudions votre parcours, vous rappelons quand un mandat colle, et avançons avec vous. Appelez-nous ou écrivez-nous dès que vous voulez qu'on s'en occupe.",
     candidate_journey_section("fr"),
     actions='<a class="tl-btn" href="espace.html" data-auth-open="register">Créer mon profil</a>',
 )
@@ -907,12 +907,12 @@ write("app.html", wrap(
       <div class="tl-app-grid">
         <article class="tl-app-card">
           <h3>Candidats</h3>
-          <p>Profil, CV, candidatures et messages avec votre conseiller. Les employeurs n'ont jamais vos coordonnées.</p>
+          <p>Profil, CV, candidatures et messages avec votre conseiller. Il vous rappelle pour un vrai mandat. Écrivez-nous dès que vous voulez avancer.</p>
           <p><a class="tl-btn" href="espace.html">Ouvrir mon espace</a></p>
         </article>
         <article class="tl-app-card">
           <h3>Entreprises</h3>
-          <p>Mandats, profils présentés, contrats à signer et factures. Le contact avec les candidats passe toujours par Talendus.</p>
+          <p>Mandats, profils présentés, contrats à signer et factures. Un conseiller prend votre recrutement : décrivez le poste, on vous rappelle.</p>
           <p><a class="tl-btn" href="espace-employeur.html">Espace employeur</a></p>
         </article>
       </div>

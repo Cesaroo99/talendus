@@ -11,6 +11,9 @@ def test_mobile_shell_is_not_the_website():
     assert "vl-header-area" not in page
     assert "footer-widget" not in page
     assert "preloader" not in page
+    assert "tn-splash" in page
+    assert "tn-orbit" in page
+    assert "tn-ring-a" in page
     assert "data-install-now" not in page
     assert "talendus.js" not in page
     en = (ROOT / "en" / "m.html").read_text(encoding="utf-8")
@@ -101,6 +104,11 @@ def test_mobile_app_gates_access_by_persona():
     css = (ROOT / "assets" / "css" / "mobile-app.css").read_text(encoding="utf-8")
     assert ".tn-persona" in css
     assert "body.tn-gated" in css
+    assert ".tn-orbit" in css
+    assert ".tn-splash" in css
+    js = (ROOT / "assets" / "js" / "mobile-app.js").read_text(encoding="utf-8")
+    assert "brandOrbit" in js
+    assert "tn-title-light" in js
 
 
 def test_native_app_never_asks_to_install_again():
@@ -137,7 +145,11 @@ def test_mobile_app_javascript_parses():
     js = path.read_text(encoding="utf-8")
     assert '+ "</a><a href="#' not in js
     assert "function quickLinks" in js
-    assert "render();" in js.split("hydrateSession).then(loadRoute)")[-1]
+    assert "hydrateSession().then(loadRoute)" in js
+    assert "bustCache" in js
+    assert "isFresh" in js
+    assert "requestIdleCallback" in js
+    assert "render();" in js
     node = shutil.which("node")
     if node:
         checked = subprocess.run([node, "--check", str(path)], capture_output=True, text=True)
