@@ -93,6 +93,15 @@ def test_forgot_reset_and_verify_flow(client):
         assert me.json()["data"]["is_email_verified"] is True
 
 
+def test_login_trims_email(client):
+    register(client, "spaced@example.com")
+    res = client.post("/api/auth/login", json={"email": "  Spaced@example.com  ", "password": "Password1!"})
+    assert res.status_code == 200, res.text
+    assert res.json()["data"]["access_token"]
+    forgot = client.post("/api/auth/forgot-password", json={"email": "  spaced@example.com "})
+    assert forgot.status_code == 200
+
+
 def test_login_lockout_and_journal(client):
     register(client, "lock@example.com")
     for _ in range(5):

@@ -1,13 +1,19 @@
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 from app.models.enums import ApplicationStatus, CompanyMemberRole, InterviewStatus, InterviewType, InvoiceStatus, JobSearchStatus, JobStatus, PaymentMethod, UserRole
 
 
 class ORMModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
+
+
+def _clean_email(value: Any) -> Any:
+    if isinstance(value, str):
+        return value.strip().lower()
+    return value
 
 
 class TokenResponse(BaseModel):
@@ -28,6 +34,11 @@ class RegisterIn(BaseModel):
     company_name: str | None = Field(default=None, max_length=160)
     website_url: str | None = None  # honeypot anti-spam
 
+    @field_validator("email", mode="before")
+    @classmethod
+    def _email(cls, value: Any) -> Any:
+        return _clean_email(value)
+
 
 class OAuthGoogleIn(BaseModel):
     id_token: str = Field(min_length=20, max_length=8000)
@@ -45,6 +56,11 @@ class LoginIn(BaseModel):
     email: EmailStr
     password: str
 
+    @field_validator("email", mode="before")
+    @classmethod
+    def _email(cls, value: Any) -> Any:
+        return _clean_email(value)
+
 
 class RefreshIn(BaseModel):
     refresh_token: str
@@ -57,6 +73,11 @@ class PasswordChangeIn(BaseModel):
 
 class PasswordForgotIn(BaseModel):
     email: EmailStr
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def _email(cls, value: Any) -> Any:
+        return _clean_email(value)
 
 
 class PasswordResetIn(BaseModel):

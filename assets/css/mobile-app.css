@@ -295,7 +295,7 @@ body.tn-gated #tl-native-app {
 .tn-sheet {
   background: var(--tn-card);
   border-radius: 24px 24px 0 0;
-  padding: 22px 4px 8px;
+  padding: 24px 18px 28px;
   margin: 8px -4px 0;
   box-shadow: 0 -12px 40px rgba(7, 20, 34, .18);
   min-height: 70%;
@@ -525,10 +525,28 @@ body.tn-gated .tn-tabs { display: none; }
   box-shadow: inset 3px 0 0 var(--tn-orange);
 }
 .tn-forgot {
-  margin: 4px 0 0;
+  margin: 12px 0 0;
   background: none;
   border: 0;
   padding: 0;
+}
+.tn-auth-link {
+  display: inline-block;
+  color: var(--tn-navy);
+  font-weight: 700;
+  text-decoration: none;
+}
+.tn-auth-alt {
+  text-align: center;
+  margin-top: 18px;
+}
+.tn-auth-alt a { color: var(--tn-navy); font-weight: 700; }
+.tn-hp {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
 }
 .tn-forgot .tn-text-link,
 button.tn-text-link {

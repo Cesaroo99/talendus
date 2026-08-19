@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     database_url: str = f"sqlite:///{BACKEND_ROOT / 'data' / 'talendus.db'}"
 
     frontend_url: str = "http://localhost:8000"
-    cors_origins: str = "http://localhost:8000,http://127.0.0.1:8000,http://localhost:3000"
+    cors_origins: str = "http://localhost:8000,http://127.0.0.1:8000,http://localhost:3000,https://talendus.ca,https://www.talendus.ca"
     render_external_url: str = ""
     admin_email: str = "lea.super@talendus.ca"
     admin_password: str = ""
