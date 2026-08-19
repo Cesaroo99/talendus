@@ -3957,10 +3957,20 @@ button.tl-btn.tl-btn-ghost-dark:hover,
   .tl-install-banner { display: none !important; }
 }
 @media (display-mode: standalone) {
-  .tl-whatsapp { bottom: 24px; }
-  .tl-call { bottom: 92px; }
+  .tl-whatsapp { display: none !important; }
+  .tl-call { display: none !important; }
   .tl-install-banner { display: none !important; }
   .tl-install-sheet { display: none !important; }
+}
+html.tl-native-app .preloader,
+html.tl-native-app header,
+html.tl-native-app .footer-area,
+html.tl-native-app .tl-whatsapp,
+html.tl-native-app .tl-call,
+html.tl-native-app .tl-install-banner,
+html.tl-native-app .tl-install-sheet,
+html.tl-native-app .tl-install-section {
+  display: none !important;
 }
 
 

@@ -1,4 +1,23 @@
 (function () {
+  function isNativeApp() {
+    var ua = navigator.userAgent || "";
+    if (/TalendusApp/i.test(ua)) return true;
+    if (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) return true;
+    if (window.matchMedia && window.matchMedia("(display-mode: fullscreen)").matches) return true;
+    if (window.navigator && window.navigator.standalone) return true;
+    if (/\/m\.html$/.test(location.pathname || "")) return true;
+    return false;
+  }
+
+  if (isNativeApp()) {
+    document.documentElement.classList.add("tl-standalone", "tl-native-app");
+    var path = location.pathname || "/";
+    if (!/\/m\.html$/.test(path) && path.indexOf("/download/") !== 0 && path.indexOf("/admin") !== 0 && path.indexOf("/api/") !== 0) {
+      location.replace((path.indexOf("/en/") === 0 ? "/en/m.html" : "/m.html") + (location.hash || ""));
+      return;
+    }
+  }
+
   function ready(fn) {
     if (document.readyState !== "loading") fn();
     else document.addEventListener("DOMContentLoaded", fn);
@@ -651,9 +670,14 @@
       var isMobile = isIos || isAndroid || ((navigator.maxTouchPoints || 0) > 1 && window.innerWidth < 900);
       var isChromeIos = isIos && /crios/.test(ua);
       var isSafariIos = isIos && /safari/.test(ua) && !/crios|fxios|edgios/.test(ua);
-      var standalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) ||
-        !!(window.navigator && window.navigator.standalone);
-      if (standalone) document.documentElement.classList.add("tl-standalone");
+      var standalone = isNativeApp();
+      if (standalone) document.documentElement.classList.add("tl-standalone", "tl-native-app");
+      if (standalone) {
+        try {
+          localStorage.setItem(DISMISS_KEY, String(Date.now() + 365 * 24 * 60 * 60 * 1000));
+          sessionStorage.setItem(ASKED_KEY, "1");
+        } catch (e) {}
+      }
       if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1")) {
         navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(function () {});
       }
@@ -823,7 +847,7 @@
       }
 
       function maybeShowBanner() {
-        if (standalone || dismissed || askedThisVisit()) return;
+        if (isNativeApp() || standalone || dismissed || askedThisVisit()) return;
         if (/\/admin\//.test(location.pathname)) return;
         if (board) return;
         if (!isMobile) return;

@@ -472,11 +472,26 @@ gtag('consent', 'default', {
   wait_for_update: 500
 });
 </script>"""
+    app_shell_redirect = """<script>
+(function () {
+  var ua = navigator.userAgent || "";
+  var native = /TalendusApp/i.test(ua)
+    || (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches)
+    || (window.matchMedia && window.matchMedia("(display-mode: fullscreen)").matches)
+    || !!(window.navigator && window.navigator.standalone);
+  if (!native) return;
+  document.documentElement.classList.add("tl-standalone", "tl-native-app");
+  var path = location.pathname || "/";
+  if (/\\/m\\.html$/.test(path) || path.indexOf("/download/") === 0 || path.indexOf("/admin") === 0 || path.indexOf("/api/") === 0) return;
+  location.replace((path.indexOf("/en/") === 0 ? "/en/m.html" : "/m.html") + (location.hash || ""));
+})();
+</script>"""
     return f"""<!DOCTYPE html>
 <html lang="{t['html_lang']}">
 <head>
      <meta charset="UTF-8">
-     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+     {app_shell_redirect}
      <title>{safe_title}</title>
      <meta name="description" content="{safe_desc}">
      <meta name="keywords" content="{html_lib.escape(t['keywords'], quote=True)}">
@@ -1129,6 +1144,54 @@ def install_board(lang="fr"):
       </div>
     </section>
     """
+
+
+def native_app_page(lang="fr"):
+    """Coque de l'appli téléphone, sans le chrome du site public."""
+    if lang == "en":
+        title = "Talendus"
+        desc = "Jobs, your file and your Talendus consultant, on your phone."
+        loading = "Loading Talendus"
+        html_lang = "en-CA"
+        path = "/en/m.html"
+        alt = "https://talendus.ca/m.html"
+        prefix = "../"
+    else:
+        title = "Talendus"
+        desc = "Les offres, votre dossier et votre conseiller Talendus, sur votre téléphone."
+        loading = "Chargement Talendus"
+        html_lang = "fr-CA"
+        path = "/m.html"
+        alt = "https://talendus.ca/en/m.html"
+        prefix = ""
+    return f"""<!DOCTYPE html>
+<html lang="{html_lang}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+  <title>{title}</title>
+  <meta name="description" content="{desc}">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#0b1f3a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Talendus">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="canonical" href="https://talendus.ca{path}">
+  <link rel="manifest" href="{prefix}manifest.webmanifest">
+  <link rel="apple-touch-icon" sizes="180x180" href="{prefix}assets/img/logo/apple-touch-icon.png">
+  <link rel="icon" href="{prefix}assets/img/logo/icon-192.png" type="image/png">
+  <link rel="stylesheet" href="{prefix}assets/css/mobile-app.css">
+</head>
+<body class="tl-native">
+  <div id="tl-native-app" aria-live="polite">
+    <main class="tn-screen" id="tn-screen"><p class="tn-empty">{loading}</p></main>
+  </div>
+  <script src="{prefix}assets/js/api.js"></script>
+  <script src="{prefix}assets/js/mobile-app.js"></script>
+</body>
+</html>
+"""
 
 
 def wrap(title, desc, slug, body, solid=True, lang="fr", alt="", robots="index,follow", extra_json_ld=None, og_type="website", og_image="", persona=None):
