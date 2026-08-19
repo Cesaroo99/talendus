@@ -215,3 +215,29 @@ def test_mobile_app_hub_is_ordered():
         call_js = ROOT / "assets" / "js" / "talendus-call.js"
         call_checked = subprocess.run([node, "--check", str(call_js)], capture_output=True, text=True)
         assert call_checked.returncode == 0, call_checked.stderr
+        account_js = ROOT / "assets" / "js" / "account.js"
+        acc_checked = subprocess.run([node, "--check", str(account_js)], capture_output=True, text=True)
+        assert acc_checked.returncode == 0, acc_checked.stderr
+
+
+def test_mobile_app_tracks_applications_and_offers_choice_filters():
+    js = (ROOT / "assets" / "js" / "mobile-app.js").read_text(encoding="utf-8")
+    for needle in (
+        "tn-tracker",
+        "appTracker",
+        "/jobs/options",
+        "choiceSelect",
+        "jobFacts",
+        'choiceSelect("shift"',
+        'choiceSelect("schedule"',
+        'choiceSelect("work_mode"',
+    ):
+        assert needle in js
+    css = (ROOT / "assets" / "css" / "mobile-app.css").read_text(encoding="utf-8")
+    for needle in (".tn-tracker", ".tn-facts", ".tn-search select"):
+        assert needle in css
+    jobs = (ROOT / "emplois.html").read_text(encoding="utf-8")
+    assert 'id="job-shift"' in jobs
+    assert "Quart de jour" in jobs
+    en_jobs = (ROOT / "en" / "jobs.html").read_text(encoding="utf-8")
+    assert 'id="job-shift"' in en_jobs

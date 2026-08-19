@@ -451,6 +451,8 @@
     var city = document.getElementById("job-city");
     var type = document.getElementById("job-type");
     var shift = document.getElementById("job-shift");
+    var schedule = document.getElementById("job-schedule");
+    var mode = document.getElementById("job-mode");
     var sal = document.getElementById("job-sal");
     var sector = document.getElementById("job-sector");
     var exp = document.getElementById("job-exp");
@@ -471,6 +473,8 @@
       var v = (city && city.value) || "";
       var ty = (type && type.value) || "";
       var sh = (shift && shift.value) || "";
+      var sch = (schedule && schedule.value) || "";
+      var md = (mode && mode.value) || "";
       var sec = (sector && sector.value) || "";
       var ex = (exp && exp.value) || "";
       var minSal = sal && sal.value ? Number(sal.value) : 0;
@@ -483,6 +487,8 @@
           && (!v || (card.getAttribute("data-city") || "").toLowerCase() === v.toLowerCase() || hay.indexOf(v.toLowerCase()) !== -1)
           && (!ty || (card.getAttribute("data-type") || "").toLowerCase() === ty.toLowerCase() || hay.indexOf(ty.toLowerCase()) !== -1)
           && (!sh || (card.getAttribute("data-shift") || "").indexOf(sh) !== -1 || hay.indexOf(sh.toLowerCase()) !== -1)
+          && (!sch || (card.getAttribute("data-schedule") || "").indexOf(sch) !== -1 || hay.indexOf(sch.toLowerCase()) !== -1)
+          && (!md || (card.getAttribute("data-mode") || "").indexOf(md) !== -1 || hay.indexOf(md.toLowerCase()) !== -1)
           && (!sec || (card.getAttribute("data-sector") || "").toLowerCase() === sec.toLowerCase() || hay.indexOf(sec.toLowerCase()) !== -1)
           && (!ex || (card.getAttribute("data-exp") || "").toLowerCase() === ex.toLowerCase() || hay.indexOf(ex.toLowerCase()) !== -1);
         if (ok && minSal) {
@@ -571,13 +577,15 @@
           var href = prefix + job.slug + ".html";
           var salary = job.salary_display || "";
           var shiftVal = job.shift || "";
+          var scheduleVal = job.schedule || "";
+          var modeVal = job.work_mode || "";
           var loc = job.location || "";
           var typ = job.contract_type || "";
           var sector = job.sector || "";
           var skills = job.skills || "";
           var exp = job.experience_level || "";
           var cat = String(job.category || sector || "").toLowerCase();
-          var hay = [job.title, loc, cat, sector, typ, salary, shiftVal, skills, exp].join(" ");
+          var hay = [job.title, loc, cat, sector, typ, salary, shiftVal, scheduleVal, modeVal, skills, exp].join(" ");
           var excerpt = job.summary || job.qualifications || job.description || skills || "";
           if (excerpt.length > 180) excerpt = excerpt.slice(0, 177) + "…";
           var shownCat = catLabel[cat] || job.category || sector || "";
@@ -588,8 +596,9 @@
           var facts = "";
           if (loc) facts += "<div><dt>" + (isEn ? "Location" : "Lieu") + "</dt><dd>" + escapeHtml(loc) + "</dd></div>";
           if (salary) facts += "<div><dt>" + (isEn ? "Pay" : "Rémunération") + "</dt><dd>" + escapeHtml(salary) + "</dd></div>";
-          if (shiftVal) facts += "<div><dt>" + (isEn ? "Schedule" : "Horaire") + "</dt><dd>" + escapeHtml(shiftVal) + "</dd></div>";
-          return '<a class="tl-job-card" href="' + href + '" aria-label="' + escapeHtml(cta + " : " + job.title) + '" data-job="' + escapeHtml(hay) + '" data-city="' + escapeHtml(loc) + '" data-cat="' + escapeHtml(cat) + '" data-type="' + escapeHtml(typ) + '" data-shift="' + escapeHtml(shiftVal) + '" data-salary="' + escapeHtml(salary) + '" data-sector="' + escapeHtml(sector.toLowerCase()) + '" data-exp="' + escapeHtml(String(exp).toLowerCase()) + '">' +
+          if (scheduleVal) facts += "<div><dt>" + (isEn ? "Hours" : "Horaire") + "</dt><dd>" + escapeHtml(scheduleVal) + "</dd></div>";
+          if (shiftVal) facts += "<div><dt>" + (isEn ? "Shift" : "Quart") + "</dt><dd>" + escapeHtml(shiftVal) + "</dd></div>";
+          return '<a class="tl-job-card" href="' + href + '" aria-label="' + escapeHtml(cta + " : " + job.title) + '" data-job="' + escapeHtml(hay) + '" data-city="' + escapeHtml(loc) + '" data-cat="' + escapeHtml(cat) + '" data-type="' + escapeHtml(typ) + '" data-shift="' + escapeHtml(shiftVal) + '" data-schedule="' + escapeHtml(scheduleVal) + '" data-mode="' + escapeHtml(modeVal) + '" data-salary="' + escapeHtml(salary) + '" data-sector="' + escapeHtml(sector.toLowerCase()) + '" data-exp="' + escapeHtml(String(exp).toLowerCase()) + '">' +
             '<div class="tl-job-card-banner"><span class="tl-job-card-icon" aria-hidden="true"><i class="fa-solid ' + icon + '"></i></span><div class="tl-job-card-banner-text"><p class="tl-job-card-cat">' + escapeHtml(shownCat) + '</p><p class="tl-job-card-via">Via Talendus</p></div></div>' +
             '<div class="tl-job-card-body">' +
             '<div class="tl-job-card-top">' + (typ ? '<span class="tl-chip orange">' + escapeHtml(typ) + "</span>" : "") +

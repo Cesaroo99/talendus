@@ -207,6 +207,13 @@ class JobIn(BaseModel):
     education_required: str | None = None
     certifications: str | None = None
     shift: str | None = None
+    schedule: str | None = None
+    work_mode: str | None = None
+    languages: str | None = None
+    overtime: str | None = None
+    driver_license: str | None = None
+    unionized: str | None = None
+    travel: str | None = None
     benefits: str | None = None
     responsibilities: str | None = None
     qualifications: str | None = None
@@ -231,6 +238,13 @@ class JobPatchIn(BaseModel):
     education_required: str | None = None
     certifications: str | None = None
     shift: str | None = None
+    schedule: str | None = None
+    work_mode: str | None = None
+    languages: str | None = None
+    overtime: str | None = None
+    driver_license: str | None = None
+    unionized: str | None = None
+    travel: str | None = None
     benefits: str | None = None
     responsibilities: str | None = None
     qualifications: str | None = None
@@ -251,6 +265,13 @@ class HiringRequestIn(BaseModel):
     skills: str | None = None
     qualifications: str | None = None
     languages: str | None = None
+    shift: str | None = None
+    schedule: str | None = None
+    work_mode: str | None = None
+    overtime: str | None = None
+    driver_license: str | None = None
+    unionized: str | None = None
+    travel: str | None = None
     salary_display: str | None = None
     start_date: str | None = None
     notes: str | None = Field(default=None, max_length=5000)
@@ -273,6 +294,13 @@ class HiringRequestPatchIn(BaseModel):
     skills: str | None = None
     qualifications: str | None = None
     languages: str | None = None
+    shift: str | None = None
+    schedule: str | None = None
+    work_mode: str | None = None
+    overtime: str | None = None
+    driver_license: str | None = None
+    unionized: str | None = None
+    travel: str | None = None
     salary_display: str | None = None
     start_date: str | None = None
     notes: str | None = None
@@ -308,6 +336,13 @@ class JobOut(ORMModel):
     skills: str | None
     experience_level: str | None
     shift: str | None
+    schedule: str | None = None
+    work_mode: str | None = None
+    languages: str | None = None
+    overtime: str | None = None
+    driver_license: str | None = None
+    unionized: str | None = None
+    travel: str | None = None
     status: JobStatus
     published_at: datetime | None
     expires_at: datetime | None
