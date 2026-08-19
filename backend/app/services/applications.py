@@ -19,7 +19,7 @@ from app.services.email import send_email
 from app.services.jobs import assert_job_open, get_public_job
 from app.services.notifications import notify, portal_href
 from app.site_jobs import open_site_job_for_apply
-from app.services.pipeline import stage_for
+from app.services.pipeline import stage_for, tracker_for
 
 
 def _talendus_staff(db: Session) -> list[User]:
@@ -206,7 +206,10 @@ def list_own(db: Session, user: User) -> list[Application]:
     return list(
         db.scalars(
             select(Application)
-            .options(joinedload(Application.job).joinedload(JobOffer.company))
+            .options(
+                joinedload(Application.job).joinedload(JobOffer.company),
+                joinedload(Application.history),
+            )
             .where(Application.candidate_id == candidate.id)
             .order_by(Application.created_at.desc())
         ).unique().all()
@@ -339,9 +342,13 @@ def serialize_application(row: Application, viewer: User | None = None) -> dict:
             "company_name": row.job.company.name if row.job.company else None,
             "sector": row.job.sector,
             "contract_type": row.job.contract_type,
+            "shift": row.job.shift,
+            "schedule": row.job.schedule,
+            "work_mode": row.job.work_mode,
         },
         "resume_id": row.resume_id,
         "pipeline_stage": stage_for(row.status),
+        "tracker": tracker_for(row),
         "history": [
             {
                 "old_status": h.old_status,

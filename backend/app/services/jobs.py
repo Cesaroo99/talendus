@@ -87,6 +87,13 @@ def serialize_job(job: JobOffer) -> dict:
         "education_required": job.education_required,
         "certifications": job.certifications,
         "shift": job.shift,
+        "schedule": job.schedule,
+        "work_mode": job.work_mode,
+        "languages": job.languages,
+        "overtime": job.overtime,
+        "driver_license": job.driver_license,
+        "unionized": job.unionized,
+        "travel": job.travel,
         "benefits": job.benefits,
         "start_date": job.start_date,
         "status": job.status.value,
@@ -142,6 +149,9 @@ def search_jobs(
     salary_min: int | None = None,
     salary_max: int | None = None,
     company: str | None = None,
+    shift: str | None = None,
+    schedule: str | None = None,
+    work_mode: str | None = None,
     status: JobStatus | None = None,
     public_only: bool = True,
     page: int = 1,
@@ -193,6 +203,12 @@ def search_jobs(
         stmt = stmt.where(JobOffer.contract_type.ilike(f"%{contract_type}%"))
     if experience:
         stmt = stmt.where(JobOffer.experience_level.ilike(f"%{experience}%"))
+    if shift:
+        stmt = stmt.where(JobOffer.shift.ilike(f"%{shift}%"))
+    if schedule:
+        stmt = stmt.where(JobOffer.schedule.ilike(f"%{schedule}%"))
+    if work_mode:
+        stmt = stmt.where(JobOffer.work_mode.ilike(f"%{work_mode}%"))
     if salary_min:
         stmt = stmt.where(or_(JobOffer.salary_min >= salary_min, JobOffer.salary_max >= salary_min))
     if salary_max:
@@ -295,6 +311,13 @@ def create_job(db: Session, user: User, data: JobIn, ip: str | None = None) -> J
         education_required=data.education_required,
         certifications=data.certifications,
         shift=data.shift,
+        schedule=data.schedule,
+        work_mode=data.work_mode,
+        languages=data.languages,
+        overtime=data.overtime,
+        driver_license=data.driver_license,
+        unionized=data.unionized,
+        travel=data.travel,
         benefits=data.benefits,
         currency=getattr(data, "currency", None) or "CAD",
         openings=getattr(data, "openings", None) or 1,
@@ -397,6 +420,13 @@ def duplicate_job(db: Session, user: User, job_id: str) -> JobOffer:
         education_required=source.education_required,
         certifications=source.certifications,
         shift=source.shift,
+        schedule=source.schedule,
+        work_mode=source.work_mode,
+        languages=source.languages,
+        overtime=source.overtime,
+        driver_license=source.driver_license,
+        unionized=source.unionized,
+        travel=source.travel,
         benefits=source.benefits,
         status=JobStatus.DRAFT,
         start_date=source.start_date,

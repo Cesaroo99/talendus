@@ -392,6 +392,13 @@ def _seed(db: Session) -> None:
             skills=skills,
             experience_level=exp,
             shift=shift,
+            schedule="Temps plein",
+            work_mode="Hybride" if sector in {"Technologie", "Administration", "Finance", "Marketing"} else "Sur place",
+            languages="Français et anglais" if sector in {"Logistique", "Cadres", "Technologie"} else "Français",
+            overtime="Oui, payées" if sector in {"Production", "Entrepôt", "Maintenance"} else "Occasionnelles",
+            unionized="Non syndiqué",
+            travel="Aucun",
+            benefits="Assurance collective",
             status=status,
             published_at=now - timedelta(days=10) if status != JobStatus.DRAFT else None,
         )

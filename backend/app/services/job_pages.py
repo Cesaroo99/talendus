@@ -65,13 +65,35 @@ def render_job_html(job: JobOffer, lang: str = "fr") -> str:
     if loc:
         facts.append(f"<li>{'Location' if is_en else 'Lieu'} : {esc(loc)}</li>")
     if contract:
-        facts.append(f"<li>{esc(contract)}</li>")
+        facts.append(f"<li>{'Contract' if is_en else 'Contrat'} : {esc(contract)}</li>")
     if salary:
         facts.append(f"<li>{'Pay' if is_en else 'Rémunération'} : {esc(salary)}</li>")
+    if job.schedule:
+        facts.append(f"<li>{'Hours' if is_en else 'Horaire'} : {esc(job.schedule)}</li>")
     if shift:
-        facts.append(f"<li>{'Schedule' if is_en else 'Horaire'} : {esc(shift)}</li>")
+        facts.append(f"<li>{'Shift' if is_en else 'Quart'} : {esc(shift)}</li>")
+    if job.work_mode:
+        facts.append(f"<li>{'Workplace' if is_en else 'Présence'} : {esc(job.work_mode)}</li>")
+    if job.languages:
+        facts.append(f"<li>{'Languages' if is_en else 'Langues'} : {esc(job.languages)}</li>")
+    if job.overtime:
+        facts.append(f"<li>{'Overtime' if is_en else 'Heures sup.'} : {esc(job.overtime)}</li>")
+    if job.driver_license:
+        facts.append(f"<li>{'Driver’s licence' if is_en else 'Permis'} : {esc(job.driver_license)}</li>")
+    if job.unionized:
+        facts.append(f"<li>{'Union' if is_en else 'Syndicat'} : {esc(job.unionized)}</li>")
+    if job.travel:
+        facts.append(f"<li>{'Travel' if is_en else 'Déplacements'} : {esc(job.travel)}</li>")
     if experience:
         facts.append(f"<li>{'Experience' if is_en else 'Expérience'} : {esc(experience)}</li>")
+    if job.education_required:
+        facts.append(f"<li>{'Education' if is_en else 'Formation'} : {esc(job.education_required)}</li>")
+    if job.certifications:
+        facts.append(f"<li>{'Certifications' if is_en else 'Certifications'} : {esc(job.certifications)}</li>")
+    if job.start_date:
+        facts.append(f"<li>{'Start date' if is_en else 'Entrée en poste'} : {esc(job.start_date)}</li>")
+    if job.openings and job.openings > 1:
+        facts.append(f"<li>{'Openings' if is_en else 'Postes'} : {job.openings}</li>")
     if sector:
         facts.append(f"<li>{'Sector' if is_en else 'Secteur'} : {esc(sector)}</li>")
 

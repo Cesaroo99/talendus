@@ -21,6 +21,9 @@ def search_jobs(
     contract_type: str | None = None,
     experience: str | None = None,
     company: str | None = None,
+    shift: str | None = None,
+    schedule: str | None = None,
+    work_mode: str | None = None,
     salary_min: int | None = Query(default=None, ge=0),
     salary_max: int | None = Query(default=None, ge=0),
     lat: float | None = Query(default=None),
@@ -40,6 +43,9 @@ def search_jobs(
         contract_type=contract_type,
         experience=experience,
         company=company,
+        shift=shift,
+        schedule=schedule,
+        work_mode=work_mode,
         salary_min=salary_min,
         salary_max=salary_max,
         sort=sort,
@@ -65,6 +71,13 @@ def search_jobs(
 @router.get("/board")
 def job_board(db: Session = Depends(get_db)):
     return ok(jobs_service.export_board(db))
+
+
+@router.get("/options")
+def job_options(db: Session = Depends(get_db)):
+    from app.services.job_catalog import catalog
+
+    return ok(catalog(db))
 
 
 @router.get("/managed")

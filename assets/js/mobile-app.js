@@ -182,7 +182,22 @@
     presentedFile: "Presented file",
     jobCity: "City",
     jobSector: "Industry",
+    shift: "Shift",
+    schedule: "Hours",
+    workMode: "Workplace",
+    anyChoice: "All",
+    jobEducation: "Education",
+    jobCerts: "Certifications",
+    jobOpenings: "Openings",
+    jobStart: "Start date",
     moreFilters: "Narrow the search",
+    pick: "Select",
+    overtime: "Overtime",
+    license: "Driver’s licence",
+    union: "Union",
+    travel: "Travel",
+    benefits: "Benefits",
+    shiftPref: "Preferred shift",
     contactUs: "A consultant answers. Call, write or send a WhatsApp.",
     photoHint: "A photo helps your consultant recognise you.",
     expHint: "Add roles you have held. It helps us match you.",
@@ -394,7 +409,22 @@
     presentedFile: "Dossier présenté",
     jobCity: "Ville",
     jobSector: "Secteur",
+    shift: "Quart",
+    schedule: "Horaire",
+    workMode: "Présence",
+    anyChoice: "Tous",
+    jobEducation: "Formation",
+    jobCerts: "Certifications",
+    jobOpenings: "Postes à pourvoir",
+    jobStart: "Entrée en poste",
     moreFilters: "Préciser la recherche",
+    pick: "Choisir",
+    overtime: "Heures sup.",
+    license: "Permis",
+    union: "Syndicat",
+    travel: "Déplacements",
+    benefits: "Avantages",
+    shiftPref: "Quart souhaité",
     contactUs: "Un conseiller vous répond. Appelez, écrivez ou envoyez un WhatsApp.",
     photoHint: "Une photo aide votre conseiller à vous reconnaître.",
     expHint: "Ajoutez les postes que vous avez tenus. Ça nous aide à vous placer.",
@@ -451,6 +481,10 @@
     inbox: [],
     invoices: [],
     contracts: [],
+    jobOptions: null,
+    jobShift: "",
+    jobSchedule: "",
+    jobWorkMode: "",
     prefs: null,
     company: null,
     application: null,
@@ -458,6 +492,7 @@
     jobCity: "",
     jobSector: "",
     jobContract: "",
+    jobExperience: "",
     need: null,
     notice: "",
     error: "",
@@ -602,8 +637,9 @@
   function statusLabel(s) {
     var key = String(s || "").toUpperCase();
     var fr = {
-      SENT: "Envoyée", SUBMITTED: "Envoyée", REVIEW: "À l’étude", UNDER_REVIEW: "À l’étude",
+      SENT: "Envoyée", SUBMITTED: "Envoyée", RECEIVED: "Reçue", REVIEW: "À l’étude", UNDER_REVIEW: "À l’étude",
       SHORTLISTED: "Présélection", PRESELECT: "Présélection", INTERVIEW: "Entretien",
+      SECOND_INTERVIEW: "2e entretien", OFFER_SENT: "Offre",
       SCHEDULED: "Planifié", CONFIRMED: "Confirmé", CANCELLED: "Annulé", COMPLETED: "Terminé",
       HIRED: "Embauché", REJECTED: "Non retenu", WITHDRAWN: "Retirée", PRESENTED: "Présenté",
       OPEN: "Ouvert", NEW: "Nouveau", IN_PROGRESS: "En cours", CLOSED: "Clos",
@@ -611,14 +647,97 @@
       PUBLISHED: "Publié", DRAFT: "Brouillon"
     };
     var en = {
-      SENT: "Sent", SUBMITTED: "Sent", REVIEW: "Under review", UNDER_REVIEW: "Under review",
+      SENT: "Sent", SUBMITTED: "Sent", RECEIVED: "Received", REVIEW: "Under review", UNDER_REVIEW: "Under review",
       SHORTLISTED: "Shortlist", PRESELECT: "Shortlist", INTERVIEW: "Interview",
+      SECOND_INTERVIEW: "Second interview", OFFER_SENT: "Offer",
       SCHEDULED: "Scheduled", CONFIRMED: "Confirmed", CANCELLED: "Cancelled", COMPLETED: "Done",
       HIRED: "Hired", REJECTED: "Not retained", WITHDRAWN: "Withdrawn", PRESENTED: "Presented",
       OPEN: "Open", NEW: "New", IN_PROGRESS: "In progress", CLOSED: "Closed",
       PAID: "Paid", PENDING: "Pending", OVERDUE: "Overdue", PUBLISHED: "Published", DRAFT: "Draft"
     };
     return (isEn ? en : fr)[key] || s || "";
+  }
+  function optionLabel(item) {
+    if (!item) return "";
+    if (typeof item === "string") return item;
+    return isEn ? (item.label_en || item.label || item.value) : (item.label || item.value);
+  }
+  function optionValue(item) {
+    if (!item) return "";
+    return typeof item === "string" ? item : (item.value || item.label || "");
+  }
+  function choiceSelect(name, items, selected, allLabel) {
+    var html = '<select name="' + name + '"><option value="">' + esc(allLabel == null ? t.anyChoice : allLabel) + "</option>";
+    var seen = {};
+    (items || []).forEach(function (item) {
+      var val = optionValue(item);
+      if (!val || seen[val]) return;
+      seen[val] = true;
+      html += '<option value="' + esc(val) + '"' + (String(selected || "") === String(val) ? " selected" : "") + ">" + esc(optionLabel(item)) + "</option>";
+    });
+    if (selected && !seen[String(selected)]) {
+      html += '<option value="' + esc(selected) + '" selected>' + esc(selected) + "</option>";
+    }
+    return html + "</select>";
+  }
+  function labeledChoice(name, label, items, selected, allLabel) {
+    return "<label>" + esc(label) + "</label>" + choiceSelect(name, items, selected, allLabel);
+  }
+  function jobOpts() {
+    return state.jobOptions || {};
+  }
+  function loadJobOptions() {
+    if (state.jobOptions) return Promise.resolve(state.jobOptions);
+    return api.request("/jobs/options").then(function (json) {
+      state.jobOptions = dataOf(json) || {};
+      return state.jobOptions;
+    }).catch(function () {
+      state.jobOptions = state.jobOptions || {};
+      return state.jobOptions;
+    });
+  }
+  function jobFacts(job) {
+    if (!job) return "";
+    var rows = [
+      [t.jobCity, job.location],
+      [t.jobSector, job.sector],
+      [t.contract, job.contract_type],
+      [t.schedule, job.schedule],
+      [t.shift, job.shift],
+      [t.workMode, job.work_mode],
+      [t.languages, job.languages],
+      [t.overtime, job.overtime],
+      [t.license, job.driver_license],
+      [t.union, job.unionized],
+      [t.travel, job.travel],
+      [t.salary, job.salary_display],
+      [t.experienceLevel, job.experience_level],
+      [t.jobEducation, job.education_required],
+      [t.jobCerts, job.certifications],
+      [t.jobStart, job.start_date],
+      [t.jobOpenings, job.openings && job.openings > 1 ? String(job.openings) : ""],
+      [t.benefits, job.benefits]
+    ].filter(function (row) { return row[1]; });
+    if (!rows.length) return "";
+    return '<dl class="tn-facts">' + rows.map(function (row) {
+      return "<div><dt>" + esc(row[0]) + "</dt><dd>" + esc(row[1]) + "</dd></div>";
+    }).join("") + "</dl>";
+  }
+  function appTracker(app, mini) {
+    var tracker = (app && app.tracker) || {};
+    var steps = tracker.steps || [];
+    if (!steps.length) return "";
+    var html = '<ol class="tn-tracker' + (mini ? " is-mini" : "") + '">';
+    steps.forEach(function (step) {
+      html += '<li class="is-' + esc(step.state || "todo") + '"><b>' + esc(statusLabel(step.key)) + "</b>";
+      if (!mini && step.at) html += '<span>' + esc(when(step.at)) + "</span>";
+      html += "</li>";
+    });
+    html += "</ol>";
+    if (tracker.outcome) {
+      html += '<p class="tn-status">' + esc(statusLabel(tracker.outcome)) + "</p>";
+    }
+    return html;
   }
   function personName(row) {
     return (((row && row.first_name) || "") + " " + ((row && row.last_name) || "")).trim();
@@ -821,7 +940,7 @@
   function jobCard(job) {
     if (!job) return "";
     return '<a class="tn-job" href="#/job/' + encodeURIComponent(job.slug || job.id) + '"><h3>' + esc(job.title) + "</h3>" +
-      '<p class="tn-meta">' + esc([job.location, job.sector || job.employment_type, job.salary || job.salary_display].filter(Boolean).join(" · ")) + "</p></a>";
+      '<p class="tn-meta">' + esc([job.location, job.shift, job.schedule, job.contract_type || job.sector, job.salary || job.salary_display].filter(Boolean).join(" · ")) + "</p></a>";
   }
   function quickLinks(items) {
     return '<div class="tn-quick">' + items.map(function (it) {
@@ -888,14 +1007,19 @@
   }
 
   function jobsView() {
+    var o = jobOpts();
     return "<h1 class=\"tn-title\">" + esc(t.jobs) + "</h1>" +
       '<form class="tn-search" data-search-jobs>' +
       '<input name="q" placeholder="' + esc(t.search) + '" value="' + esc(state.query || "") + '" enterkeyhint="search">' +
       '<button type="submit">' + esc(t.go) + "</button>" +
       '<div class="tn-filters">' +
-      '<input name="location" placeholder="' + esc(t.jobCity) + '" value="' + esc(state.jobCity || "") + '">' +
-      '<input name="sector" placeholder="' + esc(t.jobSector) + '" value="' + esc(state.jobSector || "") + '">' +
-      '<input name="contract_type" placeholder="' + esc(t.contract) + '" value="' + esc(state.jobContract || "") + '">' +
+      choiceSelect("location", o.locations, state.jobCity, t.jobCity) +
+      choiceSelect("sector", o.sectors, state.jobSector, t.jobSector) +
+      choiceSelect("contract_type", o.contract_types, state.jobContract, t.contract) +
+      choiceSelect("shift", o.shifts, state.jobShift, t.shift) +
+      choiceSelect("schedule", o.schedules, state.jobSchedule, t.schedule) +
+      choiceSelect("work_mode", o.work_modes, state.jobWorkMode, t.workMode) +
+      choiceSelect("experience", o.experience_levels, state.jobExperience, t.experienceLevel) +
       "</div></form>" +
       '<div class="tn-grid">' + (state.jobs.map(jobCard).join("") || '<div class="tn-empty">' + esc(t.emptyJobs) + "</div>") + "</div>";
   }
@@ -903,11 +1027,13 @@
   function jobView() {
     var job = state.job;
     if (!job) return '<div class="tn-empty">' + esc(t.loading) + "</div>";
-    var body = (job.description || "").slice(0, 900);
+    var body = (job.description || job.qualifications || "").slice(0, 900);
     var saved = !!(job.saved || (state.saved || []).some(function (row) { return (row.id || (row.job && row.job.id)) === job.id; }));
     return '<a class="tn-back" href="#/jobs">' + esc(t.back) + "</a><h1 class=\"tn-title\">" + esc(job.title) + "</h1>" +
-      '<p class="tn-meta">' + esc([job.location, job.sector, job.contract_type, job.salary_display].filter(Boolean).join(" · ")) + "</p>" +
-      '<div class="tn-card"><p>' + esc(body) + "</p></div>" + flash() +
+      jobFacts(job) +
+      (body ? '<div class="tn-card"><p>' + esc(body) + "</p></div>" : "") +
+      (job.benefits ? '<div class="tn-card"><p>' + esc(t.benefits) + " · " + esc(job.benefits) + "</p></div>" : "") +
+      flash() +
       '<form class="tn-form" data-apply-form data-job="' + esc(job.id) + '"><label>' + esc(t.cover) + '</label><textarea name="cover_note" maxlength="800"></textarea>' +
       '<button class="tn-btn" type="submit">' + esc(t.apply) + "</button></form>" +
       '<button type="button" class="tn-btn tn-btn-ghost" data-save-job="' + esc(job.id) + '">' + esc(saved ? t.unsaveJob : t.saveJob) + "</button>";
@@ -947,18 +1073,26 @@
   function needView() {
     var r = route();
     var n = r.id ? (state.need || {}) : {};
+    var o = jobOpts();
     if (r.id && !state.need) return backTo("#/hiring") + '<div class="tn-empty">' + esc(t.loading) + "</div>";
     return backTo("#/hiring") + "<h1 class=\"tn-title\">" + esc(r.id ? t.editNeed : t.addNeed) + "</h1><p class=\"tn-lead\">" + esc(t.needLead) + "</p>" + flash() +
       '<form class="tn-form" data-hiring' + (r.id ? ' data-id="' + esc(r.id) + '"' : "") + '><label>' + esc(t.needTitle) +
       '</label><input name="title" required placeholder="' + esc(t.needTitle) + '" value="' + esc(n.title || "") + '">' +
-      "<label>" + esc(t.location) + '</label><input name="location" autocomplete="address-level2" value="' + esc(n.location || "") + '">' +
-      "<label>" + esc(t.sector) + '</label><input name="sector" value="' + esc(n.sector || "") + '">' +
-      "<label>" + esc(t.contract) + '</label><input name="contract_type" value="' + esc(n.contract_type || "") + '">' +
-      "<label>" + esc(t.experienceLevel) + '</label><input name="experience_level" value="' + esc(n.experience_level || "") + '">' +
+      labeledChoice("location", t.location, o.locations, n.location, t.pick) +
+      labeledChoice("sector", t.sector, o.sectors, n.sector, t.pick) +
+      labeledChoice("contract_type", t.contract, o.contract_types, n.contract_type, t.pick) +
+      labeledChoice("experience_level", t.experienceLevel, o.experience_levels, n.experience_level, t.pick) +
+      labeledChoice("shift", t.shift, o.shifts, n.shift, t.pick) +
+      labeledChoice("schedule", t.schedule, o.schedules, n.schedule, t.pick) +
+      labeledChoice("work_mode", t.workMode, o.work_modes, n.work_mode, t.pick) +
+      labeledChoice("languages", t.languages, o.languages, n.languages, t.pick) +
+      labeledChoice("overtime", t.overtime, o.overtime, n.overtime, t.pick) +
+      labeledChoice("driver_license", t.license, o.driver_licenses, n.driver_license, t.pick) +
+      labeledChoice("unionized", t.union, o.union_status, n.unionized, t.pick) +
+      labeledChoice("travel", t.travel, o.travel, n.travel, t.pick) +
       "<label>" + esc(t.seats) + '</label><input name="seats" type="number" min="1" value="' + esc(n.seats || 1) + '">' +
       "<label>" + esc(t.startDate) + '</label><input name="start_date" type="date" value="' + esc(n.start_date || "") + '">' +
       "<label>" + esc(t.skills) + '</label><input name="skills" value="' + esc(n.skills || "") + '">' +
-      "<label>" + esc(t.languages) + '</label><input name="languages" value="' + esc(n.languages || "") + '">' +
       "<label>" + esc(t.salary) + '</label><input name="salary_display" value="' + esc(n.salary_display || "") + '">' +
       "<label>" + esc(t.notes) + '</label><textarea name="notes" placeholder="' + esc(t.notes) + '">' + esc(n.notes || "") + "</textarea>" +
       '<button class="tn-btn" type="submit">' + esc(r.id ? t.save : t.sendNeed) + "</button></form>";
@@ -999,10 +1133,12 @@
     }), "#/me");
   }
   function alertsView() {
+    var o = jobOpts();
     return backTo("#/me") + "<h1 class=\"tn-title\">" + esc(t.alerts) + "</h1><p class=\"tn-lead\">" + esc(t.emptyAlerts) + "</p>" + flash() +
       '<form class="tn-form" data-alert><label>' + esc(t.alertKeywords) + '</label><input name="keywords" required>' +
-      "<label>" + esc(t.city) + '</label><input name="city">' +
-      "<label>" + esc(t.sector) + '</label><input name="sector">' +
+      labeledChoice("city", t.city, o.locations, "", t.pick) +
+      labeledChoice("sector", t.sector, o.sectors, "", t.pick) +
+      labeledChoice("contract_type", t.contract, o.contract_types, "", t.pick) +
       '<button class="tn-btn" type="submit">' + esc(t.createAlert) + "</button></form>" +
       '<div class="tn-grid tn-stack">' + ((state.alerts || []).map(function (row) {
         return '<div class="tn-job"><h3>' + esc(row.keywords || row.city || t.alerts) + '</h3><p class="tn-meta">' +
@@ -1030,6 +1166,7 @@
     return backTo("#/inbox") + "<h1 class=\"tn-title\">" + esc(personName(cand) || t.presentedFile) + "</h1>" +
       '<p class="tn-meta">' + esc([cand.title, cand.city, job.title].filter(Boolean).join(" · ")) + "</p>" +
       '<span class="tn-status">' + esc(statusLabel(a.status)) + "</span>" + flash() +
+      appTracker(a) +
       (cand.skills ? '<div class="tn-card"><p>' + esc(cand.skills) + "</p></div>" : "") +
       (a.cover_note ? '<div class="tn-card"><p>' + esc(a.cover_note) + "</p></div>" : "") +
       '<a class="tn-btn tn-btn-ghost" href="#/messages">' + esc(t.messages) + "</a>";
@@ -1057,28 +1194,26 @@
     var a = state.application;
     if (!a) return '<div class="tn-empty">' + esc(t.loading) + "</div>";
     var job = a.job || {};
-    var hist = (a.history || []).map(function (h) {
-      return '<p class="tn-meta">' + esc(when(h.created_at) + " · " + statusLabel(h.new_status || "")) + "</p>";
-    }).join("");
     return backTo("#/apps") + "<h1 class=\"tn-title\">" + esc(job.title || t.appDetail) + "</h1>" +
-      '<p class="tn-meta">' + esc([job.location, statusLabel(a.status)].filter(Boolean).join(" · ")) + "</p>" + flash() +
+      '<p class="tn-meta">' + esc([job.location, job.shift, job.schedule, statusLabel(a.status)].filter(Boolean).join(" · ")) + "</p>" + flash() +
+      appTracker(a) +
       (a.cover_note ? '<div class="tn-card"><p>' + esc(a.cover_note) + "</p></div>" : "") +
-      "<h2 class=\"tn-section\">" + esc(t.history) + "</h2>" + (hist || '<div class="tn-empty">' + esc(t.emptyApps) + "</div>") +
       (a.status === "WITHDRAWN" ? "" : '<button type="button" class="tn-btn tn-btn-ghost" data-withdraw="' + esc(a.id) + '">' + esc(t.withdraw) + "</button>");
   }
   function companyView() {
     var c = state.company || {};
+    var o = jobOpts();
     return backTo("#/me") + "<h1 class=\"tn-title\">" + esc(t.companyProfile) + "</h1><p class=\"tn-lead\">" + esc(t.companyLead) + "</p>" + flash() +
       '<form class="tn-form" data-company data-id="' + esc(c.id || "") + '"><label>' + esc(t.company) +
       '</label><input name="name" value="' + esc(c.name || "") + '" required>' +
-      "<label>" + esc(t.city) + '</label><input name="city" value="' + esc(c.city || "") + '">' +
-      "<label>" + esc(t.sector) + '</label><input name="sector" value="' + esc(c.sector || "") + '">' +
+      labeledChoice("city", t.city, o.locations, c.city, t.pick) +
+      labeledChoice("sector", t.sector, o.sectors, c.sector, t.pick) +
       "<label>" + esc(t.address) + '</label><input name="address" value="' + esc(c.address || "") + '">' +
-      "<label>" + esc(t.country) + '</label><input name="country" value="' + esc(c.country || "Canada") + '">' +
+      labeledChoice("country", t.country, o.countries, c.country || "Canada", t.pick) +
       "<label>" + esc(t.website) + '</label><input name="website" value="' + esc(c.website || "") + '" inputmode="url">' +
       "<label>" + esc(t.email) + '</label><input name="email" type="email" value="' + esc(c.email || "") + '">' +
       "<label>" + esc(t.phone) + '</label><input name="phone" value="' + esc(c.phone || "") + '" inputmode="tel">' +
-      "<label>" + esc(t.size) + '</label><input name="size_label" value="' + esc(c.size_label || "") + '">' +
+      labeledChoice("size_label", t.size, o.company_sizes, c.size_label, t.pick) +
       "<label>" + esc(t.legalName) + '</label><input name="legal_name" value="' + esc(c.legal_name || "") + '">' +
       "<label>" + esc(t.linkedin) + '</label><input name="linkedin_url" value="' + esc(c.linkedin_url || "") + '">' +
       "<label>" + esc(t.description) + '</label><textarea name="description">' + esc(c.description || "") + "</textarea>" +
@@ -1128,7 +1263,8 @@
       '<div class="tn-grid">' + (state.apps.map(function (a) {
         var job = a.job || {};
         return '<a class="tn-job" href="#/app/' + encodeURIComponent(a.id) + '"><h3>' + esc(job.title || t.apps) +
-          '</h3><p class="tn-meta">' + esc(job.location || "") + '</p><span class="tn-status">' + esc(statusLabel(a.status)) + "</span></a>";
+          '</h3><p class="tn-meta">' + esc(job.location || "") + '</p><span class="tn-status">' + esc(statusLabel(a.status)) + "</span>" +
+          appTracker(a, true) + "</a>";
       }).join("") || '<div class="tn-empty">' + esc(t.emptyApps) + "</div>") + "</div>";
   }
   function profileView() {
@@ -1152,19 +1288,20 @@
       "<label>" + esc(t.last) + '</label><input name="last_name" value="' + esc(u.last_name || "") + '" autocomplete="family-name">' +
       "<label>" + esc(t.phone) + '</label><input name="phone" value="' + esc(u.phone || p.phone || "") + '" inputmode="tel">' +
       "<label>" + esc(t.address) + '</label><input name="address" value="' + esc(p.address || "") + '" autocomplete="street-address">' +
-      "<label>" + esc(t.city) + '</label><input name="city" value="' + esc(p.city || "") + '" autocomplete="address-level2">' +
-      "<label>" + esc(t.province) + '</label><input name="province" value="' + esc(p.province || "") + '">' +
-      "<label>" + esc(t.country) + '</label><input name="country" value="' + esc(p.country || "Canada") + '">' +
+      labeledChoice("city", t.city, jobOpts().locations, p.city, t.pick) +
+      labeledChoice("province", t.province, jobOpts().provinces, p.province || "Québec", t.pick) +
+      labeledChoice("country", t.country, jobOpts().countries, p.country || "Canada", t.pick) +
       "<label>" + esc(t.birth) + '</label><input name="birth_date" type="date" value="' + esc(p.birth_date || "") + '">' +
       "<label>" + esc(t.title) + '</label><input name="title" value="' + esc(p.title || "") + '">' +
-      "<label>" + esc(t.sector) + '</label><input name="sector" value="' + esc(p.sector || "") + '">' +
+      labeledChoice("sector", t.sector, jobOpts().sectors, p.sector, t.pick) +
       "<label>" + esc(t.experience) + '</label><input name="years_experience" type="number" min="0" value="' + esc(p.years_experience || "") + '">' +
       "<label>" + esc(t.skills) + '</label><input name="skills" value="' + esc(p.skills || "") + '">' +
-      "<label>" + esc(t.languages) + '</label><input name="languages" value="' + esc(p.languages || "") + '">' +
-      "<label>" + esc(t.availability) + '</label><input name="availability" value="' + esc(p.availability || "") + '">' +
-      "<label>" + esc(t.contract) + '</label><input name="contract_type" value="' + esc(p.contract_type || "") + '">' +
+      labeledChoice("languages", t.languages, jobOpts().languages, p.languages, t.pick) +
+      labeledChoice("availability", t.availability, jobOpts().availability, p.availability, t.pick) +
+      labeledChoice("contract_type", t.contract, jobOpts().contract_types, p.contract_type, t.pick) +
+      labeledChoice("shift_preference", t.shiftPref, jobOpts().shifts, p.shift_preference, t.pick) +
+      labeledChoice("mobility", t.mobility, jobOpts().mobility, p.mobility, t.pick) +
       "<label>" + esc(t.salary) + '</label><input name="desired_salary_min" type="number" value="' + esc(p.desired_salary_min || "") + '">' +
-      "<label>" + esc(t.mobility) + '</label><input name="mobility" value="' + esc(p.mobility || "") + '">' +
       "<label>" + esc(t.bio) + '</label><textarea name="bio">' + esc(p.bio || "") + "</textarea>" +
       '<button class="tn-btn" type="submit">' + esc(t.save) + "</button></form>" +
       listBlockMini(t.experience, p.experiences, t.expHint, "data-exp",
@@ -1294,13 +1431,21 @@
     if (extra.location != null) state.jobCity = extra.location;
     if (extra.sector != null) state.jobSector = extra.sector;
     if (extra.contract_type != null) state.jobContract = extra.contract_type;
-    var key = "jobs:" + (state.query || "") + ":" + (state.jobCity || "") + ":" + (state.jobSector || "") + ":" + (state.jobContract || "");
+    if (extra.shift != null) state.jobShift = extra.shift;
+    if (extra.schedule != null) state.jobSchedule = extra.schedule;
+    if (extra.work_mode != null) state.jobWorkMode = extra.work_mode;
+    if (extra.experience != null) state.jobExperience = extra.experience;
+    var key = "jobs:" + [state.query, state.jobCity, state.jobSector, state.jobContract, state.jobShift, state.jobSchedule, state.jobWorkMode, state.jobExperience].join(":");
     if (isFresh(key) && state.jobs && state.jobs.length) return Promise.resolve();
     return api.jobs({
       q: state.query || "",
       location: state.jobCity || "",
       sector: state.jobSector || "",
       contract_type: state.jobContract || "",
+      shift: state.jobShift || "",
+      schedule: state.jobSchedule || "",
+      work_mode: state.jobWorkMode || "",
+      experience: state.jobExperience || "",
       page_size: 20,
       sort: "published_at"
     }).then(function (json) {
@@ -1392,7 +1537,7 @@
     if (!syncHash()) return Promise.resolve();
     render();
     var r = route();
-    var pending = [loadSessionData()];
+    var pending = [loadSessionData(), loadJobOptions()];
     if (state.user && isCandidate() && (r.name === "home" || r.name === "jobs")) {
       var haveMatches = !!(state.dash && (state.dash.matches || []).length);
       if (r.name === "jobs" || !haveMatches) pending.push(loadJobs(state.query));
@@ -1610,7 +1755,11 @@
       loadJobs(fd.get("q") != null ? fd.get("q") : state.query, {
         location: fd.get("location") != null ? fd.get("location") : state.jobCity,
         sector: fd.get("sector") != null ? fd.get("sector") : state.jobSector,
-        contract_type: fd.get("contract_type") != null ? fd.get("contract_type") : state.jobContract
+        contract_type: fd.get("contract_type") != null ? fd.get("contract_type") : state.jobContract,
+        shift: fd.get("shift") != null ? fd.get("shift") : state.jobShift,
+        schedule: fd.get("schedule") != null ? fd.get("schedule") : state.jobSchedule,
+        work_mode: fd.get("work_mode") != null ? fd.get("work_mode") : state.jobWorkMode,
+        experience: fd.get("experience") != null ? fd.get("experience") : state.jobExperience
       }).then(function () { go("#/jobs"); render(); });
     } else if (form.matches("[data-login]")) {
       e.preventDefault();
@@ -1687,7 +1836,7 @@
           city: d.city, province: d.province, country: d.country, address: d.address, birth_date: d.birth_date,
           title: d.title, sector: d.sector, skills: d.skills,
           bio: d.bio, languages: d.languages, availability: d.availability, contract_type: d.contract_type,
-          mobility: d.mobility,
+          mobility: d.mobility, shift_preference: d.shift_preference,
           years_experience: d.years_experience ? Number(d.years_experience) : null,
           desired_salary_min: d.desired_salary_min ? Number(d.desired_salary_min) : null
         })

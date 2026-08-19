@@ -1078,6 +1078,22 @@ def employer_need_fields(lang="fr"):
             <input name="localisation" placeholder="City, region, country or remote">
             <label>Contract type</label>
             <select name="contrat">{contracts}</select>
+            <label>Shift</label>
+            <select name="quart">
+              <option value="">Select</option>
+              <option>Day shift</option>
+              <option>Evening shift</option>
+              <option>Night shift</option>
+              <option>Rotating shifts</option>
+              <option>Weekend</option>
+            </select>
+            <label>Hours</label>
+            <select name="horaire">
+              <option value="">Select</option>
+              <option>Full-time</option>
+              <option>Part-time</option>
+              <option>On call</option>
+            </select>
             <label>What we should know</label>
             <textarea name="message" required placeholder="Responsibilities, must-have skills, experience, urgency, anything that will shape the search"></textarea>
         """
@@ -1103,6 +1119,22 @@ def employer_need_fields(lang="fr"):
             <input name="localisation" placeholder="Ville, région, pays ou télétravail">
             <label>Type de contrat</label>
             <select name="contrat">{contracts}</select>
+            <label>Quart</label>
+            <select name="quart">
+              <option value="">Choisir</option>
+              <option>Quart de jour</option>
+              <option>Quart de soir</option>
+              <option>Quart de nuit</option>
+              <option>Quarts rotatifs</option>
+              <option>Fin de semaine</option>
+            </select>
+            <label>Horaire</label>
+            <select name="horaire">
+              <option value="">Choisir</option>
+              <option>Temps plein</option>
+              <option>Temps partiel</option>
+              <option>Sur appel</option>
+            </select>
             <label>Ce que nous devons savoir</label>
             <textarea name="message" required placeholder="Responsabilités, compétences indispensables, expérience, urgence, tout ce qui orientera la recherche"></textarea>
         """
@@ -1153,6 +1185,35 @@ def job_search_filters(lang="fr"):
             <option value="debutant">Entry-level</option>
             <option value="intermediaire">Mid-level</option>
             <option value="senior">Senior</option>
+          </select>
+        </label>
+        <label class="tl-filter">
+          <span>Shift</span>
+          <select id="job-shift">
+            <option value="">Any shift</option>
+            <option>Day shift</option>
+            <option>Evening shift</option>
+            <option>Night shift</option>
+            <option>Rotating shifts</option>
+            <option>Weekend</option>
+          </select>
+        </label>
+        <label class="tl-filter">
+          <span>Hours</span>
+          <select id="job-schedule">
+            <option value="">Any hours</option>
+            <option>Full-time</option>
+            <option>Part-time</option>
+            <option>On call</option>
+          </select>
+        </label>
+        <label class="tl-filter">
+          <span>Workplace</span>
+          <select id="job-mode">
+            <option value="">Any workplace</option>
+            <option>On-site</option>
+            <option>Hybrid</option>
+            <option>Remote</option>
           </select>
         </label>
         <label class="tl-filter">
@@ -1224,6 +1285,35 @@ def job_search_filters(lang="fr"):
             <option value="debutant">Débutant</option>
             <option value="intermediaire">Intermédiaire</option>
             <option value="senior">Senior</option>
+          </select>
+        </label>
+        <label class="tl-filter">
+          <span>Quart</span>
+          <select id="job-shift">
+            <option value="">Tous les quarts</option>
+            <option>Quart de jour</option>
+            <option>Quart de soir</option>
+            <option>Quart de nuit</option>
+            <option>Quarts rotatifs</option>
+            <option>Fin de semaine</option>
+          </select>
+        </label>
+        <label class="tl-filter">
+          <span>Horaire</span>
+          <select id="job-schedule">
+            <option value="">Tous les horaires</option>
+            <option>Temps plein</option>
+            <option>Temps partiel</option>
+            <option>Sur appel</option>
+          </select>
+        </label>
+        <label class="tl-filter">
+          <span>Présence</span>
+          <select id="job-mode">
+            <option value="">Toutes les présences</option>
+            <option>Sur place</option>
+            <option>Hybride</option>
+            <option>Télétravail</option>
           </select>
         </label>
         <label class="tl-filter">
@@ -1410,6 +1500,36 @@ def _job_icon(cat):
     return JOB_CAT_ICON.get(cat, "fa-briefcase")
 
 
+JOB_SHIFT_BY_SLUG = {
+    "operateur-production": ("Quarts rotatifs", "Rotating shifts"),
+    "journalier-usine": ("Quart de soir", "Evening shift"),
+    "electromecanicien": ("Quarts rotatifs", "Rotating shifts"),
+    "infirmier": ("Quarts rotatifs", "Rotating shifts"),
+    "vendeur": ("Quart de jour", "Day shift"),
+}
+
+JOB_MODE_BY_SLUG = {
+    "developpeur": ("Hybride", "Hybrid"),
+    "comptable": ("Hybride", "Hybrid"),
+    "ingenieur": ("Hybride", "Hybrid"),
+    "coordonnateur-logistique": ("Hybride", "Hybrid"),
+    "responsable-rh": ("Hybride", "Hybrid"),
+    "specialiste-marketing": ("Hybride", "Hybrid"),
+}
+
+
+def job_offer_traits(slug, lang="fr"):
+    shift = JOB_SHIFT_BY_SLUG.get(slug, ("Quart de jour", "Day shift"))
+    mode = JOB_MODE_BY_SLUG.get(slug, ("Sur place", "On-site"))
+    i = 1 if lang == "en" else 0
+    return {
+        "shift": shift[i],
+        "schedule": "Full-time" if lang == "en" else "Temps plein",
+        "work_mode": mode[i],
+        "languages": "French and English" if lang == "en" and slug in {"coordonnateur-logistique", "developpeur", "responsable-rh"} else ("Français et anglais" if slug in {"coordonnateur-logistique", "developpeur", "responsable-rh"} else ("French" if lang == "en" else "Français")),
+    }
+
+
 def _skill_chips(skills):
     parts = [s.strip() for s in (skills or "").replace(";", ",").split(",") if s.strip()]
     if not parts:
@@ -1424,6 +1544,10 @@ def _job_href(slug, lang="fr"):
 
 def job_card_html(job, lang="fr"):
     slug, title, city, cat, typ, sal, shift, req, sector, skills, exp = job
+    traits = job_offer_traits(slug, lang)
+    quart = traits["shift"]
+    horaire = traits["schedule"]
+    mode = traits["work_mode"]
     href = _job_href(slug, lang)
     exp_label = JOB_EXP_LABEL[lang].get(exp, exp)
     cat_label = JOB_CAT_LABEL[lang].get(cat, cat)
@@ -1432,13 +1556,13 @@ def job_card_html(job, lang="fr"):
     if lang == "en":
         cta = "View opening and apply"
         via = "Via Talendus"
-        loc_l, pay_l, time_l, profile_l = "Location", "Pay", "Schedule", "Profile we look for"
+        loc_l, pay_l, time_l, shift_l, profile_l = "Location", "Pay", "Hours", "Shift", "Profile we look for"
     else:
         cta = "Voir l'offre et postuler"
         via = "Via Talendus"
-        loc_l, pay_l, time_l, profile_l = "Lieu", "Rémunération", "Horaire", "Profil recherché"
+        loc_l, pay_l, time_l, shift_l, profile_l = "Lieu", "Rémunération", "Horaire", "Quart", "Profil recherché"
     return f'''
-    <a class="tl-job-card" href="{href}" aria-label="{cta} : {title}" data-job="{title} {city} {cat} {typ} {sal} {shift} {sector} {skills} {exp}" data-city="{city}" data-cat="{cat}" data-type="{typ}" data-shift="{shift}" data-salary="{sal}" data-sector="{sector}" data-skills="{skills}" data-exp="{exp}">
+    <a class="tl-job-card" href="{href}" aria-label="{cta} : {title}" data-job="{title} {city} {cat} {typ} {sal} {horaire} {quart} {mode} {sector} {skills} {exp}" data-city="{city}" data-cat="{cat}" data-type="{typ}" data-shift="{quart}" data-schedule="{horaire}" data-mode="{mode}" data-salary="{sal}" data-sector="{sector}" data-skills="{skills}" data-exp="{exp}">
       <div class="tl-job-card-banner">
         <span class="tl-job-card-icon" aria-hidden="true"><i class="fa-solid {icon}"></i></span>
         <div class="tl-job-card-banner-text">
@@ -1455,7 +1579,8 @@ def job_card_html(job, lang="fr"):
         <dl class="tl-job-facts-mini">
           <div><dt>{loc_l}</dt><dd>{city}</dd></div>
           <div><dt>{pay_l}</dt><dd>{sal}</dd></div>
-          <div><dt>{time_l}</dt><dd>{shift}</dd></div>
+          <div><dt>{time_l}</dt><dd>{horaire}</dd></div>
+          <div><dt>{shift_l}</dt><dd>{quart}</dd></div>
         </dl>
         <p class="tl-job-excerpt-label">{profile_l}</p>
         <p class="tl-job-excerpt">{req}</p>
@@ -1548,6 +1673,11 @@ def _apply_form_html(slug, lang="fr"):
 
 def job_detail_html(job, related_html, lang="fr"):
     slug, title, city, cat, typ, sal, shift, req, sector, skills, exp = job
+    traits = job_offer_traits(slug, lang)
+    quart = traits["shift"]
+    horaire = traits["schedule"]
+    mode = traits["work_mode"]
+    langs = traits["languages"]
     exp_label = JOB_EXP_LABEL[lang].get(exp, exp)
     cat_label = JOB_CAT_LABEL[lang].get(cat, cat)
     sector_label = JOB_CAT_LABEL[lang].get(sector, sector)
@@ -1573,7 +1703,8 @@ def job_detail_html(job, related_html, lang="fr"):
       <ul class="tl-job-hero-tags">
         <li>{typ}</li>
         <li>{exp_label}</li>
-        <li>{shift}</li>
+        <li>{horaire}</li>
+        <li>{quart}</li>
         <li>Via Talendus</li>
       </ul>
     </header>
@@ -1582,7 +1713,10 @@ def job_detail_html(job, related_html, lang="fr"):
         <ul class="tl-job-facts">
           <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Location</span><strong>{city}</strong></li>
           <li><i class="fa-solid fa-sack-dollar" aria-hidden="true"></i><span>Pay</span><strong>{sal}</strong></li>
-          <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Schedule</span><strong>{shift}</strong></li>
+          <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Hours</span><strong>{horaire}</strong></li>
+          <li><i class="fa-solid fa-moon" aria-hidden="true"></i><span>Shift</span><strong>{quart}</strong></li>
+          <li><i class="fa-solid fa-building" aria-hidden="true"></i><span>Workplace</span><strong>{mode}</strong></li>
+          <li><i class="fa-solid fa-language" aria-hidden="true"></i><span>Languages</span><strong>{langs}</strong></li>
           <li><i class="fa-solid fa-file-contract" aria-hidden="true"></i><span>Type</span><strong>{typ}</strong></li>
           <li><i class="fa-solid fa-signal" aria-hidden="true"></i><span>Experience</span><strong>{exp_label}</strong></li>
           <li><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>Category</span><strong>{cat_label}</strong></li>
@@ -1595,7 +1729,7 @@ def job_detail_html(job, related_html, lang="fr"):
           {chips}
           <h2>What the mandate includes</h2>
           <ul>
-            <li>{typ} role, {shift.lower()}</li>
+            <li>{typ} role, {horaire.lower()}, {quart.lower()}</li>
             <li>Pay: {sal}</li>
             <li>A Talendus consultant screens your file and calls you</li>
             <li>If it fits, we present you and stay with you through the next steps</li>
@@ -1645,7 +1779,8 @@ def job_detail_html(job, related_html, lang="fr"):
       <ul class="tl-job-hero-tags">
         <li>{typ}</li>
         <li>{exp_label}</li>
-        <li>{shift}</li>
+        <li>{horaire}</li>
+        <li>{quart}</li>
         <li>Via Talendus</li>
       </ul>
     </header>
@@ -1654,7 +1789,10 @@ def job_detail_html(job, related_html, lang="fr"):
         <ul class="tl-job-facts">
           <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Lieu</span><strong>{city}</strong></li>
           <li><i class="fa-solid fa-sack-dollar" aria-hidden="true"></i><span>Rémunération</span><strong>{sal}</strong></li>
-          <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Horaire</span><strong>{shift}</strong></li>
+          <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Horaire</span><strong>{horaire}</strong></li>
+          <li><i class="fa-solid fa-moon" aria-hidden="true"></i><span>Quart</span><strong>{quart}</strong></li>
+          <li><i class="fa-solid fa-building" aria-hidden="true"></i><span>Présence</span><strong>{mode}</strong></li>
+          <li><i class="fa-solid fa-language" aria-hidden="true"></i><span>Langues</span><strong>{langs}</strong></li>
           <li><i class="fa-solid fa-file-contract" aria-hidden="true"></i><span>Type</span><strong>{typ}</strong></li>
           <li><i class="fa-solid fa-signal" aria-hidden="true"></i><span>Expérience</span><strong>{exp_label}</strong></li>
           <li><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>Catégorie</span><strong>{cat_label}</strong></li>
@@ -1667,7 +1805,7 @@ def job_detail_html(job, related_html, lang="fr"):
           {chips}
           <h2>Ce que comprend le mandat</h2>
           <ul>
-            <li>Poste {typ.lower()}, {shift.lower()}</li>
+            <li>Poste {typ.lower()}, {horaire.lower()}, {quart.lower()}</li>
             <li>Rémunération : {sal}</li>
             <li>Un conseiller Talendus étudie votre dossier et vous rappelle</li>
             <li>Si ça colle, nous vous présentons et restons avec vous pour la suite</li>
