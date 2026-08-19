@@ -241,3 +241,24 @@ def test_mobile_app_tracks_applications_and_offers_choice_filters():
     assert "Quart de jour" in jobs
     en_jobs = (ROOT / "en" / "jobs.html").read_text(encoding="utf-8")
     assert 'id="job-shift"' in en_jobs
+
+
+def test_mobile_app_switches_language_and_hides_status_codes():
+    js = (ROOT / "assets" / "js" / "mobile-app.js").read_text(encoding="utf-8")
+    for needle in (
+        "talendus_locale",
+        "function applyLocale",
+        "function langSwitch",
+        'data-locale="fr-CA"',
+        'data-locale="en-CA"',
+        'WITHDRAWN: "Retirée"',
+        "var EN =",
+        "var FR =",
+    ):
+        assert needle in js
+    css = (ROOT / "assets" / "css" / "mobile-app.css").read_text(encoding="utf-8")
+    assert ".tn-langs" in css
+    assert ".tn-lang.is-on" in css
+    account = (ROOT / "assets" / "js" / "account.js").read_text(encoding="utf-8")
+    assert "toUpperCase()" in account
+    assert 'WITHDRAWN:' in account

@@ -108,6 +108,7 @@ def test_apply_and_duplicate_and_status_and_notifications(client):
     assert applied.status_code == 200
     application_id = applied.json()["data"]["id"]
     assert applied.json()["data"]["status"] == "SUBMITTED"
+    assert applied.json()["data"]["status_label"] == "Candidature envoyée"
 
     dup = client.post("/api/applications", headers=cand_headers, json={"job_id": job["id"]})
     assert dup.status_code == 409
@@ -136,6 +137,9 @@ def test_apply_and_duplicate_and_status_and_notifications(client):
     notifs2 = client.get("/api/notifications", headers=cand_headers)
     titles = [n["title"] for n in notifs2.json()["data"]]
     assert any("candidature" in t.lower() or "Mise à jour" in t for t in titles)
+    bodies = " ".join((n.get("message") or "") for n in notifs2.json()["data"])
+    assert "SHORTLISTED" not in bodies
+    assert "Présélection" in bodies
 
 
 def test_idor_application_and_candidate_profile(client):

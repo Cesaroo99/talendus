@@ -17,6 +17,7 @@ from app.services.audit import audit
 from app.services.auth import ensure_candidate
 from app.services.email import send_email
 from app.services.jobs import assert_job_open, get_public_job
+from app.services.labels import application_status_label
 from app.services.notifications import notify, portal_href
 from app.site_jobs import open_site_job_for_apply
 from app.services.pipeline import stage_for, tracker_for
@@ -262,10 +263,11 @@ def change_status(db: Session, user: User, application_id: str, status: Applicat
         ntype = NotificationType.APPLICATION_REJECTED
     elif status == ApplicationStatus.INTERVIEW:
         ntype = NotificationType.INTERVIEW_INVITE
+    shown = application_status_label(status, candidate_user)
     notify(
         db, candidate_user, ntype,
         "Mise à jour de candidature",
-        f"{application.job.title} : {status.value}",
+        f"{application.job.title} : {shown}",
         href=portal_href(candidate_user, "application", application.id),
     )
     template = "interview" if status == ApplicationStatus.INTERVIEW else "application_status"
@@ -273,7 +275,7 @@ def change_status(db: Session, user: User, application_id: str, status: Applicat
         db, candidate_user.email,
         EmailType.INTERVIEW_INVITE if status == ApplicationStatus.INTERVIEW else EmailType.APPLICATION_STATUS,
         template,
-        name=candidate_user.first_name, job_title=application.job.title, status=status.value, comment=comment or "",
+        name=candidate_user.first_name, job_title=application.job.title, status=shown, comment=comment or "",
     )
     from app.integrations.hooks import maybe_send_whatsapp
 
@@ -281,7 +283,7 @@ def change_status(db: Session, user: User, application_id: str, status: Applicat
     maybe_send_whatsapp(
         recipient=candidate_user.phone,
         template=wa_template,
-        variables={"name": candidate_user.first_name or "", "job": application.job.title, "status": status.value},
+        variables={"name": candidate_user.first_name or "", "job": application.job.title, "status": shown},
     )
     audit(
         db,
@@ -329,6 +331,7 @@ def serialize_application(row: Application, viewer: User | None = None) -> dict:
     payload = {
         "id": row.id,
         "status": row.status.value,
+        "status_label": application_status_label(row.status, viewer),
         "cover_note": row.cover_note,
         "source": row.source,
         "match_score": row.match_score,

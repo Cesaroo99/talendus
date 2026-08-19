@@ -290,6 +290,7 @@
       }).join("") + "</ul>";
     }
     function statusLabel(s) {
+      var key = String(s || "").toUpperCase().replace(/-/g, "_");
       var map = {
         SUBMITTED: isEn ? "Submitted" : "Candidature envoyée",
         RECEIVED: isEn ? "Received" : "Reçue",
@@ -333,9 +334,17 @@
         INTERVIEWS: isEn ? "Talendus interviews" : "Entretiens Talendus",
         SHORTLIST: isEn ? "Shortlist ready" : "Shortlist disponible",
         CLIENT_REVIEW: isEn ? "Profiles to review" : "Profils à consulter",
-        HIRING: isEn ? "Your decision" : "Décision en cours"
+        HIRING: isEn ? "Your decision" : "Décision en cours",
+        TALENDUS: "Talendus",
+        CLIENT: isEn ? "Client" : "Client",
+        PHONE: isEn ? "Phone" : "Téléphone",
+        VIDEO: isEn ? "Video" : "Visio",
+        ONSITE: isEn ? "On site" : "Sur place",
+        OFFER: isEn ? "Offer" : "Offre"
       };
-      return map[s] || s;
+      if (map[key]) return map[key];
+      if (/^[A-Z0-9_]+$/.test(key) && key.length > 1) return "";
+      return s || "";
     }
     function fmtDate(v) {
       if (!v) return "-";

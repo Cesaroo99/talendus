@@ -556,6 +556,28 @@ body.tn-gated .tn-tabs { display: none; }
   font-size: .78rem;
   font-weight: 700;
 }
+.tn-langs {
+  display: flex;
+  gap: 8px;
+  margin: 16px 0 4px;
+}
+.tn-lang {
+  flex: 1;
+  border: 1px solid var(--tn-line);
+  background: #fff;
+  color: var(--tn-navy);
+  border-radius: 999px;
+  padding: 10px 12px;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+.tn-lang.is-on {
+  background: var(--tn-navy);
+  border-color: var(--tn-navy);
+  color: #fff;
+}
+.tn-gate .tn-langs { margin-top: 22px; }
 .tn-quick {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
