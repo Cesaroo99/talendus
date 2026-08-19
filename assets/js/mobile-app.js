@@ -136,7 +136,68 @@
     emptyPipeline: "No file presented yet.",
     appDetail: "Application",
     history: "Follow-up",
-    space: "Your space"
+    space: "Your space",
+    profile: "My profile",
+    documents: "Resume",
+    account: "Account",
+    helpTitle: "Talk to Talendus",
+    emailUs: "Email",
+    phone: "Phone",
+    bio: "Summary",
+    experience: "Experience",
+    languages: "Languages",
+    sector: "Industry",
+    contract: "Contract type",
+    salary: "Desired pay",
+    mobility: "Mobility",
+    province: "Province",
+    photo: "Photo",
+    add: "Add",
+    remove: "Remove",
+    education: "Education",
+    certs: "Certifications",
+    school: "School",
+    diploma: "Diploma",
+    companyName: "Company",
+    roleHeld: "Role",
+    years: "Years",
+    downloadCv: "Download",
+    noCv: "No resume yet. Add one so a consultant can study your path.",
+    cvReady: "Resume on file",
+    groupFile: "Your file",
+    groupFollow: "Follow-up",
+    groupHire: "Hiring",
+    groupCompany: "Company",
+    groupAccount: "Account",
+    seeAll: "See all",
+    nextStep: "To do now",
+    myNeeds: "Your hiring needs",
+    addNeed: "New need",
+    seats: "Openings",
+    website: "Website",
+    address: "Address",
+    size: "Company size",
+    description: "Description",
+    candidate: "Candidate",
+    presentedFile: "Presented file",
+    jobCity: "City",
+    jobSector: "Industry",
+    moreFilters: "Narrow the search",
+    contactUs: "A consultant answers. Call, write or send a WhatsApp.",
+    photoHint: "A photo helps your consultant recognise you.",
+    expHint: "Add roles you have held. It helps us match you.",
+    inboxEmpty: "No file presented yet. Hand us a need, we come back with people.",
+    appsHint: "Each application is followed by your consultant.",
+    profileLead: "The clearer this is, the faster a consultant can call you for a real mandate.",
+    companyLead: "Keep the company file up to date so we brief the right people.",
+    needLead: "Describe the role. A consultant opens the search and calls you back.",
+    country: "Country",
+    birth: "Date of birth",
+    startDate: "Start date",
+    experienceLevel: "Experience level",
+    editNeed: "Edit this need",
+    legalName: "Legal name",
+    linkedin: "LinkedIn"
   } : {
     home: "Accueil",
     jobs: "Offres",
@@ -267,7 +328,68 @@
     emptyPipeline: "Aucun dossier présenté pour le moment.",
     appDetail: "Candidature",
     history: "Suivi",
-    space: "Votre espace"
+    space: "Votre espace",
+    profile: "Mon profil",
+    documents: "CV",
+    account: "Compte",
+    helpTitle: "Parler à Talendus",
+    emailUs: "Courriel",
+    phone: "Téléphone",
+    bio: "Résumé",
+    experience: "Expérience",
+    languages: "Langues",
+    sector: "Secteur",
+    contract: "Type de contrat",
+    salary: "Salaire souhaité",
+    mobility: "Mobilité",
+    province: "Province",
+    photo: "Photo",
+    add: "Ajouter",
+    remove: "Retirer",
+    education: "Formations",
+    certs: "Certifications",
+    school: "École",
+    diploma: "Diplôme",
+    companyName: "Entreprise",
+    roleHeld: "Poste",
+    years: "Années",
+    downloadCv: "Télécharger",
+    noCv: "Aucun CV pour le moment. Ajoutez-en un pour qu’un conseiller étudie votre parcours.",
+    cvReady: "CV au dossier",
+    groupFile: "Votre dossier",
+    groupFollow: "Suivi",
+    groupHire: "Recrutement",
+    groupCompany: "Entreprise",
+    groupAccount: "Compte",
+    seeAll: "Tout voir",
+    nextStep: "À faire maintenant",
+    myNeeds: "Vos besoins",
+    addNeed: "Nouveau besoin",
+    seats: "Postes",
+    website: "Site web",
+    address: "Adresse",
+    size: "Taille",
+    description: "Description",
+    candidate: "Candidat",
+    presentedFile: "Dossier présenté",
+    jobCity: "Ville",
+    jobSector: "Secteur",
+    moreFilters: "Préciser la recherche",
+    contactUs: "Un conseiller vous répond. Appelez, écrivez ou envoyez un WhatsApp.",
+    photoHint: "Une photo aide votre conseiller à vous reconnaître.",
+    expHint: "Ajoutez les postes que vous avez tenus. Ça nous aide à vous placer.",
+    inboxEmpty: "Aucun dossier présenté pour le moment. Confiez un besoin, on revient avec des profils.",
+    appsHint: "Chaque candidature est suivie par votre conseiller.",
+    profileLead: "Plus c’est clair, plus vite un conseiller peut vous rappeler pour un vrai mandat.",
+    companyLead: "Tenez la fiche à jour pour qu’on briefe les bonnes personnes.",
+    needLead: "Décrivez le poste. Un conseiller ouvre la recherche et vous rappelle.",
+    country: "Pays",
+    birth: "Date de naissance",
+    startDate: "Date de début",
+    experienceLevel: "Niveau d’expérience",
+    editNeed: "Modifier ce besoin",
+    legalName: "Raison sociale",
+    linkedin: "LinkedIn"
   };
 
   var state = {
@@ -293,6 +415,10 @@
     company: null,
     application: null,
     query: "",
+    jobCity: "",
+    jobSector: "",
+    jobContract: "",
+    need: null,
     notice: "",
     error: "",
     mismatch: ""
@@ -343,19 +469,21 @@
   }
   function canonicalize(name, id) {
     var aliases = {
-      dashboard: "home", home: "home", profile: "me", documents: "me", cv: "me", resume: "me",
+      dashboard: "home", home: "home", profile: "profile", documents: "cv", cv: "cv", resume: "cv",
       settings: "settings", account: "settings", applications: "apps", candidatures: "apps",
       application: "app", apps: "apps", saved: "saved", sauvegardees: "saved", alerts: "alerts",
       alertes: "alerts", notifications: "notifs", notifs: "notifs", entretiens: "interviews",
       interviews: "interviews", pipeline: "pipeline", ats: "pipeline", company: "company",
       billing: "invoices", facturation: "invoices", invoices: "invoices", contrats: "contracts",
       mandats: "contracts", contracts: "contracts", hiring: "hiring", messages: "messages",
-      me: "me", jobs: "jobs", job: "job", inbox: "inbox"
+      me: "me", jobs: "jobs", job: "job", inbox: "inbox", help: "help", aide: "help",
+      need: "need", "hiring-new": "need", "job-new": "need"
     };
     name = aliases[name] || name;
     if (isEmployer()) {
-      if (name === "jobs" || name === "job" || name === "job-edit" || name === "job-new") name = "hiring";
+      if (name === "jobs" || name === "job" || name === "job-edit") name = "hiring";
       if (name === "apps" || name === "app") name = "inbox";
+      if (name === "profile" || name === "cv") name = "company";
     }
     return { name: name, id: id || "" };
   }
@@ -369,8 +497,8 @@
   }
   function allowedRoute(name) {
     if (!state.user) return name === "welcome" || name === "login" || name === "register";
-    if (isCandidate()) return ["home", "jobs", "job", "apps", "app", "messages", "me", "notifs", "alerts", "saved", "interviews", "settings"].indexOf(name) !== -1;
-    if (isEmployer()) return ["home", "hiring", "messages", "me", "notifs", "interviews", "inbox", "invoices", "contracts", "pipeline", "company", "settings"].indexOf(name) !== -1;
+    if (isCandidate()) return ["home", "jobs", "job", "apps", "app", "messages", "me", "notifs", "alerts", "saved", "interviews", "settings", "profile", "cv", "help"].indexOf(name) !== -1;
+    if (isEmployer()) return ["home", "hiring", "need", "messages", "me", "notifs", "interviews", "inbox", "invoices", "contracts", "pipeline", "company", "settings", "help"].indexOf(name) !== -1;
     return name === "home" || name === "me" || name === "messages" || name === "settings";
   }
   function portalHash(href) {
@@ -413,6 +541,56 @@
   function helpLine() {
     return '<p class="tn-help">' + esc(t.help) + ' <a href="' + telHref() + '">' + esc(state.contact.phone_display || t.call) + "</a></p>";
   }
+  function statusLabel(s) {
+    var key = String(s || "").toUpperCase();
+    var fr = {
+      SENT: "Envoyée", SUBMITTED: "Envoyée", REVIEW: "À l’étude", UNDER_REVIEW: "À l’étude",
+      SHORTLISTED: "Présélection", PRESELECT: "Présélection", INTERVIEW: "Entretien",
+      SCHEDULED: "Planifié", CONFIRMED: "Confirmé", CANCELLED: "Annulé", COMPLETED: "Terminé",
+      HIRED: "Embauché", REJECTED: "Non retenu", WITHDRAWN: "Retirée", PRESENTED: "Présenté",
+      OPEN: "Ouvert", NEW: "Nouveau", IN_PROGRESS: "En cours", CLOSED: "Clos",
+      PAID: "Payée", PENDING: "En attente", OVERDUE: "En retard", SENT_INV: "Envoyée",
+      PUBLISHED: "Publié", DRAFT: "Brouillon"
+    };
+    var en = {
+      SENT: "Sent", SUBMITTED: "Sent", REVIEW: "Under review", UNDER_REVIEW: "Under review",
+      SHORTLISTED: "Shortlist", PRESELECT: "Shortlist", INTERVIEW: "Interview",
+      SCHEDULED: "Scheduled", CONFIRMED: "Confirmed", CANCELLED: "Cancelled", COMPLETED: "Done",
+      HIRED: "Hired", REJECTED: "Not retained", WITHDRAWN: "Withdrawn", PRESENTED: "Presented",
+      OPEN: "Open", NEW: "New", IN_PROGRESS: "In progress", CLOSED: "Closed",
+      PAID: "Paid", PENDING: "Pending", OVERDUE: "Overdue", PUBLISHED: "Published", DRAFT: "Draft"
+    };
+    return (isEn ? en : fr)[key] || s || "";
+  }
+  function personName(row) {
+    return (((row && row.first_name) || "") + " " + ((row && row.last_name) || "")).trim();
+  }
+  function initialsOf(user) {
+    user = user || state.user || {};
+    var a = String(user.first_name || "").charAt(0);
+    var b = String(user.last_name || "").charAt(0);
+    return ((a + b) || String(user.email || "?").charAt(0)).toUpperCase();
+  }
+  function identityHead() {
+    var u = state.user || {};
+    var name = personName(u) || t.me;
+    return '<div class="tn-identity"><div class="tn-avatar" aria-hidden="true">' + esc(initialsOf(u)) + "</div>" +
+      "<div><h1 class=\"tn-title\">" + esc(name) + '</h1><p class="tn-meta">' + esc(u.email || "") + "</p></div></div>";
+  }
+  function menuGroup(title, items) {
+    return "<h2 class=\"tn-section\">" + esc(title) + "</h2>" +
+      '<nav class="tn-menu">' + items.map(function (it) {
+        var badge = it[2] ? '<span class="tn-menu-badge">' + esc(it[2]) + "</span>" : "";
+        return '<a href="' + it[0] + '"><span>' + esc(it[1]) + "</span>" + badge +
+          '<span class="tn-chevron" aria-hidden="true">' + icons.chevron + "</span></a>";
+      }).join("") + "</nav>";
+  }
+  function backTo(href) {
+    return '<a class="tn-back" href="' + href + '">' + esc(t.back) + "</a>";
+  }
+  function statLink(href, value, label) {
+    return '<a class="tn-stat" href="' + href + '"><b>' + esc(value) + "</b><span>" + esc(label) + "</span></a>";
+  }
   function when(iso) {
     if (!iso) return "";
     try { return new Date(iso).toLocaleString(isEn ? "en-CA" : "fr-CA", { dateStyle: "medium", timeStyle: "short" }); }
@@ -451,7 +629,7 @@
 
   function topBar() {
     var unread = unreadCount();
-    return '<header class="tn-top"><div class="tn-brand">' + brandOrbit("is-sm") + "<span>Talendus</span></div>" +
+    return '<header class="tn-top"><a class="tn-brand" href="#/home">' + brandOrbit("is-sm") + "<span>Talendus</span></a>" +
       '<div class="tn-top-actions"><a class="tn-icon-btn" href="#/notifs" aria-label="' + esc(t.notifs) + '">' + icons.bell +
       (unread ? '<span class="tn-badge">' + unread + "</span>" : "") + "</a>" +
       '<a class="tn-icon-btn" href="' + telHref() + '" aria-label="' + esc(t.call) + '">' + icons.phone + "</a></div></header>";
@@ -473,9 +651,14 @@
       { href: "#/messages", key: "messages", label: t.messages, icon: icons.msg },
       { href: "#/me", key: "me", label: t.me, icon: icons.me }
     ];
+    var msgUnread = ((state.dash && state.dash.stats && state.dash.stats.unread_messages) || 0);
     return '<nav class="tn-tabs" aria-label="Talendus">' + items.map(function (item) {
-      var on = r === item.key || (item.key === "jobs" && r === "job") || (item.key === "hiring" && (r === "pipeline" || r === "inbox")) || (item.key === "me" && (r === "settings" || r === "company" || r === "apps" || r === "app"));
-      return '<a href="' + item.href + '" class="' + (on ? "is-on" : "") + '">' + item.icon + "<span>" + esc(item.label) + "</span></a>";
+      var on = r === item.key;
+      if (item.key === "jobs") on = on || r === "job";
+      if (item.key === "hiring") on = on || r === "need" || r === "pipeline" || r === "inbox";
+      if (item.key === "me") on = on || ["settings", "company", "apps", "app", "profile", "cv", "saved", "alerts", "interviews", "help", "invoices", "contracts"].indexOf(r) !== -1;
+      var badge = (item.key === "messages" && msgUnread) ? '<span class="tn-badge">' + msgUnread + "</span>" : "";
+      return '<a href="' + item.href + '" class="' + (on ? "is-on" : "") + '">' + item.icon + badge + "<span>" + esc(item.label) + "</span></a>";
     }).join("") + "</nav>";
   }
 
@@ -547,32 +730,42 @@
     var dash = state.dash || {};
     var stats = dash.stats || {};
     if (isEmployer()) {
-      var unsigned = (state.contracts || []).filter(function (c) { return !c.signed; }).length;
-      var due = (state.invoices || []).filter(function (inv) { return inv.status !== "PAID" && inv.status !== "CANCELLED"; }).length;
+      var needs = state.hiring || [];
       return '<p class="tn-kicker">' + esc(t.space) + "</p><h1 class=\"tn-title\">" + esc(t.hello) + (name ? " " + esc(name) : "") + "</h1>" +
-        '<p class="tn-lead">' + esc(t.mediateEmployer) + "</p>" + flash() +
+        flash() +
+        '<div class="tn-stats">' +
+        statLink("#/hiring", stats.active_jobs || needs.length || 0, t.hiring) +
+        statLink("#/inbox", stats.applications || 0, t.presented) +
+        statLink("#/interviews", stats.interviews || 0, t.interviews) +
+        statLink("#/notifs", stats.unread_notifications || unreadCount(), t.notifs) +
+        "</div>" +
+        '<a class="tn-btn" href="#/need">' + esc(t.addNeed) + "</a>" +
         interviewCard() +
-        '<div class="tn-stats"><div class="tn-stat"><b>' + esc(stats.active_jobs || state.hiring.length || 0) + "</b><span>" + esc(t.hiring) + "</span></div>" +
-        '<div class="tn-stat"><b>' + esc(state.inbox.length || stats.applications || 0) + "</b><span>" + esc(t.presented) + "</span></div>" +
-        '<div class="tn-stat"><b>' + esc(due) + "</b><span>" + esc(t.toPay) + "</span></div>" +
-        '<div class="tn-stat"><b>' + esc(unsigned) + "</b><span>" + esc(t.unsigned) + "</span></div></div>" +
-        '<a class="tn-btn" href="#/hiring">' + esc(t.newNeed) + "</a>" +
-        quickLinks([["#/inbox", t.presented], ["#/pipeline", t.pipeline], ["#/invoices", t.invoices], ["#/contracts", t.contracts]]) +
+        (needs.length ? "<h2 class=\"tn-section\">" + esc(t.myNeeds) + "</h2><div class=\"tn-grid\">" +
+          needs.slice(0, 3).map(function (row) {
+            return '<a class="tn-job" href="#/need/' + encodeURIComponent(row.id) + '"><h3>' + esc(row.title) + '</h3><p class="tn-meta">' +
+              esc([row.location, statusLabel(row.status_label || row.status)].filter(Boolean).join(" · ")) + "</p></a>";
+          }).join("") + "</div>" : "") +
         dashNotifs();
     }
     var pct = (dash.completeness && dash.completeness.percent) || 0;
     var matches = (dash.matches || []).map(function (row) { return jobCard(row.job || row); }).join("");
+    var next = "";
+    if (pct < 80) {
+      next = '<section class="tn-card tn-file-card"><p class="tn-kicker">' + esc(t.nextStep) + "</p>" +
+        '<p class="tn-meta">' + esc(t.completeness) + " · " + pct + "%</p>" +
+        '<div class="tn-progress"><span style="width:' + pct + '%"></span></div>' +
+        missingChips() +
+        '<a class="tn-btn" href="#/profile">' + esc(t.completeFile) + "</a></section>";
+    }
     return '<p class="tn-kicker">' + esc(t.space) + "</p><h1 class=\"tn-title\">" + esc(t.hello) + (name ? " " + esc(name) : "") + "</h1>" +
-      '<p class="tn-note">' + esc(t.mediate) + "</p>" + flash() +
-      '<section class="tn-card tn-file-card"><p class="tn-meta">' + esc(t.completeness) + " · " + pct + "%</p>" +
-      '<div class="tn-progress"><span style="width:' + pct + '%"></span></div>' +
-      missingChips() +
-      '<a class="tn-btn tn-btn-ghost" href="#/me">' + esc(t.completeFile) + "</a></section>" +
-      interviewCard() +
-      '<div class="tn-stats"><div class="tn-stat"><b>' + esc(stats.applications || 0) + "</b><span>" + esc(t.statsApps) + "</span></div>" +
-      '<div class="tn-stat"><b>' + esc(stats.interviews || 0) + "</b><span>" + esc(t.statsInterviews) + "</span></div>" +
-      '<div class="tn-stat"><b>' + esc(stats.saved_jobs || (state.saved || []).length) + "</b><span>" + esc(t.savedJobs) + "</span></div>" +
-      '<div class="tn-stat"><b>' + esc(stats.unread_notifications || unreadCount()) + "</b><span>" + esc(t.notifs) + "</span></div></div>" +
+      flash() + next + interviewCard() +
+      '<div class="tn-stats">' +
+      statLink("#/apps", stats.applications || 0, t.statsApps) +
+      statLink("#/interviews", stats.interviews || 0, t.statsInterviews) +
+      statLink("#/saved", stats.saved_jobs || (state.saved || []).length, t.savedJobs) +
+      statLink("#/notifs", stats.unread_notifications || unreadCount(), t.notifs) +
+      "</div>" +
       dashNotifs() +
       "<h2 class=\"tn-section\">" + esc(t.nextJob) + "</h2>" +
       '<div class="tn-grid">' + (matches || state.jobs.slice(0, 4).map(jobCard).join("") || '<div class="tn-empty">' + esc(t.emptyJobs) + "</div>") + "</div>" +
@@ -591,7 +784,14 @@
 
   function jobsView() {
     return "<h1 class=\"tn-title\">" + esc(t.jobs) + "</h1>" +
-      '<form class="tn-search" data-search-jobs><input name="q" placeholder="' + esc(t.search) + '" value="' + esc(state.query || "") + '" enterkeyhint="search"><button type="submit">' + esc(t.go) + "</button></form>" +
+      '<form class="tn-search" data-search-jobs>' +
+      '<input name="q" placeholder="' + esc(t.search) + '" value="' + esc(state.query || "") + '" enterkeyhint="search">' +
+      '<button type="submit">' + esc(t.go) + "</button>" +
+      '<div class="tn-filters">' +
+      '<input name="location" placeholder="' + esc(t.jobCity) + '" value="' + esc(state.jobCity || "") + '">' +
+      '<input name="sector" placeholder="' + esc(t.jobSector) + '" value="' + esc(state.jobSector || "") + '">' +
+      '<input name="contract_type" placeholder="' + esc(t.contract) + '" value="' + esc(state.jobContract || "") + '">' +
+      "</div></form>" +
       '<div class="tn-grid">' + (state.jobs.map(jobCard).join("") || '<div class="tn-empty">' + esc(t.emptyJobs) + "</div>") + "</div>";
   }
 
@@ -631,22 +831,40 @@
   }
 
   function hiringView() {
-    return "<h1 class=\"tn-title\">" + esc(t.newNeed) + "</h1><p class=\"tn-lead\">" + esc(t.hiringLead) + "</p>" + flash() +
-      '<form class="tn-form" data-hiring><label>' + esc(t.needTitle) + '</label><input name="title" required placeholder="' + esc(t.needTitle) + '">' +
-      "<label>" + esc(t.location) + '</label><input name="location" autocomplete="address-level2">' +
-      "<label>" + esc(t.notes) + '</label><textarea name="notes" placeholder="' + esc(t.notes) + '"></textarea>' +
-      '<button class="tn-btn" type="submit">' + esc(t.sendNeed) + "</button></form>" +
+    return "<h1 class=\"tn-title\">" + esc(t.myNeeds) + "</h1><p class=\"tn-lead\">" + esc(t.hiringLead) + "</p>" + flash() +
+      '<a class="tn-btn" href="#/need">' + esc(t.addNeed) + "</a>" +
       '<div class="tn-grid tn-stack">' + (state.hiring.map(function (row) {
-        return '<div class="tn-job"><h3>' + esc(row.title) + '</h3><p class="tn-meta">' + esc(row.location || "") + '</p><span class="tn-status">' + esc(row.status_label || row.status || "") + "</span></div>";
+        return '<a class="tn-job" href="#/need/' + encodeURIComponent(row.id) + '"><h3>' + esc(row.title) + '</h3><p class="tn-meta">' +
+          esc([row.location, row.sector, row.seats ? (row.seats + " " + t.seats) : ""].filter(Boolean).join(" · ")) +
+          '</p><span class="tn-status">' + esc(statusLabel(row.status_label || row.status)) + "</span></a>";
       }).join("") || '<div class="tn-empty">' + esc(t.emptyHiring) + "</div>") + "</div>";
   }
+  function needView() {
+    var r = route();
+    var n = r.id ? (state.need || {}) : {};
+    if (r.id && !state.need) return backTo("#/hiring") + '<div class="tn-empty">' + esc(t.loading) + "</div>";
+    return backTo("#/hiring") + "<h1 class=\"tn-title\">" + esc(r.id ? t.editNeed : t.addNeed) + "</h1><p class=\"tn-lead\">" + esc(t.needLead) + "</p>" + flash() +
+      '<form class="tn-form" data-hiring' + (r.id ? ' data-id="' + esc(r.id) + '"' : "") + '><label>' + esc(t.needTitle) +
+      '</label><input name="title" required placeholder="' + esc(t.needTitle) + '" value="' + esc(n.title || "") + '">' +
+      "<label>" + esc(t.location) + '</label><input name="location" autocomplete="address-level2" value="' + esc(n.location || "") + '">' +
+      "<label>" + esc(t.sector) + '</label><input name="sector" value="' + esc(n.sector || "") + '">' +
+      "<label>" + esc(t.contract) + '</label><input name="contract_type" value="' + esc(n.contract_type || "") + '">' +
+      "<label>" + esc(t.experienceLevel) + '</label><input name="experience_level" value="' + esc(n.experience_level || "") + '">' +
+      "<label>" + esc(t.seats) + '</label><input name="seats" type="number" min="1" value="' + esc(n.seats || 1) + '">' +
+      "<label>" + esc(t.startDate) + '</label><input name="start_date" type="date" value="' + esc(n.start_date || "") + '">' +
+      "<label>" + esc(t.skills) + '</label><input name="skills" value="' + esc(n.skills || "") + '">' +
+      "<label>" + esc(t.languages) + '</label><input name="languages" value="' + esc(n.languages || "") + '">' +
+      "<label>" + esc(t.salary) + '</label><input name="salary_display" value="' + esc(n.salary_display || "") + '">' +
+      "<label>" + esc(t.notes) + '</label><textarea name="notes" placeholder="' + esc(t.notes) + '">' + esc(n.notes || "") + "</textarea>" +
+      '<button class="tn-btn" type="submit">' + esc(r.id ? t.save : t.sendNeed) + "</button></form>";
+  }
 
-  function listBlock(title, empty, items) {
-    return "<h1 class=\"tn-title\">" + esc(title) + "</h1>" + flash() + '<div class="tn-grid">' +
+  function listBlock(title, empty, items, backHref) {
+    return (backHref ? backTo(backHref) : "") + "<h1 class=\"tn-title\">" + esc(title) + "</h1>" + flash() + '<div class="tn-grid">' +
       (items && items.length ? items.join("") : '<div class="tn-empty">' + esc(empty) + "</div>") + "</div>";
   }
   function notifsView() {
-    return "<h1 class=\"tn-title\">" + esc(t.notifs) + "</h1>" + flash() +
+    return backTo("#/home") + "<h1 class=\"tn-title\">" + esc(t.notifs) + "</h1>" + flash() +
       ((state.notifs || []).length ? '<button type="button" class="tn-btn tn-btn-ghost" data-read-all>' + esc(t.markAll) + "</button>" : "") +
       '<div class="tn-grid">' + ((state.notifs || []).map(function (n) {
         return '<button type="button" class="tn-job tn-notif' + (n.is_read ? "" : " is-unread") + '" data-open-notif="' +
@@ -662,19 +880,21 @@
           esc(row.id) + '">' + esc(t.confirmInterview) + '</button><button type="button" class="tn-btn tn-btn-ghost" data-int-status="CANCELLED" data-int-id="' +
           esc(row.id) + '">' + esc(t.cancelInterview) + "</button></div>";
       }
-      return '<div class="tn-job"><h3>' + esc(row.type_label || t.interviews) + "</h3><p class=\"tn-meta\">" +
-        esc([when(row.scheduled_at), row.location, row.status].filter(Boolean).join(" · ")) + "</p>" + actions + "</div>";
-    }));
+      var job = row.job || {};
+      return '<div class="tn-job"><h3>' + esc(job.title || row.type_label || t.interviews) + "</h3><p class=\"tn-meta\">" +
+        esc([when(row.scheduled_at), row.location, statusLabel(row.status)].filter(Boolean).join(" · ")) + "</p>" + actions + "</div>";
+    }), "#/me");
   }
   function savedView() {
     return listBlock(t.savedJobs, t.emptySaved, (state.saved || []).map(function (row) {
       return jobCard(row.job || row);
-    }));
+    }), "#/me");
   }
   function alertsView() {
-    return "<h1 class=\"tn-title\">" + esc(t.alerts) + "</h1><p class=\"tn-lead\">" + esc(t.emptyAlerts) + "</p>" + flash() +
+    return backTo("#/me") + "<h1 class=\"tn-title\">" + esc(t.alerts) + "</h1><p class=\"tn-lead\">" + esc(t.emptyAlerts) + "</p>" + flash() +
       '<form class="tn-form" data-alert><label>' + esc(t.alertKeywords) + '</label><input name="keywords" required>' +
       "<label>" + esc(t.city) + '</label><input name="city">' +
+      "<label>" + esc(t.sector) + '</label><input name="sector">' +
       '<button class="tn-btn" type="submit">' + esc(t.createAlert) + "</button></form>" +
       '<div class="tn-grid tn-stack">' + ((state.alerts || []).map(function (row) {
         return '<div class="tn-job"><h3>' + esc(row.keywords || row.city || t.alerts) + '</h3><p class="tn-meta">' +
@@ -683,13 +903,28 @@
       }).join("") || '<div class="tn-empty">' + esc(t.emptyAlerts) + "</div>") + "</div>";
   }
   function inboxView() {
-    return listBlock(t.presented, t.emptyApps, (state.inbox || []).map(function (a) {
+    var r = route();
+    if (r.id) return inboxDetail();
+    return listBlock(t.presented, t.inboxEmpty, (state.inbox || []).map(function (a) {
       var job = a.job || {};
       var cand = a.candidate || {};
-      var label = [cand.title, job.title || t.presented].filter(Boolean).join(" · ");
-      return '<a class="tn-job" href="#/inbox"><h3>' + esc(label) + '</h3><span class="tn-status">' +
-        esc(a.status || a.pipeline_stage || "") + "</span></a>";
-    }));
+      var label = personName(cand) || cand.title || t.candidate;
+      return '<a class="tn-job" href="#/inbox/' + encodeURIComponent(a.id) + '"><h3>' + esc(label) +
+        '</h3><p class="tn-meta">' + esc([cand.title, job.title, cand.city].filter(Boolean).join(" · ")) +
+        '</p><span class="tn-status">' + esc(statusLabel(a.status || a.pipeline_stage)) + "</span></a>";
+    }), "#/hiring");
+  }
+  function inboxDetail() {
+    var a = state.application;
+    if (!a) return '<div class="tn-empty">' + esc(t.loading) + "</div>";
+    var job = a.job || {};
+    var cand = a.candidate || {};
+    return backTo("#/inbox") + "<h1 class=\"tn-title\">" + esc(personName(cand) || t.presentedFile) + "</h1>" +
+      '<p class="tn-meta">' + esc([cand.title, cand.city, job.title].filter(Boolean).join(" · ")) + "</p>" +
+      '<span class="tn-status">' + esc(statusLabel(a.status)) + "</span>" + flash() +
+      (cand.skills ? '<div class="tn-card"><p>' + esc(cand.skills) + "</p></div>" : "") +
+      (a.cover_note ? '<div class="tn-card"><p>' + esc(a.cover_note) + "</p></div>" : "") +
+      '<a class="tn-btn tn-btn-ghost" href="#/messages">' + esc(t.messages) + "</a>";
   }
   function pipelineView() {
     var groups = {};
@@ -698,12 +933,15 @@
       (groups[key] = groups[key] || []).push(a);
     });
     var keys = Object.keys(groups);
-    if (!keys.length) return listBlock(t.pipeline, t.emptyPipeline, []);
-    return "<h1 class=\"tn-title\">" + esc(t.pipeline) + "</h1>" + flash() + keys.map(function (key) {
-      return "<h2 class=\"tn-section\">" + esc(key) + "</h2><div class=\"tn-grid\">" + groups[key].map(function (a) {
+    if (!keys.length) return listBlock(t.pipeline, t.emptyPipeline, [], "#/hiring");
+    return backTo("#/hiring") + "<h1 class=\"tn-title\">" + esc(t.pipeline) + "</h1>" + flash() + keys.map(function (key) {
+      return "<h2 class=\"tn-section\">" + esc(statusLabel(key) || key) + "</h2><div class=\"tn-grid\">" + groups[key].map(function (a) {
         var job = a.job || {};
-        return '<div class="tn-job"><h3>' + esc(job.title || t.presented) + '</h3><span class="tn-status">' +
-          esc(a.status || "") + "</span></div>";
+        var cand = a.candidate || {};
+        var label = personName(cand) || job.title || t.presented;
+        return '<a class="tn-job" href="#/inbox/' + encodeURIComponent(a.id) + '"><h3>' + esc(label) +
+          '</h3><p class="tn-meta">' + esc([cand.title, job.title].filter(Boolean).join(" · ")) +
+          '</p><span class="tn-status">' + esc(statusLabel(a.status || "")) + "</span></a>";
       }).join("") + "</div>";
     }).join("");
   }
@@ -712,21 +950,30 @@
     if (!a) return '<div class="tn-empty">' + esc(t.loading) + "</div>";
     var job = a.job || {};
     var hist = (a.history || []).map(function (h) {
-      return '<p class="tn-meta">' + esc(when(h.created_at) + " · " + (h.new_status || "")) + "</p>";
+      return '<p class="tn-meta">' + esc(when(h.created_at) + " · " + statusLabel(h.new_status || "")) + "</p>";
     }).join("");
-    return '<a class="tn-back" href="#/apps">' + esc(t.back) + "</a><h1 class=\"tn-title\">" + esc(job.title || t.appDetail) + "</h1>" +
-      '<p class="tn-meta">' + esc([job.location, a.status].filter(Boolean).join(" · ")) + "</p>" + flash() +
+    return backTo("#/apps") + "<h1 class=\"tn-title\">" + esc(job.title || t.appDetail) + "</h1>" +
+      '<p class="tn-meta">' + esc([job.location, statusLabel(a.status)].filter(Boolean).join(" · ")) + "</p>" + flash() +
       (a.cover_note ? '<div class="tn-card"><p>' + esc(a.cover_note) + "</p></div>" : "") +
       "<h2 class=\"tn-section\">" + esc(t.history) + "</h2>" + (hist || '<div class="tn-empty">' + esc(t.emptyApps) + "</div>") +
       (a.status === "WITHDRAWN" ? "" : '<button type="button" class="tn-btn tn-btn-ghost" data-withdraw="' + esc(a.id) + '">' + esc(t.withdraw) + "</button>");
   }
   function companyView() {
     var c = state.company || {};
-    return "<h1 class=\"tn-title\">" + esc(t.companyProfile) + "</h1>" + flash() +
+    return backTo("#/me") + "<h1 class=\"tn-title\">" + esc(t.companyProfile) + "</h1><p class=\"tn-lead\">" + esc(t.companyLead) + "</p>" + flash() +
       '<form class="tn-form" data-company data-id="' + esc(c.id || "") + '"><label>' + esc(t.company) +
       '</label><input name="name" value="' + esc(c.name || "") + '" required>' +
       "<label>" + esc(t.city) + '</label><input name="city" value="' + esc(c.city || "") + '">' +
-      "<label>" + esc(t.location) + '</label><input name="sector" value="' + esc(c.sector || "") + '">' +
+      "<label>" + esc(t.sector) + '</label><input name="sector" value="' + esc(c.sector || "") + '">' +
+      "<label>" + esc(t.address) + '</label><input name="address" value="' + esc(c.address || "") + '">' +
+      "<label>" + esc(t.country) + '</label><input name="country" value="' + esc(c.country || "Canada") + '">' +
+      "<label>" + esc(t.website) + '</label><input name="website" value="' + esc(c.website || "") + '" inputmode="url">' +
+      "<label>" + esc(t.email) + '</label><input name="email" type="email" value="' + esc(c.email || "") + '">' +
+      "<label>" + esc(t.phone) + '</label><input name="phone" value="' + esc(c.phone || "") + '" inputmode="tel">' +
+      "<label>" + esc(t.size) + '</label><input name="size_label" value="' + esc(c.size_label || "") + '">' +
+      "<label>" + esc(t.legalName) + '</label><input name="legal_name" value="' + esc(c.legal_name || "") + '">' +
+      "<label>" + esc(t.linkedin) + '</label><input name="linkedin_url" value="' + esc(c.linkedin_url || "") + '">' +
+      "<label>" + esc(t.description) + '</label><textarea name="description">' + esc(c.description || "") + "</textarea>" +
       '<button class="tn-btn" type="submit">' + esc(t.save) + "</button></form>";
   }
   function settingsView() {
@@ -734,7 +981,7 @@
     function check(name, label, on) {
       return '<label class="tn-check"><input type="checkbox" name="' + name + '"' + (on ? " checked" : "") + "> " + esc(label) + "</label>";
     }
-    return "<h1 class=\"tn-title\">" + esc(t.settings) + "</h1>" + flash() +
+    return backTo("#/me") + "<h1 class=\"tn-title\">" + esc(t.settings) + "</h1>" + flash() +
       '<form class="tn-form" data-password><label>' + esc(t.currentPass) + '</label><input name="current_password" type="password" required autocomplete="current-password">' +
       "<label>" + esc(t.newPass) + '</label><input name="new_password" type="password" required minlength="8" autocomplete="new-password">' +
       '<button class="tn-btn" type="submit">' + esc(t.changePass) + "</button></form>" +
@@ -751,14 +998,14 @@
     return listBlock(t.invoices, t.emptyInvoices, (state.invoices || []).map(function (inv) {
       var payable = inv.status === "SENT" || inv.status === "PENDING" || inv.status === "OVERDUE";
       return '<div class="tn-job"><h3>' + esc(inv.number || t.invoices) + "</h3><p class=\"tn-meta\">" +
-        esc(money(inv.amount) + " · " + (inv.status || "")) + '</p><div class="tn-row-actions">' +
+        esc(money(inv.amount) + " · " + statusLabel(inv.status || "")) + '</p><div class="tn-row-actions">' +
         (payable ? '<button type="button" class="tn-btn" data-pay="' + esc(inv.id) + '">' + esc(t.pay) + "</button>" : "") +
         '<button type="button" class="tn-btn tn-btn-ghost" data-pdf="invoices" data-id="' +
         esc(inv.id) + '">' + esc(t.downloadPdf) + "</button></div></div>";
-    }));
+    }), "#/me");
   }
   function contractsView() {
-    return "<h1 class=\"tn-title\">" + esc(t.contracts) + "</h1>" + flash() + '<div class="tn-grid">' +
+    return backTo("#/me") + "<h1 class=\"tn-title\">" + esc(t.contracts) + "</h1>" + flash() + '<div class="tn-grid">' +
       ((state.contracts || []).map(function (row) {
         return '<div class="tn-job"><h3>' + esc(row.document_name || row.type || t.contracts) + '</h3><p class="tn-meta">' +
           esc(row.signed ? t.signed : t.unsigned) + "</p>" +
@@ -767,30 +1014,96 @@
       }).join("") || '<div class="tn-empty">' + esc(t.emptyContracts) + "</div>") + "</div>";
   }
 
+  function appsView() {
+    return backTo("#/me") + "<h1 class=\"tn-title\">" + esc(t.apps) + "</h1><p class=\"tn-lead\">" + esc(t.appsHint) + "</p>" + flash() +
+      '<div class="tn-grid">' + (state.apps.map(function (a) {
+        var job = a.job || {};
+        return '<a class="tn-job" href="#/app/' + encodeURIComponent(a.id) + '"><h3>' + esc(job.title || t.apps) +
+          '</h3><p class="tn-meta">' + esc(job.location || "") + '</p><span class="tn-status">' + esc(statusLabel(a.status)) + "</span></a>";
+      }).join("") || '<div class="tn-empty">' + esc(t.emptyApps) + "</div>") + "</div>";
+  }
+  function profileView() {
+    var u = state.user || {};
+    var p = state.profile || {};
+    function listBlockMini(title, rows, emptyTxt, formAttrs, fields, delAttr) {
+      var items = (rows || []).map(function (row) {
+        return '<div class="tn-job"><h3>' + esc(row.role || row.diploma || row.name || "") + "</h3><p class=\"tn-meta\">" +
+          esc([row.company, row.school, row.issuer, row.years, row.year].filter(Boolean).join(" · ")) +
+          '</p><button type="button" class="tn-btn tn-btn-ghost" ' + delAttr + '="' + esc(row.id) + '">' + esc(t.remove) + "</button></div>";
+      }).join("");
+      return "<h2 class=\"tn-section\">" + esc(title) + "</h2>" + (items || '<p class="tn-meta">' + esc(emptyTxt) + "</p>") +
+        '<form class="tn-form" ' + formAttrs + ">" + fields + '<button class="tn-btn tn-btn-ghost" type="submit">' + esc(t.add) + "</button></form>";
+    }
+    return backTo("#/me") + "<h1 class=\"tn-title\">" + esc(t.profile) + "</h1><p class=\"tn-lead\">" + esc(t.profileLead) + "</p>" + flash() +
+      '<form class="tn-form" data-avatar><label>' + esc(t.photo) + '</label><p class="tn-meta">' + esc(t.photoHint) + "</p>" +
+      '<input type="file" name="file" accept="image/jpeg,image/png,image/webp">' +
+      '<button class="tn-btn tn-btn-ghost" type="submit">' + esc(t.save) + "</button></form>" +
+      '<form class="tn-form" data-profile>' +
+      "<label>" + esc(t.first) + '</label><input name="first_name" value="' + esc(u.first_name || "") + '" autocomplete="given-name">' +
+      "<label>" + esc(t.last) + '</label><input name="last_name" value="' + esc(u.last_name || "") + '" autocomplete="family-name">' +
+      "<label>" + esc(t.phone) + '</label><input name="phone" value="' + esc(u.phone || p.phone || "") + '" inputmode="tel">' +
+      "<label>" + esc(t.address) + '</label><input name="address" value="' + esc(p.address || "") + '" autocomplete="street-address">' +
+      "<label>" + esc(t.city) + '</label><input name="city" value="' + esc(p.city || "") + '" autocomplete="address-level2">' +
+      "<label>" + esc(t.province) + '</label><input name="province" value="' + esc(p.province || "") + '">' +
+      "<label>" + esc(t.country) + '</label><input name="country" value="' + esc(p.country || "Canada") + '">' +
+      "<label>" + esc(t.birth) + '</label><input name="birth_date" type="date" value="' + esc(p.birth_date || "") + '">' +
+      "<label>" + esc(t.title) + '</label><input name="title" value="' + esc(p.title || "") + '">' +
+      "<label>" + esc(t.sector) + '</label><input name="sector" value="' + esc(p.sector || "") + '">' +
+      "<label>" + esc(t.experience) + '</label><input name="years_experience" type="number" min="0" value="' + esc(p.years_experience || "") + '">' +
+      "<label>" + esc(t.skills) + '</label><input name="skills" value="' + esc(p.skills || "") + '">' +
+      "<label>" + esc(t.languages) + '</label><input name="languages" value="' + esc(p.languages || "") + '">' +
+      "<label>" + esc(t.availability) + '</label><input name="availability" value="' + esc(p.availability || "") + '">' +
+      "<label>" + esc(t.contract) + '</label><input name="contract_type" value="' + esc(p.contract_type || "") + '">' +
+      "<label>" + esc(t.salary) + '</label><input name="desired_salary_min" type="number" value="' + esc(p.desired_salary_min || "") + '">' +
+      "<label>" + esc(t.mobility) + '</label><input name="mobility" value="' + esc(p.mobility || "") + '">' +
+      "<label>" + esc(t.bio) + '</label><textarea name="bio">' + esc(p.bio || "") + "</textarea>" +
+      '<button class="tn-btn" type="submit">' + esc(t.save) + "</button></form>" +
+      listBlockMini(t.experience, p.experiences, t.expHint, "data-exp",
+        "<label>" + esc(t.companyName) + '</label><input name="company" required>' +
+        "<label>" + esc(t.roleHeld) + '</label><input name="role" required>' +
+        "<label>" + esc(t.years) + '</label><input name="years">', "data-del-exp") +
+      listBlockMini(t.education, p.education, "", "data-edu",
+        "<label>" + esc(t.school) + '</label><input name="school" required>' +
+        "<label>" + esc(t.diploma) + '</label><input name="diploma">', "data-del-edu") +
+      listBlockMini(t.certs, p.certifications, "", "data-cert",
+        "<label>" + esc(t.certs) + '</label><input name="name" required>', "data-del-cert");
+  }
+  function cvView() {
+    var p = state.profile || {};
+    var resumes = p.resumes || [];
+    return backTo("#/me") + "<h1 class=\"tn-title\">" + esc(t.documents) + "</h1>" + flash() +
+      '<form class="tn-form" data-cv><label>' + esc(t.cv) + '</label><input type="file" name="file" accept=".pdf,.doc,.docx,application/pdf,image/png,image/jpeg" required>' +
+      '<button class="tn-btn" type="submit">' + esc(t.upload) + "</button></form>" +
+      '<div class="tn-grid tn-stack">' + (resumes.map(function (r) {
+        return '<div class="tn-job"><h3>' + esc(r.original_name || t.cv) + '</h3><p class="tn-meta">' +
+          esc(r.is_primary ? t.cvReady : when(r.created_at)) + '</p><div class="tn-row-actions">' +
+          '<button type="button" class="tn-btn" data-dl-cv="' + esc(r.id) + '">' + esc(t.downloadCv) + "</button>" +
+          '<button type="button" class="tn-btn tn-btn-ghost" data-del-cv="' + esc(r.id) + '">' + esc(t.remove) + "</button></div></div>";
+      }).join("") || '<div class="tn-empty">' + esc(t.noCv) + "</div>") + "</div>";
+  }
+  function helpView() {
+    var mail = (state.contact && state.contact.email) || "info@talendus.ca";
+    return backTo("#/me") + "<h1 class=\"tn-title\">" + esc(t.helpTitle) + "</h1><p class=\"tn-lead\">" + esc(t.contactUs) + "</p>" +
+      '<div class="tn-help-actions">' +
+      '<a class="tn-btn" href="' + telHref() + '">' + esc(t.call) + " · " + esc(state.contact.phone_display || "") + "</a>" +
+      '<a class="tn-btn tn-btn-ghost" href="' + waHref() + '">' + esc(t.wa) + "</a>" +
+      '<a class="tn-btn tn-btn-ghost" href="mailto:' + esc(mail) + '">' + esc(t.emailUs) + " · " + esc(mail) + "</a></div>";
+  }
   function meView() {
-    var html = "<h1 class=\"tn-title\">" + esc(((state.user.first_name || "") + " " + (state.user.last_name || "")).trim() || t.me) + "</h1>" +
-      '<p class="tn-meta">' + esc(state.user.email || "") + "</p>" + flash();
+    var html = identityHead() + flash();
     if (isCandidate()) {
-      var p = state.profile || {};
-      html += '<p class="tn-note">' + esc(t.mediate) + "</p>" +
-        '<form class="tn-form" data-profile><label>' + esc(t.city) + '</label><input name="city" value="' + esc(p.city || "") + '" autocomplete="address-level2">' +
-        "<label>" + esc(t.title) + '</label><input name="title" value="' + esc(p.title || "") + '">' +
-        "<label>" + esc(t.skills) + '</label><input name="skills" value="' + esc(p.skills || "") + '">' +
-        "<label>" + esc(t.availability) + '</label><input name="availability" value="' + esc(p.availability || "") + '">' +
-        '<button class="tn-btn" type="submit">' + esc(t.save) + "</button></form>" +
-        '<form class="tn-form" data-cv><label>' + esc(t.cv) + '</label><input type="file" name="file" accept=".pdf,.doc,.docx,application/pdf">' +
-        '<button class="tn-btn tn-btn-ghost" type="submit">' + esc(t.upload) + "</button></form>" +
-        quickLinks([["#/apps", t.apps], ["#/saved", t.savedJobs], ["#/alerts", t.alerts], ["#/interviews", t.interviews], ["#/settings", t.settings]]) +
-        "<h2 class=\"tn-section\">" + esc(t.apps) + "</h2><div class=\"tn-grid\">" +
-        (state.apps.map(function (a) {
-          var job = a.job || {};
-          return '<a class="tn-job" href="#/app/' + encodeURIComponent(a.id) + '"><h3>' + esc(job.title || t.apps) + '</h3><span class="tn-status">' + esc(a.status || "") + "</span></a>";
-        }).join("") || '<div class="tn-empty">' + esc(t.emptyApps) + "</div>") + "</div>";
+      var pct = ((state.dash && state.dash.completeness && state.dash.completeness.percent) || 0);
+      html += '<p class="tn-meta">' + esc(t.completeness) + " · " + pct + "%</p>" +
+        '<div class="tn-progress"><span style="width:' + pct + '%"></span></div>' +
+        menuGroup(t.groupFile, [["#/profile", t.profile], ["#/cv", t.documents], ["#/apps", t.apps, state.apps.length || ""], ["#/saved", t.savedJobs], ["#/alerts", t.alerts]]) +
+        menuGroup(t.groupFollow, [["#/interviews", t.interviews], ["#/notifs", t.notifs, unreadCount() || ""], ["#/messages", t.messages]]) +
+        menuGroup(t.groupAccount, [["#/settings", t.settings], ["#/help", t.helpTitle]]);
     } else {
-      html += '<p class="tn-note">' + esc(t.mediateEmployer) + "</p>" +
-        '<p class="tn-meta">' + esc((state.dash && state.dash.company_name) || "") + "</p>" +
-        quickLinks([["#/inbox", t.presented], ["#/pipeline", t.pipeline], ["#/company", t.companyProfile], ["#/settings", t.settings]]) +
-        '<a class="tn-btn" href="#/hiring">' + esc(t.newNeed) + "</a>";
+      var stats = (state.dash && state.dash.stats) || {};
+      html += '<p class="tn-meta">' + esc((state.dash && state.dash.company_name) || "") + "</p>" +
+        menuGroup(t.groupHire, [["#/need", t.addNeed], ["#/hiring", t.myNeeds, (state.hiring || []).length || ""], ["#/inbox", t.presented, stats.applications || ""], ["#/pipeline", t.pipeline], ["#/interviews", t.interviews]]) +
+        menuGroup(t.groupCompany, [["#/company", t.companyProfile], ["#/contracts", t.contracts], ["#/invoices", t.invoices]]) +
+        menuGroup(t.groupAccount, [["#/settings", t.settings], ["#/help", t.helpTitle]]);
     }
     html += '<button class="tn-btn tn-btn-ghost tn-logout" data-logout>' + esc(t.logout) + "</button>";
     return html;
@@ -810,12 +1123,17 @@
       if (name === "interviews") return interviewsView();
       if (name === "saved") return savedView();
       if (name === "alerts") return alertsView();
+      if (name === "apps") return appsView();
       if (name === "app") return appView();
+      if (name === "profile") return profileView();
+      if (name === "cv") return cvView();
+      if (name === "help") return helpView();
       if (name === "settings") return settingsView();
-      if (name === "me" || name === "apps") return meView();
+      if (name === "me") return meView();
       return homeView();
     }
     if (name === "hiring") return hiringView();
+    if (name === "need") return needView();
     if (name === "messages") return messagesView();
     if (name === "notifs") return notifsView();
     if (name === "interviews") return interviewsView();
@@ -825,6 +1143,7 @@
     if (name === "contracts") return contractsView();
     if (name === "company") return companyView();
     if (name === "settings") return settingsView();
+    if (name === "help") return helpView();
     if (name === "me") return meView();
     return homeView();
   }
@@ -859,10 +1178,21 @@
   }
 
   function loadJobs(q) {
-    state.query = q || "";
-    var key = "jobs:" + (q || "");
+    var extra = arguments[1] || {};
+    if (q != null) state.query = q || "";
+    if (extra.location != null) state.jobCity = extra.location;
+    if (extra.sector != null) state.jobSector = extra.sector;
+    if (extra.contract_type != null) state.jobContract = extra.contract_type;
+    var key = "jobs:" + (state.query || "") + ":" + (state.jobCity || "") + ":" + (state.jobSector || "") + ":" + (state.jobContract || "");
     if (isFresh(key) && state.jobs && state.jobs.length) return Promise.resolve();
-    return api.jobs({ q: q || "", page_size: 20, sort: "published_at" }).then(function (json) {
+    return api.jobs({
+      q: state.query || "",
+      location: state.jobCity || "",
+      sector: state.jobSector || "",
+      contract_type: state.jobContract || "",
+      page_size: 20,
+      sort: "published_at"
+    }).then(function (json) {
       state.jobs = dataOf(json) || [];
       stamp(key);
     }).catch(function () { state.jobs = []; });
@@ -885,7 +1215,9 @@
       if (name === "home" || name === "me" || name === "apps") {
         need("candDash", function () { return api.request("/candidates/me/dashboard"); }, "dash", false);
       }
-      if (name === "me") need("profile", function () { return api.profile(); }, "profile", false);
+      if (name === "me" || name === "profile" || name === "cv") {
+        need("profile", function () { return api.profile(); }, "profile", false);
+      }
       if (name === "me" || name === "apps" || name === "app") {
         need("apps", function () { return api.myApplications(); }, "apps", true);
       }
@@ -900,18 +1232,14 @@
       if (name === "home" || name === "me") {
         need("empDash", function () { return api.request("/companies/me/dashboard"); }, "dash", false);
       }
-      if (name === "home" || name === "hiring") {
+      if (name === "home" || name === "hiring" || name === "need" || name === "me") {
         need("hiring", function () { return api.request("/hiring-requests"); }, "hiring", true);
       }
-      if (name === "home" || name === "inbox" || name === "pipeline") {
+      if (name === "inbox" || name === "pipeline") {
         need("inbox", function () { return api.request("/applications"); }, "inbox", true);
       }
-      if (name === "home" || name === "invoices") {
-        need("invoices", function () { return api.request("/invoices"); }, "invoices", true);
-      }
-      if (name === "home" || name === "contracts") {
-        need("contracts", function () { return api.request("/contracts"); }, "contracts", true);
-      }
+      if (name === "invoices") need("invoices", function () { return api.request("/invoices"); }, "invoices", true);
+      if (name === "contracts") need("contracts", function () { return api.request("/contracts"); }, "contracts", true);
       if (name === "company") need("company", function () { return api.request("/companies/me"); }, "company", false);
       if (name === "interviews" || name === "home") {
         need("interviews", function () { return api.request("/interviews"); }, "interviews", true);
@@ -958,6 +1286,12 @@
     }
     if (state.user && isCandidate() && r.name === "app" && r.id) {
       pending.push(api.request("/applications/" + encodeURIComponent(r.id)).then(function (json) { state.application = dataOf(json); }).catch(function () { state.application = null; }));
+    }
+    if (state.user && isEmployer() && r.name === "inbox" && r.id) {
+      pending.push(api.request("/applications/" + encodeURIComponent(r.id)).then(function (json) { state.application = dataOf(json); }).catch(function () { state.application = null; }));
+    }
+    if (state.user && isEmployer() && r.name === "need" && r.id) {
+      pending.push(api.request("/hiring-requests/" + encodeURIComponent(r.id)).then(function (json) { state.need = dataOf(json); }).catch(function () { state.need = null; }));
     }
     if (state.user && r.name === "settings") {
       pending.push(api.request("/users/me/preferences").then(function (json) { state.prefs = dataOf(json) || {}; }).catch(function () { state.prefs = {}; }));
@@ -1097,6 +1431,26 @@
         else fail({ message: t.err });
       }).catch(fail);
     }
+    var delRow = e.target.closest("[data-del-exp], [data-del-edu], [data-del-cert]");
+    if (delRow) {
+      e.preventDefault();
+      if (!isCandidate()) return;
+      var kind = delRow.hasAttribute("data-del-exp") ? "experiences" : (delRow.hasAttribute("data-del-edu") ? "education" : "certifications");
+      var rid = delRow.getAttribute("data-del-exp") || delRow.getAttribute("data-del-edu") || delRow.getAttribute("data-del-cert");
+      api.request("/candidates/me/" + kind + "/" + rid, { method: "DELETE" }).then(function () { done(t.saved); }).catch(fail);
+    }
+    var delCv = e.target.closest("[data-del-cv]");
+    if (delCv) {
+      e.preventDefault();
+      if (!isCandidate()) return;
+      api.request("/candidates/me/resume/" + delCv.getAttribute("data-del-cv"), { method: "DELETE" }).then(function () { done(t.saved); }).catch(fail);
+    }
+    var dlCv = e.target.closest("[data-dl-cv]");
+    if (dlCv) {
+      e.preventDefault();
+      if (!isCandidate()) return;
+      api.download("/candidates/resumes/" + dlCv.getAttribute("data-dl-cv") + "/file", "cv.pdf").catch(fail);
+    }
     if (e.target.closest("[data-logout]")) {
       e.preventDefault();
       api.logout().then(function () {
@@ -1117,7 +1471,12 @@
     if (form.matches("[data-search-jobs]")) {
       e.preventDefault();
       if (!isCandidate()) return;
-      loadJobs(new FormData(form).get("q")).then(function () { go("#/jobs"); render(); });
+      var fd = new FormData(form);
+      loadJobs(fd.get("q") != null ? fd.get("q") : state.query, {
+        location: fd.get("location") != null ? fd.get("location") : state.jobCity,
+        sector: fd.get("sector") != null ? fd.get("sector") : state.jobSector,
+        contract_type: fd.get("contract_type") != null ? fd.get("contract_type") : state.jobContract
+      }).then(function () { go("#/jobs"); render(); });
     } else if (form.matches("[data-login]")) {
       e.preventDefault();
       var fd = new FormData(form);
@@ -1156,14 +1515,60 @@
     } else if (form.matches("[data-hiring]")) {
       e.preventDefault();
       if (!isEmployer()) return;
-      api.request("/hiring-requests", { method: "POST", body: Object.fromEntries(new FormData(form).entries()) }).then(function () {
-        form.reset();
-        done(t.needSent);
+      var hire = Object.fromEntries(new FormData(form).entries());
+      if (hire.seats) hire.seats = Number(hire.seats) || 1;
+      var hid = form.getAttribute("data-id");
+      var req = hid
+        ? api.request("/hiring-requests/" + hid, { method: "PATCH", body: hire })
+        : api.request("/hiring-requests", { method: "POST", body: hire });
+      req.then(function () {
+        setNotice(hid ? t.saved : t.needSent);
+        bustCache();
+        go("#/hiring");
+        return loadRoute();
       }).catch(fail);
     } else if (form.matches("[data-profile]")) {
       e.preventDefault();
       if (!isCandidate()) return;
-      api.updateProfile(Object.fromEntries(new FormData(form).entries())).then(function () { done(t.saved); }).catch(fail);
+      var d = Object.fromEntries(new FormData(form).entries());
+      Promise.all([
+        api.request("/users/me", { method: "PATCH", body: { first_name: d.first_name, last_name: d.last_name, phone: d.phone } }),
+        api.updateProfile({
+          city: d.city, province: d.province, country: d.country, address: d.address, birth_date: d.birth_date,
+          title: d.title, sector: d.sector, skills: d.skills,
+          bio: d.bio, languages: d.languages, availability: d.availability, contract_type: d.contract_type,
+          mobility: d.mobility,
+          years_experience: d.years_experience ? Number(d.years_experience) : null,
+          desired_salary_min: d.desired_salary_min ? Number(d.desired_salary_min) : null
+        })
+      ]).then(function () { return api.me(); }).then(function (json) {
+        var user = dataOf(json);
+        if (user) state.user = user;
+        done(t.saved);
+      }).catch(fail);
+    } else if (form.matches("[data-avatar]")) {
+      e.preventDefault();
+      if (!isCandidate()) return;
+      var photo = form.file && form.file.files && form.file.files[0];
+      if (!photo) return;
+      var av = new FormData();
+      av.append("file", photo);
+      api.request("/users/me/avatar", { method: "POST", body: av }).then(function () { done(t.saved); }).catch(fail);
+    } else if (form.matches("[data-exp]")) {
+      e.preventDefault();
+      if (!isCandidate()) return;
+      api.request("/candidates/me/experiences", { method: "POST", body: Object.fromEntries(new FormData(form).entries()) })
+        .then(function () { form.reset(); done(t.saved); }).catch(fail);
+    } else if (form.matches("[data-edu]")) {
+      e.preventDefault();
+      if (!isCandidate()) return;
+      api.request("/candidates/me/education", { method: "POST", body: Object.fromEntries(new FormData(form).entries()) })
+        .then(function () { form.reset(); done(t.saved); }).catch(fail);
+    } else if (form.matches("[data-cert]")) {
+      e.preventDefault();
+      if (!isCandidate()) return;
+      api.request("/candidates/me/certifications", { method: "POST", body: Object.fromEntries(new FormData(form).entries()) })
+        .then(function () { form.reset(); done(t.saved); }).catch(fail);
     } else if (form.matches("[data-cv]")) {
       e.preventDefault();
       if (!isCandidate()) return;
@@ -1192,7 +1597,9 @@
       if (!isEmployer()) return;
       var cid = form.getAttribute("data-id");
       if (!cid) return;
-      api.request("/companies/" + cid, { method: "PATCH", body: Object.fromEntries(new FormData(form).entries()) })
+      var body = Object.fromEntries(new FormData(form).entries());
+      if (!body.email) delete body.email;
+      api.request("/companies/" + cid, { method: "PATCH", body: body })
         .then(function () { done(t.saved); }).catch(fail);
     }
   });
