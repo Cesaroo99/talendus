@@ -59,6 +59,38 @@ def service_worker():
     )
 
 
+def _install_file(name: str, media_type: str, download_name: str):
+    path = SITE_ROOT / "assets" / "app" / name
+    if not path.exists():
+        raise AppError(404, "Fichier d'installation introuvable.", "NOT_FOUND")
+    return FileResponse(
+        path,
+        media_type=media_type,
+        filename=download_name,
+        headers={"Cache-Control": "public, max-age=3600"},
+    )
+
+
+@router.get("/download/talendus.apk", include_in_schema=False)
+@router.get("/assets/app/talendus.apk", include_in_schema=False)
+def android_app_package():
+    return _install_file(
+        "talendus.apk",
+        "application/vnd.android.package-archive",
+        "Talendus.apk",
+    )
+
+
+@router.get("/download/talendus.mobileconfig", include_in_schema=False)
+@router.get("/assets/app/talendus.mobileconfig", include_in_schema=False)
+def ios_home_screen_profile():
+    return _install_file(
+        "talendus.mobileconfig",
+        "application/x-apple-aspen-config",
+        "Talendus.mobileconfig",
+    )
+
+
 @router.get("/robots.txt", include_in_schema=False)
 def robots():
     return PlainTextResponse(robots_txt(), media_type="text/plain; charset=utf-8")

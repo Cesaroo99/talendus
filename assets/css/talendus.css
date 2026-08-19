@@ -3847,6 +3847,14 @@ button.tl-btn.tl-btn-ghost-dark:hover,
   margin: 0 auto 28px;
 }
 .tl-install-hero-card h2 { margin: 12px 0 8px; }
+.tl-install-hero-card .tl-btn { margin: 8px 6px 0; }
+.tl-install-direct {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 14px;
+}
 .tl-install-icon-preview {
   display: inline-flex;
   flex-direction: column;
