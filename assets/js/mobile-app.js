@@ -6,6 +6,7 @@
 
   var PERSONA_KEY = "talendus_mobile_persona";
   var LANG_KEY = "talendus_locale";
+  var LANG_CHOSEN_KEY = "talendus_locale_chosen";
   var EN = {
     home: "Home",
     jobs: "Jobs",
@@ -470,28 +471,35 @@
   };
 
   function pageIsEn() {
-    var lang = (document.documentElement.lang || "").toLowerCase();
     var path = (location.pathname || "").toLowerCase();
-    return lang.indexOf("en") === 0 || path.indexOf("/en/") === 0;
+    return path.indexOf("/en/") === 0;
   }
   function storedLocale() {
     try { return localStorage.getItem(LANG_KEY) || ""; } catch (e) { return ""; }
   }
+  function localeChosen() {
+    try { return localStorage.getItem(LANG_CHOSEN_KEY) === "1"; } catch (e) { return false; }
+  }
   function detectLang() {
-    var stored = storedLocale().toLowerCase();
-    if (stored.indexOf("en") === 0) return true;
-    if (stored.indexOf("fr") === 0) return false;
+    if (localeChosen()) {
+      var stored = storedLocale().toLowerCase();
+      if (stored.indexOf("en") === 0) return true;
+      if (stored.indexOf("fr") === 0) return false;
+    }
     return pageIsEn();
   }
   var isEn = detectLang();
   var t = isEn ? EN : FR;
   document.documentElement.lang = isEn ? "en-CA" : "fr-CA";
-  function applyLocale(locale, persist) {
+  function applyLocale(locale, persist, chosen) {
     var wantEn = String(locale || "").toLowerCase().indexOf("en") === 0;
     isEn = wantEn;
     t = isEn ? EN : FR;
     document.documentElement.lang = isEn ? "en-CA" : "fr-CA";
     try { localStorage.setItem(LANG_KEY, isEn ? "en-CA" : "fr-CA"); } catch (e) {}
+    if (chosen) {
+      try { localStorage.setItem(LANG_CHOSEN_KEY, "1"); } catch (e) {}
+    }
     if (persist && state.user) {
       api.request("/users/me/preferences", { method: "PATCH", body: { locale: isEn ? "en-CA" : "fr-CA" } }).catch(function () {});
     }
@@ -797,16 +805,16 @@
     var tracker = (app && app.tracker) || {};
     var steps = tracker.steps || [];
     if (!steps.length) return "";
-    var html = '<ol class="tn-tracker' + (mini ? " is-mini" : "") + '">';
+    var html = '<ol class="tn-tracker' + (mini ? " is-mini" : "") + '"' + (mini ? ' aria-hidden="true"' : "") + ">";
     steps.forEach(function (step) {
-      html += '<li class="is-' + esc(step.state || "todo") + '"><b>' + esc(statusLabel(step.key)) + "</b>";
-      if (!mini && step.at) html += '<span>' + esc(when(step.at)) + "</span>";
+      html += '<li class="is-' + esc(step.state || "todo") + '">';
+      if (!mini) {
+        html += "<b>" + esc(statusLabel(step.key)) + "</b>";
+        if (step.at) html += "<span>" + esc(when(step.at)) + "</span>";
+      }
       html += "</li>";
     });
     html += "</ol>";
-    if (tracker.outcome) {
-      html += '<p class="tn-status">' + esc(statusLabel(tracker.outcome)) + "</p>";
-    }
     return html;
   }
   function personName(row) {
@@ -1641,8 +1649,19 @@
       pending.push(api.verifyEmail(r.id).then(function () { setNotice(t.verifyOk); }).catch(fail));
     }
     return Promise.all(pending).then(function () {
-      if (!storedLocale() && state.prefs && state.prefs.locale) applyLocale(state.prefs.locale, false);
+      if (!localeChosen() && !storedLocale() && state.prefs && state.prefs.locale) {
+        var prefEn = String(state.prefs.locale).toLowerCase().indexOf("en") === 0;
+        if (!(prefEn && !pageIsEn())) applyLocale(state.prefs.locale, false);
+      }
       if (!syncHash()) return;
+      if (state.user && route().name === "notifs" && (state.notifs || []).some(function (n) { return !n.is_read; })) {
+        return api.request("/notifications/read-all", { method: "POST" }).then(function () {
+          (state.notifs || []).forEach(function (n) { n.is_read = true; });
+          bustCache(["notifs"]);
+          render();
+          syncCallScreen();
+        });
+      }
       render();
       syncCallScreen();
     }).catch(function () { render(); });
@@ -1698,7 +1717,7 @@
     var locBtn = e.target.closest("[data-locale]");
     if (locBtn) {
       e.preventDefault();
-      applyLocale(locBtn.getAttribute("data-locale"), !!state.user);
+      applyLocale(locBtn.getAttribute("data-locale"), !!state.user, true);
       render();
       return;
     }
@@ -2040,15 +2059,11 @@
     if (!nativePush()) return;
     rows = rows || state.notifs || [];
     var seen = seenPushIds();
-    var shown = 0;
     var changed = false;
     rows.forEach(function (n) {
       if (!n || n.is_read || seen.indexOf(n.id) !== -1) return;
       seen.push(n.id);
       changed = true;
-      if (shown >= 5) return;
-      shown += 1;
-      try { window.TalendusNative.showNotification(n.title || "Talendus", n.message || "", n.href || "/m.html#/notifs"); } catch (err) {}
     });
     if (changed) storeSeenPush(seen);
   }

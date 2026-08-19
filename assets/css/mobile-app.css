@@ -432,6 +432,7 @@ a.tn-stat {
   text-decoration: none;
   color: inherit;
   display: block;
+  overflow: hidden;
 }
 .tn-job h3, .tn-thread strong { margin: 0 0 4px; font-size: 1.05rem; }
 .tn-meta { color: var(--tn-muted); font-size: .9rem; margin: 0; }
@@ -500,14 +501,18 @@ a.tn-stat {
 }
 .tn-tracker.is-mini li {
   flex: 1;
+  min-width: 0;
   padding: 0;
   border: 0;
   height: 6px;
   border-radius: 99px;
   background: #dbe3ee;
   font-size: 0;
+  overflow: hidden;
 }
 .tn-tracker.is-mini li::before { display: none; }
+.tn-tracker.is-mini li b,
+.tn-tracker.is-mini li span { display: none; }
 .tn-tracker.is-mini li.is-done, .tn-tracker.is-mini li.is-current { background: var(--tn-orange); }
 .tn-tracker.is-mini li.is-todo { background: #e8eef5; }
 .tn-empty { text-align: center; color: var(--tn-muted); }

@@ -239,10 +239,19 @@ def test_mobile_app_tracks_applications_and_offers_choice_filters():
         'choiceSelect("shift"',
         'choiceSelect("schedule"',
         'choiceSelect("work_mode"',
+        'mini ? \' aria-hidden="true"\'',
+        "if (!mini)",
     ):
         assert needle in js
+    assert "tracker.outcome" not in js
     css = (ROOT / "assets" / "css" / "mobile-app.css").read_text(encoding="utf-8")
-    for needle in (".tn-tracker", ".tn-facts", ".tn-search select"):
+    for needle in (
+        ".tn-tracker",
+        ".tn-facts",
+        ".tn-search select",
+        ".tn-tracker.is-mini li b",
+        "overflow: hidden",
+    ):
         assert needle in css
     jobs = (ROOT / "emplois.html").read_text(encoding="utf-8")
     assert 'id="job-shift"' in jobs
@@ -255,13 +264,17 @@ def test_mobile_app_switches_language_and_hides_status_codes():
     js = (ROOT / "assets" / "js" / "mobile-app.js").read_text(encoding="utf-8")
     for needle in (
         "talendus_locale",
+        "talendus_locale_chosen",
         "function applyLocale",
         "function langSwitch",
+        "function pageIsEn",
+        "function localeChosen",
         'data-locale="fr-CA"',
         'data-locale="en-CA"',
         'WITHDRAWN: "Retirée"',
         "var EN =",
         "var FR =",
+        'path.indexOf("/en/") === 0',
     ):
         assert needle in js
     css = (ROOT / "assets" / "css" / "mobile-app.css").read_text(encoding="utf-8")

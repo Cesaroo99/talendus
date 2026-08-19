@@ -1,4 +1,4 @@
-const CACHE = "talendus-app-v19";
+const CACHE = "talendus-app-v20";
 const PRECACHE = [
   "/offline.html",
   "/m.html",
@@ -64,13 +64,14 @@ self.addEventListener("push", function (event) {
   } catch (e) {
     try { payload.body = event.data ? event.data.text() : ""; } catch (err) {}
   }
+  var tag = payload.tag || payload.id || [payload.title || "", payload.body || payload.message || ""].join("|") || "talendus";
   event.waitUntil(self.registration.showNotification(payload.title || "Talendus", {
     body: payload.body || payload.message || "",
     icon: payload.icon || "/assets/img/logo/icon-192.png",
     badge: "/assets/img/logo/icon-192.png",
     data: { href: payload.href || "/m.html#/notifs" },
-    tag: payload.tag || "talendus",
-    renotify: true
+    tag: tag,
+    renotify: false
   }));
 });
 

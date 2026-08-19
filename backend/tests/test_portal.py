@@ -152,6 +152,21 @@ def test_notification_mark_read(client):
     assert marked.json()["data"]["is_read"] is True
 
 
+def test_notification_mark_all_read(client):
+    emp = register(client, "notif-all-emp@example.com", "EMPLOYER")
+    staff_publish_job(client, emp, slug="notif-all-job")
+    cand = register(client, "notif-all-cand@example.com")
+    headers = auth_header(cand)
+    client.post("/api/applications", headers=headers, json={"job_slug": "notif-all-job"})
+    unread = client.get("/api/notifications?unread=true", headers=headers).json()["data"]
+    assert unread
+    marked = client.post("/api/notifications/read-all", headers=headers)
+    assert marked.status_code == 200, marked.text
+    assert marked.json()["data"]["updated"] >= 1
+    leftover = client.get("/api/notifications?unread=true", headers=headers).json()["data"]
+    assert leftover == []
+
+
 def test_portal_routes_exist(client):
     res = client.get("/candidate/dashboard")
     assert res.status_code in {200, 404}
