@@ -14,7 +14,10 @@
   document.documentElement.classList.add("tl-standalone", "tl-native-app");
   var path = location.pathname || "/";
   if (/\/m\.html$/.test(path) || path.indexOf("/download/") === 0 || path.indexOf("/admin") === 0 || path.indexOf("/api/") === 0) return;
-  location.replace((path.indexOf("/en/") === 0 ? "/en/m.html" : "/m.html") + (location.hash || ""));
+  var hash = location.hash || "";
+  var portal = path.match(/\/(candidate|employer)(?:\/(.*))?$/);
+  if (portal) hash = "#/" + (portal[2] || "home");
+  location.replace((path.indexOf("/en/") === 0 ? "/en/m.html" : "/m.html") + hash);
 })();
 </script>
      <title>Recrutement industriel à Laval | Talendus</title>

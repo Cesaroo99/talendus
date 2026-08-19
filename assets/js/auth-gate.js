@@ -82,8 +82,21 @@
     }
     function logoUrl() { return assetPrefix() + "assets/img/logo/logo1.png"; }
     function homeHref() { return siteRoot() + "index.html"; }
+    function isNativeApp() {
+      var ua = navigator.userAgent || "";
+      if (/TalendusApp/i.test(ua)) return true;
+      if (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) return true;
+      if (window.matchMedia && window.matchMedia("(display-mode: fullscreen)").matches) return true;
+      if (window.navigator && window.navigator.standalone) return true;
+      return /\/m\.html$/.test(location.pathname || "");
+    }
     function portalHref(role, hash) {
       if (staffRole(role)) return "/admin/";
+      if (isNativeApp()) {
+        var mapped = String(hash || "#/home").replace("#/dashboard", "#/home");
+        if (mapped === "#/dashboard" || !mapped) mapped = "#/home";
+        return (isEn ? "/en/m.html" : "/m.html") + mapped;
+      }
       var dest = role === "EMPLOYER"
         ? siteRoot() + (isEn ? "account-employer.html" : "espace-employeur.html")
         : siteRoot() + (isEn ? "account.html" : "espace.html");

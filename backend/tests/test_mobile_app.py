@@ -54,6 +54,39 @@ def test_mobile_app_persona_extras():
         assert needle in css
 
 
+def test_mobile_app_uses_the_dashboard_session():
+    js = (ROOT / "assets" / "js" / "mobile-app.js").read_text(encoding="utf-8")
+    for needle in (
+        "canonicalize",
+        "portalHash",
+        "hydrateSession",
+        "dashboard: \"home\"",
+        "#/settings",
+        "#/pipeline",
+        "#/company",
+        "#/app/",
+        "/candidates/me/dashboard",
+        "/companies/me/dashboard",
+        "/users/me/preferences",
+        "data-open-notif",
+        "staffRole",
+        "/admin/",
+    ):
+        assert needle in js
+    api = (ROOT / "assets" / "js" / "api.js").read_text(encoding="utf-8")
+    assert "talendus_access_token" in api
+    assert "localStorage.setItem(USER, JSON.stringify(json.data))" in api
+    auth = (ROOT / "assets" / "js" / "auth-gate.js").read_text(encoding="utf-8")
+    assert 'isNativeApp()' in auth
+    assert "/m.html" in auth
+    native = (ROOT / "assets" / "js" / "talendus.js").read_text(encoding="utf-8")
+    assert "candidate|employer" in native
+    page = (ROOT / "espace.html").read_text(encoding="utf-8")
+    assert "candidate|employer" in page
+    css = (ROOT / "assets" / "css" / "mobile-app.css").read_text(encoding="utf-8")
+    assert ".tn-check" in css
+
+
 def test_mobile_app_gates_access_by_persona():
     js = (ROOT / "assets" / "js" / "mobile-app.js").read_text(encoding="utf-8")
     assert 'data-choose="talent"' in js
