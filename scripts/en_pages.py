@@ -1,6 +1,6 @@
 """English pages for Talendus, native copy, not machine-translated chrome."""
 
-from parts import speed_strip, cta_band, faq_html, proof_stats, FAQ_EMPLOYERS_EN, FAQ_CANDIDATES_EN, FAQ_HOME_EN, homepage_faq, cv_file_field, install_board
+from parts import speed_strip, cta_band, faq_html, proof_stats, FAQ_EMPLOYERS_EN, FAQ_CANDIDATES_EN, FAQ_HOME_EN, homepage_faq, cv_file_field, install_board, native_app_page
 from seo_pages import write_en as write_seo_en
 from positioning import (
     homepage_after_hero, job_search_filters, employer_need_fields,
@@ -811,4 +811,5 @@ def build_en(write, wrap, page_hero):
         lang="en",
         alt="app.html",
     ))
+    write("en/m.html", native_app_page("en"))
     write_seo_en(write, wrap, page_hero, CTA)

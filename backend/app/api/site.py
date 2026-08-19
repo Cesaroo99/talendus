@@ -154,6 +154,16 @@ def employer_portal_en(rest: str = ""):
     return _portal_page("en/account-employer.html")
 
 
+@router.get("/m.html", include_in_schema=False)
+def mobile_app_fr():
+    return _portal_page("m.html")
+
+
+@router.get("/en/m.html", include_in_schema=False)
+def mobile_app_en():
+    return _portal_page("en/m.html")
+
+
 @router.get("/blog/{slug}", include_in_schema=False)
 def blog_html(slug: str, db: Session = Depends(get_db)):
     try:

@@ -19,7 +19,7 @@ def test_web_manifest_is_installable(client):
     data = json.loads(res.text)
     assert data["name"] == "Talendus"
     assert data["display"] == "standalone"
-    assert data["start_url"].startswith("/")
+    assert data["start_url"].startswith("/m.html")
     assert data["scope"] == "/"
     sizes = {icon["sizes"]: icon for icon in data["icons"]}
     assert "192x192" in sizes
@@ -40,7 +40,7 @@ def test_service_worker_allows_root_scope(client):
     assert res.status_code == 200, res.text
     assert "javascript" in (res.headers.get("content-type") or "")
     assert res.headers.get("service-worker-allowed") == "/"
-    assert "talendus-app-v3" in res.text
+    assert "talendus-app-v6" in res.text
     assert "/offline.html" in res.text
     assert "/download/" in res.text
 
@@ -100,7 +100,7 @@ def test_ios_profile_adds_a_home_screen_icon(client):
     assert profile.exists()
     text = profile.read_text(encoding="utf-8")
     assert "com.apple.webClip.managed" in text
-    assert "https://talendus.ca" in text
+    assert "https://talendus.ca/m.html" in text
     assert "<key>FullScreen</key>" in text
     res = client.get("/download/talendus.mobileconfig")
     assert res.status_code == 200, res.text
