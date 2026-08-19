@@ -312,6 +312,12 @@
     }
     function accountHref(role) {
       if (staffRole(role)) return "/admin/";
+      var native = /TalendusApp/i.test(navigator.userAgent || "")
+        || (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches)
+        || (window.matchMedia && window.matchMedia("(display-mode: fullscreen)").matches)
+        || !!(window.navigator && window.navigator.standalone)
+        || /\/m\.html$/.test(location.pathname || "");
+      if (native) return (isEn ? "/en/m.html" : "/m.html") + "#/home";
       if (role === "EMPLOYER") return siteRoot() + (isEn ? "account-employer.html" : "espace-employeur.html") + "#/dashboard";
       return siteRoot() + (isEn ? "account.html" : "espace.html") + "#/dashboard";
     }

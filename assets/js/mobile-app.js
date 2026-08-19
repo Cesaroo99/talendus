@@ -118,7 +118,23 @@
     pay: "Pay",
     confirmInterview: "Confirm",
     cancelInterview: "Cancel",
-    interviewUpdated: "Interview updated."
+    interviewUpdated: "Interview updated.",
+    settings: "Settings",
+    currentPass: "Current password",
+    newPass: "New password",
+    changePass: "Update password",
+    prefs: "Notifications",
+    notifyApp: "In the app",
+    notifyEmail: "By email",
+    notifyApps: "Applications",
+    notifyMsgs: "Messages",
+    notifyMatch: "Matching roles",
+    notifyInt: "Interviews",
+    pipeline: "Pipeline",
+    companyProfile: "Company",
+    emptyPipeline: "No file presented yet.",
+    appDetail: "Application",
+    history: "Follow-up"
   } : {
     home: "Accueil",
     jobs: "Offres",
@@ -231,7 +247,23 @@
     pay: "Payer",
     confirmInterview: "Confirmer",
     cancelInterview: "Annuler",
-    interviewUpdated: "Entretien mis à jour."
+    interviewUpdated: "Entretien mis à jour.",
+    settings: "Paramètres",
+    currentPass: "Mot de passe actuel",
+    newPass: "Nouveau mot de passe",
+    changePass: "Mettre à jour le mot de passe",
+    prefs: "Notifications",
+    notifyApp: "Dans l’appli",
+    notifyEmail: "Par courriel",
+    notifyApps: "Candidatures",
+    notifyMsgs: "Messages",
+    notifyMatch: "Offres qui correspondent",
+    notifyInt: "Entretiens",
+    pipeline: "Pipeline",
+    companyProfile: "Entreprise",
+    emptyPipeline: "Aucun dossier présenté pour le moment.",
+    appDetail: "Candidature",
+    history: "Suivi"
   };
 
   var state = {
@@ -253,6 +285,9 @@
     inbox: [],
     invoices: [],
     contracts: [],
+    prefs: null,
+    company: null,
+    application: null,
     query: "",
     notice: "",
     error: "",
@@ -285,26 +320,64 @@
       else sessionStorage.removeItem(PERSONA_KEY);
     } catch (e) {}
   }
+  function staffRole(role) {
+    return ["ADMIN", "SUPER_ADMIN", "RECRUITER", "FINANCE", "EDITOR"].indexOf(role) !== -1;
+  }
   function isEmployer(user) {
     user = user || state.user;
-    return !!(user && (user.role === "EMPLOYER" || user.role === "RECRUITER" || user.role === "ADMIN" || user.role === "SUPER_ADMIN"));
+    return !!(user && user.role === "EMPLOYER");
   }
   function isCandidate(user) {
     user = user || state.user;
     return !!(user && user.role === "CANDIDATE");
   }
+  function canonicalize(name, id) {
+    var aliases = {
+      dashboard: "home", home: "home", profile: "me", documents: "me", cv: "me", resume: "me",
+      settings: "settings", account: "settings", applications: "apps", candidatures: "apps",
+      application: "app", apps: "apps", saved: "saved", sauvegardees: "saved", alerts: "alerts",
+      alertes: "alerts", notifications: "notifs", notifs: "notifs", entretiens: "interviews",
+      interviews: "interviews", pipeline: "pipeline", ats: "pipeline", company: "company",
+      billing: "invoices", facturation: "invoices", invoices: "invoices", contrats: "contracts",
+      mandats: "contracts", contracts: "contracts", hiring: "hiring", messages: "messages",
+      me: "me", jobs: "jobs", job: "job", inbox: "inbox"
+    };
+    name = aliases[name] || name;
+    if (isEmployer()) {
+      if (name === "jobs" || name === "job" || name === "job-edit" || name === "job-new") name = "hiring";
+      if (name === "apps" || name === "app") name = "inbox";
+    }
+    return { name: name, id: id || "" };
+  }
   function route() {
     var raw = (location.hash || "").replace(/^#/, "");
     var parts = raw.replace(/^\//, "").split("/").filter(Boolean);
     var name = parts[0];
+    var id = decodeURIComponent(parts.slice(1).join("/"));
     if (!name) name = state.user ? "home" : "welcome";
-    return { name: name, id: decodeURIComponent(parts.slice(1).join("/")) };
+    return canonicalize(name, id);
   }
   function allowedRoute(name) {
     if (!state.user) return name === "welcome" || name === "login" || name === "register";
-    if (isCandidate()) return ["home", "jobs", "job", "apps", "messages", "me", "notifs", "alerts", "saved", "interviews"].indexOf(name) !== -1;
-    if (isEmployer()) return ["home", "hiring", "messages", "me", "notifs", "interviews", "inbox", "invoices", "contracts"].indexOf(name) !== -1;
-    return name === "home" || name === "me" || name === "messages";
+    if (isCandidate()) return ["home", "jobs", "job", "apps", "app", "messages", "me", "notifs", "alerts", "saved", "interviews", "settings"].indexOf(name) !== -1;
+    if (isEmployer()) return ["home", "hiring", "messages", "me", "notifs", "interviews", "inbox", "invoices", "contracts", "pipeline", "company", "settings"].indexOf(name) !== -1;
+    return name === "home" || name === "me" || name === "messages" || name === "settings";
+  }
+  function portalHash(href) {
+    if (!href) return "#/home";
+    var hash = "";
+    try {
+      var u = new URL(href, location.origin);
+      hash = (u.hash || "").replace(/^#\/?/, "");
+      var m = u.pathname.match(/\/(candidate|employer)(?:\/(.*))?$/);
+      if (m && m[2]) hash = m[2];
+    } catch (e) {
+      var bits = String(href).split("#");
+      hash = (bits[1] || "").replace(/^\//, "");
+    }
+    var parts = hash.split("/").filter(Boolean);
+    var mapped = canonicalize(parts[0] || "home", parts.slice(1).join("/"));
+    return "#/" + mapped.name + (mapped.id ? "/" + mapped.id : "");
   }
   function go(hash) {
     if ((location.hash || "") === hash) render();
@@ -391,7 +464,7 @@
       { href: "#/me", key: "me", label: t.me, icon: icons.me }
     ];
     return '<nav class="tn-tabs" aria-label="Talendus">' + items.map(function (item) {
-      var on = r === item.key || (item.key === "jobs" && r === "job");
+      var on = r === item.key || (item.key === "jobs" && r === "job") || (item.key === "hiring" && (r === "pipeline" || r === "inbox")) || (item.key === "me" && (r === "settings" || r === "company" || r === "apps" || r === "app"));
       return '<a href="' + item.href + '" class="' + (on ? "is-on" : "") + '">' + item.icon + "<span>" + esc(item.label) + "</span></a>";
     }).join("") + "</nav>";
   }
@@ -465,7 +538,8 @@
         '<div class="tn-stat"><b>' + esc(due) + "</b><span>" + esc(t.toPay) + "</span></div>" +
         '<div class="tn-stat"><b>' + esc(unsigned) + "</b><span>" + esc(t.unsigned) + "</span></div></div>" +
         '<a class="tn-btn" href="#/hiring">' + esc(t.newNeed) + "</a>" +
-        '<div class="tn-quick"><a href="#/inbox">' + esc(t.presented) + "</a><a href="#/invoices">' + esc(t.invoices) + "</a><a href="#/contracts">' + esc(t.contracts) + "</a></div>";
+        '<div class="tn-quick"><a href="#/inbox">' + esc(t.presented) + "</a><a href="#/pipeline">' + esc(t.pipeline) + "</a><a href="#/invoices">' + esc(t.invoices) + "</a><a href="#/contracts">' + esc(t.contracts) + "</a></div>" +
+        dashNotifs();
     }
     var pct = (dash.completeness && dash.completeness.percent) || 0;
     var matches = (dash.matches || []).map(function (row) { return jobCard(row.job || row); }).join("");
@@ -477,10 +551,23 @@
       '<a class="tn-btn tn-btn-ghost" href="#/me">' + esc(t.completeFile) + "</a></section>" +
       interviewCard() +
       '<div class="tn-stats"><div class="tn-stat"><b>' + esc(stats.applications || 0) + "</b><span>" + esc(t.statsApps) + "</span></div>" +
-      '<div class="tn-stat"><b>' + esc(stats.interviews || 0) + "</b><span>" + esc(t.statsInterviews) + "</span></div></div>" +
+      '<div class="tn-stat"><b>' + esc(stats.interviews || 0) + "</b><span>" + esc(t.statsInterviews) + "</span></div>" +
+      '<div class="tn-stat"><b>' + esc(stats.saved_jobs || (state.saved || []).length) + "</b><span>" + esc(t.savedJobs) + "</span></div>" +
+      '<div class="tn-stat"><b>' + esc(stats.unread_notifications || unreadCount()) + "</b><span>" + esc(t.notifs) + "</span></div></div>" +
+      dashNotifs() +
       "<h2 class=\"tn-section\">" + esc(t.nextJob) + "</h2>" +
       '<div class="tn-grid">' + (matches || state.jobs.slice(0, 4).map(jobCard).join("") || '<div class="tn-empty">' + esc(t.emptyJobs) + "</div>") + "</div>" +
       '<a class="tn-text-link" href="#/jobs">' + esc(t.openJobs) + "</a>";
+  }
+
+  function dashNotifs() {
+    var rows = ((state.dash && state.dash.notifications) || state.notifs || []).slice(0, 3);
+    if (!rows.length) return "";
+    return "<h2 class=\"tn-section\">" + esc(t.notifs) + "</h2><div class=\"tn-grid\">" + rows.map(function (n) {
+      return '<button type="button" class="tn-job tn-notif' + (n.is_read ? "" : " is-unread") + '" data-open-notif="' +
+        esc(n.id) + '" data-href="' + esc(n.href || "") + '"><h3>' + esc(n.title || t.notifs) +
+        '</h3><p class="tn-meta">' + esc(n.message || when(n.created_at)) + "</p></button>";
+    }).join("") + "</div>";
   }
 
   function jobsView() {
@@ -543,7 +630,8 @@
     return "<h1 class=\"tn-title\">" + esc(t.notifs) + "</h1>" + flash() +
       ((state.notifs || []).length ? '<button type="button" class="tn-btn tn-btn-ghost" data-read-all>' + esc(t.markAll) + "</button>" : "") +
       '<div class="tn-grid">' + ((state.notifs || []).map(function (n) {
-        return '<button type="button" class="tn-job tn-notif' + (n.is_read ? "" : " is-unread") + '" data-read-notif="' + esc(n.id) + '"><h3>' +
+        return '<button type="button" class="tn-job tn-notif' + (n.is_read ? "" : " is-unread") + '" data-open-notif="' +
+          esc(n.id) + '" data-href="' + esc(n.href || "") + '"><h3>' +
           esc(n.title || t.notifs) + '</h3><p class="tn-meta">' + esc(n.message || when(n.created_at)) + "</p></button>";
       }).join("") || '<div class="tn-empty">' + esc(t.emptyNotifs) + "</div>") + "</div>";
   }
@@ -578,8 +666,67 @@
   function inboxView() {
     return listBlock(t.presented, t.emptyApps, (state.inbox || []).map(function (a) {
       var job = a.job || {};
-      return '<div class="tn-job"><h3>' + esc(job.title || t.presented) + '</h3><span class="tn-status">' + esc(a.status || "") + "</span></div>";
+      var cand = a.candidate || {};
+      var label = [cand.title, job.title || t.presented].filter(Boolean).join(" · ");
+      return '<a class="tn-job" href="#/inbox"><h3>' + esc(label) + '</h3><span class="tn-status">' +
+        esc(a.status || a.pipeline_stage || "") + "</span></a>";
     }));
+  }
+  function pipelineView() {
+    var groups = {};
+    (state.inbox || []).forEach(function (a) {
+      var key = a.pipeline_stage || a.status || t.presented;
+      (groups[key] = groups[key] || []).push(a);
+    });
+    var keys = Object.keys(groups);
+    if (!keys.length) return listBlock(t.pipeline, t.emptyPipeline, []);
+    return "<h1 class=\"tn-title\">" + esc(t.pipeline) + "</h1>" + flash() + keys.map(function (key) {
+      return "<h2 class=\"tn-section\">" + esc(key) + "</h2><div class=\"tn-grid\">" + groups[key].map(function (a) {
+        var job = a.job || {};
+        return '<div class="tn-job"><h3>' + esc(job.title || t.presented) + '</h3><span class="tn-status">' +
+          esc(a.status || "") + "</span></div>";
+      }).join("") + "</div>";
+    }).join("");
+  }
+  function appView() {
+    var a = state.application;
+    if (!a) return '<div class="tn-empty">' + esc(t.loading) + "</div>";
+    var job = a.job || {};
+    var hist = (a.history || []).map(function (h) {
+      return '<p class="tn-meta">' + esc(when(h.created_at) + " · " + (h.new_status || "")) + "</p>";
+    }).join("");
+    return '<a class="tn-back" href="#/apps">' + esc(t.back) + "</a><h1 class=\"tn-title\">" + esc(job.title || t.appDetail) + "</h1>" +
+      '<p class="tn-meta">' + esc([job.location, a.status].filter(Boolean).join(" · ")) + "</p>" + flash() +
+      (a.cover_note ? '<div class="tn-card"><p>' + esc(a.cover_note) + "</p></div>" : "") +
+      "<h2 class=\"tn-section\">" + esc(t.history) + "</h2>" + (hist || '<div class="tn-empty">' + esc(t.emptyApps) + "</div>") +
+      (a.status === "WITHDRAWN" ? "" : '<button type="button" class="tn-btn tn-btn-ghost" data-withdraw="' + esc(a.id) + '">' + esc(t.withdraw) + "</button>");
+  }
+  function companyView() {
+    var c = state.company || {};
+    return "<h1 class=\"tn-title\">" + esc(t.companyProfile) + "</h1>" + flash() +
+      '<form class="tn-form" data-company data-id="' + esc(c.id || "") + '"><label>' + esc(t.company) +
+      '</label><input name="name" value="' + esc(c.name || "") + '" required>' +
+      "<label>" + esc(t.city) + '</label><input name="city" value="' + esc(c.city || "") + '">' +
+      "<label>" + esc(t.location) + '</label><input name="sector" value="' + esc(c.sector || "") + '">' +
+      '<button class="tn-btn" type="submit">' + esc(t.save) + "</button></form>";
+  }
+  function settingsView() {
+    var p = state.prefs || {};
+    function check(name, label, on) {
+      return '<label class="tn-check"><input type="checkbox" name="' + name + '"' + (on ? " checked" : "") + "> " + esc(label) + "</label>";
+    }
+    return "<h1 class=\"tn-title\">" + esc(t.settings) + "</h1>" + flash() +
+      '<form class="tn-form" data-password><label>' + esc(t.currentPass) + '</label><input name="current_password" type="password" required autocomplete="current-password">' +
+      "<label>" + esc(t.newPass) + '</label><input name="new_password" type="password" required minlength="8" autocomplete="new-password">' +
+      '<button class="tn-btn" type="submit">' + esc(t.changePass) + "</button></form>" +
+      '<form class="tn-form" data-prefs><p class="tn-meta">' + esc(t.prefs) + "</p>" +
+      check("notify_in_app", t.notifyApp, p.notify_in_app !== false) +
+      check("notify_email", t.notifyEmail, p.notify_email !== false) +
+      check("notify_application", t.notifyApps, p.notify_application !== false) +
+      check("notify_message", t.notifyMsgs, p.notify_message !== false) +
+      (isCandidate() ? check("notify_match", t.notifyMatch, p.notify_match !== false) : "") +
+      check("notify_interview", t.notifyInt, p.notify_interview !== false) +
+      '<button class="tn-btn" type="submit">' + esc(t.save) + "</button></form>";
   }
   function invoicesView() {
     return listBlock(t.invoices, t.emptyInvoices, (state.invoices || []).map(function (inv) {
@@ -614,17 +761,16 @@
         '<button class="tn-btn" type="submit">' + esc(t.save) + "</button></form>" +
         '<form class="tn-form" data-cv><label>' + esc(t.cv) + '</label><input type="file" name="file" accept=".pdf,.doc,.docx,application/pdf">' +
         '<button class="tn-btn tn-btn-ghost" type="submit">' + esc(t.upload) + "</button></form>" +
-        '<div class="tn-quick"><a href="#/apps">' + esc(t.apps) + "</a><a href="#/saved">' + esc(t.savedJobs) + "</a><a href="#/alerts">' + esc(t.alerts) + "</a><a href="#/interviews">' + esc(t.interviews) + "</a></div>" +
+        '<div class="tn-quick"><a href="#/apps">' + esc(t.apps) + "</a><a href="#/saved">' + esc(t.savedJobs) + "</a><a href="#/alerts">' + esc(t.alerts) + "</a><a href="#/interviews">' + esc(t.interviews) + "</a><a href=\"#/settings\">" + esc(t.settings) + "</a></div>" +
         "<h2 class=\"tn-section\">" + esc(t.apps) + "</h2><div class=\"tn-grid\">" +
         (state.apps.map(function (a) {
           var job = a.job || {};
-          return '<div class="tn-job"><h3>' + esc(job.title || t.apps) + '</h3><span class="tn-status">' + esc(a.status || "") + "</span>" +
-            (a.status === "WITHDRAWN" ? "" : '<button type="button" class="tn-btn tn-btn-ghost" data-withdraw="' + esc(a.id) + '">' + esc(t.withdraw) + "</button>") + "</div>";
+          return '<a class="tn-job" href="#/app/' + encodeURIComponent(a.id) + '"><h3>' + esc(job.title || t.apps) + '</h3><span class="tn-status">' + esc(a.status || "") + "</span></a>";
         }).join("") || '<div class="tn-empty">' + esc(t.emptyApps) + "</div>") + "</div>";
     } else {
       html += '<p class="tn-note">' + esc(t.mediateEmployer) + "</p>" +
         '<p class="tn-meta">' + esc((state.dash && state.dash.company_name) || "") + "</p>" +
-        '<div class="tn-quick"><a href="#/inbox">' + esc(t.presented) + "</a><a href="#/invoices">' + esc(t.invoices) + "</a><a href="#/contracts">' + esc(t.contracts) + "</a><a href="#/interviews">' + esc(t.interviews) + "</a></div>" +
+        '<div class="tn-quick"><a href="#/inbox">' + esc(t.presented) + "</a><a href="#/pipeline">' + esc(t.pipeline) + "</a><a href="#/company">' + esc(t.companyProfile) + "</a><a href=\"#/settings\">" + esc(t.settings) + "</a></div>" +
         '<a class="tn-btn" href="#/hiring">' + esc(t.newNeed) + "</a>";
     }
     html += '<button class="tn-btn tn-btn-ghost tn-logout" data-logout>' + esc(t.logout) + "</button>";
@@ -645,6 +791,8 @@
       if (name === "interviews") return interviewsView();
       if (name === "saved") return savedView();
       if (name === "alerts") return alertsView();
+      if (name === "app") return appView();
+      if (name === "settings") return settingsView();
       if (name === "me" || name === "apps") return meView();
       return homeView();
     }
@@ -653,8 +801,11 @@
     if (name === "notifs") return notifsView();
     if (name === "interviews") return interviewsView();
     if (name === "inbox") return inboxView();
+    if (name === "pipeline") return pipelineView();
     if (name === "invoices") return invoicesView();
     if (name === "contracts") return contractsView();
+    if (name === "company") return companyView();
+    if (name === "settings") return settingsView();
     if (name === "me") return meView();
     return homeView();
   }
@@ -697,16 +848,25 @@
       tasks.push(api.request("/applications").then(function (json) { state.inbox = dataOf(json) || []; }).catch(function () { state.inbox = []; }));
       tasks.push(api.request("/invoices").then(function (json) { state.invoices = dataOf(json) || []; }).catch(function () { state.invoices = []; }));
       tasks.push(api.request("/contracts").then(function (json) { state.contracts = dataOf(json) || []; }).catch(function () { state.contracts = []; }));
+      tasks.push(api.request("/companies/me").then(function (json) { state.company = dataOf(json); }).catch(function () { state.company = null; }));
     }
     return Promise.all(tasks);
   }
 
   function syncHash() {
     var r = route();
-    if (allowedRoute(r.name)) return true;
-    var fallback = state.user ? "#/home" : "#/welcome";
-    if ((location.hash || "") !== fallback) {
-      location.replace(fallback);
+    if (!allowedRoute(r.name)) {
+      var fallback = state.user ? "#/home" : "#/welcome";
+      if ((location.hash || "") !== fallback) {
+        location.replace(fallback);
+        return false;
+      }
+      return true;
+    }
+    var wanted = "#/" + r.name + (r.id ? "/" + r.id : "");
+    var raw = (location.hash || "").replace(/^#\/?/, "").split("/")[0];
+    if (state.user && raw && raw !== r.name && raw !== "welcome") {
+      location.replace(wanted);
       return false;
     }
     return true;
@@ -721,6 +881,15 @@
     if (state.user && isCandidate() && r.name === "job" && r.id) {
       pending.push(api.request("/jobs/" + encodeURIComponent(r.id)).then(function (json) { state.job = dataOf(json); }).catch(function () { state.job = null; }));
     }
+    if (state.user && isCandidate() && r.name === "app" && r.id) {
+      pending.push(api.request("/applications/" + encodeURIComponent(r.id)).then(function (json) { state.application = dataOf(json); }).catch(function () { state.application = null; }));
+    }
+    if (state.user && r.name === "settings") {
+      pending.push(api.request("/users/me/preferences").then(function (json) { state.prefs = dataOf(json) || {}; }).catch(function () { state.prefs = {}; }));
+    }
+    if (state.user && isEmployer() && r.name === "company") {
+      pending.push(api.request("/companies/me").then(function (json) { state.company = dataOf(json); }).catch(function () { state.company = null; }));
+    }
     if (state.user && r.name === "messages" && r.id) {
       pending.push(api.request("/messages/" + encodeURIComponent(r.id)).then(function (json) { state.conversation = dataOf(json) || []; }).catch(function () { state.conversation = []; }));
     }
@@ -731,14 +900,31 @@
   }
 
   function afterAuth() {
-    var user = api.currentUser();
-    var chosen = getPersona();
-    state.mismatch = "";
-    if (chosen === "talent" && isEmployer(user)) state.mismatch = t.wrongPersonaEmployer;
-    if (chosen === "employer" && isCandidate(user)) state.mismatch = t.wrongPersonaTalent;
-    setNotice("");
-    go("#/home");
-    return loadRoute();
+    return hydrateSession().then(function () {
+      var user = api.currentUser();
+      var chosen = getPersona();
+      state.mismatch = "";
+      if (chosen === "talent" && isEmployer(user)) state.mismatch = t.wrongPersonaEmployer;
+      if (chosen === "employer" && isCandidate(user)) state.mismatch = t.wrongPersonaTalent;
+      if (user) setPersona(isEmployer(user) ? "employer" : "talent");
+      setNotice("");
+      go("#/home");
+      return loadRoute();
+    });
+  }
+
+  function hydrateSession() {
+    if (!api.currentUser()) return Promise.resolve();
+    return api.me().then(function (json) {
+      var user = dataOf(json);
+      if (!user) return;
+      state.user = user;
+      if (staffRole(user.role)) {
+        location.replace("/admin/");
+        return new Promise(function () {});
+      }
+      setPersona(user.role === "EMPLOYER" ? "employer" : "talent");
+    }).catch(function () {});
   }
 
   function fail(err) {
@@ -786,6 +972,16 @@
       e.preventDefault();
       api.request("/notifications/" + readOne.getAttribute("data-read-notif") + "/read", { method: "POST" })
         .then(function () { return loadRoute(); }).catch(fail);
+    }
+    var openNotif = e.target.closest("[data-open-notif]");
+    if (openNotif) {
+      e.preventDefault();
+      var href = openNotif.getAttribute("data-href") || "";
+      var dest = portalHash(href);
+      var nid = openNotif.getAttribute("data-open-notif");
+      var jump = function () { go(dest); loadRoute(); };
+      if (nid) api.request("/notifications/" + nid + "/read", { method: "POST" }).then(jump).catch(jump);
+      else jump();
     }
     if (e.target.closest("[data-read-all]")) {
       e.preventDefault();
@@ -899,6 +1095,28 @@
       var payload = new FormData();
       payload.append("file", file);
       api.uploadResume(payload).then(function () { done(t.saved); }).catch(fail);
+    } else if (form.matches("[data-password]")) {
+      e.preventDefault();
+      api.request("/auth/change-password", { method: "POST", body: Object.fromEntries(new FormData(form).entries()) })
+        .then(function () { form.reset(); done(t.saved); }).catch(fail);
+    } else if (form.matches("[data-prefs]")) {
+      e.preventDefault();
+      var prefs = {
+        notify_in_app: !!(form.notify_in_app && form.notify_in_app.checked),
+        notify_email: !!(form.notify_email && form.notify_email.checked),
+        notify_application: !!(form.notify_application && form.notify_application.checked),
+        notify_message: !!(form.notify_message && form.notify_message.checked),
+        notify_interview: !!(form.notify_interview && form.notify_interview.checked)
+      };
+      if (form.notify_match) prefs.notify_match = !!form.notify_match.checked;
+      api.request("/users/me/preferences", { method: "PATCH", body: prefs }).then(function () { done(t.saved); }).catch(fail);
+    } else if (form.matches("[data-company]")) {
+      e.preventDefault();
+      if (!isEmployer()) return;
+      var cid = form.getAttribute("data-id");
+      if (!cid) return;
+      api.request("/companies/" + cid, { method: "PATCH", body: Object.fromEntries(new FormData(form).entries()) })
+        .then(function () { done(t.saved); }).catch(fail);
     }
   });
 
@@ -909,5 +1127,5 @@
   api.services().then(function (json) {
     var data = dataOf(json) || {};
     if (data.contact) state.contact = data.contact;
-  }).catch(function () {}).then(loadRoute);
+  }).catch(function () {}).then(hydrateSession).then(loadRoute);
 })();

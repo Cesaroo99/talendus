@@ -144,7 +144,14 @@
         .catch(function () { return null; })
         .then(function () { clearSession(); });
     },
-    me: function () { return request("/users/me"); },
+    me: function () {
+      return request("/users/me").then(function (json) {
+        if (json && json.data) {
+          try { localStorage.setItem(USER, JSON.stringify(json.data)); } catch (e) {}
+        }
+        return json;
+      });
+    },
     providers: function () { return request("/auth/providers"); },
     forgotPassword: function (email) { return request("/auth/forgot-password", { method: "POST", body: { email: email } }); },
     resetPassword: function (token, password) {

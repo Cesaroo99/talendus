@@ -353,6 +353,14 @@ button.tn-text-link {
   cursor: pointer;
   font: inherit;
 }
+.tn-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0;
+  font-weight: 600;
+}
+.tn-check input { width: auto; }
 .tn-row-actions {
   display: flex;
   flex-wrap: wrap;
