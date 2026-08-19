@@ -7,6 +7,7 @@ def test_mobile_shell_is_not_the_website():
     page = (ROOT / "m.html").read_text(encoding="utf-8")
     assert 'id="tl-native-app"' in page
     assert "mobile-app.js" in page
+    assert "talendus-call.js" in page
     assert "mobile-app.css" in page
     assert "vl-header-area" not in page
     assert "footer-widget" not in page
@@ -135,11 +136,14 @@ def test_native_app_never_asks_to_install_again():
     assert "isNativeApp" in js
     assert "/m.html" in js
     java = (ROOT / "mobile" / "android" / "app" / "src" / "main" / "java" / "ca" / "talendus" / "app" / "MainActivity.java").read_text(encoding="utf-8")
-    assert "TalendusApp/1.0" in java
+    assert "TalendusApp/" in java
     assert "https://talendus.ca/m.html" in java
     assert "TalendusNative" in java
     assert "POST_NOTIFICATIONS" in java
     assert "showNotification" in java
+    assert "setAuthToken" in java
+    assert "CAMERA" in java
+    assert "RECORD_AUDIO" in java
     profile = (ROOT / "assets" / "app" / "talendus.mobileconfig").read_text(encoding="utf-8")
     assert "https://talendus.ca/m.html" in profile
 
@@ -183,6 +187,10 @@ def test_mobile_app_hub_is_ordered():
         "/push/subscribe",
         "enablePush",
         "TalendusNative",
+        "#/call/",
+        "TalendusCall",
+        "callAudio",
+        "setAuthToken",
     ):
         assert needle in js
     css = (ROOT / "assets" / "css" / "mobile-app.css").read_text(encoding="utf-8")
@@ -204,3 +212,6 @@ def test_mobile_app_hub_is_ordered():
     if node:
         checked = subprocess.run([node, "--check", str(path)], capture_output=True, text=True)
         assert checked.returncode == 0, checked.stderr
+        call_js = ROOT / "assets" / "js" / "talendus-call.js"
+        call_checked = subprocess.run([node, "--check", str(call_js)], capture_output=True, text=True)
+        assert call_checked.returncode == 0, call_checked.stderr

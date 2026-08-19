@@ -3,16 +3,13 @@ package ca.talendus.app;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.webkit.JavascriptInterface;
 import android.webkit.PermissionRequest;
 import android.webkit.WebChromeClient;
@@ -21,19 +18,31 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class MainActivity extends Activity {
     public static final String APP_URL = "https://talendus.ca/m.html";
-    public static final String CHANNEL_ID = "talendus";
     private static final int NOTIF_PERMISSION = 91;
+    private static final int MEDIA_PERMISSION = 92;
     private WebView web;
-    private int notifSeq = 1000;
+    private PermissionRequest pendingWebPermission;
+    private final Handler ticker = new Handler(Looper.getMainLooper());
+    private final Runnable pollTick = new Runnable() {
+        @Override
+        public void run() {
+            NotifPoller.pollAsync(MainActivity.this);
+            ticker.postDelayed(this, 20000);
+        }
+    };
 
     @SuppressLint({"SetJavaScriptEnabled", "AddJavascriptInterface"})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        ensureChannel();
+        NotifPoller.ensureChannel(this);
         requestNotifPermission();
+        NotifPoller.schedule(this);
         web = new WebView(this);
         setContentView(web);
         WebSettings settings = web.getSettings();
@@ -43,12 +52,12 @@ public class MainActivity extends Activity {
         settings.setSupportZoom(false);
         settings.setMediaPlaybackRequiresUserGesture(false);
         String ua = settings.getUserAgentString();
-        settings.setUserAgentString((ua == null ? "" : ua) + " TalendusApp/1.0");
+        settings.setUserAgentString((ua == null ? "" : ua) + " TalendusApp/1.2");
         web.addJavascriptInterface(new TalendusNative(), "TalendusNative");
         web.setWebChromeClient(new WebChromeClient() {
             @Override
             public void onPermissionRequest(PermissionRequest request) {
-                runOnUiThread(() -> request.grant(request.getResources()));
+                runOnUiThread(() -> grantWebMedia(request));
             }
         });
         web.setWebViewClient(new WebViewClient() {
@@ -77,6 +86,20 @@ public class MainActivity extends Activity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        ticker.removeCallbacks(pollTick);
+        ticker.post(pollTick);
+        NotifPoller.pollAsync(this);
+    }
+
+    @Override
+    protected void onPause() {
+        ticker.removeCallbacks(pollTick);
+        super.onPause();
+    }
+
+    @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
@@ -93,6 +116,39 @@ public class MainActivity extends Activity {
             return;
         }
         super.onBackPressed();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == MEDIA_PERMISSION && pendingWebPermission != null) {
+            pendingWebPermission.grant(pendingWebPermission.getResources());
+            pendingWebPermission = null;
+        }
+        if (requestCode == NOTIF_PERMISSION) {
+            NotifPoller.pollAsync(this);
+        }
+    }
+
+    private void grantWebMedia(PermissionRequest request) {
+        pendingWebPermission = request;
+        List<String> needed = new ArrayList<>();
+        for (String resource : request.getResources()) {
+            if (PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(resource)
+                && checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                needed.add(Manifest.permission.CAMERA);
+            }
+            if (PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(resource)
+                && checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                needed.add(Manifest.permission.RECORD_AUDIO);
+            }
+        }
+        if (needed.isEmpty()) {
+            request.grant(request.getResources());
+            pendingWebPermission = null;
+            return;
+        }
+        requestPermissions(needed.toArray(new String[0]), MEDIA_PERMISSION);
     }
 
     private String urlFromIntent(Intent intent) {
@@ -116,25 +172,6 @@ public class MainActivity extends Activity {
         return data != null ? data.toString() : null;
     }
 
-    private void ensureChannel() {
-        if (Build.VERSION.SDK_INT < 26) {
-            return;
-        }
-        NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        if (manager == null) {
-            return;
-        }
-        NotificationChannel channel = new NotificationChannel(
-            CHANNEL_ID,
-            "Talendus",
-            NotificationManager.IMPORTANCE_HIGH
-        );
-        channel.setDescription("Suivis Talendus");
-        channel.enableVibration(true);
-        channel.setLightColor(Color.parseColor("#FF6B00"));
-        manager.createNotificationChannel(channel);
-    }
-
     private void requestNotifPermission() {
         if (Build.VERSION.SDK_INT < 33) {
             return;
@@ -145,8 +182,22 @@ public class MainActivity extends Activity {
         requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, NOTIF_PERMISSION);
     }
 
+    private void requestMediaPermission() {
+        List<String> needed = new ArrayList<>();
+        if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            needed.add(Manifest.permission.CAMERA);
+        }
+        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            needed.add(Manifest.permission.RECORD_AUDIO);
+        }
+        if (!needed.isEmpty()) {
+            requestPermissions(needed.toArray(new String[0]), MEDIA_PERMISSION);
+        }
+    }
+
     private boolean notificationsAllowed() {
-        NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        android.app.NotificationManager manager =
+            (android.app.NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         if (manager == null) {
             return false;
         }
@@ -159,54 +210,30 @@ public class MainActivity extends Activity {
         return true;
     }
 
-    private void postNotification(String title, String body, String href) {
-        if (!notificationsAllowed()) {
-            requestNotifPermission();
-            return;
-        }
-        NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        if (manager == null) {
-            return;
-        }
-        String safeTitle = title == null || title.isEmpty() ? "Talendus" : title;
-        String safeBody = body == null ? "" : body;
-        String safeHref = href == null || href.isEmpty() ? "/m.html#/notifs" : href;
-        int id = notifSeq++;
-        Intent open = new Intent(this, MainActivity.class);
-        open.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        open.putExtra("href", safeHref);
-        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
-        if (Build.VERSION.SDK_INT >= 23) {
-            flags |= PendingIntent.FLAG_IMMUTABLE;
-        }
-        PendingIntent pending = PendingIntent.getActivity(this, id, open, flags);
-        Notification.Builder builder;
-        if (Build.VERSION.SDK_INT >= 26) {
-            builder = new Notification.Builder(this, CHANNEL_ID);
-        } else {
-            builder = new Notification.Builder(this);
-        }
-        builder.setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle(safeTitle)
-            .setContentText(safeBody)
-            .setAutoCancel(true)
-            .setContentIntent(pending);
-        if (Build.VERSION.SDK_INT >= 21) {
-            builder.setColor(0xFFFF6B00);
-            builder.setStyle(new Notification.BigTextStyle().bigText(safeBody));
-        }
-        manager.notify(id, builder.build());
-    }
-
     public class TalendusNative {
         @JavascriptInterface
         public void showNotification(String title, String body, String href) {
-            runOnUiThread(() -> postNotification(title, body, href));
+            runOnUiThread(() -> NotifPoller.post(MainActivity.this, title, body, href));
         }
 
         @JavascriptInterface
         public void requestPermission() {
             runOnUiThread(MainActivity.this::requestNotifPermission);
+        }
+
+        @JavascriptInterface
+        public void requestMedia() {
+            runOnUiThread(MainActivity.this::requestMediaPermission);
+        }
+
+        @JavascriptInterface
+        public void setAuthToken(String token) {
+            NotifPoller.setToken(MainActivity.this, token);
+        }
+
+        @JavascriptInterface
+        public void clearAuth() {
+            NotifPoller.clearToken(MainActivity.this);
         }
 
         @JavascriptInterface

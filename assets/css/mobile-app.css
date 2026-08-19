@@ -204,7 +204,7 @@ body.tn-gated #tl-native-app {
   letter-spacing: -.03em;
   font-weight: 800;
 }
-.tn-title-light { color: #fff; text-align: center; margin-top: 18px; }
+.tn-title-light { color: #fff; text-align: center; margin-top: 22px; margin-bottom: 18px; }
 .tn-lead {
   margin: 0 0 22px;
   color: var(--tn-muted);
@@ -231,9 +231,9 @@ body.tn-gated #tl-native-app {
   background: rgba(255,255,255,.96);
   border: 1px solid rgba(255,255,255,.2);
   border-radius: 22px;
-  padding: 18px 16px;
+  padding: 16px;
   margin: 0 0 12px;
-  min-height: 104px;
+  min-height: 76px;
   box-shadow: 0 16px 40px rgba(7, 20, 34, .22);
   transition: transform .18s ease;
 }
@@ -241,14 +241,10 @@ body.tn-gated #tl-native-app {
 .tn-persona strong {
   display: block;
   font-size: 1.08rem;
-  margin: 0 0 4px;
+  margin: 0;
 }
 .tn-persona em {
-  display: block;
-  font-style: normal;
-  color: var(--tn-muted);
-  font-size: .9rem;
-  line-height: 1.4;
+  display: none;
 }
 .tn-persona-icon {
   flex: 0 0 52px;

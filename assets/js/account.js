@@ -39,7 +39,7 @@
       haveAccount: "Already have an account?",
       noAccount: "No account yet?",
       err: "Something went wrong.", saved: "Saved.", uploaded: "File saved.", send: "Send",
-      confirm: "Confirm", cancel: "Cancel", to: "To", write: "Your message", score: "Match",
+      confirm: "Confirm", cancel: "Cancel", callAudio: "Audio call", callVideo: "Video call", to: "To", write: "Your message", score: "Match",
       welcomeEmployer: "Your hiring workspace", guestEmployer: "Sign in to follow the profiles Talendus presents.",
       registerEmployer: "Create an employer account", company: "Company", inbox: "Applications",
       candidates: "Presented files", invoices: "Invoices", publish: "Publish", pause: "Pause",
@@ -144,7 +144,7 @@
       haveAccount: "Déjà un compte ?",
       noAccount: "Pas encore de compte ?",
       err: "Une erreur s’est produite.", saved: "Enregistré.", uploaded: "Fichier enregistré.", send: "Envoyer",
-      confirm: "Confirmer", cancel: "Annuler", to: "Destinataire", write: "Votre message", score: "Score",
+      confirm: "Confirmer", cancel: "Annuler", callAudio: "Appel audio", callVideo: "Appel vidéo", to: "Destinataire", write: "Votre message", score: "Score",
       welcomeEmployer: "Votre espace employeur", guestEmployer: "Connectez-vous pour suivre les profils que Talendus vous présente.",
       registerEmployer: "Créer un compte employeur", company: "Entreprise", inbox: "Candidatures",
       candidates: "Dossiers présentés", invoices: "Factures", publish: "Publier", pause: "Mettre en pause",
@@ -1350,6 +1350,16 @@
           api.request("/interviews/" + btn.getAttribute("data-int-id") + "/status", { method: "POST", body: { status: btn.getAttribute("data-int-status") } }).then(function () { go("interviews"); });
         };
       });
+      root.querySelectorAll("[data-join-call]").forEach(function (btn) {
+        btn.onclick = function () {
+          if (!window.TalendusCall) return;
+          window.TalendusCall.start({
+            interviewId: btn.getAttribute("data-join-call"),
+            video: btn.getAttribute("data-video") !== "0",
+            onHangup: function () {}
+          });
+        };
+      });
       var apply = document.getElementById("acc-apply");
       if (apply && state.job) apply.onclick = function () {
         api.request("/applications", { method: "POST", body: { job_id: state.job.id, job_slug: state.job.slug } })
@@ -1434,8 +1444,15 @@
     function renderInterviews(items, apps) {
       var list = (!items || !items.length) ? empty(t.emptyInts) : items.map(function (i) {
         var actions = "";
+        if (i.in_app_call) {
+          actions += '<p><button type="button" class="tl-btn tl-btn-ghost" data-join-call="' + esc(i.id) + '" data-video="0">' + esc(t.callAudio) + "</button> ";
+          if (i.call_video !== false) {
+            actions += '<button type="button" class="tl-btn" data-join-call="' + esc(i.id) + '" data-video="1">' + esc(t.callVideo) + "</button>";
+          }
+          actions += "</p>";
+        }
         if (i.status === "SCHEDULED" && !isEmployerSpace()) {
-          actions = '<p><button type="button" class="tl-btn tl-btn-ghost" data-int-status="CONFIRMED" data-int-id="' + esc(i.id) + '">' + esc(t.confirm) +
+          actions += '<p><button type="button" class="tl-btn tl-btn-ghost" data-int-status="CONFIRMED" data-int-id="' + esc(i.id) + '">' + esc(t.confirm) +
             '</button> <button type="button" class="tl-btn tl-btn-ghost" data-int-status="CANCELLED" data-int-id="' + esc(i.id) + '">' + esc(t.cancel) + "</button></p>";
         }
         return '<div class="tl-account-notif"><b>' + esc(i.type_label || i.type) + " · " + esc(statusLabel(i.status)) + "</b><p>" +
