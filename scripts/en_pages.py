@@ -781,14 +781,14 @@ def build_en(write, wrap, page_hero):
         alt="solutions-rh.html",
     ))
     write("en/app.html", wrap(
-        "Talendus on your phone | Android and iPhone",
-        "Add Talendus to your home screen. Three small steps, then the Talendus icon is ready.",
+        "Install Talendus | Android and iPhone",
+        "Install Talendus on your phone. One tap downloads the app, then the icon appears on your home screen.",
         "en/app.html",
         page_hero(
             "On your phone",
             "Talendus in your pocket.",
-            "Add Talendus to your home screen. Then it opens like your other apps.",
-            actions='<a class="tl-btn" href="#tl-install-board">See the 3 steps</a><a class="tl-btn tl-btn-ghost" href="account.html">Open my workspace</a>',
+            "Install the app. Then it opens like your other apps.",
+            actions='<a class="tl-btn" href="#tl-install-board">Install now</a><a class="tl-btn tl-btn-ghost" href="account.html">Open my workspace</a>',
             badges='<span class="tl-badge tl-badge-light">Android</span> <span class="tl-badge tl-badge-light">iPhone</span>',
         )
         + install_board("en")

@@ -668,9 +668,10 @@
         }
         if (isAndroid) {
           board.querySelectorAll("[data-install-ios]").forEach(function (el) { el.hidden = true; });
+          board.querySelectorAll("[data-install-ios-file]").forEach(function (el) { el.hidden = true; });
         } else if (isIos) {
           board.querySelectorAll("[data-install-android]").forEach(function (el) { el.hidden = true; });
-          board.querySelectorAll("[data-install-now]").forEach(function (el) { el.hidden = true; });
+          board.querySelectorAll("[data-install-android-file]").forEach(function (el) { el.hidden = true; });
         }
       }
 
@@ -681,6 +682,8 @@
         if (localStorage.getItem("talendus_install_dismissed") === "1") dismissed = true;
       } catch (e) {}
 
+      var APK_URL = "/download/talendus.apk";
+      var IOS_URL = "/download/talendus.mobileconfig";
       var deferred = null;
       window.TalendusInstall = {
         prompt: function () { return runInstall(); }
@@ -703,54 +706,70 @@
         if (box) box.remove();
       }
 
+      function packageUrl() {
+        return isIos ? IOS_URL : APK_URL;
+      }
+
+      function startPackageDownload(url) {
+        window.location.assign(url || packageUrl());
+      }
+
       function runInstall() {
-        rememberDismiss(14);
         hideBanner();
-        if (deferred && typeof deferred.prompt === "function") {
+        if (!isIos && deferred && typeof deferred.prompt === "function") {
           var ev = deferred;
           deferred = null;
           return ev.prompt().then(function () {
             return ev.userChoice;
           }).then(function (choice) {
-            if (choice && choice.outcome === "accepted") rememberDismiss(365);
-            else openGuide();
-          }).catch(function () { openGuide(); });
+            if (choice && choice.outcome === "accepted") {
+              rememberDismiss(365);
+              return;
+            }
+            startPackageDownload(APK_URL);
+            showFollowUp("android");
+          }).catch(function () {
+            startPackageDownload(APK_URL);
+            showFollowUp("android");
+          });
         }
-        openGuide();
+        startPackageDownload();
+        showFollowUp(isIos ? "ios" : "android");
         return Promise.resolve();
       }
 
-      function openGuide() {
-        if (board) {
-          board.scrollIntoView({ behavior: "smooth", block: "start" });
-          return;
-        }
+      function showFollowUp(kind) {
+        rememberDismiss(7);
         if (document.querySelector(".tl-install-sheet")) return;
-        var href = location.pathname.indexOf("/en/") === 0 ? "/en/app.html" : "/app.html";
         var sheet = document.createElement("div");
         sheet.className = "tl-install-sheet is-on";
         sheet.setAttribute("role", "dialog");
         sheet.setAttribute("aria-modal", "true");
+        var title = isEn ? "The download has started" : "Le téléchargement a commencé";
+        var body = kind === "ios"
+          ? (isEn
+            ? "<p>Allow the profile, then open <strong>Settings</strong>. At the top, tap <strong>Profile Downloaded</strong>, then <strong>Install</strong>.</p>"
+            : "<p>Autorisez le profil, puis ouvrez <strong>Réglages</strong>. En haut, touchez <strong>Profil téléchargé</strong>, puis <strong>Installer</strong>.</p>")
+          : (isEn
+            ? "<p>Open the downloaded file, then tap <strong>Install</strong>. If asked, allow Chrome to install apps.</p>"
+            : "<p>Ouvrez le fichier téléchargé, puis touchez <strong>Installer</strong>. Si le téléphone le demande, autorisez Chrome à installer des applis.</p>");
+        if (kind === "ios" && (isChromeIos || !isSafariIos)) {
+          body += "<p class=\"tl-install-safari-note\">" + (isEn
+            ? "If nothing happens, open this page in Safari (the blue compass icon) and tap Install again."
+            : "Si rien ne se passe, ouvrez cette page avec Safari (l'icône boussole bleue) et touchez Installer encore une fois.") + "</p>";
+        }
         sheet.innerHTML =
           "<div class=\"tl-install-sheet-card\">" +
             "<button type=\"button\" class=\"tl-auth-close\" data-install-close aria-label=\"" + (isEn ? "Close" : "Fermer") + "\"><i class=\"fa-solid fa-xmark\" aria-hidden=\"true\"></i></button>" +
             "<div class=\"tl-install-icon-preview\" aria-hidden=\"true\"><img src=\"/assets/img/logo/icon-192.png\" width=\"64\" height=\"64\" alt=\"\"><span>Talendus</span></div>" +
-            "<h2>" + (isEn ? "Add Talendus to your home screen" : "Ajoutez Talendus à l'écran d'accueil") + "</h2>" +
-            (isIos
-              ? "<ol class=\"tl-install-steps tl-install-steps-sheet\">" +
-                "<li><span class=\"tl-install-step-num\">1</span><div><h3>" + (isEn ? "Tap Share" : "Touchez Partager") + "</h3><p>" + (isEn ? "The square with the arrow pointing up, at the bottom." : "Le carré avec la flèche vers le haut, en bas de l'écran.") + "</p></div></li>" +
-                "<li><span class=\"tl-install-step-num\">2</span><div><h3>" + (isEn ? "Tap Add to Home Screen" : "Touchez Sur l'écran d'accueil") + "</h3><p>" + (isEn ? "Scroll the list if you do not see it." : "Faites glisser la liste si vous ne le voyez pas.") + "</p></div></li>" +
-                "<li><span class=\"tl-install-step-num\">3</span><div><h3>" + (isEn ? "Tap Add" : "Touchez Ajouter") + "</h3><p>" + (isEn ? "The Talendus icon appears. Done." : "L'icône Talendus apparaît. C'est fini.") + "</p></div></li></ol>" +
-                (isChromeIos || !isSafariIos ? "<p class=\"tl-install-safari-note\">" + (isEn ? "On iPhone, open this page in Safari (the blue compass icon)." : "Sur iPhone, ouvrez cette page avec Safari (l'icône boussole bleue).") + "</p>" : "")
-              : "<ol class=\"tl-install-steps tl-install-steps-sheet\">" +
-                "<li><span class=\"tl-install-step-num\">1</span><div><h3>" + (isEn ? "Tap the menu" : "Touchez le menu") + "</h3><p>" + (isEn ? "The three dots at the top right." : "Les trois points en haut à droite.") + "</p></div></li>" +
-                "<li><span class=\"tl-install-step-num\">2</span><div><h3>" + (isEn ? "Tap Add to home screen" : "Touchez Ajouter à l'écran d'accueil") + "</h3><p>" + (isEn ? "Some phones say Install app." : "Certains téléphones disent Installer l'application.") + "</p></div></li>" +
-                "<li><span class=\"tl-install-step-num\">3</span><div><h3>" + (isEn ? "Confirm" : "Confirmez") + "</h3><p>" + (isEn ? "The Talendus icon appears. Done." : "L'icône Talendus apparaît. C'est fini.") + "</p></div></li></ol>") +
-            "<p class=\"tl-install-sheet-actions\"><a class=\"tl-btn tl-btn-ghost\" href=\"" + href + "\">" + (isEn ? "See the full guide" : "Voir le guide illustré") + "</a></p>" +
+            "<h2>" + title + "</h2>" + body +
+            "<p class=\"tl-install-sheet-actions\"><button type=\"button\" class=\"tl-btn\" data-install-close>" + (isEn ? "Done" : "C'est fait") + "</button></p>" +
           "</div>";
         document.body.appendChild(sheet);
         function close() { sheet.remove(); }
-        sheet.querySelector("[data-install-close]").addEventListener("click", close);
+        sheet.querySelectorAll("[data-install-close]").forEach(function (el) {
+          el.addEventListener("click", close);
+        });
         sheet.addEventListener("click", function (e) { if (e.target === sheet) close(); });
       }
 
@@ -759,6 +778,12 @@
           e.preventDefault();
           runInstall();
         });
+      });
+      document.querySelectorAll("[data-install-android-file]").forEach(function (link) {
+        link.addEventListener("click", function () { showFollowUp("android"); });
+      });
+      document.querySelectorAll("[data-install-ios-file]").forEach(function (link) {
+        link.addEventListener("click", function () { showFollowUp("ios"); });
       });
 
       window.addEventListener("beforeinstallprompt", function (e) {
@@ -780,12 +805,12 @@
         var box = document.createElement("div");
         box.className = "tl-install-banner is-on";
         box.setAttribute("role", "dialog");
-        box.setAttribute("aria-label", isEn ? "Add Talendus to your phone" : "Ajouter Talendus au téléphone");
+        box.setAttribute("aria-label", isEn ? "Install Talendus" : "Installer Talendus");
         box.innerHTML = "<p>" + (isEn
-          ? "Add Talendus to your home screen. Then it opens like your other apps."
-          : "Ajoutez Talendus à l'écran d'accueil. Ensuite, ça s'ouvre comme vos autres applis.") +
+          ? "Install Talendus on this phone. Then it opens like your other apps."
+          : "Installez Talendus sur ce téléphone. Ensuite, ça s'ouvre comme vos autres applis.") +
           "</p><div class=\"tl-actions\">" +
-          "<button type=\"button\" class=\"tl-btn\" data-install-native>" + (isEn ? "Add" : "Ajouter") + "</button>" +
+          "<button type=\"button\" class=\"tl-btn\" data-install-native>" + (isEn ? "Install" : "Installer") + "</button>" +
           "<button type=\"button\" class=\"tl-btn tl-btn-ghost\" data-install-dismiss>" + (isEn ? "Not now" : "Pas maintenant") + "</button></div>";
         document.body.appendChild(box);
         box.querySelector("[data-install-dismiss]").addEventListener("click", function () {
@@ -805,7 +830,7 @@
         showBanner();
       }
 
-      setTimeout(maybeShowBanner, 4000);
+      setTimeout(maybeShowBanner, 2500);
     })();
   });
 })();

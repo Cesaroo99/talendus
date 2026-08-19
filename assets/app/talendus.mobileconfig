@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>PayloadContent</key>
+  <array>
+    <dict>
+      <key>FullScreen</key>
+      <true/>
+      <key>Icon</key>
+      <data>iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAYAAAA9zQYyAAADOklEQVR42u3dQVIiQRRFUalghnvAdeD63YeLcI4TZg4UoTJ/vn/uvCOarNPPxKbbw+l8ub5IIW2OQEBLQEtAS0ALaAloCWgJaAloAS0BLQEtAS0BLaAloCWgJaAloNWioyN4Tl+fHw/9+te3d4f4hA7+1fdYuKAD3Qow4EBHAwYc6BaQwQY6DjHcQEdDBrsZ6C6QO8NuAbor5I6wo0GD3A/2BrM3wxbaw7LWFhpmZ2ahQbbWvRYaZmcZAxpmZxpx5QDZFSRmoWF21jGgYXbmMaBhdvYxoGH2DGJAw+xZxICG2TOJAQ0z1DGgYYY6+k2htCxo62ylY0DDDHUMaJihdoeWKoK2zlY6BjTMULtySBVBW2crHQMaZqhdOaSKoK2zlbbQUkXQ1tlKW2ipImjrbKUttFQRtHW20iPyo5FvJfzPm0bDlSMGc9LrKA+68nKkIaj6ekYZaL3QqYvWeam3lD+ZHnr91zfCgju0LLQEtLQ6aN8X1WgTFloWWgK62Zc+ry8M9AoHmvrQq7+uPX9/7a8caai7vxF3hw5C4LtKPj66C4Z7/toZQgtduns/Q+Ejn0DHYIZ6EdC+jGqWEQstCy0BLQEtAS2gJaAloCWgJaAFtAS0BLQEtAS0gH40H1jXLCMWWhZaAloCWgJaQK/zLlbrt6cNCy0LLQEtrQ7aPVqjTVhoWWgJaCkBtHu0Rlqw0LLQVlpVDVhoWWipPWjXDtcNCy1VBm2lrbOFliqDttLW2UJLlUGnrvR/f5hk4g8qnfWMLfRk1H7qbgjo5Lv0X5GmYp75bLeuL3w2apj36eiLVL07tRa+Q/s2nnWOe1MINcxRoKU40FbaOsctNNQwx105oIbZHVqqDNpKW+e4hYYa5rgrB9SeSdwdGmrPIu5NIdSeQRRoqJ19HGionXkcaKid9W8dTufLddUD93ljkJdfaGvtTGNBQ+0so64criAgxy20tXZmsQttrf3h3zwwmC20tQYZaLBBBhpskIHuDrvz+4fWoJNwexMMdARskIFeGjjAQC8NHGCgl4QOLtDSj/zPSQJaAloCWgJaQEtAS0BLQEtAC2gJaAloCWgJaAEtAS0BLQEtAa0efQOYYlIK+Bv+pAAAAABJRU5ErkJggg==</data>
+      <key>IsRemovable</key>
+      <true/>
+      <key>Label</key>
+      <string>Talendus</string>
+      <key>PayloadDescription</key>
+      <string>Ajoute Talendus à l'écran d'accueil</string>
+      <key>PayloadDisplayName</key>
+      <string>Talendus</string>
+      <key>PayloadIdentifier</key>
+      <string>ca.talendus.webclip</string>
+      <key>PayloadOrganization</key>
+      <string>Talendus</string>
+      <key>PayloadType</key>
+      <string>com.apple.webClip.managed</string>
+      <key>PayloadUUID</key>
+      <string>5C46618C-DF2C-5ADE-8847-20CB472A9717</string>
+      <key>PayloadVersion</key>
+      <integer>1</integer>
+      <key>Precomposed</key>
+      <true/>
+      <key>URL</key>
+      <string>https://talendus.ca</string>
+    </dict>
+  </array>
+  <key>PayloadDescription</key>
+  <string>Installe l'icône Talendus sur l'écran d'accueil</string>
+  <key>PayloadDisplayName</key>
+  <string>Talendus</string>
+  <key>PayloadIdentifier</key>
+  <string>ca.talendus.profile</string>
+  <key>PayloadOrganization</key>
+  <string>Talendus</string>
+  <key>PayloadRemovalDisallowed</key>
+  <false/>
+  <key>PayloadType</key>
+  <string>Configuration</string>
+  <key>PayloadUUID</key>
+  <string>139F00A2-5F40-547E-8129-656B55574ADB</string>
+  <key>PayloadVersion</key>
+  <integer>1</integer>
+</dict>
+</plist>

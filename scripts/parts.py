@@ -1033,42 +1033,48 @@ def cv_file_field(lang="fr", required=True):
 
 
 def install_board(lang="fr"):
-    """Guide visuel d'ajout à l'écran d'accueil, sans jargon technique."""
+    """Boutons d'installation réelle : APK Android et profil iPhone."""
     a = pfx(lang)
+    apk = "/download/talendus.apk"
+    ios = "/download/talendus.mobileconfig"
     if lang == "en":
-        already = "Talendus is already on your home screen. Tap the icon to open it."
-        title = "Three small steps"
-        lead = "Then Talendus opens like your other apps — no store visit needed."
-        safari = "On iPhone, open this page in Safari (the blue compass icon), then follow the steps."
-        add = "Add to home screen"
+        already = "Talendus is already installed. Tap the icon on your home screen to open it."
+        title = "Install Talendus"
+        lead = "Tap Install. Your phone downloads the app. Then open the file to put Talendus on your home screen."
+        safari = "On iPhone, installation works best in Safari (the blue compass icon)."
+        add = "Install now"
+        android_btn = "Install on Android"
+        ios_btn = "Install on iPhone"
         android_h = "On Android"
         ios_h = "On iPhone"
-        a1_t, a1_p = "Tap the menu", "The three dots at the top right of the screen."
-        a2_t, a2_p = "Tap Add to home screen", "Some phones say Install app. Same idea."
-        a3_t, a3_p = "Confirm", "The Talendus icon appears on your home screen. Done."
-        i1_t, i1_p = "Tap Share", "The square with the arrow pointing up, at the bottom of the screen."
-        i2_t, i2_p = "Tap Add to Home Screen", "Scroll the list if you do not see it right away."
-        i3_t, i3_p = "Tap Add", "The Talendus icon appears on your home screen. Done."
-        after = "You can then open Talendus from the icon, like any other app."
+        a1_t, a1_p = "Tap Install on Android", "Your phone downloads the Talendus app."
+        a2_t, a2_p = "Open the downloaded file", "Chrome shows it at the bottom of the screen, or in Downloads."
+        a3_t, a3_p = "Tap Install", "If asked, allow Chrome to install apps. The Talendus icon appears."
+        i1_t, i1_p = "Tap Install on iPhone", "Safari downloads the Talendus profile."
+        i2_t, i2_p = "Allow the profile", "Then open Settings. At the top, tap Profile Downloaded."
+        i3_t, i3_p = "Tap Install", "Enter your code if asked. The Talendus icon appears on the home screen."
+        after = "After that, open Talendus from the icon, like any other app."
     else:
-        already = "Talendus est déjà sur votre écran d'accueil. Touchez l'icône pour l'ouvrir."
-        title = "Trois petits gestes"
-        lead = "Ensuite, Talendus s'ouvre comme vos autres applis — sans passer par une boutique."
-        safari = "Sur iPhone, ouvrez cette page avec Safari (l'icône boussole bleue), puis suivez les gestes."
-        add = "Ajouter à l'écran d'accueil"
+        already = "Talendus est déjà installé. Touchez l'icône sur l'écran d'accueil pour l'ouvrir."
+        title = "Installer Talendus"
+        lead = "Touchez Installer. Le téléphone télécharge l'application. Ensuite, ouvrez le fichier pour placer Talendus sur l'écran d'accueil."
+        safari = "Sur iPhone, l'installation fonctionne le mieux avec Safari (l'icône boussole bleue)."
+        add = "Installer maintenant"
+        android_btn = "Installer sur Android"
+        ios_btn = "Installer sur iPhone"
         android_h = "Sur Android"
         ios_h = "Sur iPhone"
-        a1_t, a1_p = "Touchez le menu", "Les trois points en haut à droite de l'écran."
-        a2_t, a2_p = "Touchez Ajouter à l'écran d'accueil", "Certains téléphones disent Installer l'application. C'est la même chose."
-        a3_t, a3_p = "Confirmez", "L'icône Talendus apparaît sur votre écran d'accueil. C'est fini."
-        i1_t, i1_p = "Touchez Partager", "Le carré avec la flèche vers le haut, en bas de l'écran."
-        i2_t, i2_p = "Touchez Sur l'écran d'accueil", "Faites glisser la liste si vous ne le voyez pas tout de suite."
-        i3_t, i3_p = "Touchez Ajouter", "L'icône Talendus apparaît sur votre écran d'accueil. C'est fini."
-        after = "Vous pourrez ensuite ouvrir Talendus depuis l'icône, comme n'importe quelle appli."
-    share_svg = """<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="14" y="18" width="20" height="22" rx="4" fill="none" stroke="currentColor" stroke-width="3"/><path d="M24 6v22" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M16 14l8-8 8 8" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>"""
-    menu_svg = """<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="12" r="3.5" fill="currentColor"/><circle cx="24" cy="24" r="3.5" fill="currentColor"/><circle cx="24" cy="36" r="3.5" fill="currentColor"/></svg>"""
-    home_svg = """<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="8" y="8" width="32" height="32" rx="8" fill="#0b1f3a"/><circle cx="24" cy="24" r="11" fill="#fff"/><path d="M17.5 20.2h13v3.2h-4.8v9.1h-3.4v-9.1h-4.8z" fill="#0b1f3a"/></svg>"""
+        a1_t, a1_p = "Touchez Installer sur Android", "Le téléphone télécharge l'application Talendus."
+        a2_t, a2_p = "Ouvrez le fichier téléchargé", "Chrome l'affiche en bas de l'écran, ou dans Téléchargements."
+        a3_t, a3_p = "Touchez Installer", "Si le téléphone le demande, autorisez Chrome à installer des applis. L'icône Talendus apparaît."
+        i1_t, i1_p = "Touchez Installer sur iPhone", "Safari télécharge le profil Talendus."
+        i2_t, i2_p = "Autorisez le profil", "Puis ouvrez Réglages. En haut, touchez Profil téléchargé."
+        i3_t, i3_p = "Touchez Installer", "Entrez votre code si on vous le demande. L'icône Talendus apparaît sur l'écran d'accueil."
+        after = "Ensuite, ouvrez Talendus depuis l'icône, comme n'importe quelle appli."
+    download_svg = """<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 8v22" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M16 24l8 8 8-8" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 38h28" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>"""
+    file_svg = """<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="12" y="8" width="24" height="32" rx="4" fill="none" stroke="currentColor" stroke-width="3"/><path d="M18 20h12M18 28h8" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>"""
     check_svg = """<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="16" fill="#ff6b00"/><path d="M16 24.5l5 5 11-12" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>"""
+    gear_svg = """<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="7" fill="none" stroke="currentColor" stroke-width="3"/><path d="M24 8v4M24 36v4M8 24h4M36 24h4M12.5 12.5l2.8 2.8M32.7 32.7l2.8 2.8M12.5 35.5l2.8-2.8M32.7 15.3l2.8-2.8" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>"""
 
     def step(num, heading, text, glyph):
         return f"""
@@ -1095,21 +1101,25 @@ def install_board(lang="fr"):
             <p>{lead}</p>
             <p class="tl-install-safari-note" data-install-safari hidden>{safari}</p>
             <button type="button" class="tl-btn" data-install-now>{add}</button>
+            <div class="tl-install-direct">
+              <a class="tl-btn" href="{apk}" data-install-android-file>{android_btn}</a>
+              <a class="tl-btn tl-btn-ghost" href="{ios}" data-install-ios-file>{ios_btn}</a>
+            </div>
           </div>
           <div class="tl-install-lanes">
             <article class="tl-install-lane" data-install-android>
               <h3>{android_h}</h3>
               <ol class="tl-install-steps">
-                {step(1, a1_t, a1_p, menu_svg)}
-                {step(2, a2_t, a2_p, home_svg)}
+                {step(1, a1_t, a1_p, download_svg)}
+                {step(2, a2_t, a2_p, file_svg)}
                 {step(3, a3_t, a3_p, check_svg)}
               </ol>
             </article>
             <article class="tl-install-lane" data-install-ios>
               <h3>{ios_h}</h3>
               <ol class="tl-install-steps">
-                {step(1, i1_t, i1_p, share_svg)}
-                {step(2, i2_t, i2_p, home_svg)}
+                {step(1, i1_t, i1_p, download_svg)}
+                {step(2, i2_t, i2_p, gear_svg)}
                 {step(3, i3_t, i3_p, check_svg)}
               </ol>
             </article>
