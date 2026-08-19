@@ -127,3 +127,18 @@ def test_mobile_shell_is_served(client):
     en = client.get("/en/m.html")
     assert en.status_code == 200, en.text
     assert "tl-native-app" in en.text
+
+
+def test_mobile_app_javascript_parses():
+    import shutil
+    import subprocess
+
+    path = ROOT / "assets" / "js" / "mobile-app.js"
+    js = path.read_text(encoding="utf-8")
+    assert '+ "</a><a href="#' not in js
+    assert "function quickLinks" in js
+    assert "render();" in js.split("hydrateSession).then(loadRoute)")[-1]
+    node = shutil.which("node")
+    if node:
+        checked = subprocess.run([node, "--check", str(path)], capture_output=True, text=True)
+        assert checked.returncode == 0, checked.stderr
