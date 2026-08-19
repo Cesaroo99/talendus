@@ -20,11 +20,38 @@ def test_mobile_shell_is_not_the_website():
 
 def test_mobile_app_has_recruiting_screens():
     js = (ROOT / "assets" / "js" / "mobile-app.js").read_text(encoding="utf-8")
-    for needle in ("#/jobs", "#/messages", "#/me", "#/hiring", "data-apply", "data-login"):
+    for needle in ("#/jobs", "#/messages", "#/me", "#/hiring", "data-apply-form", "data-login"):
         assert needle in js
     assert "blog" not in js.lower()
     css = (ROOT / "assets" / "css" / "mobile-app.css").read_text(encoding="utf-8")
     assert ".tn-tabs" in css
+
+
+def test_mobile_app_persona_extras():
+    js = (ROOT / "assets" / "js" / "mobile-app.js").read_text(encoding="utf-8")
+    for needle in (
+        "#/notifs",
+        "#/saved",
+        "#/alerts",
+        "#/interviews",
+        "#/inbox",
+        "#/invoices",
+        "#/contracts",
+        "data-save-job",
+        "data-withdraw",
+        "data-forgot",
+        "data-alert",
+        "data-sign",
+        "data-pdf",
+        "data-pay",
+        "data-int-status",
+        "forgotPassword",
+        "cover_note",
+    ):
+        assert needle in js
+    css = (ROOT / "assets" / "css" / "mobile-app.css").read_text(encoding="utf-8")
+    for needle in (".tn-badge", ".tn-chips", ".tn-quick", ".tn-notif.is-unread", ".tn-forgot"):
+        assert needle in css
 
 
 def test_mobile_app_gates_access_by_persona():

@@ -61,6 +61,7 @@ body.tn-gated #tl-native-app {
   gap: 8px;
 }
 .tn-icon-btn {
+  position: relative;
   width: 40px;
   height: 40px;
   border: 0;
@@ -283,7 +284,8 @@ body.tn-gated .tn-tabs { display: none; }
 .tn-tabs svg { width: 22px; height: 22px; }
 .tn-badge {
   position: absolute;
-  margin: -18px 0 0 14px;
+  top: 4px;
+  right: 4px;
   min-width: 16px;
   height: 16px;
   padding: 0 4px;
@@ -293,6 +295,69 @@ body.tn-gated .tn-tabs { display: none; }
   font-size: .65rem;
   line-height: 16px;
   text-align: center;
+}
+.tn-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 12px;
+}
+.tn-chip {
+  display: inline-flex;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #eef2f7;
+  color: var(--tn-navy);
+  font-size: .78rem;
+  font-weight: 700;
+}
+.tn-quick {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 16px 0;
+}
+.tn-quick a {
+  display: block;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid var(--tn-line);
+  color: var(--tn-navy);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: .9rem;
+}
+.tn-notif {
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+.tn-notif.is-unread {
+  border-color: var(--tn-orange);
+  box-shadow: inset 3px 0 0 var(--tn-orange);
+}
+.tn-forgot {
+  margin: 4px 0 0;
+  background: none;
+  border: 0;
+  padding: 0;
+}
+.tn-forgot .tn-text-link,
+button.tn-text-link {
+  width: 100%;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+}
+.tn-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
 }
 .tn-msg-list {
   display: flex;
