@@ -564,6 +564,8 @@ button.tn-text-link {
   font-weight: 600;
 }
 .tn-check input { width: auto; }
+.tn-push-card { margin-bottom: 14px; }
+.tn-push-card .tn-btn { margin-top: 10px; }
 .tn-row-actions {
   display: flex;
   flex-wrap: wrap;

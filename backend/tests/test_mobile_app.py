@@ -137,6 +137,9 @@ def test_native_app_never_asks_to_install_again():
     java = (ROOT / "mobile" / "android" / "app" / "src" / "main" / "java" / "ca" / "talendus" / "app" / "MainActivity.java").read_text(encoding="utf-8")
     assert "TalendusApp/1.0" in java
     assert "https://talendus.ca/m.html" in java
+    assert "TalendusNative" in java
+    assert "POST_NOTIFICATIONS" in java
+    assert "showNotification" in java
     profile = (ROOT / "assets" / "app" / "talendus.mobileconfig").read_text(encoding="utf-8")
     assert "https://talendus.ca/m.html" in profile
 
@@ -175,10 +178,15 @@ def test_mobile_app_hub_is_ordered():
         "identityHead",
         "menuGroup",
         'href="#/home"',
+        "data-enable-push",
+        "notify_push",
+        "/push/subscribe",
+        "enablePush",
+        "TalendusNative",
     ):
         assert needle in js
     css = (ROOT / "assets" / "css" / "mobile-app.css").read_text(encoding="utf-8")
-    for needle in (".tn-menu", ".tn-identity", "a.tn-stat", ".tn-filters", ".tn-avatar"):
+    for needle in (".tn-menu", ".tn-identity", "a.tn-stat", ".tn-filters", ".tn-avatar", ".tn-push-card"):
         assert needle in css
     import shutil
     import subprocess

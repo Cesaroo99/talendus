@@ -93,21 +93,33 @@ def notify(
     row = Notification(user_id=user.id, type=ntype, title=title, message=message, href=href)
     db.add(row)
     logger.info("notify user=%s type=%s", user.id, ntype)
-    _queue_external_channels(db, user, ntype, title, message)
+    _queue_external_channels(db, user, ntype, title, message, href)
     return row
 
 
-def _queue_external_channels(db: Session, user: User, ntype: NotificationType, title: str, message: str) -> None:
-    """Point d'extension pour e-mail (déjà envoyé ailleurs), SMS, WhatsApp et push."""
+def _queue_external_channels(
+    db: Session,
+    user: User,
+    ntype: NotificationType,
+    title: str,
+    message: str,
+    href: str | None = None,
+) -> None:
+    """E-mail (déjà envoyé ailleurs), SMS/WhatsApp (journalisés) et Web Push."""
     pref = user.preferences
-    if pref is None:
-        return
-    if pref.notify_sms:
-        logger.info("notify channel=sms queued user=%s type=%s", user.id, ntype)
-    if pref.notify_whatsapp:
-        logger.info("notify channel=whatsapp queued user=%s type=%s", user.id, ntype)
-    if pref.notify_push:
-        logger.info("notify channel=push queued user=%s type=%s", user.id, ntype)
+    if pref is not None:
+        if pref.notify_sms:
+            logger.info("notify channel=sms queued user=%s type=%s", user.id, ntype)
+        if pref.notify_whatsapp:
+            logger.info("notify channel=whatsapp queued user=%s type=%s", user.id, ntype)
+    try:
+        from app.services import push as push_service
+
+        sent = push_service.send_to_user(db, user, title, message, href)
+        if sent:
+            logger.info("notify channel=push sent=%s user=%s type=%s", sent, user.id, ntype)
+    except Exception as exc:
+        logger.info("notify channel=push failed user=%s type=%s err=%s", user.id, ntype, exc)
 
 
 def serialize_notification(row: Notification) -> dict:
