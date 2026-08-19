@@ -10,7 +10,7 @@ from pathlib import Path
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
-SITE = "https://talendus.ca"
+SITE = "https://talendus.ca/m.html"
 ICON_SRC = ROOT / "assets" / "img" / "logo" / "apple-touch-icon.png"
 OUT_APP = ROOT / "assets" / "app"
 ANDROID_RES = ROOT / "mobile" / "android" / "app" / "src" / "main" / "res"

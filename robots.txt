@@ -10,6 +10,8 @@ Disallow: /candidate
 Disallow: /employer
 Disallow: /en/candidate
 Disallow: /en/employer
+Disallow: /m.html
+Disallow: /en/m.html
 Disallow: /index1.html
 Disallow: /index2.html
 Disallow: /index3.html

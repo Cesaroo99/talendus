@@ -1,11 +1,11 @@
 # Applis Talendus (Android et iPhone)
 
-Le site sert des fichiers d’installation réels :
+Une fois installée, l’appli ouvre la coque mobile (`/m.html`) : accueil, offres, messages et compte. Ce n’est plus le site public.
 
-- Android : `assets/app/talendus.apk`, téléchargé via `/download/talendus.apk`
-- iPhone : `assets/app/talendus.mobileconfig`, téléchargé via `/download/talendus.mobileconfig`
+Fichiers d’installation :
 
-Le bouton **Installer** télécharge ce fichier. Ce n’est pas un guide d’étapes à suivre dans le navigateur.
+- Android : `assets/app/talendus.apk` via `/download/talendus.apk`
+- iPhone : `assets/app/talendus.mobileconfig` via `/download/talendus.mobileconfig`
 
 Pour reconstruire l’APK :
 

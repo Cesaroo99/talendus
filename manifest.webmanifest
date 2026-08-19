@@ -3,7 +3,7 @@
   "name": "Talendus",
   "short_name": "Talendus",
   "description": "Talendus sur votre téléphone : offres, profil, messages et appel direct.",
-  "start_url": "/?source=pwa",
+  "start_url": "/m.html",
   "scope": "/",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],
@@ -42,15 +42,15 @@
   ],
   "shortcuts": [
     {
-      "name": "Espace candidat",
-      "short_name": "Candidat",
-      "url": "/espace.html",
+      "name": "Offres",
+      "short_name": "Offres",
+      "url": "/m.html#/jobs",
       "icons": [{ "src": "/assets/img/logo/icon-192.png", "sizes": "192x192" }]
     },
     {
-      "name": "Espace employeur",
-      "short_name": "Entreprise",
-      "url": "/espace-employeur.html",
+      "name": "Messages",
+      "short_name": "Messages",
+      "url": "/m.html#/messages",
       "icons": [{ "src": "/assets/img/logo/icon-192.png", "sizes": "192x192" }]
     }
   ]

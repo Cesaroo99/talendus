@@ -2,7 +2,21 @@
 <html lang="fr-CA">
 <head>
      <meta charset="UTF-8">
-     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+     <script>
+(function () {
+  var ua = navigator.userAgent || "";
+  var native = /TalendusApp/i.test(ua)
+    || (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches)
+    || (window.matchMedia && window.matchMedia("(display-mode: fullscreen)").matches)
+    || !!(window.navigator && window.navigator.standalone);
+  if (!native) return;
+  document.documentElement.classList.add("tl-standalone", "tl-native-app");
+  var path = location.pathname || "/";
+  if (/\/m\.html$/.test(path) || path.indexOf("/download/") === 0 || path.indexOf("/admin") === 0 || path.indexOf("/api/") === 0) return;
+  location.replace((path.indexOf("/en/") === 0 ? "/en/m.html" : "/m.html") + (location.hash || ""));
+})();
+</script>
      <title>Recrutement logistique Québec | Talendus</title>
      <meta name="description" content="Planification, transport, WMS et coordination. La logistique est un secteur parmi d&#x27;autres.">
      <meta name="keywords" content="agence de recrutement, agence de placement, recrutement externalisé, recherche de talents, présélection de candidats, recrutement intelligent, recrutement assisté par IA, placement de personnel, solution de recrutement, recrutement de talents, Talendus Québec">
