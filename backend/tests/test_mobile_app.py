@@ -249,6 +249,8 @@ def test_mobile_app_tracks_applications_and_offers_choice_filters():
         ".tn-tracker",
         ".tn-facts",
         ".tn-search select",
+        ".tn-search-bar",
+        ".tn-filter-toggle",
         ".tn-tracker.is-mini li b",
         "overflow: hidden",
     ):
@@ -258,6 +260,26 @@ def test_mobile_app_tracks_applications_and_offers_choice_filters():
     assert "Quart de jour" in jobs
     en_jobs = (ROOT / "en" / "jobs.html").read_text(encoding="utf-8")
     assert 'id="job-shift"' in en_jobs
+
+
+def test_mobile_app_searches_jobs_without_a_stray_button():
+    js = (ROOT / "assets" / "js" / "mobile-app.js").read_text(encoding="utf-8")
+    for needle in (
+        "tn-search-bar",
+        "data-toggle-filters",
+        "data-jobs-grid",
+        "scheduleJobSearch",
+        "runJobSearch",
+        'filters: "Filtres"',
+    ):
+        assert needle in js
+    assert "esc(t.go)" not in js
+    jobs_view = js.split("function jobsView")[1].split("function jobView")[0]
+    assert '<button type="submit">' not in jobs_view
+    css = (ROOT / "assets" / "css" / "mobile-app.css").read_text(encoding="utf-8")
+    assert ".tn-search-bar" in css
+    assert ".tn-filter-toggle" in css
+    assert ".tn-search button" not in css
 
 
 def test_mobile_app_switches_language_and_hides_status_codes():

@@ -39,7 +39,7 @@
     call: "Call Talendus",
     wa: "WhatsApp",
     search: "Search a role",
-    go: "Search",
+    filters: "Filters",
     emptyJobs: "No roles to show yet.",
     apply: "Ask Talendus to present me",
     applied: "Request sent to your consultant.",
@@ -270,7 +270,7 @@
     call: "Appeler Talendus",
     wa: "WhatsApp",
     search: "Rechercher un poste",
-    go: "Chercher",
+    filters: "Filtres",
     emptyJobs: "Aucune offre à afficher pour le moment.",
     apply: "Demander à être présenté",
     applied: "Demande envoyée à votre conseiller.",
@@ -552,7 +552,8 @@
     chevron: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg>',
     talent: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.2"/><path d="M5 19c1.4-3 3.8-4.6 7-4.6S17.6 16 19 19"/><path d="M17 4.5l2 2 3.2-3.2"/></svg>',
     hire: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M8 8V6h8v2"/><path d="M12 12v4"/><path d="M10 14h4"/></svg>',
-    bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9a6 6 0 1112 0c0 7 3 7 3 7H3s3 0 3-7"/><path d="M10 19a2 2 0 004 0"/></svg>'
+    bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9a6 6 0 1112 0c0 7 3 7 3 7H3s3 0 3-7"/><path d="M10 19a2 2 0 004 0"/></svg>',
+    search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/></svg>'
   };
   var MARK = '<svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg"><path fill="#ffffff" fill-rule="evenodd" d="M18 1.5c9.113 0 16.5 7.387 16.5 16.5S27.113 34.5 18 34.5 1.5 27.113 1.5 18 8.887 1.5 18 1.5zm-7.25 9.75h14.5a1.75 1.75 0 1 1 0 3.5h-5.5v12.75a1.75 1.75 0 1 1-3.5 0V14.75h-5.5a1.75 1.75 0 1 1 0-3.5z"/></svg>';
   function brandOrbit(cls) {
@@ -1086,13 +1087,30 @@
     }).join("") + "</div>";
   }
 
+  function activeJobFilterCount() {
+    return [state.jobCity, state.jobSector, state.jobContract, state.jobShift, state.jobSchedule, state.jobWorkMode, state.jobExperience]
+      .filter(Boolean).length;
+  }
+  function jobFiltersAreOpen() {
+    if (state.jobFiltersOpen == null) return activeJobFilterCount() > 0;
+    return !!state.jobFiltersOpen;
+  }
+  function jobsGridHtml() {
+    return state.jobs.map(jobCard).join("") || '<div class="tn-empty">' + esc(t.emptyJobs) + "</div>";
+  }
   function jobsView() {
     var o = jobOpts();
+    var filterCount = activeJobFilterCount();
+    var filtersOpen = jobFiltersAreOpen();
     return "<h1 class=\"tn-title\">" + esc(t.jobs) + "</h1>" +
-      '<form class="tn-search" data-search-jobs>' +
-      '<input name="q" placeholder="' + esc(t.search) + '" value="' + esc(state.query || "") + '" enterkeyhint="search">' +
-      '<button type="submit">' + esc(t.go) + "</button>" +
-      '<div class="tn-filters">' +
+      '<form class="tn-search" data-search-jobs role="search">' +
+      '<label class="tn-search-bar"><span class="tn-search-icon" aria-hidden="true">' + icons.search + "</span>" +
+      '<input name="q" type="search" placeholder="' + esc(t.search) + '" value="' + esc(state.query || "") +
+      '" enterkeyhint="search" autocomplete="off" aria-label="' + esc(t.search) + '"></label>' +
+      '<button type="button" class="tn-filter-toggle' + (filterCount ? " is-on" : "") + '" data-toggle-filters aria-expanded="' +
+      (filtersOpen ? "true" : "false") + '" aria-controls="tn-job-filters">' +
+      esc(t.filters) + (filterCount ? " · " + filterCount : "") + "</button>" +
+      '<div class="tn-filters" id="tn-job-filters"' + (filtersOpen ? "" : " hidden") + ">" +
       choiceSelect("location", o.locations, state.jobCity, t.jobCity) +
       choiceSelect("sector", o.sectors, state.jobSector, t.jobSector) +
       choiceSelect("contract_type", o.contract_types, state.jobContract, t.contract) +
@@ -1101,7 +1119,7 @@
       choiceSelect("work_mode", o.work_modes, state.jobWorkMode, t.workMode) +
       choiceSelect("experience", o.experience_levels, state.jobExperience, t.experienceLevel) +
       "</div></form>" +
-      '<div class="tn-grid">' + (state.jobs.map(jobCard).join("") || '<div class="tn-empty">' + esc(t.emptyJobs) + "</div>") + "</div>";
+      '<div class="tn-grid" data-jobs-grid>' + jobsGridHtml() + "</div>";
   }
 
   function jobView() {
@@ -1534,6 +1552,45 @@
       stamp(key);
     }).catch(function () { state.jobs = []; });
   }
+  var jobSearchTimer = 0;
+  function readJobSearch(form) {
+    var fd = new FormData(form);
+    return {
+      q: fd.get("q") != null ? fd.get("q") : state.query,
+      extra: {
+        location: fd.get("location") != null ? fd.get("location") : state.jobCity,
+        sector: fd.get("sector") != null ? fd.get("sector") : state.jobSector,
+        contract_type: fd.get("contract_type") != null ? fd.get("contract_type") : state.jobContract,
+        shift: fd.get("shift") != null ? fd.get("shift") : state.jobShift,
+        schedule: fd.get("schedule") != null ? fd.get("schedule") : state.jobSchedule,
+        work_mode: fd.get("work_mode") != null ? fd.get("work_mode") : state.jobWorkMode,
+        experience: fd.get("experience") != null ? fd.get("experience") : state.jobExperience
+      }
+    };
+  }
+  function paintJobResults() {
+    var grid = root.querySelector("[data-jobs-grid]");
+    var toggle = root.querySelector("[data-toggle-filters]");
+    if (toggle) {
+      var count = activeJobFilterCount();
+      toggle.classList.toggle("is-on", !!count);
+      toggle.textContent = t.filters + (count ? " · " + count : "");
+    }
+    if (grid && route().name === "jobs") {
+      grid.innerHTML = jobsGridHtml();
+      return;
+    }
+    render();
+  }
+  function runJobSearch(form) {
+    if (!form || !isCandidate()) return Promise.resolve();
+    var spec = readJobSearch(form);
+    return loadJobs(spec.q, spec.extra).then(paintJobResults);
+  }
+  function scheduleJobSearch(form) {
+    clearTimeout(jobSearchTimer);
+    jobSearchTimer = setTimeout(function () { runJobSearch(form); }, 280);
+  }
 
   function loadSessionData() {
     state.user = api.currentUser();
@@ -1729,6 +1786,13 @@
       }).catch(fail);
       return;
     }
+    var filterToggle = e.target.closest("[data-toggle-filters]");
+    if (filterToggle) {
+      e.preventDefault();
+      state.jobFiltersOpen = !jobFiltersAreOpen();
+      render();
+      return;
+    }
     var choose = e.target.closest("[data-choose]");
     if (choose) setPersona(choose.getAttribute("data-choose"));
     var applyBtn = e.target.closest("[data-apply]");
@@ -1852,17 +1916,8 @@
     if (!(form instanceof HTMLFormElement)) return;
     if (form.matches("[data-search-jobs]")) {
       e.preventDefault();
-      if (!isCandidate()) return;
-      var fd = new FormData(form);
-      loadJobs(fd.get("q") != null ? fd.get("q") : state.query, {
-        location: fd.get("location") != null ? fd.get("location") : state.jobCity,
-        sector: fd.get("sector") != null ? fd.get("sector") : state.jobSector,
-        contract_type: fd.get("contract_type") != null ? fd.get("contract_type") : state.jobContract,
-        shift: fd.get("shift") != null ? fd.get("shift") : state.jobShift,
-        schedule: fd.get("schedule") != null ? fd.get("schedule") : state.jobSchedule,
-        work_mode: fd.get("work_mode") != null ? fd.get("work_mode") : state.jobWorkMode,
-        experience: fd.get("experience") != null ? fd.get("experience") : state.jobExperience
-      }).then(function () { go("#/jobs"); render(); });
+      clearTimeout(jobSearchTimer);
+      runJobSearch(form);
     } else if (form.matches("[data-login]")) {
       e.preventDefault();
       var loginData = new FormData(form);
@@ -2006,6 +2061,26 @@
       api.request("/companies/" + cid, { method: "PATCH", body: body })
         .then(function () { done(t.saved); }).catch(fail);
     }
+  });
+
+  root.addEventListener("input", function (e) {
+    var form = e.target.closest("[data-search-jobs]");
+    if (!form || e.target.name !== "q") return;
+    scheduleJobSearch(form);
+  });
+  root.addEventListener("change", function (e) {
+    var form = e.target.closest("[data-search-jobs]");
+    if (!form || e.target.tagName !== "SELECT") return;
+    clearTimeout(jobSearchTimer);
+    runJobSearch(form);
+  });
+  root.addEventListener("keydown", function (e) {
+    if (e.key !== "Enter") return;
+    var input = e.target.closest("[data-search-jobs] input[name='q']");
+    if (!input || !input.form) return;
+    e.preventDefault();
+    clearTimeout(jobSearchTimer);
+    runJobSearch(input.form);
   });
 
   window.addEventListener("hashchange", loadRoute);
