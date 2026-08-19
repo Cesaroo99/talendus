@@ -522,6 +522,11 @@
     return '<a class="tn-job" href="#/job/' + encodeURIComponent(job.slug || job.id) + '"><h3>' + esc(job.title) + "</h3>" +
       '<p class="tn-meta">' + esc([job.location, job.sector || job.employment_type, job.salary || job.salary_display].filter(Boolean).join(" · ")) + "</p></a>";
   }
+  function quickLinks(items) {
+    return '<div class="tn-quick">' + items.map(function (it) {
+      return '<a href="' + it[0] + '">' + esc(it[1]) + "</a>";
+    }).join("") + "</div>";
+  }
 
   function homeView() {
     var name = (state.user && state.user.first_name) || "";
@@ -538,7 +543,7 @@
         '<div class="tn-stat"><b>' + esc(due) + "</b><span>" + esc(t.toPay) + "</span></div>" +
         '<div class="tn-stat"><b>' + esc(unsigned) + "</b><span>" + esc(t.unsigned) + "</span></div></div>" +
         '<a class="tn-btn" href="#/hiring">' + esc(t.newNeed) + "</a>" +
-        '<div class="tn-quick"><a href="#/inbox">' + esc(t.presented) + "</a><a href="#/pipeline">' + esc(t.pipeline) + "</a><a href="#/invoices">' + esc(t.invoices) + "</a><a href="#/contracts">' + esc(t.contracts) + "</a></div>" +
+        quickLinks([["#/inbox", t.presented], ["#/pipeline", t.pipeline], ["#/invoices", t.invoices], ["#/contracts", t.contracts]]) +
         dashNotifs();
     }
     var pct = (dash.completeness && dash.completeness.percent) || 0;
@@ -761,7 +766,7 @@
         '<button class="tn-btn" type="submit">' + esc(t.save) + "</button></form>" +
         '<form class="tn-form" data-cv><label>' + esc(t.cv) + '</label><input type="file" name="file" accept=".pdf,.doc,.docx,application/pdf">' +
         '<button class="tn-btn tn-btn-ghost" type="submit">' + esc(t.upload) + "</button></form>" +
-        '<div class="tn-quick"><a href="#/apps">' + esc(t.apps) + "</a><a href="#/saved">' + esc(t.savedJobs) + "</a><a href="#/alerts">' + esc(t.alerts) + "</a><a href="#/interviews">' + esc(t.interviews) + "</a><a href=\"#/settings\">" + esc(t.settings) + "</a></div>" +
+        quickLinks([["#/apps", t.apps], ["#/saved", t.savedJobs], ["#/alerts", t.alerts], ["#/interviews", t.interviews], ["#/settings", t.settings]]) +
         "<h2 class=\"tn-section\">" + esc(t.apps) + "</h2><div class=\"tn-grid\">" +
         (state.apps.map(function (a) {
           var job = a.job || {};
@@ -770,7 +775,7 @@
     } else {
       html += '<p class="tn-note">' + esc(t.mediateEmployer) + "</p>" +
         '<p class="tn-meta">' + esc((state.dash && state.dash.company_name) || "") + "</p>" +
-        '<div class="tn-quick"><a href="#/inbox">' + esc(t.presented) + "</a><a href="#/pipeline">' + esc(t.pipeline) + "</a><a href="#/company">' + esc(t.companyProfile) + "</a><a href=\"#/settings\">" + esc(t.settings) + "</a></div>" +
+        quickLinks([["#/inbox", t.presented], ["#/pipeline", t.pipeline], ["#/company", t.companyProfile], ["#/settings", t.settings]]) +
         '<a class="tn-btn" href="#/hiring">' + esc(t.newNeed) + "</a>";
     }
     html += '<button class="tn-btn tn-btn-ghost tn-logout" data-logout>' + esc(t.logout) + "</button>";
@@ -896,7 +901,7 @@
     return Promise.all(pending).then(function () {
       if (!syncHash()) return;
       render();
-    });
+    }).catch(function () { render(); });
   }
 
   function afterAuth() {
@@ -1127,5 +1132,6 @@
   api.services().then(function (json) {
     var data = dataOf(json) || {};
     if (data.contact) state.contact = data.contact;
-  }).catch(function () {}).then(hydrateSession).then(loadRoute);
+  }).catch(function () {}).then(hydrateSession).then(loadRoute).catch(function () { render(); });
+  render();
 })();
