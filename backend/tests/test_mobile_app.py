@@ -128,6 +128,10 @@ def test_mobile_app_signs_in_before_creating_an_account():
     css = (ROOT / "assets" / "css" / "mobile-app.css").read_text(encoding="utf-8")
     assert ".tn-auth-link" in css
     assert ".tn-hp" in css
+    assert "border-radius: 24px 24px 0 0" not in css
+    assert ".tn-sheet .tn-title" in css
+    assert ".tn-forgot" in css
+    assert "text-align: center" in css
 
 
 def test_native_app_never_asks_to_install_again():
