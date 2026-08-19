@@ -276,7 +276,7 @@ gtag('consent', 'default', {
             <input type="hidden" name="profil" value="Candidat, je cherche un poste">
             <label>Nom</label><input required name="nom" autocomplete="name">
             <label>Courriel</label><input type="email" required name="courriel" autocomplete="email">
-            <label>Téléphone</label><input name="tel" autocomplete="tel">
+            <label>Téléphone</label><input name="tel" autocomplete="tel" placeholder="514 555-0123">
             <label>Objet</label>
             <select name="objet">
               <option>Déposer mon CV</option>
@@ -289,7 +289,7 @@ gtag('consent', 'default', {
               <span class="tl-file-hint">PDF, Word (DOC, DOCX) ou image (PNG, JPG). 5 Mo max. Le fichier arrive chez Talendus. Un conseiller vous rappelle.</span>
             </label>
             <label>Lien vers votre CV <span class="tl-optional">(facultatif)</span></label><input name="cv" placeholder="https://">
-            <label>Message</label><textarea name="message" placeholder="Métier, compétences, ville, type d'emploi"></textarea>
+            <label>Message</label><textarea name="message" placeholder="Cariste à Laval, quart de jour, permis classe 5, disponible lundi"></textarea>
             <button class="tl-btn tl-btn-lg" type="submit">Créer mon profil</button>
             <div class="tl-success"></div>
           </form>
@@ -303,7 +303,7 @@ gtag('consent', 'default', {
             <label>Nom</label><input required name="nom">
             <label>Entreprise</label><input required name="entreprise">
             <label>Courriel</label><input type="email" required name="courriel">
-            <label>Téléphone</label><input name="tel">
+            <label>Téléphone</label><input name="tel" placeholder="514 555-0123" autocomplete="tel">
             <label>Objet</label>
             <select name="objet">
               <option>Confier mon recrutement</option>
@@ -314,11 +314,11 @@ gtag('consent', 'default', {
             <label>Secteur</label>
             <select name="secteur"><option value="">Choisir un secteur</option><option value="technologie">Technologie et informatique</option><option value="construction">Construction</option><option value="manufacturier">Manufacturier</option><option value="transport">Transport et logistique</option><option value="commerce">Commerce et vente au détail</option><option value="finance">Finance</option><option value="assurance">Assurance</option><option value="sante">Santé</option><option value="education">Éducation</option><option value="hotellerie">Hôtellerie et restauration</option><option value="immobilier">Immobilier</option><option value="services-pro">Services professionnels</option><option value="marketing">Marketing et communication</option><option value="ingenierie">Ingénierie</option><option value="administration">Administration</option><option value="agriculture">Agriculture</option><option value="energie">Énergie</option><option value="telecom">Télécommunications</option><option value="services-entreprises">Services aux entreprises</option><option value="autre">Autre / plusieurs secteurs</option></select>
             <label>Poste recherché</label>
-            <input name="poste" placeholder="ex. comptable, développeur, infirmier, soudeur">
+            <input name="poste" placeholder="ex. cariste, soudeur, machiniste CNC">
             <label>Nombre de personnes à recruter</label>
             <input name="volume" type="number" min="1" value="1">
             <label>Localisation</label>
-            <input name="localisation" placeholder="Ville, région, pays ou télétravail">
+            <input name="localisation" placeholder="Laval, Longueuil, Rive-Sud, Grand Montréal…">
             <label>Type de contrat</label>
             <select name="contrat">
             <option value="">Choisir</option>
@@ -330,7 +330,7 @@ gtag('consent', 'default', {
             <option>Plusieurs types de contrat</option>
         </select>
             <label>Ce que nous devons savoir</label>
-            <textarea name="message" required placeholder="Responsabilités, compétences indispensables, expérience, urgence, tout ce qui orientera la recherche"></textarea>
+            <textarea name="message" required placeholder="Quart 6 h–14 h, 40 h, ASP requise, usine à Laval, bilingue un atout."></textarea>
         
             <button class="tl-btn tl-btn-lg" type="submit">Confier mon recrutement</button>
             <div class="tl-success"></div>
@@ -432,6 +432,7 @@ gtag('consent', 'default', {
 <script src="assets/js/plugins/circle-progress.js" defer></script>
 <script src="assets/js/main.js" defer></script>
 <script src="assets/js/api.js" defer></script>
+<script src="assets/js/qc-hints.js" defer></script>
 <script src="assets/js/talendus.js" defer></script>
 <script src="assets/js/persona.js" defer></script>
 <script src="assets/js/auth-gate.js" defer></script>

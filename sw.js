@@ -1,10 +1,11 @@
-const CACHE = "talendus-app-v12";
+const CACHE = "talendus-app-v13";
 const PRECACHE = [
   "/offline.html",
   "/m.html",
   "/manifest.webmanifest",
   "/assets/css/mobile-app.css",
   "/assets/js/api.js",
+  "/assets/js/qc-hints.js",
   "/assets/js/mobile-app.js",
   "/assets/img/logo/icon-192.png",
   "/assets/img/logo/apple-touch-icon.png"

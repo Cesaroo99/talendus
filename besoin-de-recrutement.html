@@ -242,17 +242,17 @@ gtag('consent', 'default', {
       <div><label>Nom du contact</label><input required name="nom"></div></div>
       <div class="tl-row-2"><div><label>Fonction</label><input name="fonction" placeholder="RH, opérations, direction…"></div>
       <div><label>Courriel professionnel</label><input type="email" required name="courriel"></div></div>
-      <div class="tl-row-2"><div><label>Téléphone</label><input name="tel"></div>
-      <div><label>Taille de l'entreprise</label><input name="taille" placeholder="ex. 50–200"></div></div>
+      <div class="tl-row-2"><div><label>Téléphone</label><input name="tel" placeholder="514 555-0123" autocomplete="tel"></div>
+      <div><label>Taille de l'entreprise</label><input name="taille" placeholder="ex. 50–200 employés, usine à Laval"></div></div>
       
             <label>Secteur</label>
             <select name="secteur"><option value="">Choisir un secteur</option><option value="technologie">Technologie et informatique</option><option value="construction">Construction</option><option value="manufacturier">Manufacturier</option><option value="transport">Transport et logistique</option><option value="commerce">Commerce et vente au détail</option><option value="finance">Finance</option><option value="assurance">Assurance</option><option value="sante">Santé</option><option value="education">Éducation</option><option value="hotellerie">Hôtellerie et restauration</option><option value="immobilier">Immobilier</option><option value="services-pro">Services professionnels</option><option value="marketing">Marketing et communication</option><option value="ingenierie">Ingénierie</option><option value="administration">Administration</option><option value="agriculture">Agriculture</option><option value="energie">Énergie</option><option value="telecom">Télécommunications</option><option value="services-entreprises">Services aux entreprises</option><option value="autre">Autre / plusieurs secteurs</option></select>
             <label>Poste recherché</label>
-            <input name="poste" placeholder="ex. comptable, développeur, infirmier, soudeur">
+            <input name="poste" placeholder="ex. cariste, soudeur, machiniste CNC">
             <label>Nombre de personnes à recruter</label>
             <input name="volume" type="number" min="1" value="1">
             <label>Localisation</label>
-            <input name="localisation" placeholder="Ville, région, pays ou télétravail">
+            <input name="localisation" placeholder="Laval, Longueuil, Rive-Sud, Grand Montréal…">
             <label>Type de contrat</label>
             <select name="contrat">
             <option value="">Choisir</option>
@@ -264,10 +264,10 @@ gtag('consent', 'default', {
             <option>Plusieurs types de contrat</option>
         </select>
             <label>Ce que nous devons savoir</label>
-            <textarea name="message" required placeholder="Responsabilités, compétences indispensables, expérience, urgence, tout ce qui orientera la recherche"></textarea>
+            <textarea name="message" required placeholder="Quart 6 h–14 h, 40 h, ASP requise, usine à Laval, bilingue un atout."></textarea>
         
-      <label>Niveau d'expérience</label><input name="experience" placeholder="ex. 3 à 5 ans, junior, cadre">
-      <label>Compétences et qualifications</label><input name="competences" placeholder="Compétences indispensables, langues, diplômes">
+      <label>Niveau d'expérience</label><input name="experience" placeholder="ex. 3 à 5 ans, supervision, quart de jour">
+      <label>Compétences et qualifications</label><input name="competences" placeholder="Cariste, cadenassage, ASP Construction, français / anglais">
       <button class="tl-btn tl-btn-lg" type="submit">Confier mon recrutement</button>
       <div class="tl-success"></div>
     </form>
@@ -373,6 +373,7 @@ gtag('consent', 'default', {
 <script src="assets/js/plugins/circle-progress.js" defer></script>
 <script src="assets/js/main.js" defer></script>
 <script src="assets/js/api.js" defer></script>
+<script src="assets/js/qc-hints.js" defer></script>
 <script src="assets/js/talendus.js" defer></script>
 <script src="assets/js/persona.js" defer></script>
 <script src="assets/js/auth-gate.js" defer></script>

@@ -470,10 +470,10 @@ write("candidats.html", wrap(
           <form class="tl-form" action="#" method="post" data-form="talent-cv" enctype="multipart/form-data">
             <label>Nom</label><input required name="nom" autocomplete="name">
             <label>Courriel</label><input type="email" required name="courriel" autocomplete="email">
-            <label>Téléphone</label><input name="tel" autocomplete="tel">
+            <label>Téléphone</label><input name="tel" autocomplete="tel" placeholder="514 555-0123">
             <label>Métier visé</label>
             <select name="metier">""" + talent_trade_options("fr") + """</select>
-            <label>Région</label><input name="region" placeholder="Laval, Montérégie, Québec, télétravail…">
+            <label>Région</label><input name="region" placeholder="Montréal, Laval, Longueuil, Rive-Sud…">
             """ + cv_file_field("fr", required=True) + """
             <label>Lien vers votre CV <span class="tl-optional">(facultatif)</span></label><input name="cv" placeholder="https://">
             <button class="tl-btn tl-btn-lg" type="submit">Créer mon profil</button>
@@ -598,7 +598,7 @@ write("contact.html", wrap(
             <input type="hidden" name="profil" value="Candidat, je cherche un poste">
             <label>Nom</label><input required name="nom" autocomplete="name">
             <label>Courriel</label><input type="email" required name="courriel" autocomplete="email">
-            <label>Téléphone</label><input name="tel" autocomplete="tel">
+            <label>Téléphone</label><input name="tel" autocomplete="tel" placeholder="514 555-0123">
             <label>Objet</label>
             <select name="objet">
               <option>Déposer mon CV</option>
@@ -607,7 +607,7 @@ write("contact.html", wrap(
             </select>
             """ + cv_file_field("fr", required=False) + """
             <label>Lien vers votre CV <span class="tl-optional">(facultatif)</span></label><input name="cv" placeholder="https://">
-            <label>Message</label><textarea name="message" placeholder="Métier, compétences, ville, type d'emploi"></textarea>
+            <label>Message</label><textarea name="message" placeholder="Cariste à Laval, quart de jour, permis classe 5, disponible lundi"></textarea>
             <button class="tl-btn tl-btn-lg" type="submit">Créer mon profil</button>
             <div class="tl-success"></div>
           </form>
@@ -621,7 +621,7 @@ write("contact.html", wrap(
             <label>Nom</label><input required name="nom">
             <label>Entreprise</label><input required name="entreprise">
             <label>Courriel</label><input type="email" required name="courriel">
-            <label>Téléphone</label><input name="tel">
+            <label>Téléphone</label><input name="tel" placeholder="514 555-0123" autocomplete="tel">
             <label>Objet</label>
             <select name="objet">
               <option>Confier mon recrutement</option>

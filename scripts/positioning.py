@@ -985,11 +985,11 @@ def hiring_need_form_section(lang="fr"):
       <div><label>Your name</label><input required name="nom"></div></div>
       <div class="tl-row-2"><div><label>Role</label><input name="fonction" placeholder="HR, operations, owner…"></div>
       <div><label>Work email</label><input type="email" required name="courriel"></div></div>
-      <div class="tl-row-2"><div><label>Phone</label><input name="tel"></div>
-      <div><label>Company size</label><input name="taille" placeholder="e.g. 50–200"></div></div>
+      <div class="tl-row-2"><div><label>Phone</label><input name="tel" placeholder="514 555-0123" autocomplete="tel"></div>
+      <div><label>Company size</label><input name="taille" placeholder="e.g. 50–200 employees, Laval plant"></div></div>
       {fields}
-      <label>Experience level</label><input name="experience" placeholder="e.g. 3–5 years, junior, leadership">
-      <label>Key skills</label><input name="competences" placeholder="Must-have skills, languages, qualifications">
+      <label>Experience level</label><input name="experience" placeholder="e.g. 3–5 years, supervisor, day shift">
+      <label>Key skills</label><input name="competences" placeholder="Forklift, lockout, ASP Construction, French / English">
       <button class="tl-btn tl-btn-lg" type="submit">Hand us the search</button>
       <div class="tl-success"></div>
     </form>
@@ -1010,11 +1010,11 @@ def hiring_need_form_section(lang="fr"):
       <div><label>Nom du contact</label><input required name="nom"></div></div>
       <div class="tl-row-2"><div><label>Fonction</label><input name="fonction" placeholder="RH, opérations, direction…"></div>
       <div><label>Courriel professionnel</label><input type="email" required name="courriel"></div></div>
-      <div class="tl-row-2"><div><label>Téléphone</label><input name="tel"></div>
-      <div><label>Taille de l'entreprise</label><input name="taille" placeholder="ex. 50–200"></div></div>
+      <div class="tl-row-2"><div><label>Téléphone</label><input name="tel" placeholder="514 555-0123" autocomplete="tel"></div>
+      <div><label>Taille de l'entreprise</label><input name="taille" placeholder="ex. 50–200 employés, usine à Laval"></div></div>
       {fields}
-      <label>Niveau d'expérience</label><input name="experience" placeholder="ex. 3 à 5 ans, junior, cadre">
-      <label>Compétences et qualifications</label><input name="competences" placeholder="Compétences indispensables, langues, diplômes">
+      <label>Niveau d'expérience</label><input name="experience" placeholder="ex. 3 à 5 ans, supervision, quart de jour">
+      <label>Compétences et qualifications</label><input name="competences" placeholder="Cariste, cadenassage, ASP Construction, français / anglais">
       <button class="tl-btn tl-btn-lg" type="submit">Confier mon recrutement</button>
       <div class="tl-success"></div>
     </form>
@@ -1071,15 +1071,15 @@ def employer_need_fields(lang="fr"):
             <label>Industry</label>
             <select name="secteur">{sectors}</select>
             <label>Role to fill</label>
-            <input name="poste" placeholder="e.g. accountant, developer, nurse, welder">
+            <input name="poste" placeholder="e.g. forklift operator, welder, CNC machinist">
             <label>Number of hires</label>
             <input name="volume" type="number" min="1" value="1">
             <label>Location</label>
-            <input name="localisation" placeholder="City, region, country or remote">
+            <input name="localisation" placeholder="Laval, Longueuil, South Shore, Greater Montreal…">
             <label>Contract type</label>
             <select name="contrat">{contracts}</select>
             <label>What we should know</label>
-            <textarea name="message" required placeholder="Responsibilities, must-have skills, experience, urgency, anything that will shape the search"></textarea>
+            <textarea name="message" required placeholder="Day shift 6 a.m.–2 p.m., 40 h, ASP required, plant in Laval, bilingual an asset."></textarea>
         """
     sectors = _options(SECTOR_EXAMPLES["fr"], "Choisir un secteur")
     sectors += '<option value="autre">Autre / plusieurs secteurs</option>'
@@ -1096,15 +1096,15 @@ def employer_need_fields(lang="fr"):
             <label>Secteur</label>
             <select name="secteur">{sectors}</select>
             <label>Poste recherché</label>
-            <input name="poste" placeholder="ex. comptable, développeur, infirmier, soudeur">
+            <input name="poste" placeholder="ex. cariste, soudeur, machiniste CNC">
             <label>Nombre de personnes à recruter</label>
             <input name="volume" type="number" min="1" value="1">
             <label>Localisation</label>
-            <input name="localisation" placeholder="Ville, région, pays ou télétravail">
+            <input name="localisation" placeholder="Laval, Longueuil, Rive-Sud, Grand Montréal…">
             <label>Type de contrat</label>
             <select name="contrat">{contracts}</select>
             <label>Ce que nous devons savoir</label>
-            <textarea name="message" required placeholder="Responsabilités, compétences indispensables, expérience, urgence, tout ce qui orientera la recherche"></textarea>
+            <textarea name="message" required placeholder="Quart 6 h–14 h, 40 h, ASP requise, usine à Laval, bilingue un atout."></textarea>
         """
 
 
@@ -1125,16 +1125,17 @@ def job_search_filters(lang="fr"):
       <div class="tl-filters tl-filters-search" data-ai-ready="true">
         <label class="tl-filter tl-filter-search">
           <span>Role or skills</span>
-          <input id="job-search" placeholder="Developer, Excel, welding, project management…">
+          <input id="job-search" placeholder="Forklift operator, welder, CNC, day shift…">
         </label>
         <label class="tl-filter">
           <span>Location</span>
           <select id="job-city">
             <option value="">Anywhere</option>
             <option>Laval</option><option>Longueuil</option><option>Montreal</option>
-            <option>Drummondville</option><option>Saint-Jérôme</option>
-            <option>Sherbrooke</option><option>Boucherville</option>
+            <option>Brossard</option><option>Terrebonne</option><option>Drummondville</option>
+            <option>Saint-Jérôme</option><option>Sherbrooke</option><option>Boucherville</option>
             <option>Anjou</option><option>Trois-Rivières</option><option>Quebec City</option>
+            <option>Lévis</option><option>Gatineau</option><option>Granby</option>
             <option value="remote">Remote</option>
           </select>
         </label>
@@ -1196,16 +1197,17 @@ def job_search_filters(lang="fr"):
       <div class="tl-filters tl-filters-search" data-ai-ready="true">
         <label class="tl-filter tl-filter-search">
           <span>Métier ou compétences</span>
-          <input id="job-search" placeholder="Développeur, Excel, soudure, gestion de projet…">
+          <input id="job-search" placeholder="Cariste, soudeur, machiniste CNC, quart de jour…">
         </label>
         <label class="tl-filter">
           <span>Localisation</span>
           <select id="job-city">
             <option value="">Toutes les localisations</option>
             <option>Laval</option><option>Longueuil</option><option>Montréal</option>
-            <option>Drummondville</option><option>Saint-Jérôme</option>
-            <option>Sherbrooke</option><option>Boucherville</option>
+            <option>Brossard</option><option>Terrebonne</option><option>Drummondville</option>
+            <option>Saint-Jérôme</option><option>Sherbrooke</option><option>Boucherville</option>
             <option>Anjou</option><option>Trois-Rivières</option><option>Québec</option>
+            <option>Lévis</option><option>Gatineau</option><option>Granby</option>
             <option value="remote">Télétravail</option>
           </select>
         </label>
@@ -1516,14 +1518,14 @@ def _apply_form_html(slug, lang="fr"):
           <form class="tl-form" data-form="apply" data-job-slug="{slug}" enctype="multipart/form-data">
             <label>Name</label><input name="name" required autocomplete="name">
             <label>Email</label><input type="email" name="email" required autocomplete="email">
-            <label>Phone</label><input name="phone" autocomplete="tel">
+            <label>Phone</label><input name="phone" autocomplete="tel" placeholder="514 555-0123">
             <label class="tl-file">
               <span>Your resume</span>
               <input type="file" name="cvfile" accept="{accept}" required>
               <span class="tl-file-hint">PDF, Word (DOC, DOCX) or image (PNG, JPG). 5 MB max. The file reaches Talendus. A consultant calls you back.</span>
             </label>
             <label>Note for Talendus <span class="tl-optional">(optional)</span></label>
-            <textarea name="message" rows="3" maxlength="800" placeholder="Availability, permit, what you want us to know"></textarea>
+            <textarea name="message" rows="3" maxlength="800" placeholder="Available Monday, class 5 licence, 4 years on forklift."></textarea>
             <button class="tl-btn tl-btn-lg" type="submit">Send my application</button>
             <div class="tl-success"></div>
           </form>
@@ -1532,14 +1534,14 @@ def _apply_form_html(slug, lang="fr"):
           <form class="tl-form" data-form="apply" data-job-slug="{slug}" enctype="multipart/form-data">
             <label>Nom</label><input name="nom" required autocomplete="name">
             <label>Courriel</label><input type="email" name="courriel" required autocomplete="email">
-            <label>Téléphone</label><input name="tel" autocomplete="tel">
+            <label>Téléphone</label><input name="tel" autocomplete="tel" placeholder="514 555-0123">
             <label class="tl-file">
               <span>Votre CV</span>
               <input type="file" name="cvfile" accept="{accept}" required>
               <span class="tl-file-hint">PDF, Word (DOC, DOCX) ou image (PNG, JPG). 5 Mo max. Le fichier arrive chez Talendus. Un conseiller vous rappelle.</span>
             </label>
             <label>Note pour Talendus <span class="tl-optional">(facultatif)</span></label>
-            <textarea name="message" rows="3" maxlength="800" placeholder="Disponibilité, permis, ce que vous voulez qu'on sache"></textarea>
+            <textarea name="message" rows="3" maxlength="800" placeholder="Disponible lundi, permis classe 5, 4 ans sur chariot élévateur."></textarea>
             <button class="tl-btn tl-btn-lg" type="submit">Envoyer ma candidature</button>
             <div class="tl-success"></div>
           </form>

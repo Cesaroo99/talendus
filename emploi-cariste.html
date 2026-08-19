@@ -262,14 +262,14 @@ gtag('consent', 'default', {
           <form class="tl-form" data-form="apply" data-job-slug="cariste" enctype="multipart/form-data">
             <label>Nom</label><input name="nom" required autocomplete="name">
             <label>Courriel</label><input type="email" name="courriel" required autocomplete="email">
-            <label>Téléphone</label><input name="tel" autocomplete="tel">
+            <label>Téléphone</label><input name="tel" autocomplete="tel" placeholder="514 555-0123">
             <label class="tl-file">
               <span>Votre CV</span>
               <input type="file" name="cvfile" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp,application/pdf,image/png,image/jpeg" required>
               <span class="tl-file-hint">PDF, Word (DOC, DOCX) ou image (PNG, JPG). 5 Mo max. Le fichier arrive chez Talendus. Un conseiller vous rappelle.</span>
             </label>
             <label>Note pour Talendus <span class="tl-optional">(facultatif)</span></label>
-            <textarea name="message" rows="3" maxlength="800" placeholder="Disponibilité, permis, ce que vous voulez qu'on sache"></textarea>
+            <textarea name="message" rows="3" maxlength="800" placeholder="Disponible lundi, permis classe 5, 4 ans sur chariot élévateur."></textarea>
             <button class="tl-btn tl-btn-lg" type="submit">Envoyer ma candidature</button>
             <div class="tl-success"></div>
           </form>
@@ -447,6 +447,7 @@ gtag('consent', 'default', {
 <script src="assets/js/plugins/circle-progress.js" defer></script>
 <script src="assets/js/main.js" defer></script>
 <script src="assets/js/api.js" defer></script>
+<script src="assets/js/qc-hints.js" defer></script>
 <script src="assets/js/talendus.js" defer></script>
 <script src="assets/js/persona.js" defer></script>
 <script src="assets/js/auth-gate.js" defer></script>

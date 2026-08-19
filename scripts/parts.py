@@ -784,6 +784,7 @@ def footer(lang="fr"):
 <script src="{a}assets/js/plugins/circle-progress.js" defer></script>
 <script src="{a}assets/js/main.js" defer></script>
 <script src="{a}assets/js/api.js" defer></script>
+<script src="{a}assets/js/qc-hints.js" defer></script>
 <script src="{a}assets/js/talendus.js" defer></script>
 <script src="{a}assets/js/persona.js" defer></script>
 <script src="{a}assets/js/auth-gate.js" defer></script>
@@ -1204,6 +1205,7 @@ def native_app_page(lang="fr"):
     </div>
   </div>
   <script src="{prefix}assets/js/api.js"></script>
+  <script src="{prefix}assets/js/qc-hints.js"></script>
   <script src="{prefix}assets/js/mobile-app.js"></script>
 </body>
 </html>

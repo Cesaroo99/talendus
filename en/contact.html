@@ -276,7 +276,7 @@ gtag('consent', 'default', {
             <input type="hidden" name="profil" value="Candidate, I am looking for a role">
             <label>Name</label><input required name="nom" autocomplete="name">
             <label>Email</label><input type="email" required name="courriel" autocomplete="email">
-            <label>Phone</label><input name="tel" autocomplete="tel">
+            <label>Phone</label><input name="tel" autocomplete="tel" placeholder="514 555-0123">
             <label>Subject</label>
             <select name="objet">
               <option>Submit my resume</option>
@@ -289,7 +289,7 @@ gtag('consent', 'default', {
               <span class="tl-file-hint">PDF, Word (DOC, DOCX) or image (PNG, JPG). 5 MB max. The file reaches Talendus. A consultant calls you back.</span>
             </label>
             <label>Link to your resume <span class="tl-optional">(optional)</span></label><input name="cv" placeholder="https://">
-            <label>Message</label><textarea name="message" placeholder="Role, skills, city, job type"></textarea>
+            <label>Message</label><textarea name="message" placeholder="Forklift in Laval, day shift, class 5 licence, available Monday"></textarea>
             <button class="tl-btn tl-btn-lg" type="submit">Create my profile</button>
             <div class="tl-success"></div>
           </form>
@@ -303,7 +303,7 @@ gtag('consent', 'default', {
             <label>Name</label><input required name="nom">
             <label>Company</label><input required name="entreprise">
             <label>Email</label><input type="email" required name="courriel">
-            <label>Phone</label><input name="tel">
+            <label>Phone</label><input name="tel" placeholder="514 555-0123" autocomplete="tel">
             <label>Subject</label>
             <select name="objet">
               <option>Hand us the search</option>
@@ -314,11 +314,11 @@ gtag('consent', 'default', {
             <label>Industry</label>
             <select name="secteur"><option value="">Select an industry</option><option value="technologie">Technology and IT</option><option value="construction">Construction</option><option value="manufacturier">Manufacturing</option><option value="transport">Transportation and logistics</option><option value="commerce">Retail and commerce</option><option value="finance">Finance</option><option value="assurance">Insurance</option><option value="sante">Healthcare</option><option value="education">Education</option><option value="hotellerie">Hospitality</option><option value="immobilier">Real estate</option><option value="services-pro">Professional services</option><option value="marketing">Marketing and communications</option><option value="ingenierie">Engineering</option><option value="administration">Administration</option><option value="agriculture">Agriculture</option><option value="energie">Energy</option><option value="telecom">Telecommunications</option><option value="services-entreprises">Business services</option><option value="autre">Other / several industries</option></select>
             <label>Role to fill</label>
-            <input name="poste" placeholder="e.g. accountant, developer, nurse, welder">
+            <input name="poste" placeholder="e.g. forklift operator, welder, CNC machinist">
             <label>Number of hires</label>
             <input name="volume" type="number" min="1" value="1">
             <label>Location</label>
-            <input name="localisation" placeholder="City, region, country or remote">
+            <input name="localisation" placeholder="Laval, Longueuil, South Shore, Greater Montreal…">
             <label>Contract type</label>
             <select name="contrat">
             <option value="">Select</option>
@@ -330,7 +330,7 @@ gtag('consent', 'default', {
             <option>Several contract types</option>
         </select>
             <label>What we should know</label>
-            <textarea name="message" required placeholder="Responsibilities, must-have skills, experience, urgency, anything that will shape the search"></textarea>
+            <textarea name="message" required placeholder="Day shift 6 a.m.–2 p.m., 40 h, ASP required, plant in Laval, bilingual an asset."></textarea>
         
             <button class="tl-btn tl-btn-lg" type="submit">Hand us the search</button>
             <div class="tl-success"></div>
@@ -432,6 +432,7 @@ gtag('consent', 'default', {
 <script src="../assets/js/plugins/circle-progress.js" defer></script>
 <script src="../assets/js/main.js" defer></script>
 <script src="../assets/js/api.js" defer></script>
+<script src="../assets/js/qc-hints.js" defer></script>
 <script src="../assets/js/talendus.js" defer></script>
 <script src="../assets/js/persona.js" defer></script>
 <script src="../assets/js/auth-gate.js" defer></script>

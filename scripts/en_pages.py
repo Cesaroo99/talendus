@@ -329,10 +329,10 @@ def build_en(write, wrap, page_hero):
           <form class="tl-form" action="#" method="post" data-form="talent-cv" enctype="multipart/form-data">
             <label>Name</label><input required name="nom" autocomplete="name">
             <label>Email</label><input type="email" required name="courriel" autocomplete="email">
-            <label>Phone</label><input name="tel" autocomplete="tel">
+            <label>Phone</label><input name="tel" autocomplete="tel" placeholder="514 555-0123">
             <label>Target role</label>
             <select name="metier">""" + talent_trade_options("en") + """</select>
-            <label>Region</label><input name="region" placeholder="Laval, Montérégie, Quebec City, remote…">
+            <label>Region</label><input name="region" placeholder="Montreal, Laval, Longueuil, South Shore…">
             """ + cv_file_field("en", required=True) + """
             <label>Link to your resume <span class="tl-optional">(optional)</span></label><input name="cv" placeholder="https://">
             <button class="tl-btn tl-btn-lg" type="submit">Create my profile</button>
@@ -454,7 +454,7 @@ def build_en(write, wrap, page_hero):
             <input type="hidden" name="profil" value="Candidate, I am looking for a role">
             <label>Name</label><input required name="nom" autocomplete="name">
             <label>Email</label><input type="email" required name="courriel" autocomplete="email">
-            <label>Phone</label><input name="tel" autocomplete="tel">
+            <label>Phone</label><input name="tel" autocomplete="tel" placeholder="514 555-0123">
             <label>Subject</label>
             <select name="objet">
               <option>Submit my resume</option>
@@ -463,7 +463,7 @@ def build_en(write, wrap, page_hero):
             </select>
             {cv_file_field("en", required=False)}
             <label>Link to your resume <span class="tl-optional">(optional)</span></label><input name="cv" placeholder="https://">
-            <label>Message</label><textarea name="message" placeholder="Role, skills, city, job type"></textarea>
+            <label>Message</label><textarea name="message" placeholder="Forklift in Laval, day shift, class 5 licence, available Monday"></textarea>
             <button class="tl-btn tl-btn-lg" type="submit">Create my profile</button>
             <div class="tl-success"></div>
           </form>
@@ -477,7 +477,7 @@ def build_en(write, wrap, page_hero):
             <label>Name</label><input required name="nom">
             <label>Company</label><input required name="entreprise">
             <label>Email</label><input type="email" required name="courriel">
-            <label>Phone</label><input name="tel">
+            <label>Phone</label><input name="tel" placeholder="514 555-0123" autocomplete="tel">
             <label>Subject</label>
             <select name="objet">
               <option>Hand us the search</option>
