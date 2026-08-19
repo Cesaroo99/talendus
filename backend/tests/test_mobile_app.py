@@ -137,7 +137,31 @@ def test_mobile_shell_is_served(client):
     assert "tl-native-app" in en.text
 
 
-def test_mobile_app_javascript_parses():
+def test_mobile_app_hub_is_ordered():
+    js = (ROOT / "assets" / "js" / "mobile-app.js").read_text(encoding="utf-8")
+    for needle in (
+        "#/profile",
+        "#/cv",
+        "#/help",
+        "#/need",
+        "tn-menu",
+        "tn-identity",
+        "data-avatar",
+        "data-exp",
+        "data-edu",
+        "data-cert",
+        "data-dl-cv",
+        "data-del-cv",
+        "data-hiring",
+        "groupFile",
+        "identityHead",
+        "menuGroup",
+        'href="#/home"',
+    ):
+        assert needle in js
+    css = (ROOT / "assets" / "css" / "mobile-app.css").read_text(encoding="utf-8")
+    for needle in (".tn-menu", ".tn-identity", "a.tn-stat", ".tn-filters", ".tn-avatar"):
+        assert needle in css
     import shutil
     import subprocess
 
