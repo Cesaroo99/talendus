@@ -121,16 +121,23 @@ def test_mobile_app_asks_for_phone_notifications():
         "/push/vapid-public-key",
         "enablePush",
         "TalendusNative",
-        "showNotification",
+        "mirrorUnreadToNative",
+        "/notifications/read-all",
+        "bustCache([\"notifs\"])",
     ):
         assert needle in js
+    assert ".showNotification(" not in js
     sw = (ROOT / "sw.js").read_text(encoding="utf-8")
-    assert "talendus-app-v19" in sw
+    assert "talendus-app-v20" in sw
     assert "showNotification" in sw
+    assert "renotify: false" in sw
     java = (ROOT / "mobile" / "android" / "app" / "src" / "main" / "java" / "ca" / "talendus" / "app" / "MainActivity.java").read_text(encoding="utf-8")
     assert "TalendusNative" in java
     assert "POST_NOTIFICATIONS" in java
     assert "setAuthToken" in java
+    poller = (ROOT / "mobile" / "android" / "app" / "src" / "main" / "java" / "ca" / "talendus" / "app" / "NotifPoller.java").read_text(encoding="utf-8")
+    assert "seen.contains(key)" in poller
+    assert "row.optString(\"id\"" in poller
     manifest = (ROOT / "mobile" / "android" / "app" / "src" / "main" / "AndroidManifest.xml").read_text(encoding="utf-8")
     assert "POST_NOTIFICATIONS" in manifest
     assert "CAMERA" in manifest

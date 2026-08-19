@@ -30,7 +30,6 @@ public final class NotifPoller {
     private static final String KEY_SEEN = "seen_ids";
     private static final String API = "https://talendus.ca/api/notifications?unread=true";
     private static final int ALARM_ID = 71;
-    private static int seq = 2000;
 
     private NotifPoller() {}
 
@@ -100,33 +99,18 @@ public final class NotifPoller {
             if (data == null) {
                 return;
             }
-            List<String> seen = seenIds(ctx);
-            int shown = 0;
-            boolean changed = false;
             for (int i = 0; i < data.length(); i++) {
                 JSONObject row = data.optJSONObject(i);
                 if (row == null) {
                     continue;
                 }
-                String id = row.optString("id", "");
-                if (id.isEmpty() || seen.contains(id)) {
-                    continue;
-                }
-                seen.add(id);
-                changed = true;
-                if (shown >= 5) {
-                    continue;
-                }
-                shown++;
                 post(
                     ctx,
                     row.optString("title", "Talendus"),
                     row.optString("message", ""),
-                    appHref(row.optString("href", ""))
+                    appHref(row.optString("href", "")),
+                    row.optString("id", "")
                 );
-            }
-            if (changed) {
-                storeSeen(ctx, seen);
             }
         } catch (Exception ignored) {
         } finally {
@@ -156,6 +140,10 @@ public final class NotifPoller {
     }
 
     public static void post(Context ctx, String title, String body, String href) {
+        post(ctx, title, body, href, "");
+    }
+
+    public static void post(Context ctx, String title, String body, String href, String notifId) {
         ensureChannel(ctx);
         NotificationManager manager = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
         if (manager == null) {
@@ -167,7 +155,17 @@ public final class NotifPoller {
         String safeTitle = title == null || title.isEmpty() ? "Talendus" : title;
         String safeBody = body == null ? "" : body;
         String safeHref = href == null || href.isEmpty() ? "/m.html#/notifs" : href;
-        int id = seq++;
+        String key = notifId != null && !notifId.isEmpty() ? notifId : (safeTitle + "\n" + safeBody);
+        List<String> seen = seenIds(ctx);
+        if (seen.contains(key)) {
+            return;
+        }
+        seen.add(key);
+        storeSeen(ctx, seen);
+        int id = Math.abs(key.hashCode());
+        if (id == 0 || id == Integer.MIN_VALUE) {
+            id = 1;
+        }
         Intent open = new Intent(ctx, MainActivity.class);
         open.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         open.putExtra("href", safeHref);
