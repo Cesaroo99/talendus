@@ -1,6 +1,6 @@
 (function (global) {
   var STYLE_ID = "tn-call-css";
-  var CSS = "#tn-call-overlay{display:none;position:fixed;inset:0;z-index:80;background:#071422;color:#fff;font-family:inherit}" +
+  var CSS = "#tn-call-overlay{display:none;position:fixed;inset:0;z-index:200;background:#071422;color:#fff;font-family:inherit}" +
     "#tn-call-overlay.is-on{display:flex;flex-direction:column}" +
     "#tn-call-overlay .tn-call-stage{flex:1;position:relative;background:#04101c;overflow:hidden}" +
     "#tn-call-overlay video{object-fit:cover;background:#000}" +

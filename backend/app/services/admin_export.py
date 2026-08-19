@@ -19,8 +19,9 @@ from app.models import (
     RecruitmentMission,
     User,
 )
-from app.models.enums import ApplicationStatus, InvoiceStatus, JobStatus, MissionStatus, utcnow
+from app.models.enums import ApplicationStatus, InterviewType, InvoiceStatus, JobStatus, MissionStatus, utcnow
 from app.services.hiring_requests import STATUS_COPY, serialize_request
+from app.services.interviews import CALL_TYPES, LIVE_CALL_STATUSES
 from app.services.pipeline import stage_for
 
 APP_STATUS = {
@@ -410,6 +411,8 @@ def _interview(i: Interview) -> dict:
         "recruiterId": i.recruiter_id or "",
         "status": i.status.value if i.status else "SCHEDULED",
         "jobId": i.job_id or "",
+        "in_app_call": i.type in CALL_TYPES and i.status in LIVE_CALL_STATUSES,
+        "call_video": i.type != InterviewType.PHONE,
     }
 
 
