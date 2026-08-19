@@ -13,10 +13,10 @@
     messages: "Messages",
     me: "Me",
     hello: "Hello",
-    welcomeTitle: "How can Talendus help you?",
-    welcomeLead: "Choose once. You will only see what matches that choice.",
+    welcomeTitle: "You are",
+    welcomeLead: "",
     tagline: "Placement agency · Every industry",
-    talent: "I am looking for work",
+    talent: "Looking for work",
     talentHint: "A consultant follows you. Submit your resume — we call you when a real mandate fits.",
     employer: "I want to hire",
     employerHint: "Hand us a hiring need. We search, present files, and a consultant calls you back.",
@@ -213,7 +213,11 @@
     pushLead: "Get Talendus updates in your phone’s notification bar.",
     pushEnable: "Enable phone notifications",
     notifyPush: "Phone notification bar",
-    pushOn: "Updates will appear in your notification bar."
+    pushOn: "Updates will appear in your notification bar.",
+    joinCall: "Join the call",
+    callAudio: "Audio call",
+    callVideo: "Video call",
+    callConnecting: "Connecting the interview…"
   } : {
     home: "Accueil",
     jobs: "Offres",
@@ -221,8 +225,8 @@
     messages: "Messages",
     me: "Moi",
     hello: "Bonjour",
-    welcomeTitle: "Comment Talendus peut vous aider ?",
-    welcomeLead: "Choisissez une fois. Ensuite, vous ne voyez que ce qui correspond à votre situation.",
+    welcomeTitle: "Vous êtes",
+    welcomeLead: "",
     tagline: "Agence de placement · Tous secteurs",
     talent: "Je cherche un emploi",
     talentHint: "Un conseiller vous suit. Déposez votre CV, on vous rappelle pour un vrai mandat.",
@@ -421,7 +425,11 @@
     pushLead: "Recevez les suivis Talendus dans la barre de notifications du téléphone.",
     pushEnable: "Activer les notifications du téléphone",
     notifyPush: "Barre de notifications du téléphone",
-    pushOn: "Les suivis apparaîtront dans la barre de notifications."
+    pushOn: "Les suivis apparaîtront dans la barre de notifications.",
+    joinCall: "Rejoindre l’appel",
+    callAudio: "Appel audio",
+    callVideo: "Appel vidéo",
+    callConnecting: "Connexion à l’entretien…"
   };
 
   var state = {
@@ -511,7 +519,8 @@
       mandats: "contracts", contracts: "contracts", hiring: "hiring", messages: "messages",
       me: "me", jobs: "jobs", job: "job", inbox: "inbox", help: "help", aide: "help",
       need: "need", "hiring-new": "need", "job-new": "need",
-      forgot: "forgot", reset: "reset", verify: "verify", login: "login", register: "register"
+      forgot: "forgot", reset: "reset", verify: "verify", login: "login", register: "register",
+      call: "call", appel: "call"
     };
     name = aliases[name] || name;
     if (isEmployer()) {
@@ -541,12 +550,13 @@
     if (!name) name = state.user ? "home" : "welcome";
     var mapped = canonicalize(name, id);
     if (!mapped.id && query.token) mapped.id = query.token;
+    mapped.query = query;
     return mapped;
   }
   function allowedRoute(name) {
     if (!state.user) return ["welcome", "login", "register", "forgot", "reset", "verify"].indexOf(name) !== -1;
-    if (isCandidate()) return ["home", "jobs", "job", "apps", "app", "messages", "me", "notifs", "alerts", "saved", "interviews", "settings", "profile", "cv", "help"].indexOf(name) !== -1;
-    if (isEmployer()) return ["home", "hiring", "need", "messages", "me", "notifs", "interviews", "inbox", "invoices", "contracts", "pipeline", "company", "settings", "help"].indexOf(name) !== -1;
+    if (isCandidate()) return ["home", "jobs", "job", "apps", "app", "messages", "me", "notifs", "alerts", "saved", "interviews", "settings", "profile", "cv", "help", "call"].indexOf(name) !== -1;
+    if (isEmployer()) return ["home", "hiring", "need", "messages", "me", "notifs", "interviews", "inbox", "invoices", "contracts", "pipeline", "company", "settings", "help", "call"].indexOf(name) !== -1;
     return name === "home" || name === "me" || name === "messages" || name === "settings";
   }
   function portalHash(href) {
@@ -668,10 +678,20 @@
     return "<p class=\"tn-meta\">" + esc(t.missing) + "</p><div class=\"tn-chips\">" +
       missing.map(function (key) { return '<span class="tn-chip">' + esc(labels[key] || key) + "</span>"; }).join("") + "</div>";
   }
+  function canJoinCall(row) {
+    return !!(row && row.in_app_call && row.status !== "CANCELLED" && row.status !== "COMPLETED" && row.status !== "NO_SHOW");
+  }
+  function callActions(row) {
+    if (!canJoinCall(row)) return "";
+    var audio = '<a class="tn-btn tn-btn-ghost" href="#/call/' + encodeURIComponent(row.id) + '?video=0">' + esc(t.callAudio) + "</a>";
+    var video = row.call_video === false ? "" : '<a class="tn-btn" href="#/call/' + encodeURIComponent(row.id) + '?video=1">' + esc(t.callVideo) + "</a>";
+    return '<div class="tn-row-actions">' + audio + video + "</div>";
+  }
   function interviewCard() {
     var row = nextInterview();
     if (!row) return "";
-    return '<a class="tn-job" href="#/interviews"><h3>' + esc(t.nextInterview) + "</h3><p class=\"tn-meta\">" +
+    var href = canJoinCall(row) ? ("#/call/" + encodeURIComponent(row.id) + (row.call_video === false ? "?video=0" : "?video=1")) : "#/interviews";
+    return '<a class="tn-job" href="' + href + '"><h3>' + esc(t.nextInterview) + "</h3><p class=\"tn-meta\">" +
       esc(when(row.scheduled_at) + (row.location ? " · " + row.location : "") + (row.type_label ? " · " + row.type_label : "")) + "</p></a>";
   }
 
@@ -688,6 +708,7 @@
   function tabs() {
     if (!state.user) return "";
     var r = route().name;
+    if (r === "call") return "";
     var items = isEmployer() ? [
       { href: "#/home", key: "home", label: t.home, icon: icons.home },
       { href: "#/hiring", key: "hiring", label: t.hiring, icon: icons.hire },
@@ -704,7 +725,7 @@
       var on = r === item.key;
       if (item.key === "jobs") on = on || r === "job";
       if (item.key === "hiring") on = on || r === "need" || r === "pipeline" || r === "inbox";
-      if (item.key === "me") on = on || ["settings", "company", "apps", "app", "profile", "cv", "saved", "alerts", "interviews", "help", "invoices", "contracts"].indexOf(r) !== -1;
+      if (item.key === "me") on = on || ["settings", "company", "apps", "app", "profile", "cv", "saved", "alerts", "interviews", "help", "invoices", "contracts", "call"].indexOf(r) !== -1;
       var badge = (item.key === "messages" && msgUnread) ? '<span class="tn-badge">' + msgUnread + "</span>" : "";
       return '<a href="' + item.href + '" class="' + (on ? "is-on" : "") + '">' + item.icon + badge + "<span>" + esc(item.label) + "</span></a>";
     }).join("") + "</nav>";
@@ -730,14 +751,13 @@
       '<p class="tn-word">Talendus</p>' +
       '<p class="tn-tag">' + esc(t.tagline) + "</p>" +
       "<h1 class=\"tn-title tn-title-light\">" + esc(t.welcomeTitle) + "</h1>" +
-      '<p class="tn-lead tn-lead-light">' + esc(t.welcomeLead) + "</p>" +
       '<a class="tn-persona" href="#/login/talent" data-choose="talent">' +
         '<span class="tn-persona-icon" aria-hidden="true">' + icons.talent + "</span>" +
-        "<span><strong>" + esc(t.talent) + "</strong><em>" + esc(t.talentHint) + "</em></span>" +
+        "<span><strong>" + esc(t.talent) + "</strong></span>" +
         '<span class="tn-chevron" aria-hidden="true">' + icons.chevron + "</span></a>" +
       '<a class="tn-persona" href="#/login/employer" data-choose="employer">' +
         '<span class="tn-persona-icon" aria-hidden="true">' + icons.hire + "</span>" +
-        "<span><strong>" + esc(t.employer) + "</strong><em>" + esc(t.employerHint) + "</em></span>" +
+        "<span><strong>" + esc(t.employer) + "</strong></span>" +
         '<span class="tn-chevron" aria-hidden="true">' + icons.chevron + "</span></a>" +
       helpLine() + "</div>";
   }
@@ -959,16 +979,19 @@
   }
   function interviewsView() {
     return listBlock(t.interviews, t.emptyInterviews, (state.interviews || []).map(function (row) {
-      var actions = "";
+      var actions = callActions(row);
       if (isCandidate() && (row.status === "SCHEDULED" || !row.status)) {
-        actions = '<div class="tn-row-actions"><button type="button" class="tn-btn" data-int-status="CONFIRMED" data-int-id="' +
+        actions += '<div class="tn-row-actions"><button type="button" class="tn-btn" data-int-status="CONFIRMED" data-int-id="' +
           esc(row.id) + '">' + esc(t.confirmInterview) + '</button><button type="button" class="tn-btn tn-btn-ghost" data-int-status="CANCELLED" data-int-id="' +
           esc(row.id) + '">' + esc(t.cancelInterview) + "</button></div>";
       }
       var job = row.job || {};
-      return '<div class="tn-job"><h3>' + esc(job.title || row.type_label || t.interviews) + "</h3><p class=\"tn-meta\">" +
+      return '<div class="tn-job"><h3>' + esc(job.title || row.job_title || row.type_label || t.interviews) + "</h3><p class=\"tn-meta\">" +
         esc([when(row.scheduled_at), row.location, statusLabel(row.status)].filter(Boolean).join(" · ")) + "</p>" + actions + "</div>";
     }), "#/me");
+  }
+  function callView() {
+    return '<div class="tn-empty">' + esc(t.callConnecting) + "</div>";
   }
   function savedView() {
     return listBlock(t.savedJobs, t.emptySaved, (state.saved || []).map(function (row) {
@@ -1207,6 +1230,7 @@
       if (name === "messages") return messagesView();
       if (name === "notifs") return notifsView();
       if (name === "interviews") return interviewsView();
+      if (name === "call") return callView();
       if (name === "saved") return savedView();
       if (name === "alerts") return alertsView();
       if (name === "apps") return appsView();
@@ -1223,6 +1247,7 @@
     if (name === "messages") return messagesView();
     if (name === "notifs") return notifsView();
     if (name === "interviews") return interviewsView();
+    if (name === "call") return callView();
     if (name === "inbox") return inboxView();
     if (name === "pipeline") return pipelineView();
     if (name === "invoices") return invoicesView();
@@ -1311,7 +1336,7 @@
         need("saved", function () { return api.request("/jobs/saved"); }, "saved", true);
       }
       if (name === "alerts") need("alerts", function () { return api.request("/alerts"); }, "alerts", true);
-      if (name === "interviews" || name === "home") {
+      if (name === "interviews" || name === "home" || name === "call") {
         need("interviews", function () { return api.request("/interviews"); }, "interviews", true);
       }
     } else if (isEmployer()) {
@@ -1327,7 +1352,7 @@
       if (name === "invoices") need("invoices", function () { return api.request("/invoices"); }, "invoices", true);
       if (name === "contracts") need("contracts", function () { return api.request("/contracts"); }, "contracts", true);
       if (name === "company") need("company", function () { return api.request("/companies/me"); }, "company", false);
-      if (name === "interviews" || name === "home") {
+      if (name === "interviews" || name === "home" || name === "call") {
         need("interviews", function () { return api.request("/interviews"); }, "interviews", true);
       }
     }
@@ -1351,6 +1376,9 @@
       return true;
     }
     var wanted = "#/" + r.name + (r.id ? "/" + r.id : "");
+    var rawHash = location.hash || "";
+    var qAt = rawHash.indexOf("?");
+    if (qAt >= 0) wanted += rawHash.slice(qAt);
     var raw = (location.hash || "").replace(/^#\/?/, "").split("/")[0];
     if (state.user && raw && raw !== r.name && raw !== "welcome") {
       location.replace(wanted);
@@ -1396,6 +1424,7 @@
     return Promise.all(pending).then(function () {
       if (!syncHash()) return;
       render();
+      syncCallScreen();
     }).catch(function () { render(); });
   }
 
@@ -1414,7 +1443,7 @@
       setPersona(isEmployer(user) ? "employer" : "talent");
       setNotice("");
       go("#/home");
-      enablePush(false);
+      enablePush(true);
       return loadRoute();
     });
   }
@@ -1430,6 +1459,7 @@
         return new Promise(function () {});
       }
       setPersona(user.role === "EMPLOYER" ? "employer" : "talent");
+      syncNativeAuth();
     }).catch(function () {});
   }
 
@@ -1728,6 +1758,10 @@
   });
 
   window.addEventListener("hashchange", loadRoute);
+  window.addEventListener("talendus:session-set", function () { syncNativeAuth(); });
+  window.addEventListener("talendus:session-cleared", function () {
+    try { if (window.TalendusNative && window.TalendusNative.clearAuth) window.TalendusNative.clearAuth(); } catch (e) {}
+  });
   function urlBase64ToUint8Array(base64String) {
     var padding = "=".repeat((4 - base64String.length % 4) % 4);
     var base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
@@ -1739,6 +1773,14 @@
   function nativePush() {
     try { return window.TalendusNative && typeof window.TalendusNative.showNotification === "function"; } catch (e) { return false; }
   }
+  function syncNativeAuth() {
+    if (!nativePush()) return;
+    try {
+      var token = localStorage.getItem("talendus_access_token") || "";
+      if (token && window.TalendusNative.setAuthToken) window.TalendusNative.setAuthToken(token);
+      if (!token && window.TalendusNative.clearAuth) window.TalendusNative.clearAuth();
+    } catch (e) {}
+  }
   function pushAllowed() {
     try {
       if (nativePush() && typeof window.TalendusNative.notificationsEnabled === "function") {
@@ -1749,8 +1791,8 @@
   }
   function pushBanner() {
     if (!state.user) return "";
-    try { if (localStorage.getItem("talendus_push_ok") === "1") return ""; } catch (e) {}
     if (pushAllowed()) return "";
+    try { if (localStorage.getItem("talendus_push_ok") === "1" && pushAllowed()) return ""; } catch (e) {}
     if (typeof Notification !== "undefined" && Notification.permission === "denied" && !nativePush()) return "";
     if (typeof Notification === "undefined" && !nativePush()) return "";
     return '<div class="tn-card tn-push-card"><p class="tn-meta">' + esc(t.pushLead) +
@@ -1766,41 +1808,39 @@
     if (!nativePush()) return;
     rows = rows || state.notifs || [];
     var seen = seenPushIds();
-    var primed = false;
-    try { primed = localStorage.getItem("talendus_push_primed") === "1"; } catch (e) {}
-    if (!primed) {
-      rows.forEach(function (n) { if (n && n.id && seen.indexOf(n.id) === -1) seen.push(n.id); });
-      storeSeenPush(seen);
-      try { localStorage.setItem("talendus_push_primed", "1"); } catch (e) {}
-      return;
-    }
+    var shown = 0;
     var changed = false;
     rows.forEach(function (n) {
       if (!n || n.is_read || seen.indexOf(n.id) !== -1) return;
       seen.push(n.id);
       changed = true;
+      if (shown >= 5) return;
+      shown += 1;
       try { window.TalendusNative.showNotification(n.title || "Talendus", n.message || "", n.href || "/m.html#/notifs"); } catch (err) {}
     });
     if (changed) storeSeenPush(seen);
   }
   function enablePush(interactive) {
     if (!state.user && !api.currentUser()) return Promise.resolve(false);
+    syncNativeAuth();
     if (nativePush()) {
       try { if (window.TalendusNative.requestPermission) window.TalendusNative.requestPermission(); } catch (e) {}
-      try { localStorage.setItem("talendus_push_ok", "1"); } catch (e) {}
+      if (pushAllowed()) {
+        try { localStorage.setItem("talendus_push_ok", "1"); } catch (e) {}
+      }
     }
     if (!("serviceWorker" in navigator) || !("PushManager" in window) || typeof Notification === "undefined") {
-      return Promise.resolve(!!nativePush());
+      return Promise.resolve(pushAllowed());
     }
     var ask = Notification.permission === "granted"
       ? Promise.resolve("granted")
       : (interactive ? Notification.requestPermission() : Promise.resolve(Notification.permission));
     return ask.then(function (perm) {
-      if (perm !== "granted") return !!nativePush();
+      if (perm !== "granted") return pushAllowed();
       return navigator.serviceWorker.ready.then(function (reg) {
         return api.request("/push/vapid-public-key").then(function (json) {
           var key = dataOf(json) && dataOf(json).public_key;
-          if (!key) return false;
+          if (!key) return pushAllowed();
           return reg.pushManager.getSubscription().then(function (existing) {
             return existing || reg.pushManager.subscribe({
               userVisibleOnly: true,
@@ -1819,7 +1859,7 @@
           });
         });
       });
-    }).catch(function () { return !!nativePush(); });
+    }).catch(function () { return pushAllowed(); });
   }
   function disablePush() {
     try { localStorage.removeItem("talendus_push_ok"); } catch (e) {}
@@ -1836,8 +1876,41 @@
   }
   function quietPushSync() {
     if (!state.user) return;
+    syncNativeAuth();
     if (typeof Notification !== "undefined" && Notification.permission === "granted") enablePush(false);
+    else if (nativePush()) enablePush(false);
     mirrorUnreadToNative();
+  }
+  function pollNotifs() {
+    if (!state.user || !api.currentUser()) return;
+    api.notifications(true).then(function (json) {
+      var unread = dataOf(json) || [];
+      mirrorUnreadToNative(unread);
+      var prev = unreadCount();
+      if (unread.length) {
+        var byId = {};
+        (state.notifs || []).forEach(function (n) { byId[n.id] = n; });
+        unread.forEach(function (n) { byId[n.id] = n; });
+        state.notifs = Object.keys(byId).map(function (id) { return byId[id]; });
+      }
+      if (unreadCount() !== prev) render();
+    }).catch(function () {});
+  }
+  function syncCallScreen() {
+    var r = route();
+    if (r.name === "call" && r.id && window.TalendusCall) {
+      var q = r.query || {};
+      var video = q.video !== "0" && q.video !== "false";
+      window.TalendusCall.start({
+        interviewId: r.id,
+        video: video,
+        onHangup: function () {
+          if (route().name === "call") go("#/interviews");
+        }
+      });
+      return;
+    }
+    if (window.TalendusCall && window.TalendusCall.isLive()) window.TalendusCall.hangup();
   }
   function registerSw() {
     if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
@@ -1846,10 +1919,20 @@
   }
   if (window.requestIdleCallback) window.requestIdleCallback(registerSw, { timeout: 2500 });
   else setTimeout(registerSw, 1200);
+  setInterval(pollNotifs, 20000);
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden) {
+      pollNotifs();
+      if (nativePush()) {
+        try { window.TalendusNative.requestPermission(); } catch (e) {}
+      }
+    }
+  });
   api.services().then(function (json) {
     var data = dataOf(json) || {};
     if (data.contact) state.contact = data.contact;
   }).catch(function () {});
+  syncNativeAuth();
   hydrateSession().then(loadRoute).catch(function () { render(); });
   render();
 })();

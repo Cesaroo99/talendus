@@ -14,6 +14,14 @@ from app.services.auth import ensure_candidate
 from app.services.email import send_email
 from app.services.notifications import notify, portal_href
 
+CALL_TYPES = {
+    InterviewType.TALENDUS,
+    InterviewType.CLIENT,
+    InterviewType.PHONE,
+    InterviewType.VIDEO,
+}
+LIVE_CALL_STATUSES = {InterviewStatus.SCHEDULED, InterviewStatus.CONFIRMED}
+
 TYPE_LABEL = {
     InterviewType.TALENDUS: "Talendus",
     InterviewType.CLIENT: "Client",
@@ -61,6 +69,8 @@ def serialize_interview(row: Interview, viewer: User | None = None) -> dict:
         "candidate_name": user.full_name if user else None,
         "job_title": row.job.title if row.job else None,
         "company_name": row.company.name if row.company else None,
+        "in_app_call": row.type in CALL_TYPES and row.status in LIVE_CALL_STATUSES,
+        "call_video": row.type != InterviewType.PHONE,
     }
 
 

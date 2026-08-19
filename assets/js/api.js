@@ -19,6 +19,7 @@
       if (data.refresh_token) localStorage.setItem(REFRESH, data.refresh_token);
       if (data.user) localStorage.setItem(USER, JSON.stringify(data.user));
     } catch (e) {}
+    try { window.dispatchEvent(new CustomEvent("talendus:session-set")); } catch (e) {}
   }
 
   function clearSession() {

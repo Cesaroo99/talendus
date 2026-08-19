@@ -125,10 +125,13 @@ def test_mobile_app_asks_for_phone_notifications():
     ):
         assert needle in js
     sw = (ROOT / "sw.js").read_text(encoding="utf-8")
-    assert "talendus-app-v13" in sw
+    assert "talendus-app-v14" in sw
     assert "showNotification" in sw
     java = (ROOT / "mobile" / "android" / "app" / "src" / "main" / "java" / "ca" / "talendus" / "app" / "MainActivity.java").read_text(encoding="utf-8")
     assert "TalendusNative" in java
     assert "POST_NOTIFICATIONS" in java
+    assert "setAuthToken" in java
     manifest = (ROOT / "mobile" / "android" / "app" / "src" / "main" / "AndroidManifest.xml").read_text(encoding="utf-8")
     assert "POST_NOTIFICATIONS" in manifest
+    assert "CAMERA" in manifest
+    assert "RECORD_AUDIO" in manifest
