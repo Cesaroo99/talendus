@@ -114,15 +114,19 @@ body.tn-gated #tl-native-app {
 .tn-word {
   color: #fff;
   font-weight: 800;
-  letter-spacing: .2em;
+  letter-spacing: .28em;
+  padding-left: .28em;
   text-transform: uppercase;
   font-size: .82rem;
   margin: 0 0 6px;
+  text-align: center;
 }
 .tn-tag {
   color: rgba(255,255,255,.62);
   font-size: .86rem;
   margin: 0 0 8px;
+  text-align: center;
+  line-height: 1.4;
 }
 .tn-splash-bar {
   width: 140px;
@@ -193,13 +197,30 @@ body.tn-gated #tl-native-app {
 .tn-gate {
   display: flex;
   flex-direction: column;
-  align-items: stretch;
-  padding-top: 18px;
+  align-items: center;
+  padding-top: 12px;
+  padding-bottom: 8px;
   animation: tn-fade-up .55s ease both;
 }
-.tn-gate .tn-word,
-.tn-gate .tn-tag {
+.tn-gate-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
+  width: 100%;
+  margin-bottom: 6px;
+}
+.tn-gate .tn-word {
+  font-size: .95rem;
+  margin: 0 0 8px;
+}
+.tn-gate .tn-tag {
+  margin: 0;
+  max-width: 16.5rem;
+}
+.tn-gate .tn-persona,
+.tn-gate .tn-sheet {
+  width: 100%;
 }
 .tn-title {
   margin: 0 0 8px;
@@ -592,7 +613,21 @@ body.tn-gated .tn-tabs { display: none; }
   border-color: var(--tn-navy);
   color: #fff;
 }
-.tn-gate .tn-langs { margin-top: 22px; }
+.tn-gate .tn-langs {
+  margin-top: 22px;
+  width: min(100%, 280px);
+  align-self: center;
+}
+.tn-gate .tn-lang {
+  background: transparent;
+  border-color: rgba(255,255,255,.3);
+  color: #fff;
+}
+.tn-gate .tn-lang.is-on {
+  background: #fff;
+  border-color: #fff;
+  color: var(--tn-navy);
+}
 .tn-quick {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

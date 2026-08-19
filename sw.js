@@ -1,4 +1,4 @@
-const CACHE = "talendus-app-v18";
+const CACHE = "talendus-app-v19";
 const PRECACHE = [
   "/offline.html",
   "/m.html",
