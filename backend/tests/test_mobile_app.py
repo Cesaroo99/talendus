@@ -110,6 +110,10 @@ def test_mobile_app_gates_access_by_persona():
     js = (ROOT / "assets" / "js" / "mobile-app.js").read_text(encoding="utf-8")
     assert "brandOrbit" in js
     assert "tn-title-light" in js
+    assert "tn-gate-brand" in js
+    css = (ROOT / "assets" / "css" / "mobile-app.css").read_text(encoding="utf-8")
+    assert ".tn-gate-brand" in css
+    assert "padding-left: .28em" in css
 
 
 def test_mobile_app_signs_in_before_creating_an_account():

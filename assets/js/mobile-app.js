@@ -936,9 +936,11 @@
 
   function welcomeView() {
     return '<div class="tn-gate">' +
+      '<div class="tn-gate-brand">' +
       brandOrbit() +
       '<p class="tn-word">Talendus</p>' +
       '<p class="tn-tag">' + esc(t.tagline) + "</p>" +
+      "</div>" +
       "<h1 class=\"tn-title tn-title-light\">" + esc(t.welcomeTitle) + "</h1>" +
       '<a class="tn-persona" href="#/login/talent" data-choose="talent">' +
         '<span class="tn-persona-icon" aria-hidden="true">' + icons.talent + "</span>" +
@@ -956,7 +958,7 @@
     var persona = personaKey();
     var employer = persona === "employer";
     var backWelcome = '<a class="tn-back" href="#/welcome">' + esc(t.back) + "</a>";
-    var head = '<div class="tn-gate">' + brandOrbit("is-md") + '<p class="tn-word">Talendus</p><div class="tn-sheet">';
+    var head = '<div class="tn-gate"><div class="tn-gate-brand">' + brandOrbit("is-md") + '<p class="tn-word">Talendus</p></div><div class="tn-sheet">';
     if (r.name === "forgot") {
       return head + backWelcome.replace("#/welcome", loginHref()) +
         "<h1 class=\"tn-title\">" + esc(t.forgotTitle) + "</h1><p class=\"tn-lead\">" + esc(t.forgotLead) + "</p>" + flash() +
