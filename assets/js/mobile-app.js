@@ -197,7 +197,19 @@
     experienceLevel: "Experience level",
     editNeed: "Edit this need",
     legalName: "Legal name",
-    linkedin: "LinkedIn"
+    linkedin: "LinkedIn",
+    noAccount: "No account yet? Create one",
+    forgotTitle: "Forgot password",
+    forgotLead: "Enter the email of your Talendus space. If it exists, we send a reset link.",
+    sendReset: "Send the link",
+    forgotNeedEmail: "Enter your email first.",
+    resetTitle: "New password",
+    resetLead: "Choose a password with at least 8 characters.",
+    resetBtn: "Update password",
+    verifyTitle: "Confirming your email…",
+    verifyOk: "Email verified. You can sign in.",
+    networkErr: "Cannot reach Talendus. Check your connection and try again.",
+    sessionLost: "Sign-in could not be saved on this device. Try again."
   } : {
     home: "Accueil",
     jobs: "Offres",
@@ -389,7 +401,19 @@
     experienceLevel: "Niveau d’expérience",
     editNeed: "Modifier ce besoin",
     legalName: "Raison sociale",
-    linkedin: "LinkedIn"
+    linkedin: "LinkedIn",
+    noAccount: "Pas encore de compte ? Créer un compte",
+    forgotTitle: "Mot de passe oublié",
+    forgotLead: "Indiquez le courriel de votre espace Talendus. S’il existe, un lien de réinitialisation part.",
+    sendReset: "Envoyer le lien",
+    forgotNeedEmail: "Indiquez d’abord votre courriel.",
+    resetTitle: "Nouveau mot de passe",
+    resetLead: "Choisissez un mot de passe d’au moins 8 caractères.",
+    resetBtn: "Mettre à jour",
+    verifyTitle: "Vérification du courriel…",
+    verifyOk: "Courriel vérifié. Vous pouvez vous connecter.",
+    networkErr: "Impossible de joindre Talendus. Vérifiez la connexion, puis réessayez.",
+    sessionLost: "La connexion n’a pas pu être enregistrée sur cet appareil. Réessayez."
   };
 
   var state = {
@@ -421,7 +445,8 @@
     need: null,
     notice: "",
     error: "",
-    mismatch: ""
+    mismatch: "",
+    authEmail: ""
   };
 
   var icons = {
@@ -477,7 +502,8 @@
       billing: "invoices", facturation: "invoices", invoices: "invoices", contrats: "contracts",
       mandats: "contracts", contracts: "contracts", hiring: "hiring", messages: "messages",
       me: "me", jobs: "jobs", job: "job", inbox: "inbox", help: "help", aide: "help",
-      need: "need", "hiring-new": "need", "job-new": "need"
+      need: "need", "hiring-new": "need", "job-new": "need",
+      forgot: "forgot", reset: "reset", verify: "verify", login: "login", register: "register"
     };
     name = aliases[name] || name;
     if (isEmployer()) {
@@ -489,14 +515,28 @@
   }
   function route() {
     var raw = (location.hash || "").replace(/^#/, "");
+    var query = {};
+    var qIndex = raw.indexOf("?");
+    if (qIndex >= 0) {
+      raw.slice(qIndex + 1).split("&").forEach(function (part) {
+        var kv = part.split("=");
+        if (!kv[0]) return;
+        try {
+          query[decodeURIComponent(kv[0])] = decodeURIComponent((kv[1] || "").replace(/\+/g, " "));
+        } catch (err) {}
+      });
+      raw = raw.slice(0, qIndex);
+    }
     var parts = raw.replace(/^\//, "").split("/").filter(Boolean);
     var name = parts[0];
     var id = decodeURIComponent(parts.slice(1).join("/"));
     if (!name) name = state.user ? "home" : "welcome";
-    return canonicalize(name, id);
+    var mapped = canonicalize(name, id);
+    if (!mapped.id && query.token) mapped.id = query.token;
+    return mapped;
   }
   function allowedRoute(name) {
-    if (!state.user) return name === "welcome" || name === "login" || name === "register";
+    if (!state.user) return ["welcome", "login", "register", "forgot", "reset", "verify"].indexOf(name) !== -1;
     if (isCandidate()) return ["home", "jobs", "job", "apps", "app", "messages", "me", "notifs", "alerts", "saved", "interviews", "settings", "profile", "cv", "help"].indexOf(name) !== -1;
     if (isEmployer()) return ["home", "hiring", "need", "messages", "me", "notifs", "interviews", "inbox", "invoices", "contracts", "pipeline", "company", "settings", "help"].indexOf(name) !== -1;
     return name === "home" || name === "me" || name === "messages" || name === "settings";
@@ -662,6 +702,20 @@
     }).join("") + "</nav>";
   }
 
+  function personaKey() {
+    var r = route();
+    if (r.id === "employer" || r.id === "talent") return r.id;
+    return getPersona() || "";
+  }
+  function loginHref() {
+    var p = personaKey();
+    return p ? "#/login/" + p : "#/login";
+  }
+  function registerHref() {
+    var p = personaKey();
+    return p ? "#/register/" + p : "#/register";
+  }
+
   function welcomeView() {
     return '<div class="tn-gate">' +
       brandOrbit() +
@@ -669,48 +723,70 @@
       '<p class="tn-tag">' + esc(t.tagline) + "</p>" +
       "<h1 class=\"tn-title tn-title-light\">" + esc(t.welcomeTitle) + "</h1>" +
       '<p class="tn-lead tn-lead-light">' + esc(t.welcomeLead) + "</p>" +
-      '<a class="tn-persona" href="#/register/talent" data-choose="talent">' +
+      '<a class="tn-persona" href="#/login/talent" data-choose="talent">' +
         '<span class="tn-persona-icon" aria-hidden="true">' + icons.talent + "</span>" +
         "<span><strong>" + esc(t.talent) + "</strong><em>" + esc(t.talentHint) + "</em></span>" +
         '<span class="tn-chevron" aria-hidden="true">' + icons.chevron + "</span></a>" +
-      '<a class="tn-persona" href="#/register/employer" data-choose="employer">' +
+      '<a class="tn-persona" href="#/login/employer" data-choose="employer">' +
         '<span class="tn-persona-icon" aria-hidden="true">' + icons.hire + "</span>" +
         "<span><strong>" + esc(t.employer) + "</strong><em>" + esc(t.employerHint) + "</em></span>" +
         '<span class="tn-chevron" aria-hidden="true">' + icons.chevron + "</span></a>" +
-      '<a class="tn-text-link" href="#/login">' + esc(t.haveAccount) + "</a>" +
       helpLine() + "</div>";
   }
 
   function authView() {
     var r = route();
-    var persona = r.id === "employer" || getPersona() === "employer" ? "employer" : (r.id === "talent" || getPersona() === "talent" ? "talent" : "");
+    var persona = personaKey();
     var employer = persona === "employer";
-    var login = r.name === "login";
-    var back = '<a class="tn-back" href="#/welcome">' + esc(t.back) + "</a>";
-    var lead = login
-      ? (employer ? t.loginEmployerLead : persona === "talent" ? t.loginTalentLead : t.loginGenericLead)
-      : (employer ? t.registerEmployerLead : t.registerTalentLead);
-    var title = login ? t.login : (employer ? t.employer : t.talent);
-    var head = '<div class="tn-gate">' + brandOrbit("is-md") + '<p class="tn-word">Talendus</p>';
-    if (login) {
-      return head + '<div class="tn-sheet">' + back + "<h1 class=\"tn-title\">" + esc(title) + "</h1><p class=\"tn-lead\">" + esc(lead) + "</p>" + flash() +
-        '<form class="tn-form" data-login>' +
-        "<label for=\"tn-email\">" + esc(t.email) + '</label><input id="tn-email" name="email" type="email" autocomplete="username" inputmode="email" required>' +
-        "<label for=\"tn-pass\">" + esc(t.password) + '</label><input id="tn-pass" name="password" type="password" autocomplete="current-password" required minlength="8">' +
-        '<button class="tn-btn" type="submit">' + esc(t.submitLogin) + "</button></form>" +
-        '<form class="tn-forgot" data-forgot><input type="hidden" name="email" id="tn-forgot-email"><button type="submit" class="tn-text-link">' + esc(t.forgot) + "</button></form>" +
-        '<p class="tn-note">' + esc(t.needAccount) + ' <a href="#/welcome">' + esc(t.changeChoice) + "</a></p>" +
+    var backWelcome = '<a class="tn-back" href="#/welcome">' + esc(t.back) + "</a>";
+    var head = '<div class="tn-gate">' + brandOrbit("is-md") + '<p class="tn-word">Talendus</p><div class="tn-sheet">';
+    if (r.name === "forgot") {
+      return head + backWelcome.replace("#/welcome", loginHref()) +
+        "<h1 class=\"tn-title\">" + esc(t.forgotTitle) + "</h1><p class=\"tn-lead\">" + esc(t.forgotLead) + "</p>" + flash() +
+        '<form class="tn-form" data-forgot>' +
+        "<label for=\"tn-forgot-email\">" + esc(t.email) + '</label><input id="tn-forgot-email" name="email" type="email" autocomplete="username" inputmode="email" required value="' + esc(state.authEmail || "") + '">' +
+        '<button class="tn-btn" type="submit">' + esc(t.sendReset) + "</button></form>" +
+        '<p class="tn-note tn-auth-alt"><a href="' + loginHref() + '">' + esc(t.login) + "</a></p>" +
         helpLine() + "</div></div>";
     }
-    return head + '<div class="tn-sheet">' + back + "<h1 class=\"tn-title\">" + esc(title) + "</h1><p class=\"tn-lead\">" + esc(lead) + "</p>" + flash() +
+    if (r.name === "reset") {
+      return head + backWelcome.replace("#/welcome", loginHref()) +
+        "<h1 class=\"tn-title\">" + esc(t.resetTitle) + "</h1><p class=\"tn-lead\">" + esc(t.resetLead) + "</p>" + flash() +
+        '<form class="tn-form" data-reset>' +
+        '<input type="hidden" name="token" value="' + esc(r.id || "") + '">' +
+        "<label>" + esc(t.newPass) + '</label><input name="password" type="password" required minlength="8" autocomplete="new-password">' +
+        '<button class="tn-btn" type="submit">' + esc(t.resetBtn) + "</button></form>" +
+        helpLine() + "</div></div>";
+    }
+    if (r.name === "verify") {
+      return head + "<h1 class=\"tn-title\">" + esc(t.verifyTitle) + "</h1>" + flash() +
+        '<p class="tn-note tn-auth-alt"><a href="' + loginHref() + '">' + esc(t.login) + "</a></p>" +
+        helpLine() + "</div></div>";
+    }
+    if (r.name === "login") {
+      var lead = employer ? t.loginEmployerLead : (persona === "talent" ? t.loginTalentLead : t.loginGenericLead);
+      return head + backWelcome + "<h1 class=\"tn-title\">" + esc(t.login) + "</h1><p class=\"tn-lead\">" + esc(lead) + "</p>" + flash() +
+        '<form class="tn-form" data-login>' +
+        "<label for=\"tn-email\">" + esc(t.email) + '</label><input id="tn-email" name="email" type="email" autocomplete="username" inputmode="email" required value="' + esc(state.authEmail || "") + '">' +
+        "<label for=\"tn-pass\">" + esc(t.password) + '</label><input id="tn-pass" name="password" type="password" autocomplete="current-password" required>' +
+        '<button class="tn-btn" type="submit">' + esc(t.submitLogin) + "</button></form>" +
+        '<p class="tn-forgot"><a class="tn-auth-link" href="#/forgot">' + esc(t.forgot) + "</a></p>" +
+        '<p class="tn-note tn-auth-alt">' + esc(t.needAccount) + ' <a href="' + registerHref() + '">' + esc(t.register) + "</a></p>" +
+        helpLine() + "</div></div>";
+    }
+    var regLead = employer ? t.registerEmployerLead : t.registerTalentLead;
+    var regTitle = employer ? t.employer : t.talent;
+    return head + '<a class="tn-back" href="' + loginHref() + '">' + esc(t.back) + "</a>" +
+      "<h1 class=\"tn-title\">" + esc(regTitle) + "</h1><p class=\"tn-lead\">" + esc(regLead) + "</p>" + flash() +
       '<form class="tn-form" data-register data-role="' + (employer ? "EMPLOYER" : "CANDIDATE") + '">' +
+      '<input class="tn-hp" name="website_url" tabindex="-1" autocomplete="off">' +
       "<label>" + esc(t.first) + '</label><input name="first_name" autocomplete="given-name" required>' +
       "<label>" + esc(t.last) + '</label><input name="last_name" autocomplete="family-name" required>' +
       "<label>" + esc(t.email) + '</label><input name="email" type="email" autocomplete="email" inputmode="email" required>' +
       "<label>" + esc(t.password) + '</label><input name="password" type="password" autocomplete="new-password" required minlength="8">' +
       (employer ? "<label>" + esc(t.company) + '</label><input name="company_name" autocomplete="organization" required>' : "") +
       '<button class="tn-btn" type="submit">' + esc(t.submitRegister) + "</button></form>" +
-      '<p class="tn-note">' + esc(t.haveAccount) + ' <a href="#/login">' + esc(t.login) + "</a></p>" +
+      '<p class="tn-note tn-auth-alt">' + esc(t.haveAccount) + ' <a href="' + loginHref() + '">' + esc(t.login) + "</a></p>" +
       helpLine() + "</div></div>";
   }
 
@@ -1112,7 +1188,7 @@
   function screenHtml() {
     var name = route().name;
     if (!state.user) {
-      if (name === "login" || name === "register") return authView();
+      if (["login", "register", "forgot", "reset", "verify"].indexOf(name) !== -1) return authView();
       return welcomeView();
     }
     if (isCandidate()) {
@@ -1302,6 +1378,9 @@
     if (state.user && r.name === "messages" && r.id) {
       pending.push(api.request("/messages/" + encodeURIComponent(r.id)).then(function (json) { state.conversation = dataOf(json) || []; }).catch(function () { state.conversation = []; }));
     }
+    if (!state.user && r.name === "verify" && r.id) {
+      pending.push(api.verifyEmail(r.id).then(function () { setNotice(t.verifyOk); }).catch(fail));
+    }
     return Promise.all(pending).then(function () {
       if (!syncHash()) return;
       render();
@@ -1311,11 +1390,16 @@
   function afterAuth() {
     return hydrateSession().then(function () {
       var user = api.currentUser();
+      if (!user) {
+        fail({ message: t.sessionLost });
+        return;
+      }
       var chosen = getPersona();
       state.mismatch = "";
+      state.authEmail = "";
       if (chosen === "talent" && isEmployer(user)) state.mismatch = t.wrongPersonaEmployer;
       if (chosen === "employer" && isCandidate(user)) state.mismatch = t.wrongPersonaTalent;
-      if (user) setPersona(isEmployer(user) ? "employer" : "talent");
+      setPersona(isEmployer(user) ? "employer" : "talent");
       setNotice("");
       go("#/home");
       return loadRoute();
@@ -1479,15 +1563,30 @@
       }).then(function () { go("#/jobs"); render(); });
     } else if (form.matches("[data-login]")) {
       e.preventDefault();
-      var fd = new FormData(form);
-      api.login(fd.get("email"), fd.get("password")).then(afterAuth)
-        .catch(fail);
+      var loginData = new FormData(form);
+      var loginEmail = String(loginData.get("email") || "").trim();
+      var loginBtn = form.querySelector("button[type=submit]");
+      state.authEmail = loginEmail;
+      if (loginBtn) loginBtn.disabled = true;
+      api.login(loginEmail, loginData.get("password")).then(afterAuth).catch(function (err) {
+        if (loginBtn) loginBtn.disabled = false;
+        fail(err);
+      });
     } else if (form.matches("[data-forgot]")) {
       e.preventDefault();
-      var emailEl = document.getElementById("tn-email");
-      var email = ((emailEl && emailEl.value) || new FormData(form).get("email") || "").trim();
-      if (!email) { fail({ message: t.err }); return; }
-      api.forgotPassword(email).then(function () { setNotice(t.forgotSent); render(); }).catch(fail);
+      var forgotEmail = String(new FormData(form).get("email") || "").trim();
+      state.authEmail = forgotEmail;
+      if (!forgotEmail) { fail({ message: t.forgotNeedEmail }); return; }
+      api.forgotPassword(forgotEmail).then(function () { setNotice(t.forgotSent); render(); }).catch(fail);
+    } else if (form.matches("[data-reset]")) {
+      e.preventDefault();
+      var resetData = Object.fromEntries(new FormData(form).entries());
+      if (!resetData.token || !resetData.password) { fail({ message: t.err }); return; }
+      api.resetPassword(resetData.token, resetData.password).then(function () {
+        setNotice(t.saved);
+        go(loginHref());
+        return loadRoute();
+      }).catch(fail);
     } else if (form.matches("[data-apply-form]")) {
       e.preventDefault();
       if (!isCandidate()) return;

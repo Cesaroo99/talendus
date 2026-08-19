@@ -96,7 +96,7 @@ def test_mobile_app_gates_access_by_persona():
     assert 'data-choose="employer"' in js
     assert "#/welcome" in js
     assert "allowedRoute" in js
-    assert 'name === "welcome"' in js
+    assert '["welcome", "login", "register", "forgot", "reset", "verify"]' in js
     assert "if (!state.user)" in js
     assert "if (!isCandidate()) return" in js
     assert "if (!isEmployer()) return" in js
@@ -109,6 +109,24 @@ def test_mobile_app_gates_access_by_persona():
     js = (ROOT / "assets" / "js" / "mobile-app.js").read_text(encoding="utf-8")
     assert "brandOrbit" in js
     assert "tn-title-light" in js
+
+
+def test_mobile_app_signs_in_before_creating_an_account():
+    js = (ROOT / "assets" / "js" / "mobile-app.js").read_text(encoding="utf-8")
+    assert '<a class="tn-persona" href="#/login/talent"' in js
+    assert '<a class="tn-persona" href="#/login/employer"' in js
+    assert '<a class="tn-persona" href="#/register/talent"' not in js
+    assert "#/forgot" in js
+    assert "data-reset" in js
+    assert "data-forgot" in js
+    assert "sendReset" in js
+    assert 'id="tn-forgot-email"' in js
+    api = (ROOT / "assets" / "js" / "api.js").read_text(encoding="utf-8")
+    assert "if (token && !isPublicAuthPath(path))" in api
+    assert 'email: String(email || "").trim().toLowerCase()' in api
+    css = (ROOT / "assets" / "css" / "mobile-app.css").read_text(encoding="utf-8")
+    assert ".tn-auth-link" in css
+    assert ".tn-hp" in css
 
 
 def test_native_app_never_asks_to_install_again():

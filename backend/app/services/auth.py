@@ -138,11 +138,11 @@ def register(db: Session, data: RegisterIn, ip: str | None = None, user_agent: s
     token = _make_email_token(db, user, "verify", 24)
     send_email(
         db, user.email, EmailType.WELCOME, "welcome",
-        name=user.first_name, link=f"{settings.frontend_url}/#/verify?token={token}",
+        name=user.first_name, link=f"{settings.frontend_url}/m.html#/verify/{token}",
     )
     send_email(
         db, user.email, EmailType.VERIFY_EMAIL, "verify",
-        name=user.first_name, link=f"{settings.frontend_url}/#/verify?token={token}",
+        name=user.first_name, link=f"{settings.frontend_url}/m.html#/verify/{token}",
     )
     notify(db, user, NotificationType.ACCOUNT_CREATED, "Compte créé", "Bienvenue chez Talendus.")
     audit(db, "account.register", user, "user", user.id, ip)
@@ -205,7 +205,7 @@ def request_password_reset(db: Session, email: str) -> None:
     send_email(
         db, user.email, EmailType.PASSWORD_RESET, "reset",
         name=user.first_name or "Bonjour",
-        link=f"{settings.frontend_url}/#/reset?token={token}",
+        link=f"{settings.frontend_url}/m.html#/reset/{token}",
     )
     db.commit()
 
@@ -246,7 +246,7 @@ def resend_verification(db: Session, user: User) -> None:
     token = _make_email_token(db, user, "verify", 24)
     send_email(
         db, user.email, EmailType.VERIFY_EMAIL, "verify",
-        name=user.first_name, link=f"{settings.frontend_url}/#/verify?token={token}",
+        name=user.first_name, link=f"{settings.frontend_url}/m.html#/verify/{token}",
     )
     db.commit()
 

@@ -90,7 +90,7 @@
       headers["Content-Type"] = "application/json";
     }
     var token = opts.token || getAccess();
-    if (token) headers.Authorization = "Bearer " + token;
+    if (token && !isPublicAuthPath(path)) headers.Authorization = "Bearer " + token;
     return fetch(apiRoot() + path, {
       method: opts.method || "GET",
       headers: headers,
@@ -112,6 +112,11 @@
         }
         return json;
       });
+    }).catch(function (err) {
+      if (err && (err.status || err.code || err.payload)) throw err;
+      var net = new Error("Impossible de joindre Talendus. Vérifiez la connexion, puis réessayez.");
+      net.code = "NETWORK";
+      throw net;
     });
   }
 
@@ -126,13 +131,18 @@
     updateProfile: function (body) { return request("/candidates/me", { method: "PATCH", body: body }); },
     uploadResume: function (formData) { return request("/candidates/me/resume", { method: "POST", body: formData }); },
     register: function (body) {
+      body = Object.assign({}, body || {});
+      if (body.email) body.email = String(body.email).trim().toLowerCase();
       return request("/auth/register", { method: "POST", body: body }).then(function (json) {
         setSession(json.data);
         return json;
       });
     },
     login: function (email, password) {
-      return request("/auth/login", { method: "POST", body: { email: email, password: password } }).then(function (json) {
+      return request("/auth/login", {
+        method: "POST",
+        body: { email: String(email || "").trim().toLowerCase(), password: String(password || "") }
+      }).then(function (json) {
         setSession(json.data);
         return json;
       });
@@ -153,7 +163,7 @@
       });
     },
     providers: function () { return request("/auth/providers"); },
-    forgotPassword: function (email) { return request("/auth/forgot-password", { method: "POST", body: { email: email } }); },
+    forgotPassword: function (email) { return request("/auth/forgot-password", { method: "POST", body: { email: String(email || "").trim().toLowerCase() } }); },
     resetPassword: function (token, password) {
       return request("/auth/reset-password", { method: "POST", body: { token: token, new_password: password } });
     },

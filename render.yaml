@@ -52,6 +52,8 @@ services:
         value: https://talendus.ca
       - key: FRONTEND_URL
         value: https://talendus.ca
+      - key: CORS_ORIGINS
+        value: "https://talendus.ca,https://www.talendus.ca"
       - key: ADMIN_EMAIL
         value: lea.super@talendus.ca
       - key: WEB_CONCURRENCY
