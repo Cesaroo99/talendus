@@ -868,6 +868,32 @@ a.tl-card:hover, .tl-job-card:hover, .tl-case:hover {
 }
 .tl-form textarea { min-height: 120px; }
 .tl-form label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 14px; }
+.tl-form .tl-chip-check {
+  display: inline-flex;
+  margin: 0;
+  font-size: 14px;
+}
+.tl-choices { border: 0; margin: 0 0 12px; padding: 0; }
+.tl-choices legend { font-weight: 600; font-size: 14px; padding: 0; margin-bottom: 8px; }
+.tl-choice-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.tl-chip-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px solid #d5dee7;
+  border-radius: 999px;
+  background: #fff;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+}
+.tl-chip-check:has(input:checked) {
+  border-color: #ff6b00;
+  background: #fff4ec;
+}
+.tl-chip-check input { margin: 0; }
 .tl-success {
   display: none;
   background: #e9f8ee;

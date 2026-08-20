@@ -34,8 +34,8 @@ class Candidate(Base):
     desired_salary_min: Mapped[int | None] = mapped_column(Integer)
     desired_salary_max: Mapped[int | None] = mapped_column(Integer)
     mobility: Mapped[str | None] = mapped_column(String(120))
-    contract_type: Mapped[str | None] = mapped_column(String(40))
-    shift_preference: Mapped[str | None] = mapped_column(String(80))
+    contract_type: Mapped[str | None] = mapped_column(String(160))
+    shift_preference: Mapped[str | None] = mapped_column(String(160))
     languages: Mapped[str | None] = mapped_column(Text)  # CSV
     skills: Mapped[str | None] = mapped_column(Text)  # CSV
     bio: Mapped[str | None] = mapped_column(Text)

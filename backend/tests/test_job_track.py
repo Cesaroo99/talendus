@@ -12,6 +12,8 @@ def test_job_options_catalog_includes_shift(client):
     assert "Temps plein" in schedules
     assert data["work_modes"]
     assert data["languages"]
+    assert data["language_choices"]
+    assert "Français" in [item["value"] for item in data["language_choices"]]
     assert data["experience_levels"]
 
 

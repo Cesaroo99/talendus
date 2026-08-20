@@ -3,6 +3,7 @@ package ca.talendus.app;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.ClipData;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -12,6 +13,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.webkit.JavascriptInterface;
 import android.webkit.PermissionRequest;
+import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
@@ -25,8 +27,10 @@ public class MainActivity extends Activity {
     public static final String APP_URL = "https://talendus.ca/m.html";
     private static final int NOTIF_PERMISSION = 91;
     private static final int MEDIA_PERMISSION = 92;
+    private static final int FILE_CHOOSER = 93;
     private WebView web;
     private PermissionRequest pendingWebPermission;
+    private ValueCallback<Uri[]> fileCallback;
     private final Handler ticker = new Handler(Looper.getMainLooper());
     private final Runnable pollTick = new Runnable() {
         @Override
@@ -51,13 +55,42 @@ public class MainActivity extends Activity {
         settings.setDatabaseEnabled(true);
         settings.setSupportZoom(false);
         settings.setMediaPlaybackRequiresUserGesture(false);
+        settings.setAllowFileAccess(true);
+        settings.setAllowContentAccess(true);
         String ua = settings.getUserAgentString();
-        settings.setUserAgentString((ua == null ? "" : ua) + " TalendusApp/1.2");
+        settings.setUserAgentString((ua == null ? "" : ua) + " TalendusApp/1.3");
         web.addJavascriptInterface(new TalendusNative(), "TalendusNative");
         web.setWebChromeClient(new WebChromeClient() {
             @Override
             public void onPermissionRequest(PermissionRequest request) {
                 runOnUiThread(() -> grantWebMedia(request));
+            }
+
+            @Override
+            public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> filePathCallback, FileChooserParams fileChooserParams) {
+                if (fileCallback != null) {
+                    fileCallback.onReceiveValue(null);
+                }
+                fileCallback = filePathCallback;
+                Intent intent = fileChooserParams != null ? fileChooserParams.createIntent() : null;
+                if (intent == null) {
+                    intent = new Intent(Intent.ACTION_GET_CONTENT);
+                    intent.addCategory(Intent.CATEGORY_OPENABLE);
+                    intent.setType("*/*");
+                }
+                boolean many = fileChooserParams != null
+                    && fileChooserParams.getMode() == FileChooserParams.MODE_OPEN_MULTIPLE;
+                if (many) {
+                    intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+                }
+                try {
+                    startActivityForResult(Intent.createChooser(intent, "Talendus"), FILE_CHOOSER);
+                } catch (Exception ignored) {
+                    fileCallback.onReceiveValue(null);
+                    fileCallback = null;
+                    return false;
+                }
+                return true;
             }
         });
         web.setWebViewClient(new WebViewClient() {
@@ -83,6 +116,20 @@ public class MainActivity extends Activity {
         });
         String start = urlFromIntent(getIntent());
         web.loadUrl(start != null ? start : APP_URL);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode != FILE_CHOOSER) {
+            return;
+        }
+        ValueCallback<Uri[]> callback = fileCallback;
+        fileCallback = null;
+        if (callback == null) {
+            return;
+        }
+        callback.onReceiveValue(fileChooserUris(resultCode, data));
     }
 
     @Override
@@ -170,6 +217,22 @@ public class MainActivity extends Activity {
         }
         Uri data = intent.getData();
         return data != null ? data.toString() : null;
+    }
+
+    private static Uri[] fileChooserUris(int resultCode, Intent data) {
+        if (resultCode != RESULT_OK || data == null) {
+            return null;
+        }
+        ClipData clip = data.getClipData();
+        if (clip != null && clip.getItemCount() > 0) {
+            Uri[] uris = new Uri[clip.getItemCount()];
+            for (int i = 0; i < clip.getItemCount(); i++) {
+                uris[i] = clip.getItemAt(i).getUri();
+            }
+            return uris;
+        }
+        Uri uri = data.getData();
+        return uri != null ? new Uri[]{uri} : null;
     }
 
     private void requestNotifPermission() {
