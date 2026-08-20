@@ -316,18 +316,34 @@ def test_mobile_app_uploads_files_and_allows_multiple_choices():
         "function filePicker",
         "function choiceGroup",
         "function formChoice",
+        "function sendPickedFiles",
+        "function pickedFiles",
         "data-doc",
+        "data-pick-file",
         "tn-file-input",
         'choiceGroup("languages"',
         'choiceGroup("contract_type"',
         'choiceGroup("shift_preference"',
         "language_choices",
         "uploadEach",
+        "uploadDoc",
+        "api.appendFile",
+        'esc(t.uploadDoc)',
     ):
         assert needle in js
+    assert ".pdf,.doc" not in js
     css = (ROOT / "assets" / "css" / "mobile-app.css").read_text(encoding="utf-8")
     assert ".tn-file-btn" in css
     assert ".tn-chip-check" in css
+    assert "pointer-events: none" not in css
     java = (ROOT / "mobile" / "android" / "app" / "src" / "main" / "java" / "ca" / "talendus" / "app" / "MainActivity.java").read_text(encoding="utf-8")
     assert "onShowFileChooser" in java
     assert "EXTRA_ALLOW_MULTIPLE" in java
+    assert "ACTION_OPEN_DOCUMENT" in java
+    assert "FileChooserParams.parseResult" in java
+    manifest = (ROOT / "mobile" / "android" / "app" / "src" / "main" / "AndroidManifest.xml").read_text(encoding="utf-8")
+    assert 'android:launchMode="singleTop"' in manifest
+    api = (ROOT / "assets" / "js" / "api.js").read_text(encoding="utf-8")
+    assert "function filePartName" in api
+    assert "function appendFile" in api
+    assert 'opts.body instanceof FormData' in api

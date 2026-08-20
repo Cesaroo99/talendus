@@ -214,8 +214,12 @@
     }
 
     function validateCvFile(form, file) {
-      var allowed = /\.(pdf|doc|docx|png|jpe?g|webp)$/i;
-      if (file && !allowed.test(file.name)) {
+      if (!file) return true;
+      var name = String(file.name || "");
+      var type = String(file.type || "").toLowerCase();
+      var namedOk = /\.(pdf|doc|docx|png|jpe?g|webp)$/i.test(name);
+      var typedOk = /pdf|msword|wordprocessingml|image\/(jpeg|jpg|png|webp)/.test(type);
+      if (file && !namedOk && !typedOk && /\.[A-Za-z0-9]+$/.test(name)) {
         showFormMessage(form, isEn ? "Use a PDF, Word or image file (PNG, JPG)." : "Utilisez un fichier PDF, Word ou image (PNG, JPG).", true);
         return false;
       }
@@ -265,7 +269,7 @@
             send = Promise.resolve(null);
             if (file) {
               var up = new FormData();
-              up.append("file", file);
+              api.appendFile(up, file, "cv.pdf");
               send = api.uploadResume(up).then(function (json) {
                 return json && json.data && json.data.id;
               });
@@ -284,7 +288,7 @@
             var phone = formValue(form, ["tel", "telephone", "phone"]);
             if (phone) fd.append("phone", phone);
             if (cover) fd.append("cover_note", cover);
-            if (file) fd.append("file", file);
+            if (file) api.appendFile(fd, file, "cv.pdf");
             send = api.request("/applications/public", { method: "POST", body: fd });
           }
           send.then(function () {
@@ -330,7 +334,7 @@
           if (message) fd.append("message", message);
           var subject = formValue(form, ["objet", "subject", "profil"]);
           if (subject) fd.append("subject", subject);
-          if (file) fd.append("file", file);
+          if (file) api.appendFile(fd, file, "cv.pdf");
           api.request("/talent-profile", { method: "POST", body: fd }).then(function () {
             showFormMessage(form, fallback, false);
             form.reset();

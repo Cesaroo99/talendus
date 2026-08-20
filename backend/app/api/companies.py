@@ -153,7 +153,7 @@ async def upload_logo(
     user: User = Depends(get_current_user),
 ):
     data = await file.read()
-    company = set_company_logo(db, user, company_id, data, file.filename or "logo.png")
+    company = set_company_logo(db, user, company_id, data, file.filename or "logo")
     return ok(companies_service.serialize_company(company), message="Logo enregistré.")
 
 

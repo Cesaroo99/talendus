@@ -565,7 +565,7 @@
       }).join("");
       body = '<div class="card card-pad"><h3>Documents</h3>' +
         (docRows || "<p>Aucun document dans le dossier.</p>") +
-        '<form id="cand-upload" style="margin-top:12px"><input type="file" name="file" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" required> ' +
+        '<form id="cand-upload" style="margin-top:12px"><input type="file" name="file" accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png,image/webp" required> ' +
         '<button class="btn btn-orange" type="submit">Ajouter un document</button></form></div>';
     } else if (detailTab === "histo") {
       var apps = c.applications || [];
@@ -2019,7 +2019,7 @@
       if (!file) { U.toast("Choisissez un fichier.", "err"); return; }
       if (!live()) { U.toast("Connectez-vous à l’API pour déposer un document.", "err"); return; }
       var fd = new FormData();
-      fd.append("file", file);
+      api().appendFile(fd, file, "cv.pdf");
       try {
         await api().request("/admin/candidates/" + route().id + "/resume", { method: "POST", body: fd });
         await refreshLive();

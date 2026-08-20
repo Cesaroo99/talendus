@@ -28,7 +28,7 @@ async def upload_avatar(
     db: Session = Depends(get_db),
 ):
     data = await file.read()
-    updated = set_avatar(db, user, data, file.filename or "avatar.jpg")
+    updated = set_avatar(db, user, data, file.filename or "photo")
     return ok(UserPublic.model_validate(updated).model_dump(mode="json"), message="Photo enregistrée.")
 
 

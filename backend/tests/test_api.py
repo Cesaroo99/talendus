@@ -352,6 +352,32 @@ def test_candidate_can_upload_png_resume(client):
     assert upload.json()["data"]["original_name"] == "cv.png"
 
 
+def test_uploads_infer_extension_when_the_phone_omits_it(client):
+    cand = register(client, "noext@example.com")
+    headers = auth_header(cand)
+    resume = client.post(
+        "/api/candidates/me/resume",
+        headers=headers,
+        files={"file": ("cv", PDF, "application/octet-stream")},
+    )
+    assert resume.status_code == 200, resume.text
+    assert resume.json()["data"]["original_name"].endswith(".pdf")
+    photo = client.post(
+        "/api/users/me/avatar",
+        headers=headers,
+        files={"file": ("photo", PNG, "application/octet-stream")},
+    )
+    assert photo.status_code == 200, photo.text
+    doc = client.post(
+        "/api/documents",
+        headers=headers,
+        files={"file": ("scan", PNG, "image/png")},
+        data={"kind": "other"},
+    )
+    assert doc.status_code == 200, doc.text
+    assert doc.json()["data"]["original_name"].endswith(".png")
+
+
 def test_validation_error_format(client):
     res = client.post("/api/auth/login", json={"email": "not-an-email", "password": "x"})
     assert res.status_code == 422

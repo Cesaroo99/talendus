@@ -121,8 +121,32 @@
     });
   }
 
+  function filePartName(file, fallback) {
+    var name = String((file && file.name) || "").trim();
+    var type = String((file && file.type) || "").toLowerCase();
+    var ext = "";
+    if (type.indexOf("png") !== -1) ext = ".png";
+    else if (type === "image/jpeg" || type === "image/jpg") ext = ".jpg";
+    else if (type.indexOf("webp") !== -1) ext = ".webp";
+    else if (type.indexOf("pdf") !== -1) ext = ".pdf";
+    else if (type.indexOf("wordprocessingml") !== -1) ext = ".docx";
+    else if (type.indexOf("msword") !== -1) ext = ".doc";
+    if (name && /\.[A-Za-z0-9]{2,8}$/.test(name)) return name;
+    var fallbackName = String(fallback || "document");
+    var fallbackExt = (fallbackName.match(/\.[A-Za-z0-9]{2,8}$/) || [".pdf"])[0];
+    var base = (name.replace(/\.[^.]*$/, "") || fallbackName.replace(/\.[^.]+$/, "") || "document");
+    return base + (ext || fallbackExt);
+  }
+
+  function appendFile(formData, file, fallback) {
+    formData.append("file", file, filePartName(file, fallback || "document.pdf"));
+    return formData;
+  }
+
   global.TalendusAPI = {
     request: request,
+    filePartName: filePartName,
+    appendFile: appendFile,
     setSession: setSession,
     clearSession: clearSession,
     currentUser: currentUser,

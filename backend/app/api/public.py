@@ -131,12 +131,11 @@ async def talent_profile(request: Request, db: Session = Depends(get_db)):
             }
         )
         upload = form.get("file") or form.get("cvfile")
-        filename = getattr(upload, "filename", "") or ""
-        if upload is not None and hasattr(upload, "read") and filename:
+        if upload is not None and hasattr(upload, "read"):
             data = await upload.read()
             if data:
                 cv_file = data
-                cv_filename = filename
+                cv_filename = (getattr(upload, "filename", None) or "").strip() or "cv"
     else:
         payload = _talent_payload(await request.json())
     result = cand_svc.submit_public_talent(

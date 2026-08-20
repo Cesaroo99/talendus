@@ -30,7 +30,7 @@ public class MainActivity extends Activity {
     private static final int FILE_CHOOSER = 93;
     private WebView web;
     private PermissionRequest pendingWebPermission;
-    private ValueCallback<Uri[]> fileCallback;
+    private static ValueCallback<Uri[]> fileCallback;
     private final Handler ticker = new Handler(Looper.getMainLooper());
     private final Runnable pollTick = new Runnable() {
         @Override
@@ -58,7 +58,7 @@ public class MainActivity extends Activity {
         settings.setAllowFileAccess(true);
         settings.setAllowContentAccess(true);
         String ua = settings.getUserAgentString();
-        settings.setUserAgentString((ua == null ? "" : ua) + " TalendusApp/1.3");
+        settings.setUserAgentString((ua == null ? "" : ua) + " TalendusApp/1.5");
         web.addJavascriptInterface(new TalendusNative(), "TalendusNative");
         web.setWebChromeClient(new WebChromeClient() {
             @Override
@@ -72,23 +72,16 @@ public class MainActivity extends Activity {
                     fileCallback.onReceiveValue(null);
                 }
                 fileCallback = filePathCallback;
-                Intent intent = fileChooserParams != null ? fileChooserParams.createIntent() : null;
-                if (intent == null) {
-                    intent = new Intent(Intent.ACTION_GET_CONTENT);
-                    intent.addCategory(Intent.CATEGORY_OPENABLE);
-                    intent.setType("*/*");
-                }
-                boolean many = fileChooserParams != null
-                    && fileChooserParams.getMode() == FileChooserParams.MODE_OPEN_MULTIPLE;
-                if (many) {
-                    intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
-                }
                 try {
-                    startActivityForResult(Intent.createChooser(intent, "Talendus"), FILE_CHOOSER);
+                    startActivityForResult(openDocumentIntent(fileChooserParams), FILE_CHOOSER);
                 } catch (Exception ignored) {
-                    fileCallback.onReceiveValue(null);
-                    fileCallback = null;
-                    return false;
+                    try {
+                        startActivityForResult(Intent.createChooser(getContentIntent(fileChooserParams), "Talendus"), FILE_CHOOSER);
+                    } catch (Exception ignoredToo) {
+                        fileCallback.onReceiveValue(null);
+                        fileCallback = null;
+                        return false;
+                    }
                 }
                 return true;
             }
@@ -129,7 +122,22 @@ public class MainActivity extends Activity {
         if (callback == null) {
             return;
         }
-        callback.onReceiveValue(fileChooserUris(resultCode, data));
+        Uri[] uris = WebChromeClient.FileChooserParams.parseResult(resultCode, data);
+        if (uris == null || uris.length == 0) {
+            uris = fileChooserUris(resultCode, data);
+        }
+        if (uris != null) {
+            for (Uri uri : uris) {
+                if (uri == null) {
+                    continue;
+                }
+                try {
+                    getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                } catch (Exception ignored) {
+                }
+            }
+        }
+        callback.onReceiveValue(uris);
     }
 
     @Override
@@ -217,6 +225,53 @@ public class MainActivity extends Activity {
         }
         Uri data = intent.getData();
         return data != null ? data.toString() : null;
+    }
+
+    private Intent openDocumentIntent(WebChromeClient.FileChooserParams params) {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        fillFileIntent(intent, params);
+        intent.addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+        return intent;
+    }
+
+    private Intent getContentIntent(WebChromeClient.FileChooserParams params) {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        fillFileIntent(intent, params);
+        return intent;
+    }
+
+    private static void fillFileIntent(Intent intent, WebChromeClient.FileChooserParams params) {
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType(imagesOnly(params) ? "image/*" : "*/*");
+        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, params != null
+            && params.getMode() == WebChromeClient.FileChooserParams.MODE_OPEN_MULTIPLE);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+    }
+
+    private static boolean imagesOnly(WebChromeClient.FileChooserParams params) {
+        if (params == null) {
+            return false;
+        }
+        String[] types = params.getAcceptTypes();
+        if (types == null || types.length == 0) {
+            return false;
+        }
+        boolean sawImage = false;
+        for (String raw : types) {
+            if (raw == null || raw.isEmpty() || raw.equals("*/*")) {
+                return false;
+            }
+            String type = raw.toLowerCase();
+            if (type.startsWith(".")) {
+                return false;
+            }
+            if (type.startsWith("image/")) {
+                sawImage = true;
+            } else {
+                return false;
+            }
+        }
+        return sawImage;
     }
 
     private static Uri[] fileChooserUris(int resultCode, Intent data) {

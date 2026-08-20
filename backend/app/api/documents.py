@@ -49,9 +49,9 @@ async def upload(
 ):
     data = await file.read()
     if owner_id and (is_admin(user) or user.role in {UserRole.RECRUITER, UserRole.FINANCE}):
-        row = staff_upload_document(db, user, data, file.filename or "document.pdf", kind, owner_type or "candidate", owner_id)
+        row = staff_upload_document(db, user, data, file.filename or "document", kind, owner_type or "candidate", owner_id)
         return ok(serialize_document(row), message="Document enregistré.")
-    row = upload_document(db, user, data, file.filename or "document.pdf", kind, owner_type)
+    row = upload_document(db, user, data, file.filename or "document", kind, owner_type)
     return ok(serialize_document(row), message="Document enregistré.")
 
 

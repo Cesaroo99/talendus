@@ -26,7 +26,41 @@ IMAGE_MAGIC = (
     (b"\x89PNG\r\n\x1a\n", "image/png"),
     (b"RIFF", "image/webp"),
 )
+MIME_TO_EXT = {
+    "application/pdf": ".pdf",
+    "application/msword": ".doc",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
+    "image/jpeg": ".jpg",
+    "image/png": ".png",
+    "image/webp": ".webp",
+}
 CATEGORIES = {"resumes", "documents", "avatars", "logos", "attachments"}
+
+
+def sniff_mime(data: bytes) -> str | None:
+    if not data:
+        return None
+    for magic, mime in IMAGE_MAGIC:
+        if data.startswith(magic):
+            if mime == "image/webp" and b"WEBP" not in data[:16]:
+                continue
+            return mime
+    for magic, mime in MAGIC.items():
+        if data.startswith(magic):
+            return mime
+    return None
+
+
+def ensure_upload_filename(data: bytes, filename: str) -> str:
+    name = Path((filename or "").strip() or "document").name
+    ext = Path(name).suffix.lower()
+    if ext in ALLOWED_EXT or ext in ALLOWED_IMAGE_EXT:
+        return name
+    sniffed = sniff_mime(data)
+    if sniffed and sniffed in MIME_TO_EXT:
+        stem = Path(name).stem or "document"
+        return f"{stem}{MIME_TO_EXT[sniffed]}"
+    return name
 
 
 def detect_mime(data: bytes, filename: str) -> str:
@@ -86,13 +120,12 @@ def save_bytes(
         raise AppError(400, f"Le fichier dépasse {max_mb or settings.max_resume_mb} Mo.", "FILE_TOO_LARGE")
     if len(data) < 16:
         raise AppError(400, "Fichier vide ou illisible.", "INVALID_FILE")
+    filename = ensure_upload_filename(data, filename)
     if kind == "image":
         mime = detect_image_mime(data, filename)
-    elif kind == "resume":
-        mime = detect_resume_mime(data, filename)
     else:
-        mime = detect_mime(data, filename)
-    ext = Path(filename).suffix.lower()
+        mime = detect_resume_mime(data, filename)
+    ext = Path(filename).suffix.lower() or MIME_TO_EXT.get(mime, "")
     stored = f"{uuid.uuid4().hex}{ext}"
     original = safe_filename(filename)
     if _use_s3():

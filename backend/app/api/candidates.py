@@ -120,7 +120,7 @@ async def upload_resume(
     db: Session = Depends(get_db),
 ):
     data = await file.read()
-    row = cand_svc.upload_cv(db, user, data, file.filename or "cv.pdf")
+    row = cand_svc.upload_cv(db, user, data, file.filename or "cv")
     return ok({"id": row.id, "original_name": row.original_name, "parse_status": row.parse_status})
 
 
