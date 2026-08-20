@@ -817,14 +817,30 @@
     Object.keys(picked).forEach(function (val) { add(val, val); });
     return html + "</div></fieldset>";
   }
+  function hasNativePicker() {
+    try {
+      return !!(window.TalendusNative && window.TalendusNative.openDocumentPicker);
+    } catch (e) {
+      return false;
+    }
+  }
   function filePicker(accept, multiple) {
-    return '<div class="tn-file">' +
-      '<input class="tn-file-input" type="file" name="file" accept="' + esc(accept) + '"' + (multiple ? " multiple" : "") + ">" +
-      '<button type="button" class="tn-file-btn" data-pick-file>' + esc(t.chooseFile) + "</button>" +
+    var imagesOnly = !!(accept && accept.indexOf("image/") === 0 && accept.indexOf("pdf") === -1);
+    if (hasNativePicker()) {
+      return '<div class="tn-file">' +
+        '<button type="button" class="tn-file-btn" data-native-pick data-multiple="' + (multiple ? "1" : "0") +
+        '" data-images="' + (imagesOnly ? "1" : "0") + '">' + esc(t.chooseFile) + "</button>" +
+        '<p class="tn-file-name">' + esc(t.noFile) + "</p></div>";
+    }
+    return '<div class="tn-file"><label class="tn-file-hit">' +
+      '<input class="tn-file-input" type="file" name="file"' +
+      (accept ? ' accept="' + esc(accept) + '"' : "") +
+      (multiple ? " multiple" : "") + ">" +
+      '<span class="tn-file-btn">' + esc(t.chooseFile) + "</span></label>" +
       '<p class="tn-file-name">' + esc(t.noFile) + "</p></div>";
   }
-  var FILE_ACCEPT = "application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png,image/webp";
   function pickedFiles(form) {
+    if (form && form._tnFiles && form._tnFiles.length) return form._tnFiles.slice();
     var input = form.querySelector("input[type=file]");
     var list = input && input.files;
     var out = [];
@@ -832,17 +848,37 @@
     for (var i = 0; i < list.length; i++) out.push(list[i]);
     return out;
   }
-  function sendPickedFiles(form) {
+  function showFormNotice(form, msg, err) {
+    setNotice(msg, !!err);
+    var flashBox = root.querySelector("[data-flash]");
+    if (flashBox) flashBox.innerHTML = flash();
+    var nameEl = form && form.querySelector(".tn-file-name");
+    if (nameEl) nameEl.textContent = msg;
+  }
+  function filesFromNative(rows) {
+    var out = [];
+    (rows || []).forEach(function (row) {
+      if (!row || !row.data) return;
+      var raw = atob(row.data);
+      var buf = new Uint8Array(raw.length);
+      for (var i = 0; i < raw.length; i++) buf[i] = raw.charCodeAt(i);
+      out.push(new File([buf], row.name || "document", { type: row.type || "application/octet-stream" }));
+    });
+    return out;
+  }
+  function sendPickedFiles(form, given) {
     if (!isCandidate() || form.getAttribute("data-busy") === "1") return Promise.resolve();
-    var files = pickedFiles(form);
+    var files = (given && given.length) ? given : pickedFiles(form);
     if (!files.length) {
-      fail({ message: t.needFile });
+      showFormNotice(form, t.needFile, true);
       return Promise.resolve();
     }
     form.setAttribute("data-busy", "1");
     var btn = form.querySelector('button[type="submit"]');
     if (btn) btn.disabled = true;
     setNotice(t.uploading);
+    var flashBox = root.querySelector("[data-flash]");
+    if (flashBox) flashBox.innerHTML = flash();
     var isAvatar = form.matches("[data-avatar]");
     var isCv = form.matches("[data-cv]");
     var fallback = isAvatar ? "photo.jpg" : "document.pdf";
@@ -858,7 +894,7 @@
     }).catch(function (err) {
       form.removeAttribute("data-busy");
       if (btn) btn.disabled = false;
-      fail(err);
+      showFormNotice(form, (err && err.message) || t.err, true);
     });
   }
   function formChoice(form, name) {
@@ -1491,9 +1527,9 @@
       return "<h2 class=\"tn-section\">" + esc(title) + "</h2>" + (items || '<p class="tn-meta">' + esc(emptyTxt) + "</p>") +
         '<form class="tn-form" ' + formAttrs + ">" + fields + '<button class="tn-btn tn-btn-ghost" type="submit">' + esc(t.add) + "</button></form>";
     }
-    return backTo("#/me") + "<h1 class=\"tn-title\">" + esc(t.profile) + "</h1><p class=\"tn-lead\">" + esc(t.profileLead) + "</p>" + flash() +
+    return backTo("#/me") + "<h1 class=\"tn-title\">" + esc(t.profile) + "</h1><p class=\"tn-lead\">" + esc(t.profileLead) + "</p><div data-flash>" + flash() + "</div>" +
       '<form class="tn-form" data-avatar><label>' + esc(t.photo) + '</label><p class="tn-meta">' + esc(t.photoHint) + "</p>" +
-      filePicker("image/jpeg,image/png,image/webp", false) +
+      filePicker("image/*", false) +
       '<button class="tn-btn tn-btn-ghost" type="submit">' + esc(t.save) + "</button></form>" +
       '<form class="tn-form" data-profile>' +
       "<label>" + esc(t.first) + '</label><input name="first_name" value="' + esc(u.first_name || "") + '" autocomplete="given-name">' +
@@ -1530,9 +1566,9 @@
     var p = state.profile || {};
     var resumes = p.resumes || [];
     var docs = state.docs || [];
-    return backTo("#/me") + "<h1 class=\"tn-title\">" + esc(t.documents) + "</h1>" + flash() +
+    return backTo("#/me") + "<h1 class=\"tn-title\">" + esc(t.documents) + "</h1><div data-flash>" + flash() + "</div>" +
       '<form class="tn-form" data-cv><label>' + esc(t.cv) + "</label>" +
-      filePicker(FILE_ACCEPT, true) +
+      filePicker("", true) +
       '<button class="tn-btn" type="submit">' + esc(t.upload) + "</button></form>" +
       '<div class="tn-grid tn-stack">' + (resumes.map(function (r) {
         return '<div class="tn-job"><h3>' + esc(r.original_name || t.cv) + '</h3><p class="tn-meta">' +
@@ -1541,7 +1577,7 @@
           '<button type="button" class="tn-btn tn-btn-ghost" data-del-cv="' + esc(r.id) + '">' + esc(t.remove) + "</button></div></div>";
       }).join("") || '<div class="tn-empty">' + esc(t.noCv) + "</div>") + "</div>" +
       '<form class="tn-form" data-doc><label>' + esc(t.otherDocs) + "</label>" +
-      filePicker(FILE_ACCEPT, true) +
+      filePicker("", true) +
       '<button class="tn-btn tn-btn-ghost" type="submit">' + esc(t.uploadDoc) + "</button></form>" +
       '<div class="tn-grid tn-stack">' + (docs.map(function (row) {
         return '<div class="tn-job"><h3>' + esc(row.original_name || t.otherDocs) + '</h3><p class="tn-meta">' +
@@ -1906,12 +1942,26 @@
       render();
       return;
     }
-    var pickFile = e.target.closest("[data-pick-file]");
-    if (pickFile) {
+    var nativePick = e.target.closest("[data-native-pick]");
+    if (nativePick) {
       e.preventDefault();
-      var box = pickFile.closest(".tn-file");
-      var input = box && box.querySelector(".tn-file-input");
-      if (input) input.click();
+      if (!hasNativePicker()) return;
+      var form = nativePick.closest("form");
+      if (!form) return;
+      var id = "p" + Date.now() + "-" + Math.floor(Math.random() * 10000);
+      window.__tnNativeForms = window.__tnNativeForms || {};
+      window.__tnNativeForms[id] = form;
+      nativePick.disabled = true;
+      try {
+        window.TalendusNative.openDocumentPicker(
+          id,
+          nativePick.getAttribute("data-multiple") === "1" ? 1 : 0,
+          nativePick.getAttribute("data-images") === "1" ? 1 : 0
+        );
+      } catch (err) {
+        nativePick.disabled = false;
+        showFormNotice(form, t.err, true);
+      }
       return;
     }
     if (e.target.closest("[data-enable-push]")) {
@@ -2237,6 +2287,26 @@
   });
 
   window.addEventListener("hashchange", loadRoute);
+  window.__tnReceiveFiles = function (id, rows, error) {
+    var forms = window.__tnNativeForms || {};
+    var form = forms[id];
+    delete forms[id];
+    var pickBtn = form && form.querySelector("[data-native-pick]");
+    if (pickBtn) pickBtn.disabled = false;
+    if (!form) return;
+    if (error) {
+      showFormNotice(form, error, true);
+      return;
+    }
+    var files = filesFromNative(rows);
+    if (!files.length) return;
+    form._tnFiles = files;
+    var nameEl = form.querySelector(".tn-file-name");
+    if (nameEl) {
+      nameEl.textContent = files.length === 1 ? files[0].name : (files.length + " " + t.filesChosen);
+    }
+    sendPickedFiles(form, files);
+  };
   window.addEventListener("talendus:session-set", function () { syncNativeAuth(); });
   window.addEventListener("talendus:session-cleared", function () {
     try { if (window.TalendusNative && window.TalendusNative.clearAuth) window.TalendusNative.clearAuth(); } catch (e) {}
