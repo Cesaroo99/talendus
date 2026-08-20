@@ -81,7 +81,7 @@ async def upload_candidate_resume(
     data = await file.read()
     if not data:
         raise AppError(400, "Fichier vide.", "VALIDATION_ERROR")
-    row = cand_svc.upload_cv_for_candidate(db, user, candidate_id, data, file.filename or "cv.pdf")
+    row = cand_svc.upload_cv_for_candidate(db, user, candidate_id, data, file.filename or "cv")
     return ok(
         {
             "id": row.id,

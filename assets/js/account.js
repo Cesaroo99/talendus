@@ -656,7 +656,7 @@
         return "<li>" + esc(e.name) + ' <button type="button" class="tl-btn tl-btn-ghost" data-del-cert="' + esc(e.id) + '">' + esc(t.remove) + "</button></li>";
       }).join("") || "<li>-</li>";
       return '<p class="tl-meta">' + esc(t.updated) + " : " + esc(fmtDate(profile.updated_at)) + "</p>" +
-        '<form class="tl-form" id="acc-avatar"><label>' + esc(t.photo) + '</label><input name="file" type="file" accept="image/jpeg,image/png,image/webp">' +
+        '<form class="tl-form" id="acc-avatar"><label>' + esc(t.photo) + '</label><input name="file" type="file" accept="image/jpeg,image/png,image/webp,image/*">' +
         '<button class="tl-btn tl-btn-ghost" type="submit">' + esc(t.save) + '</button><div class="tl-success"></div></form>' +
         '<form class="tl-form" id="acc-profile"><div class="tl-row-2"><div><label>' + esc(t.first) + '</label><input name="first_name" value="' + esc(user.first_name || "") + '"></div>' +
         "<div><label>" + esc(t.last) + '</label><input name="last_name" value="' + esc(user.last_name || "") + '"></div></div>' +
@@ -689,6 +689,17 @@
         '<form class="tl-form" id="acc-cert"><input name="name" required><button class="tl-btn tl-btn-ghost" type="submit">' + esc(t.add) + "</button></form>";
     }
 
+    function bindFileForm(form, send) {
+      if (!form) return;
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        send(form);
+      });
+      var input = form.querySelector('input[type="file"]');
+      if (input) input.addEventListener("change", function () {
+        if (input.files && input.files[0]) send(form);
+      });
+    }
     function bindProfile(user) {
       var form = document.getElementById("acc-profile");
       if (form) form.addEventListener("submit", function (e) {
@@ -710,12 +721,13 @@
           flash(form.querySelector(".tl-success"), (err && err.message) || t.err, false);
         });
       });
-      var av = document.getElementById("acc-avatar");
-      if (av) av.addEventListener("submit", function (e) {
-        e.preventDefault();
+      bindFileForm(document.getElementById("acc-avatar"), function (av) {
+        if (av.getAttribute("data-busy") === "1") return;
         var file = av.querySelector("[name=file]").files[0];
         if (!file) return;
-        var fd = new FormData(); fd.append("file", file);
+        av.setAttribute("data-busy", "1");
+        var fd = new FormData();
+        api.appendFile(fd, file, "photo.jpg");
         api.request("/users/me/avatar", { method: "POST", body: fd }).then(function (json) {
           flash(av.querySelector(".tl-success"), t.uploaded, true);
           if (json && json.data) {
@@ -724,6 +736,7 @@
           window.__tlAvatarUrl = "";
           if (window.TalendusAuth && window.TalendusAuth.paint) window.TalendusAuth.paint();
         }).catch(function (err) {
+          av.removeAttribute("data-busy");
           flash(av.querySelector(".tl-success"), (err && err.message) || t.err, false);
         });
       });
@@ -961,34 +974,41 @@
           ' <button type="button" class="tl-btn tl-btn-ghost" data-del-cv="' + esc(r.id) + '">' + esc(t.remove) + "</button></li>";
       }).join("") || "<li>-</li>";
       return "<h3>CV</h3><ul>" + cvs + '</ul><form class="tl-form" id="acc-cv"><label>' + esc(t.upload) +
-        '</label><input name="file" type="file" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp,application/pdf,image/png,image/jpeg" required><button class="tl-btn" type="submit">' +
+        '</label><input name="file" type="file" accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png,image/webp" required><button class="tl-btn" type="submit">' +
         esc(t.replace) + '</button><div class="tl-success"></div></form><h3>' + esc(t.otherDocs) + "</h3><ul>" + list +
-        '</ul><form class="tl-form" id="acc-doc"><label>' + esc(t.upload) + '</label><input name="file" type="file" required>' +
+        '</ul><form class="tl-form" id="acc-doc"><label>' + esc(t.upload) + '</label><input name="file" type="file" accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png,image/webp" required>' +
         '<select name="kind"><option value="cover_letter">' + esc(t.cover) + '</option><option value="certification">' +
         esc(t.certs) + '</option><option value="other">' + esc(t.otherDocs) + "</option></select>" +
         '<button class="tl-btn" type="submit">' + esc(t.add) + '</button><div class="tl-success"></div></form>';
     }
 
     function bindDocs() {
-      var cv = document.getElementById("acc-cv");
-      if (cv) cv.addEventListener("submit", function (e) {
-        e.preventDefault();
+      bindFileForm(document.getElementById("acc-cv"), function (cv) {
+        if (cv.getAttribute("data-busy") === "1") return;
         var file = cv.querySelector("[name=file]").files[0];
         if (!file) return;
-        var fd = new FormData(); fd.append("file", file);
+        cv.setAttribute("data-busy", "1");
+        var fd = new FormData();
+        api.appendFile(fd, file, "cv.pdf");
         api.request("/candidates/me/resume", { method: "POST", body: fd }).then(function () { go("documents"); })
-          .catch(function (err) { flash(cv.querySelector(".tl-success"), (err && err.message) || t.err, false); });
+          .catch(function (err) {
+            cv.removeAttribute("data-busy");
+            flash(cv.querySelector(".tl-success"), (err && err.message) || t.err, false);
+          });
       });
-      var doc = document.getElementById("acc-doc");
-      if (doc) doc.addEventListener("submit", function (e) {
-        e.preventDefault();
+      bindFileForm(document.getElementById("acc-doc"), function (doc) {
+        if (doc.getAttribute("data-busy") === "1") return;
         var file = doc.querySelector("[name=file]").files[0];
         if (!file) return;
+        doc.setAttribute("data-busy", "1");
         var fd = new FormData();
-        fd.append("file", file);
+        api.appendFile(fd, file, "document.pdf");
         fd.append("kind", doc.querySelector("[name=kind]").value);
         api.request("/documents", { method: "POST", body: fd }).then(function () { go("documents"); })
-          .catch(function (err) { flash(doc.querySelector(".tl-success"), (err && err.message) || t.err, false); });
+          .catch(function (err) {
+            doc.removeAttribute("data-busy");
+            flash(doc.querySelector(".tl-success"), (err && err.message) || t.err, false);
+          });
       });
       root.querySelectorAll("[data-del-cv]").forEach(function (b) {
         b.onclick = function () { api.request("/candidates/me/resume/" + b.getAttribute("data-del-cv"), { method: "DELETE" }).then(function () { go("documents"); }); };

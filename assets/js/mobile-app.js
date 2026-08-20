@@ -57,6 +57,9 @@
     saved: "Saved.",
     cv: "Resume",
     upload: "Add my resume",
+    uploadDoc: "Add the document",
+    uploading: "Sending the file…",
+    uploadedOk: "File sent.",
     completeness: "Your file",
     completeFile: "Finish my file",
     statsApps: "Applications",
@@ -295,6 +298,9 @@
     saved: "Enregistré.",
     cv: "CV",
     upload: "Ajouter mon CV",
+    uploadDoc: "Ajouter le document",
+    uploading: "Envoi du fichier…",
+    uploadedOk: "Fichier envoyé.",
     completeness: "Votre dossier",
     completeFile: "Compléter mon dossier",
     statsApps: "Candidatures",
@@ -812,9 +818,48 @@
     return html + "</div></fieldset>";
   }
   function filePicker(accept, multiple) {
-    return '<label class="tn-file"><input class="tn-file-input" type="file" name="file" accept="' + esc(accept) + '"' +
-      (multiple ? " multiple" : "") + '><span class="tn-file-btn">' + esc(t.chooseFile) + "</span>" +
-      '<span class="tn-file-name">' + esc(t.noFile) + "</span></label>";
+    return '<div class="tn-file">' +
+      '<input class="tn-file-input" type="file" name="file" accept="' + esc(accept) + '"' + (multiple ? " multiple" : "") + ">" +
+      '<button type="button" class="tn-file-btn" data-pick-file>' + esc(t.chooseFile) + "</button>" +
+      '<p class="tn-file-name">' + esc(t.noFile) + "</p></div>";
+  }
+  var FILE_ACCEPT = "application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png,image/webp";
+  function pickedFiles(form) {
+    var input = form.querySelector("input[type=file]");
+    var list = input && input.files;
+    var out = [];
+    if (!list) return out;
+    for (var i = 0; i < list.length; i++) out.push(list[i]);
+    return out;
+  }
+  function sendPickedFiles(form) {
+    if (!isCandidate() || form.getAttribute("data-busy") === "1") return Promise.resolve();
+    var files = pickedFiles(form);
+    if (!files.length) {
+      fail({ message: t.needFile });
+      return Promise.resolve();
+    }
+    form.setAttribute("data-busy", "1");
+    var btn = form.querySelector('button[type="submit"]');
+    if (btn) btn.disabled = true;
+    setNotice(t.uploading);
+    var isAvatar = form.matches("[data-avatar]");
+    var isCv = form.matches("[data-cv]");
+    var fallback = isAvatar ? "photo.jpg" : "document.pdf";
+    return uploadEach(files, function (file) {
+      var payload = new FormData();
+      api.appendFile(payload, file, fallback);
+      if (form.matches("[data-doc]")) payload.append("kind", "other");
+      if (isAvatar) return api.request("/users/me/avatar", { method: "POST", body: payload });
+      if (isCv) return api.uploadResume(payload);
+      return api.request("/documents", { method: "POST", body: payload });
+    }).then(function () {
+      return done(t.uploadedOk);
+    }).catch(function (err) {
+      form.removeAttribute("data-busy");
+      if (btn) btn.disabled = false;
+      fail(err);
+    });
   }
   function formChoice(form, name) {
     var boxes = form.querySelectorAll('input[type="checkbox"][name="' + name + '"]');
@@ -1487,7 +1532,7 @@
     var docs = state.docs || [];
     return backTo("#/me") + "<h1 class=\"tn-title\">" + esc(t.documents) + "</h1>" + flash() +
       '<form class="tn-form" data-cv><label>' + esc(t.cv) + "</label>" +
-      filePicker(".pdf,.doc,.docx,application/pdf,image/png,image/jpeg", true) +
+      filePicker(FILE_ACCEPT, true) +
       '<button class="tn-btn" type="submit">' + esc(t.upload) + "</button></form>" +
       '<div class="tn-grid tn-stack">' + (resumes.map(function (r) {
         return '<div class="tn-job"><h3>' + esc(r.original_name || t.cv) + '</h3><p class="tn-meta">' +
@@ -1496,8 +1541,8 @@
           '<button type="button" class="tn-btn tn-btn-ghost" data-del-cv="' + esc(r.id) + '">' + esc(t.remove) + "</button></div></div>";
       }).join("") || '<div class="tn-empty">' + esc(t.noCv) + "</div>") + "</div>" +
       '<form class="tn-form" data-doc><label>' + esc(t.otherDocs) + "</label>" +
-      filePicker(".pdf,.doc,.docx,application/pdf,image/png,image/jpeg", true) +
-      '<button class="tn-btn tn-btn-ghost" type="submit">' + esc(t.upload) + "</button></form>" +
+      filePicker(FILE_ACCEPT, true) +
+      '<button class="tn-btn tn-btn-ghost" type="submit">' + esc(t.uploadDoc) + "</button></form>" +
       '<div class="tn-grid tn-stack">' + (docs.map(function (row) {
         return '<div class="tn-job"><h3>' + esc(row.original_name || t.otherDocs) + '</h3><p class="tn-meta">' +
           esc(when(row.created_at)) + '</p><div class="tn-row-actions">' +
@@ -1861,6 +1906,14 @@
       render();
       return;
     }
+    var pickFile = e.target.closest("[data-pick-file]");
+    if (pickFile) {
+      e.preventDefault();
+      var box = pickFile.closest(".tn-file");
+      var input = box && box.querySelector(".tn-file-input");
+      if (input) input.click();
+      return;
+    }
     if (e.target.closest("[data-enable-push]")) {
       e.preventDefault();
       enablePush(true).then(function (ok) {
@@ -2099,14 +2152,9 @@
         if (user) state.user = user;
         done(t.saved);
       }).catch(fail);
-    } else if (form.matches("[data-avatar]")) {
+    } else if (form.matches("[data-avatar]") || form.matches("[data-cv]") || form.matches("[data-doc]")) {
       e.preventDefault();
-      if (!isCandidate()) return;
-      var photo = form.file && form.file.files && form.file.files[0];
-      if (!photo) { fail({ message: t.needFile }); return; }
-      var av = new FormData();
-      av.append("file", photo);
-      api.request("/users/me/avatar", { method: "POST", body: av }).then(function () { done(t.saved); }).catch(fail);
+      sendPickedFiles(form);
     } else if (form.matches("[data-exp]")) {
       e.preventDefault();
       if (!isCandidate()) return;
@@ -2122,27 +2170,6 @@
       if (!isCandidate()) return;
       api.request("/candidates/me/certifications", { method: "POST", body: Object.fromEntries(new FormData(form).entries()) })
         .then(function () { form.reset(); done(t.saved); }).catch(fail);
-    } else if (form.matches("[data-cv]")) {
-      e.preventDefault();
-      if (!isCandidate()) return;
-      var cvFiles = form.file && form.file.files;
-      if (!cvFiles || !cvFiles.length) { fail({ message: t.needFile }); return; }
-      uploadEach(cvFiles, function (file) {
-        var payload = new FormData();
-        payload.append("file", file);
-        return api.uploadResume(payload);
-      }).then(function () { done(t.saved); }).catch(fail);
-    } else if (form.matches("[data-doc]")) {
-      e.preventDefault();
-      if (!isCandidate()) return;
-      var docFiles = form.file && form.file.files;
-      if (!docFiles || !docFiles.length) { fail({ message: t.needFile }); return; }
-      uploadEach(docFiles, function (file) {
-        var payload = new FormData();
-        payload.append("file", file);
-        payload.append("kind", "other");
-        return api.request("/documents", { method: "POST", body: payload });
-      }).then(function () { done(t.saved); }).catch(fail);
     } else if (form.matches("[data-password]")) {
       e.preventDefault();
       api.request("/auth/change-password", { method: "POST", body: Object.fromEntries(new FormData(form).entries()) })
@@ -2183,11 +2210,15 @@
     if (fileInput) {
       var box = fileInput.closest(".tn-file");
       var nameEl = box && box.querySelector(".tn-file-name");
+      var files = fileInput.files || [];
       if (nameEl) {
-        var files = fileInput.files || [];
         if (!files.length) nameEl.textContent = t.noFile;
         else if (files.length === 1) nameEl.textContent = files[0].name;
         else nameEl.textContent = files.length + " " + t.filesChosen;
+      }
+      var form = fileInput.closest("form");
+      if (form && files.length && (form.matches("[data-cv]") || form.matches("[data-doc]") || form.matches("[data-avatar]"))) {
+        sendPickedFiles(form);
       }
       return;
     }

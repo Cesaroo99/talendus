@@ -59,12 +59,11 @@ async def apply_public(request: Request, db: Session = Depends(get_db)):
             }
         )
         upload = form.get("file") or form.get("cv") or form.get("cvfile")
-        filename = getattr(upload, "filename", "") or ""
-        if upload is not None and hasattr(upload, "read") and filename:
+        if upload is not None and hasattr(upload, "read"):
             data = await upload.read()
             if data:
                 cv_file = data
-                cv_filename = filename
+                cv_filename = (getattr(upload, "filename", None) or "").strip() or "cv"
     else:
         payload = _public_payload(await request.json())
     application = applications_service.apply_public(

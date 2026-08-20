@@ -122,6 +122,27 @@ def test_documents_are_authenticated(client):
     assert ok_file.status_code == 200
 
 
+PNG = (
+    b"\x89PNG\r\n\x1a\n"
+    b"\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89"
+    b"\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n-\xb4"
+    b"\x00\x00\x00\x00IEND\xaeB`\x82"
+)
+
+
+def test_documents_accept_images(client):
+    cand = register(client, "docs-img@example.com")
+    headers = auth_header(cand)
+    upload = client.post(
+        "/api/documents",
+        headers=headers,
+        files={"file": ("permis.png", PNG, "image/png")},
+        data={"kind": "other"},
+    )
+    assert upload.status_code == 200, upload.text
+    assert upload.json()["data"]["original_name"] == "permis.png"
+
+
 def test_profile_experience_and_resume_delete(client):
     cand = register(client, "cvdel@example.com")
     headers = auth_header(cand)
