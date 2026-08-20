@@ -891,14 +891,14 @@ for old, new in [("about.html", "a-propos.html"), ("service.html", "services.htm
                     robots="noindex,nofollow"))
 
 write("app.html", wrap(
-    "Installer Talendus | Android et iPhone",
-    "Installez Talendus sur votre téléphone. Un toucher télécharge l'application, puis l'icône apparaît sur l'écran d'accueil.",
+    "Télécharger Talendus | Android et iPhone",
+    "Mettez Talendus sur votre téléphone. Offres, messages et votre conseiller, en un tap — comme vos autres applis.",
     "app.html",
     page_hero(
         "Sur votre téléphone",
         "Talendus dans votre poche.",
-        "Installez l'application. Ensuite, elle s'ouvre comme vos autres applis.",
-        actions='<a class="tl-btn" href="#tl-install-board">Installer maintenant</a><a class="tl-btn tl-btn-ghost" href="espace.html">Ouvrir mon espace</a>',
+        "Téléchargez l'application une fois. Ensuite, elle s'ouvre comme vos autres applis — offres, messages et votre conseiller compris.",
+        actions='<a class="tl-btn" href="#tl-install-board">Télécharger l\'appli</a><a class="tl-btn tl-btn-ghost" href="espace.html">Ouvrir mon espace</a>',
         badges='<span class="tl-badge tl-badge-light">Android</span> <span class="tl-badge tl-badge-light">iPhone</span>'
     )
     + install_board("fr")

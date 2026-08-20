@@ -58,7 +58,7 @@ def test_apple_touch_icon_is_square(client):
 def test_app_page_downloads_real_packages():
     page = (ROOT / "app.html").read_text(encoding="utf-8")
     assert 'id="tl-install-board"' in page
-    assert "Installer maintenant" in page
+    assert "Télécharger l'appli" in page
     assert 'href="/download/talendus.apk"' in page
     assert 'href="/download/talendus.mobileconfig"' in page
     assert "Trois petits gestes" not in page
@@ -66,7 +66,7 @@ def test_app_page_downloads_real_packages():
         assert banned not in page
     en = (ROOT / "en" / "app.html").read_text(encoding="utf-8")
     assert 'id="tl-install-board"' in en
-    assert "Install now" in en
+    assert "Download the app" in en
     assert 'href="/download/talendus.apk"' in en
     assert 'href="/download/talendus.mobileconfig"' in en
     for banned in ("Xcode", "WKWebView"):
@@ -79,6 +79,9 @@ def test_install_script_starts_a_file_download():
     assert "/download/talendus.mobileconfig" in js
     assert "location.assign" in js
     assert "openGuide" not in js
+    assert "Télécharger l'appli" in js
+    assert "rememberDismiss(365)" in js
+    assert "Le fichier est en bas de l'écran" in js
 
 
 def test_android_apk_is_a_real_package(client):

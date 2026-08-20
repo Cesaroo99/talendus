@@ -94,6 +94,8 @@ def serialize_job(job: JobOffer) -> dict:
         "driver_license": job.driver_license,
         "unionized": job.unionized,
         "travel": job.travel,
+        "work_authorization": job.work_authorization,
+        "can_sponsor": bool(job.can_sponsor),
         "benefits": job.benefits,
         "start_date": job.start_date,
         "status": job.status.value,
@@ -152,6 +154,10 @@ def search_jobs(
     shift: str | None = None,
     schedule: str | None = None,
     work_mode: str | None = None,
+    work_authorization: str | None = None,
+    work_status: str | None = None,
+    can_sponsor: bool | None = None,
+    title: str | None = None,
     status: JobStatus | None = None,
     public_only: bool = True,
     page: int = 1,
@@ -209,6 +215,24 @@ def search_jobs(
         stmt = stmt.where(JobOffer.schedule.ilike(f"%{schedule}%"))
     if work_mode:
         stmt = stmt.where(JobOffer.work_mode.ilike(f"%{work_mode}%"))
+    if title:
+        stmt = stmt.where(JobOffer.title.ilike(f"%{title.strip()}%"))
+    if work_authorization:
+        stmt = stmt.where(JobOffer.work_authorization == work_authorization.strip())
+    if can_sponsor is True:
+        stmt = stmt.where(JobOffer.can_sponsor.is_(True))
+    if work_status:
+        from app.services.job_catalog import allowed_authorizations_for_status
+
+        allowed = allowed_authorizations_for_status(work_status)
+        if allowed is not None:
+            stmt = stmt.where(
+                or_(
+                    JobOffer.work_authorization.is_(None),
+                    JobOffer.work_authorization.in_(allowed),
+                    JobOffer.can_sponsor.is_(True),
+                )
+            )
     if salary_min:
         stmt = stmt.where(or_(JobOffer.salary_min >= salary_min, JobOffer.salary_max >= salary_min))
     if salary_max:
@@ -318,6 +342,8 @@ def create_job(db: Session, user: User, data: JobIn, ip: str | None = None) -> J
         driver_license=data.driver_license,
         unionized=data.unionized,
         travel=data.travel,
+        work_authorization=data.work_authorization or "ouvert",
+        can_sponsor=bool(data.can_sponsor),
         benefits=data.benefits,
         currency=getattr(data, "currency", None) or "CAD",
         openings=getattr(data, "openings", None) or 1,
@@ -427,6 +453,8 @@ def duplicate_job(db: Session, user: User, job_id: str) -> JobOffer:
         driver_license=source.driver_license,
         unionized=source.unionized,
         travel=source.travel,
+        work_authorization=source.work_authorization,
+        can_sponsor=bool(source.can_sponsor),
         benefits=source.benefits,
         status=JobStatus.DRAFT,
         start_date=source.start_date,

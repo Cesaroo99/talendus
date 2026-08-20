@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.models import JobOffer
 from app.models.enums import JobStatus
+from app.services.occupations import occupation_choices
 
 LOCATIONS = [
     "Montréal",
@@ -102,6 +103,56 @@ BENEFITS = [
     "Formation payée",
     "Équipement fourni",
 ]
+WORK_STATUSES = [
+    {"value": "citoyen_canadien", "label": "Citoyen canadien", "label_en": "Canadian citizen"},
+    {"value": "resident_permanent", "label": "Résident permanent", "label_en": "Permanent resident"},
+    {"value": "permis_travail", "label": "Permis de travail", "label_en": "Work permit"},
+    {"value": "a_parrainer", "label": "À parrainer", "label_en": "Needs sponsorship"},
+]
+WORK_REQUIREMENTS = [
+    {"value": "ouvert", "label": "Tous les statuts", "label_en": "All work statuses"},
+    {"value": "permis_travail", "label": "Permis de travail accepté", "label_en": "Work permit accepted"},
+    {"value": "resident_permanent", "label": "Résident permanent ou citoyen", "label_en": "Permanent resident or citizen"},
+    {"value": "citoyen_canadien", "label": "Citoyenneté canadienne exigée", "label_en": "Canadian citizenship required"},
+]
+SPONSOR_FILTERS = [
+    {"value": "true", "label": "Parrainage possible", "label_en": "Sponsorship available"},
+]
+
+# Statut du candidat → exigences d'offre encore accessibles (sans parrainage).
+_STATUS_ALLOWS = {
+    "citoyen_canadien": ("ouvert", "permis_travail", "resident_permanent", "citoyen_canadien"),
+    "resident_permanent": ("ouvert", "permis_travail", "resident_permanent"),
+    "permis_travail": ("ouvert", "permis_travail"),
+    "a_parrainer": ("ouvert",),
+}
+
+
+def requirement_label(value: str | None, *, is_en: bool = False) -> str | None:
+    raw = (value or "").strip()
+    if not raw:
+        return None
+    for item in WORK_REQUIREMENTS:
+        if item["value"] == raw:
+            return item["label_en"] if is_en else item["label"]
+    return raw
+
+
+def work_status_label(value: str | None, *, is_en: bool = False) -> str | None:
+    raw = (value or "").strip()
+    if not raw:
+        return None
+    for item in WORK_STATUSES:
+        if item["value"] == raw:
+            return item["label_en"] if is_en else item["label"]
+    return raw
+
+
+def allowed_authorizations_for_status(work_status: str | None) -> tuple[str, ...] | None:
+    key = (work_status or "").strip()
+    if not key:
+        return None
+    return _STATUS_ALLOWS.get(key)
 
 
 def _choices(values: list[str]) -> list[dict]:
@@ -165,4 +216,8 @@ def catalog(db: Session | None = None) -> dict:
         "travel": _choices(TRAVEL),
         "company_sizes": _choices(COMPANY_SIZES),
         "benefits": _choices(BENEFITS),
+        "occupations": occupation_choices(),
+        "work_statuses": WORK_STATUSES,
+        "work_requirements": WORK_REQUIREMENTS,
+        "sponsor_filters": SPONSOR_FILTERS,
     }

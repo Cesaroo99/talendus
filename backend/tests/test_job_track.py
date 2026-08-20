@@ -15,6 +15,64 @@ def test_job_options_catalog_includes_shift(client):
     assert data["language_choices"]
     assert "Français" in [item["value"] for item in data["language_choices"]]
     assert data["experience_levels"]
+    occupations = [item["value"] for item in data["occupations"]]
+    assert len(occupations) >= 150
+    assert "Cariste" in occupations
+    assert "Préposé aux bénéficiaires (PAB)" in occupations
+    assert "Opérateur de chariot élévateur" in occupations
+    assert data["occupations"][0]["group"]
+    statuses = [item["value"] for item in data["work_statuses"]]
+    assert statuses == ["citoyen_canadien", "resident_permanent", "permis_travail", "a_parrainer"]
+    requirements = [item["value"] for item in data["work_requirements"]]
+    assert "citoyen_canadien" in requirements
+    assert "ouvert" in requirements
+    assert data["sponsor_filters"]
+
+
+def test_search_jobs_by_work_authorization(client):
+    emp = register(client, "auth-co@example.com", "EMPLOYER")
+    admin = promote_admin(client, "auth-admin@example.com")
+    staff_publish_job(
+        client,
+        emp,
+        admin,
+        slug="cariste-citoyen",
+        title="Cariste citoyen",
+        work_authorization="citoyen_canadien",
+        can_sponsor=False,
+    )
+    staff_publish_job(
+        client,
+        emp,
+        admin,
+        slug="cariste-permis",
+        title="Cariste permis",
+        work_authorization="permis_travail",
+        can_sponsor=False,
+    )
+    staff_publish_job(
+        client,
+        emp,
+        admin,
+        slug="cariste-parrainage",
+        title="Cariste parrainage",
+        work_authorization="citoyen_canadien",
+        can_sponsor=True,
+    )
+    citizen = client.get("/api/jobs", params={"work_status": "permis_travail"})
+    assert citizen.status_code == 200, citizen.text
+    titles = [item["title"] for item in citizen.json()["data"]]
+    assert "Cariste permis" in titles
+    assert "Cariste citoyen" not in titles
+    assert "Cariste parrainage" in titles
+    sponsored = client.get("/api/jobs", params={"can_sponsor": True})
+    assert "Cariste parrainage" in [item["title"] for item in sponsored.json()["data"]]
+    exact = client.get("/api/jobs", params={"work_authorization": "citoyen_canadien"})
+    exact_titles = [item["title"] for item in exact.json()["data"]]
+    assert "Cariste citoyen" in exact_titles
+    assert "Cariste permis" not in exact_titles
+    named = client.get("/api/jobs", params={"title": "Cariste citoyen"})
+    assert [item["title"] for item in named.json()["data"]] == ["Cariste citoyen"]
 
 
 def test_search_jobs_by_shift(client):
