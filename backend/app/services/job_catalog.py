@@ -67,6 +67,7 @@ SCHEDULES = ["Temps plein", "Temps partiel", "Sur appel", "4 jours / 3"]
 WORK_MODES = ["Sur place", "Hybride", "Télétravail"]
 
 LANGUAGES = ["Français", "Français et anglais", "Anglais", "Bilingue (FR/EN)"]
+LANGUAGE_CHOICES = ["Français", "Anglais", "Espagnol", "Arabe", "Créole", "Italien", "Portugais"]
 
 EXPERIENCE_LEVELS = [
     {"value": "debutant", "label": "Débutant", "label_en": "Entry-level"},
@@ -150,6 +151,7 @@ def catalog(db: Session | None = None) -> dict:
         "schedules": _choices(schedules),
         "work_modes": _choices(modes),
         "languages": _choices(languages),
+        "language_choices": _choices(LANGUAGE_CHOICES),
         "experience_levels": EXPERIENCE_LEVELS,
         "provinces": _choices(PROVINCES),
         "countries": _choices(COUNTRIES),

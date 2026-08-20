@@ -568,6 +568,77 @@ a.tn-stat {
 }
 .tn-form textarea { min-height: 110px; resize: vertical; }
 .tn-form button { margin-top: 8px; }
+.tn-file {
+  position: relative;
+  display: grid;
+  gap: 8px;
+  margin: 8px 0 12px;
+}
+.tn-file-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+.tn-file-btn {
+  display: block;
+  text-align: center;
+  border: 1px dashed var(--tn-line);
+  border-radius: 14px;
+  padding: 16px;
+  font-weight: 800;
+  background: #f8fafc;
+  cursor: pointer;
+}
+.tn-file:focus-within .tn-file-btn {
+  outline: 2px solid rgba(255,107,0,.35);
+  border-color: var(--tn-orange);
+}
+.tn-file-name { color: var(--tn-muted); font-size: .9rem; }
+.tn-choices {
+  border: 0;
+  margin: 12px 0 4px;
+  padding: 0;
+}
+.tn-choices legend {
+  font-weight: 700;
+  font-size: .85rem;
+  padding: 0;
+}
+.tn-choice-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.tn-chip-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--tn-line);
+  border-radius: 999px;
+  background: #fff;
+  font-weight: 700;
+  font-size: .88rem;
+  cursor: pointer;
+}
+.tn-form .tn-chip-check {
+  display: inline-flex;
+  margin: 0;
+  font-size: .88rem;
+}
+.tn-chip-check:has(input:checked) {
+  border-color: var(--tn-orange);
+  background: #fff4ec;
+}
+.tn-chip-check input {
+  margin: 0;
+  accent-color: var(--tn-orange);
+}
 .tn-file-card .tn-btn { margin-top: 8px; }
 .tn-stack { margin-top: 18px; }
 .tn-logout { margin-top: 22px; }

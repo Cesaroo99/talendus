@@ -149,6 +149,9 @@ def test_native_app_never_asks_to_install_again():
     assert "TalendusNative" in java
     assert "POST_NOTIFICATIONS" in java
     assert "showNotification" in java
+    assert "onShowFileChooser" in java
+    assert "FILE_CHOOSER" in java
+    assert "setAllowFileAccess" in java
     assert "setAuthToken" in java
     assert "CAMERA" in java
     assert "RECORD_AUDIO" in java
@@ -305,3 +308,26 @@ def test_mobile_app_switches_language_and_hides_status_codes():
     account = (ROOT / "assets" / "js" / "account.js").read_text(encoding="utf-8")
     assert "toUpperCase()" in account
     assert 'WITHDRAWN:' in account
+
+
+def test_mobile_app_uploads_files_and_allows_multiple_choices():
+    js = (ROOT / "assets" / "js" / "mobile-app.js").read_text(encoding="utf-8")
+    for needle in (
+        "function filePicker",
+        "function choiceGroup",
+        "function formChoice",
+        "data-doc",
+        "tn-file-input",
+        'choiceGroup("languages"',
+        'choiceGroup("contract_type"',
+        'choiceGroup("shift_preference"',
+        "language_choices",
+        "uploadEach",
+    ):
+        assert needle in js
+    css = (ROOT / "assets" / "css" / "mobile-app.css").read_text(encoding="utf-8")
+    assert ".tn-file-btn" in css
+    assert ".tn-chip-check" in css
+    java = (ROOT / "mobile" / "android" / "app" / "src" / "main" / "java" / "ca" / "talendus" / "app" / "MainActivity.java").read_text(encoding="utf-8")
+    assert "onShowFileChooser" in java
+    assert "EXTRA_ALLOW_MULTIPLE" in java

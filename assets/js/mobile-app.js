@@ -193,6 +193,13 @@
     jobStart: "Start date",
     moreFilters: "Narrow the search",
     pick: "Select",
+    chooseFile: "Choose a file",
+    noFile: "No file chosen",
+    filesChosen: "files chosen",
+    needFile: "Choose a file first.",
+    otherDocs: "Other documents",
+    emptyDocs: "No other document yet.",
+    multiHint: "You can tick more than one.",
     overtime: "Overtime",
     license: "Driver’s licence",
     union: "Union",
@@ -424,6 +431,13 @@
     jobStart: "Entrée en poste",
     moreFilters: "Préciser la recherche",
     pick: "Choisir",
+    chooseFile: "Choisir un fichier",
+    noFile: "Aucun fichier choisi",
+    filesChosen: "fichiers choisis",
+    needFile: "Choisissez d’abord un fichier.",
+    otherDocs: "Autres documents",
+    emptyDocs: "Aucun autre document pour le moment.",
+    multiHint: "Vous pouvez en cocher plusieurs.",
     overtime: "Heures sup.",
     license: "Permis",
     union: "Syndicat",
@@ -531,6 +545,7 @@
     prefs: null,
     company: null,
     application: null,
+    docs: [],
     query: "",
     jobCity: "",
     jobSector: "",
@@ -761,6 +776,59 @@
   }
   function labeledChoice(name, label, items, selected, allLabel) {
     return "<label>" + esc(label) + "</label>" + choiceSelect(name, items, selected, allLabel);
+  }
+  function selectedSet(raw) {
+    var out = {};
+    String(raw || "").split(",").forEach(function (part) {
+      var value = part.trim();
+      if (!value) return;
+      if (/bilingue|fr\/en|français et anglais|french and english/i.test(value)) {
+        out["Français"] = true;
+        out["Anglais"] = true;
+        return;
+      }
+      out[value] = true;
+    });
+    return out;
+  }
+  function languageItems() {
+    var picks = jobOpts().language_choices;
+    return (picks && picks.length) ? picks : (jobOpts().languages || []);
+  }
+  function choiceGroup(name, items, selected, label) {
+    var picked = selectedSet(selected);
+    var seen = {};
+    var html = '<fieldset class="tn-choices"><legend>' + esc(label) + "</legend><p class=\"tn-meta\">" + esc(t.multiHint) + "</p><div class=\"tn-choice-grid\">";
+    function add(val, text) {
+      if (!val || seen[val]) return;
+      seen[val] = true;
+      html += '<label class="tn-chip-check"><input type="checkbox" name="' + name + '" value="' + esc(val) + '"' +
+        (picked[val] ? " checked" : "") + "> " + esc(text || val) + "</label>";
+    }
+    (items || []).forEach(function (item) {
+      add(optionValue(item), optionLabel(item));
+    });
+    Object.keys(picked).forEach(function (val) { add(val, val); });
+    return html + "</div></fieldset>";
+  }
+  function filePicker(accept, multiple) {
+    return '<label class="tn-file"><input class="tn-file-input" type="file" name="file" accept="' + esc(accept) + '"' +
+      (multiple ? " multiple" : "") + '><span class="tn-file-btn">' + esc(t.chooseFile) + "</span>" +
+      '<span class="tn-file-name">' + esc(t.noFile) + "</span></label>";
+  }
+  function formChoice(form, name) {
+    var boxes = form.querySelectorAll('input[type="checkbox"][name="' + name + '"]');
+    if (!boxes.length) return String(new FormData(form).get(name) || "");
+    return Array.prototype.map.call(form.querySelectorAll('input[type="checkbox"][name="' + name + '"]:checked'), function (el) {
+      return el.value;
+    }).filter(Boolean).join(", ");
+  }
+  function uploadEach(files, sendOne) {
+    var list = [];
+    for (var i = 0; i < files.length; i++) list.push(files[i]);
+    return list.reduce(function (chain, file) {
+      return chain.then(function () { return sendOne(file); });
+    }, Promise.resolve());
   }
   function jobOpts() {
     return state.jobOptions || {};
@@ -1183,7 +1251,7 @@
       labeledChoice("shift", t.shift, o.shifts, n.shift, t.pick) +
       labeledChoice("schedule", t.schedule, o.schedules, n.schedule, t.pick) +
       labeledChoice("work_mode", t.workMode, o.work_modes, n.work_mode, t.pick) +
-      labeledChoice("languages", t.languages, o.languages, n.languages, t.pick) +
+      choiceGroup("languages", languageItems(), n.languages, t.languages) +
       labeledChoice("overtime", t.overtime, o.overtime, n.overtime, t.pick) +
       labeledChoice("driver_license", t.license, o.driver_licenses, n.driver_license, t.pick) +
       labeledChoice("unionized", t.union, o.union_status, n.unionized, t.pick) +
@@ -1380,7 +1448,7 @@
     }
     return backTo("#/me") + "<h1 class=\"tn-title\">" + esc(t.profile) + "</h1><p class=\"tn-lead\">" + esc(t.profileLead) + "</p>" + flash() +
       '<form class="tn-form" data-avatar><label>' + esc(t.photo) + '</label><p class="tn-meta">' + esc(t.photoHint) + "</p>" +
-      '<input type="file" name="file" accept="image/jpeg,image/png,image/webp">' +
+      filePicker("image/jpeg,image/png,image/webp", false) +
       '<button class="tn-btn tn-btn-ghost" type="submit">' + esc(t.save) + "</button></form>" +
       '<form class="tn-form" data-profile>' +
       "<label>" + esc(t.first) + '</label><input name="first_name" value="' + esc(u.first_name || "") + '" autocomplete="given-name">' +
@@ -1395,10 +1463,10 @@
       labeledChoice("sector", t.sector, jobOpts().sectors, p.sector, t.pick) +
       "<label>" + esc(t.experience) + '</label><input name="years_experience" type="number" min="0" value="' + esc(p.years_experience || "") + '">' +
       "<label>" + esc(t.skills) + '</label><input name="skills" value="' + esc(p.skills || "") + '">' +
-      labeledChoice("languages", t.languages, jobOpts().languages, p.languages, t.pick) +
+      choiceGroup("languages", languageItems(), p.languages, t.languages) +
       labeledChoice("availability", t.availability, jobOpts().availability, p.availability, t.pick) +
-      labeledChoice("contract_type", t.contract, jobOpts().contract_types, p.contract_type, t.pick) +
-      labeledChoice("shift_preference", t.shiftPref, jobOpts().shifts, p.shift_preference, t.pick) +
+      choiceGroup("contract_type", jobOpts().contract_types, p.contract_type, t.contract) +
+      choiceGroup("shift_preference", jobOpts().shifts, p.shift_preference, t.shiftPref) +
       labeledChoice("mobility", t.mobility, jobOpts().mobility, p.mobility, t.pick) +
       "<label>" + esc(t.salary) + '</label><input name="desired_salary_min" type="number" value="' + esc(p.desired_salary_min || "") + '">' +
       "<label>" + esc(t.bio) + '</label><textarea name="bio">' + esc(p.bio || "") + "</textarea>" +
@@ -1416,15 +1484,27 @@
   function cvView() {
     var p = state.profile || {};
     var resumes = p.resumes || [];
+    var docs = state.docs || [];
     return backTo("#/me") + "<h1 class=\"tn-title\">" + esc(t.documents) + "</h1>" + flash() +
-      '<form class="tn-form" data-cv><label>' + esc(t.cv) + '</label><input type="file" name="file" accept=".pdf,.doc,.docx,application/pdf,image/png,image/jpeg" required>' +
+      '<form class="tn-form" data-cv><label>' + esc(t.cv) + "</label>" +
+      filePicker(".pdf,.doc,.docx,application/pdf,image/png,image/jpeg", true) +
       '<button class="tn-btn" type="submit">' + esc(t.upload) + "</button></form>" +
       '<div class="tn-grid tn-stack">' + (resumes.map(function (r) {
         return '<div class="tn-job"><h3>' + esc(r.original_name || t.cv) + '</h3><p class="tn-meta">' +
           esc(r.is_primary ? t.cvReady : when(r.created_at)) + '</p><div class="tn-row-actions">' +
           '<button type="button" class="tn-btn" data-dl-cv="' + esc(r.id) + '">' + esc(t.downloadCv) + "</button>" +
           '<button type="button" class="tn-btn tn-btn-ghost" data-del-cv="' + esc(r.id) + '">' + esc(t.remove) + "</button></div></div>";
-      }).join("") || '<div class="tn-empty">' + esc(t.noCv) + "</div>") + "</div>";
+      }).join("") || '<div class="tn-empty">' + esc(t.noCv) + "</div>") + "</div>" +
+      '<form class="tn-form" data-doc><label>' + esc(t.otherDocs) + "</label>" +
+      filePicker(".pdf,.doc,.docx,application/pdf,image/png,image/jpeg", true) +
+      '<button class="tn-btn tn-btn-ghost" type="submit">' + esc(t.upload) + "</button></form>" +
+      '<div class="tn-grid tn-stack">' + (docs.map(function (row) {
+        return '<div class="tn-job"><h3>' + esc(row.original_name || t.otherDocs) + '</h3><p class="tn-meta">' +
+          esc(when(row.created_at)) + '</p><div class="tn-row-actions">' +
+          '<button type="button" class="tn-btn" data-dl-doc="' + esc(row.id) + '" data-name="' + esc(row.original_name || "document") + '">' +
+          esc(t.downloadCv) + "</button>" +
+          '<button type="button" class="tn-btn tn-btn-ghost" data-del-doc="' + esc(row.id) + '">' + esc(t.remove) + "</button></div></div>";
+      }).join("") || '<div class="tn-empty">' + esc(t.emptyDocs) + "</div>") + "</div>";
   }
   function helpView() {
     var mail = (state.contact && state.contact.email) || "info@talendus.ca";
@@ -1612,6 +1692,9 @@
       }
       if (name === "me" || name === "profile" || name === "cv") {
         need("profile", function () { return api.profile(); }, "profile", false);
+      }
+      if (name === "cv") {
+        need("docs", function () { return api.request("/documents"); }, "docs", true);
       }
       if (name === "me" || name === "apps" || name === "app") {
         need("apps", function () { return api.myApplications(); }, "apps", true);
@@ -1897,6 +1980,16 @@
       if (!isCandidate()) return;
       api.download("/candidates/resumes/" + dlCv.getAttribute("data-dl-cv") + "/file", "cv.pdf").catch(fail);
     }
+    var delDoc = e.target.closest("[data-del-doc]");
+    if (delDoc) {
+      e.preventDefault();
+      api.request("/documents/" + delDoc.getAttribute("data-del-doc"), { method: "DELETE" }).then(function () { done(t.saved); }).catch(fail);
+    }
+    var dlDoc = e.target.closest("[data-dl-doc]");
+    if (dlDoc) {
+      e.preventDefault();
+      api.download("/documents/" + dlDoc.getAttribute("data-dl-doc") + "/file", dlDoc.getAttribute("data-name") || "document").catch(fail);
+    }
     if (e.target.closest("[data-logout]")) {
       e.preventDefault();
       api.logout().then(function () {
@@ -1972,6 +2065,7 @@
       e.preventDefault();
       if (!isEmployer()) return;
       var hire = Object.fromEntries(new FormData(form).entries());
+      hire.languages = formChoice(form, "languages");
       if (hire.seats) hire.seats = Number(hire.seats) || 1;
       var hid = form.getAttribute("data-id");
       var req = hid
@@ -1987,6 +2081,9 @@
       e.preventDefault();
       if (!isCandidate()) return;
       var d = Object.fromEntries(new FormData(form).entries());
+      d.languages = formChoice(form, "languages");
+      d.contract_type = formChoice(form, "contract_type");
+      d.shift_preference = formChoice(form, "shift_preference");
       Promise.all([
         api.request("/users/me", { method: "PATCH", body: { first_name: d.first_name, last_name: d.last_name, phone: d.phone } }),
         api.updateProfile({
@@ -2006,7 +2103,7 @@
       e.preventDefault();
       if (!isCandidate()) return;
       var photo = form.file && form.file.files && form.file.files[0];
-      if (!photo) return;
+      if (!photo) { fail({ message: t.needFile }); return; }
       var av = new FormData();
       av.append("file", photo);
       api.request("/users/me/avatar", { method: "POST", body: av }).then(function () { done(t.saved); }).catch(fail);
@@ -2028,11 +2125,24 @@
     } else if (form.matches("[data-cv]")) {
       e.preventDefault();
       if (!isCandidate()) return;
-      var file = form.file && form.file.files && form.file.files[0];
-      if (!file) return;
-      var payload = new FormData();
-      payload.append("file", file);
-      api.uploadResume(payload).then(function () { done(t.saved); }).catch(fail);
+      var cvFiles = form.file && form.file.files;
+      if (!cvFiles || !cvFiles.length) { fail({ message: t.needFile }); return; }
+      uploadEach(cvFiles, function (file) {
+        var payload = new FormData();
+        payload.append("file", file);
+        return api.uploadResume(payload);
+      }).then(function () { done(t.saved); }).catch(fail);
+    } else if (form.matches("[data-doc]")) {
+      e.preventDefault();
+      if (!isCandidate()) return;
+      var docFiles = form.file && form.file.files;
+      if (!docFiles || !docFiles.length) { fail({ message: t.needFile }); return; }
+      uploadEach(docFiles, function (file) {
+        var payload = new FormData();
+        payload.append("file", file);
+        payload.append("kind", "other");
+        return api.request("/documents", { method: "POST", body: payload });
+      }).then(function () { done(t.saved); }).catch(fail);
     } else if (form.matches("[data-password]")) {
       e.preventDefault();
       api.request("/auth/change-password", { method: "POST", body: Object.fromEntries(new FormData(form).entries()) })
@@ -2069,6 +2179,18 @@
     scheduleJobSearch(form);
   });
   root.addEventListener("change", function (e) {
+    var fileInput = e.target.closest(".tn-file-input");
+    if (fileInput) {
+      var box = fileInput.closest(".tn-file");
+      var nameEl = box && box.querySelector(".tn-file-name");
+      if (nameEl) {
+        var files = fileInput.files || [];
+        if (!files.length) nameEl.textContent = t.noFile;
+        else if (files.length === 1) nameEl.textContent = files[0].name;
+        else nameEl.textContent = files.length + " " + t.filesChosen;
+      }
+      return;
+    }
     var form = e.target.closest("[data-search-jobs]");
     if (!form || e.target.tagName !== "SELECT") return;
     clearTimeout(jobSearchTimer);

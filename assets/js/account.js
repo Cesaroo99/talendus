@@ -275,6 +275,44 @@
     function labeledChoice(name, label, items, selected, allLabel) {
       return "<label>" + esc(label) + "</label>" + choiceSelect(name, items, selected, allLabel);
     }
+    function selectedSet(raw) {
+      var out = {};
+      String(raw || "").split(",").forEach(function (part) {
+        var value = part.trim();
+        if (!value) return;
+        if (/bilingue|fr\/en|français et anglais|french and english/i.test(value)) {
+          out["Français"] = true;
+          out["Anglais"] = true;
+          return;
+        }
+        out[value] = true;
+      });
+      return out;
+    }
+    function choiceGroup(name, items, selected, label) {
+      var picked = selectedSet(selected);
+      var seen = {};
+      var html = '<fieldset class="tl-choices"><legend>' + esc(label) + "</legend><div class=\"tl-choice-grid\">";
+      function add(val, text) {
+        if (!val || seen[val]) return;
+        seen[val] = true;
+        html += '<label class="tl-chip-check"><input type="checkbox" name="' + name + '" value="' + esc(val) + '"' +
+          (picked[val] ? " checked" : "") + "> " + esc(text || val) + "</label>";
+      }
+      (items || []).forEach(function (item) {
+        var val = optionValue(item);
+        add(val, optionLabel(item));
+      });
+      Object.keys(picked).forEach(function (val) { add(val, val); });
+      return html + "</div></fieldset>";
+    }
+    function formChoice(form, name) {
+      var boxes = form.querySelectorAll('input[type="checkbox"][name="' + name + '"]');
+      if (!boxes.length) return String(new FormData(form).get(name) || "");
+      return Array.prototype.map.call(form.querySelectorAll('input[type="checkbox"][name="' + name + '"]:checked'), function (el) {
+        return el.value;
+      }).filter(Boolean).join(", ");
+    }
     function jobFacts(job) {
       if (!job) return "";
       var rows = [
@@ -634,11 +672,11 @@
         "<label>" + esc(t.sector) + '</label>' + choiceSelect("sector", (jobOptions || {}).sectors, profile.sector, t.pick) +
         "<label>" + esc(t.bio) + '</label><textarea name="bio" rows="4">' + esc(profile.bio || "") + "</textarea>" +
         "<label>" + esc(t.skills) + '</label><input name="skills" value="' + esc(profile.skills || "") + '">' +
-        "<label>" + esc(t.languages) + '</label>' + choiceSelect("languages", (jobOptions || {}).languages, profile.languages, t.pick) +
-        '<div class="tl-row-2"><div><label>' + esc(t.availability) + '</label>' + choiceSelect("availability", (jobOptions || {}).availability, profile.availability, t.pick) + '</div>' +
-        "<div><label>" + esc(t.contract) + '</label>' + choiceSelect("contract_type", (jobOptions || {}).contract_types, profile.contract_type, t.pick) + "</div></div>" +
-        '<div class="tl-row-2"><div><label>' + esc(t.shiftLabel) + '</label>' + choiceSelect("shift_preference", (jobOptions || {}).shifts, profile.shift_preference, t.pick) + '</div>' +
-        "<div><label>" + esc(t.mobility) + '</label>' + choiceSelect("mobility", (jobOptions || {}).mobility, profile.mobility, t.pick) + "</div></div>" +
+        choiceGroup("languages", (jobOptions || {}).language_choices || (jobOptions || {}).languages, profile.languages, t.languages) +
+        '<div class="tl-row-2"><div><label>' + esc(t.availability) + '</label>' + choiceSelect("availability", (jobOptions || {}).availability, profile.availability, t.pick) + '</div></div>' +
+        choiceGroup("contract_type", (jobOptions || {}).contract_types, profile.contract_type, t.contract) +
+        choiceGroup("shift_preference", (jobOptions || {}).shifts, profile.shift_preference, t.shiftLabel) +
+        "<label>" + esc(t.mobility) + '</label>' + choiceSelect("mobility", (jobOptions || {}).mobility, profile.mobility, t.pick) +
         '<div class="tl-row-2"><div><label>' + esc(t.desiredSalary) + '</label><input name="desired_salary_min" type="number" value="' + esc(profile.desired_salary_min || "") + '"></div><div></div></div>' +
         '<button class="tl-btn" type="submit">' + esc(t.save) + '</button><div class="tl-success"></div></form>' +
         "<h3>" + (isEn ? "Experience" : "Expériences") + "</h3><ul>" + exp + "</ul>" +
@@ -656,12 +694,15 @@
       if (form) form.addEventListener("submit", function (e) {
         e.preventDefault();
         var d = Object.fromEntries(new FormData(form).entries());
+        d.languages = formChoice(form, "languages");
+        d.contract_type = formChoice(form, "contract_type");
+        d.shift_preference = formChoice(form, "shift_preference");
         Promise.all([
           api.request("/users/me", { method: "PATCH", body: { first_name: d.first_name, last_name: d.last_name, phone: d.phone } }),
           api.request("/candidates/me", { method: "PATCH", body: {
             city: d.city, address: d.address, province: d.province, country: d.country, birth_date: d.birth_date,
             title: d.title, sector: d.sector, skills: d.skills, bio: d.bio, languages: d.languages,
-            availability: d.availability, contract_type: d.contract_type,
+            availability: d.availability, contract_type: d.contract_type, shift_preference: d.shift_preference,
             years_experience: d.years_experience ? Number(d.years_experience) : null,
             desired_salary_min: d.desired_salary_min ? Number(d.desired_salary_min) : null, mobility: d.mobility
           } })
