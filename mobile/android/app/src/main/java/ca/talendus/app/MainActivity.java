@@ -7,11 +7,15 @@ import android.content.ClipData;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.database.Cursor;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.OpenableColumns;
+import android.util.Base64;
 import android.webkit.JavascriptInterface;
+import android.webkit.MimeTypeMap;
 import android.webkit.PermissionRequest;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
@@ -20,6 +24,11 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,9 +37,11 @@ public class MainActivity extends Activity {
     private static final int NOTIF_PERMISSION = 91;
     private static final int MEDIA_PERMISSION = 92;
     private static final int FILE_CHOOSER = 93;
+    private static final int NATIVE_PICK = 94;
     private WebView web;
     private PermissionRequest pendingWebPermission;
     private static ValueCallback<Uri[]> fileCallback;
+    private String nativePickId;
     private final Handler ticker = new Handler(Looper.getMainLooper());
     private final Runnable pollTick = new Runnable() {
         @Override
@@ -58,7 +69,7 @@ public class MainActivity extends Activity {
         settings.setAllowFileAccess(true);
         settings.setAllowContentAccess(true);
         String ua = settings.getUserAgentString();
-        settings.setUserAgentString((ua == null ? "" : ua) + " TalendusApp/1.5");
+        settings.setUserAgentString((ua == null ? "" : ua) + " TalendusApp/1.6");
         web.addJavascriptInterface(new TalendusNative(), "TalendusNative");
         web.setWebChromeClient(new WebChromeClient() {
             @Override
@@ -73,10 +84,10 @@ public class MainActivity extends Activity {
                 }
                 fileCallback = filePathCallback;
                 try {
-                    startActivityForResult(openDocumentIntent(fileChooserParams), FILE_CHOOSER);
+                    startActivityForResult(Intent.createChooser(getContentIntent(fileChooserParams), "Talendus"), FILE_CHOOSER);
                 } catch (Exception ignored) {
                     try {
-                        startActivityForResult(Intent.createChooser(getContentIntent(fileChooserParams), "Talendus"), FILE_CHOOSER);
+                        startActivityForResult(openDocumentIntent(fileChooserParams), FILE_CHOOSER);
                     } catch (Exception ignoredToo) {
                         fileCallback.onReceiveValue(null);
                         fileCallback = null;
@@ -114,6 +125,10 @@ public class MainActivity extends Activity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == NATIVE_PICK) {
+            deliverNativeFiles(resultCode, data);
+            return;
+        }
         if (requestCode != FILE_CHOOSER) {
             return;
         }
@@ -290,6 +305,127 @@ public class MainActivity extends Activity {
         return uri != null ? new Uri[]{uri} : null;
     }
 
+    private void startNativePick(String requestId, boolean multiple, boolean imagesOnly) {
+        nativePickId = requestId;
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType(imagesOnly ? "image/*" : "*/*");
+        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, multiple);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        try {
+            startActivityForResult(Intent.createChooser(intent, "Talendus"), NATIVE_PICK);
+        } catch (Exception ignored) {
+            try {
+                Intent open = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                open.addCategory(Intent.CATEGORY_OPENABLE);
+                open.setType(imagesOnly ? "image/*" : "*/*");
+                open.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, multiple);
+                open.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                startActivityForResult(open, NATIVE_PICK);
+            } catch (Exception failed) {
+                evalNativeFiles(requestId, new JSONArray(), "Impossible d’ouvrir le sélecteur de fichiers.");
+            }
+        }
+    }
+
+    private void deliverNativeFiles(int resultCode, Intent data) {
+        final String id = nativePickId;
+        nativePickId = null;
+        if (id == null) {
+            return;
+        }
+        if (resultCode != RESULT_OK || data == null) {
+            evalNativeFiles(id, new JSONArray(), null);
+            return;
+        }
+        final Uri[] uris = fileChooserUris(RESULT_OK, data);
+        new Thread(() -> {
+            JSONArray rows = new JSONArray();
+            String error = null;
+            try {
+                if (uris != null) {
+                    for (Uri uri : uris) {
+                        if (uri != null) {
+                            rows.put(readUriAsJson(uri));
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                error = "Impossible de lire le fichier.";
+            }
+            final JSONArray out = rows;
+            final String err = error;
+            runOnUiThread(() -> evalNativeFiles(id, out, err));
+        }).start();
+    }
+
+    private void evalNativeFiles(String id, JSONArray rows, String error) {
+        if (web == null) {
+            return;
+        }
+        String errArg = error == null ? "null" : JSONObject.quote(error);
+        web.evaluateJavascript(
+            "window.__tnReceiveFiles&&window.__tnReceiveFiles(" + JSONObject.quote(id) + "," + rows.toString() + "," + errArg + ")",
+            null
+        );
+    }
+
+    private JSONObject readUriAsJson(Uri uri) throws Exception {
+        String name = displayName(uri);
+        String type = getContentResolver().getType(uri);
+        if (type == null || type.isEmpty()) {
+            String ext = MimeTypeMap.getFileExtensionFromUrl(name.replace(" ", "_"));
+            type = ext == null || ext.isEmpty()
+                ? "application/octet-stream"
+                : MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext.toLowerCase());
+            if (type == null) {
+                type = "application/octet-stream";
+            }
+        }
+        JSONObject row = new JSONObject();
+        row.put("name", name);
+        row.put("type", type);
+        row.put("data", Base64.encodeToString(readUriBytes(uri, 8 * 1024 * 1024), Base64.NO_WRAP));
+        return row;
+    }
+
+    private String displayName(Uri uri) {
+        String name = "document";
+        try (Cursor cursor = getContentResolver().query(uri, new String[]{OpenableColumns.DISPLAY_NAME}, null, null, null)) {
+            if (cursor != null && cursor.moveToFirst()) {
+                int idx = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                if (idx >= 0) {
+                    String value = cursor.getString(idx);
+                    if (value != null && !value.isEmpty()) {
+                        name = value;
+                    }
+                }
+            }
+        } catch (Exception ignored) {
+        }
+        return name;
+    }
+
+    private byte[] readUriBytes(Uri uri, int maxBytes) throws Exception {
+        try (InputStream in = getContentResolver().openInputStream(uri)) {
+            if (in == null) {
+                throw new Exception("no stream");
+            }
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            byte[] buf = new byte[8192];
+            int n;
+            int total = 0;
+            while ((n = in.read(buf)) != -1) {
+                total += n;
+                if (total > maxBytes) {
+                    throw new Exception("too large");
+                }
+                out.write(buf, 0, n);
+            }
+            return out.toByteArray();
+        }
+    }
+
     private void requestNotifPermission() {
         if (Build.VERSION.SDK_INT < 33) {
             return;
@@ -352,6 +488,11 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void clearAuth() {
             NotifPoller.clearToken(MainActivity.this);
+        }
+
+        @JavascriptInterface
+        public void openDocumentPicker(String requestId, int multiple, int imagesOnly) {
+            runOnUiThread(() -> startNativePick(requestId, multiple != 0, imagesOnly != 0));
         }
 
         @JavascriptInterface

@@ -319,8 +319,12 @@ def test_mobile_app_uploads_files_and_allows_multiple_choices():
         "function sendPickedFiles",
         "function pickedFiles",
         "data-doc",
-        "data-pick-file",
+        "data-native-pick",
         "tn-file-input",
+        "tn-file-hit",
+        "openDocumentPicker",
+        "__tnReceiveFiles",
+        "hasNativePicker",
         'choiceGroup("languages"',
         'choiceGroup("contract_type"',
         'choiceGroup("shift_preference"',
@@ -334,13 +338,17 @@ def test_mobile_app_uploads_files_and_allows_multiple_choices():
     assert ".pdf,.doc" not in js
     css = (ROOT / "assets" / "css" / "mobile-app.css").read_text(encoding="utf-8")
     assert ".tn-file-btn" in css
+    assert ".tn-file-hit" in css
     assert ".tn-chip-check" in css
-    assert "pointer-events: none" not in css
+    assert "font-size: 80px" in css
     java = (ROOT / "mobile" / "android" / "app" / "src" / "main" / "java" / "ca" / "talendus" / "app" / "MainActivity.java").read_text(encoding="utf-8")
     assert "onShowFileChooser" in java
     assert "EXTRA_ALLOW_MULTIPLE" in java
     assert "ACTION_OPEN_DOCUMENT" in java
+    assert "ACTION_GET_CONTENT" in java
     assert "FileChooserParams.parseResult" in java
+    assert "openDocumentPicker" in java
+    assert "NATIVE_PICK" in java
     manifest = (ROOT / "mobile" / "android" / "app" / "src" / "main" / "AndroidManifest.xml").read_text(encoding="utf-8")
     assert 'android:launchMode="singleTop"' in manifest
     api = (ROOT / "assets" / "js" / "api.js").read_text(encoding="utf-8")
