@@ -242,6 +242,12 @@ def test_mobile_app_tracks_applications_and_offers_choice_filters():
         'choiceSelect("shift"',
         'choiceSelect("schedule"',
         'choiceSelect("work_mode"',
+        'choiceSelect("title"',
+        'choiceSelect("work_authorization"',
+        'labeledChoice("work_status"',
+        "o.occupations",
+        "can_sponsor",
+        '<optgroup label="',
         'mini ? \' aria-hidden="true"\'',
         "if (!mini)",
     ):

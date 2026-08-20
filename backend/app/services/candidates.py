@@ -353,6 +353,7 @@ def serialize_candidate(profile: Candidate, include_private: bool = True) -> dic
         "skills": profile.skills,
         "languages": profile.languages,
         "experience_level": profile.experience_level,
+        "work_status": profile.work_status,
         "bio": profile.bio,
         "experiences": [
             {"id": e.id, "company": e.company, "role": e.role, "years": e.years, "description": e.description}
@@ -396,6 +397,7 @@ def serialize_candidate(profile: Candidate, include_private: bool = True) -> dic
             "mobility": profile.mobility,
             "contract_type": profile.contract_type,
             "shift_preference": profile.shift_preference,
+            "work_status": profile.work_status,
             "education_level": profile.education_level,
             "job_search_status": profile.job_search_status.value if profile.job_search_status else None,
             "work_preferences": profile.work_preferences,

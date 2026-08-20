@@ -756,6 +756,7 @@
 
       function runInstall() {
         hideBanner();
+        rememberDismiss(365);
         if (!isIos && deferred && typeof deferred.prompt === "function") {
           var ev = deferred;
           deferred = null;
@@ -779,20 +780,20 @@
       }
 
       function showFollowUp(kind) {
-        rememberDismiss(7);
+        rememberDismiss(365);
         if (document.querySelector(".tl-install-sheet")) return;
         var sheet = document.createElement("div");
         sheet.className = "tl-install-sheet is-on";
         sheet.setAttribute("role", "dialog");
         sheet.setAttribute("aria-modal", "true");
-        var title = isEn ? "The download has started" : "Le téléchargement a commencé";
+        var title = isEn ? "Install Talendus now" : "Installez Talendus maintenant";
         var body = kind === "ios"
           ? (isEn
-            ? "<p>Allow the profile, then open <strong>Settings</strong>. At the top, tap <strong>Profile Downloaded</strong>, then <strong>Install</strong>.</p>"
-            : "<p>Autorisez le profil, puis ouvrez <strong>Réglages</strong>. En haut, touchez <strong>Profil téléchargé</strong>, puis <strong>Installer</strong>.</p>")
+            ? "<p>Allow the profile, then open <strong>Settings</strong>. At the top, tap <strong>Profile Downloaded</strong>, then tap <strong>Install</strong>.</p>"
+            : "<p>Autorisez le profil, puis ouvrez <strong>Réglages</strong>. En haut, touchez <strong>Profil téléchargé</strong>, puis touchez <strong>Installer</strong>.</p>")
           : (isEn
-            ? "<p>Open the downloaded file, then tap <strong>Install</strong>. If asked, allow Chrome to install apps.</p>"
-            : "<p>Ouvrez le fichier téléchargé, puis touchez <strong>Installer</strong>. Si le téléphone le demande, autorisez Chrome à installer des applis.</p>");
+            ? "<p>The file is at the bottom of the screen. Tap it once, then tap <strong>Install</strong>.</p>"
+            : "<p>Le fichier est en bas de l'écran. Touchez-le une fois, puis touchez <strong>Installer</strong>.</p>");
         if (kind === "ios" && (isChromeIos || !isSafariIos)) {
           body += "<p class=\"tl-install-safari-note\">" + (isEn
             ? "If nothing happens, open this page in Safari (the blue compass icon) and tap Install again."
@@ -845,12 +846,12 @@
         var box = document.createElement("div");
         box.className = "tl-install-banner is-on";
         box.setAttribute("role", "dialog");
-        box.setAttribute("aria-label", isEn ? "Install Talendus" : "Installer Talendus");
+        box.setAttribute("aria-label", isEn ? "Download Talendus" : "Télécharger Talendus");
         box.innerHTML = "<p>" + (isEn
-          ? "Install Talendus on this phone. Then it opens like your other apps."
-          : "Installez Talendus sur ce téléphone. Ensuite, ça s'ouvre comme vos autres applis.") +
+          ? "Put Talendus on your phone. Jobs, messages and your consultant — one tap, like your other apps."
+          : "Mettez Talendus sur votre téléphone. Offres, messages et votre conseiller, en un tap — comme vos autres applis.") +
           "</p><div class=\"tl-actions\">" +
-          "<button type=\"button\" class=\"tl-btn\" data-install-native>" + (isEn ? "Install" : "Installer") + "</button>" +
+          "<button type=\"button\" class=\"tl-btn\" data-install-native>" + (isEn ? "Download the app" : "Télécharger l'appli") + "</button>" +
           "<button type=\"button\" class=\"tl-btn tl-btn-ghost\" data-install-dismiss>" + (isEn ? "Not now" : "Pas maintenant") + "</button></div>";
         document.body.appendChild(box);
         box.querySelector("[data-install-dismiss]").addEventListener("click", function () {

@@ -348,6 +348,8 @@ def serialize_application(row: Application, viewer: User | None = None) -> dict:
             "shift": row.job.shift,
             "schedule": row.job.schedule,
             "work_mode": row.job.work_mode,
+            "work_authorization": row.job.work_authorization,
+            "can_sponsor": bool(row.job.can_sponsor),
         },
         "resume_id": row.resume_id,
         "pipeline_stage": stage_for(row.status),

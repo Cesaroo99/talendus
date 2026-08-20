@@ -61,6 +61,9 @@
       startDate: "Start date", deadline: "Deadline", responsibilities: "Responsibilities",
       extra: "Additional information", validate: "Talendus reviews the need, defines the profile and takes on the search. You do not publish a job yourself.",
       hours: "Hours", shiftLabel: "Shift", workMode: "Workplace", pick: "Select",
+      workStatus: "Work status", workAuth: "Work authorization",
+      canSponsor: "We can sponsor a candidate", sponsorYes: "Sponsorship available",
+      occupation: "Occupation",
       overtime: "Overtime", license: "Driver’s licence", union: "Union", travel: "Travel",
       benefits: "Benefits", offerSent: "Offer sent", secondInterview: "Second interview",
       needSent: "Your hiring need has been sent to Talendus. Our team will review the information and contact you to understand the role and define the profile together. Your recruiting starts with Talendus.",
@@ -169,6 +172,9 @@
       startDate: "Date de début", deadline: "Date limite", responsibilities: "Responsabilités",
       extra: "Informations complémentaires", validate: "Talendus étudie le besoin, définit le profil et lance la recherche. Vous ne publiez pas l’offre vous-même.",
       hours: "Horaire", shiftLabel: "Quart", workMode: "Présence", pick: "Choisir",
+      workStatus: "Statut d’autorisation", workAuth: "Autorisation de travail",
+      canSponsor: "Nous pouvons parrainer un candidat", sponsorYes: "Parrainage possible",
+      occupation: "Métier",
       overtime: "Heures sup.", license: "Permis", union: "Syndicat", travel: "Déplacements",
       benefits: "Avantages", offerSent: "Offre envoyée", secondInterview: "2e entretien",
       needSent: "Votre besoin a bien été transmis à Talendus. Notre équipe va analyser les informations communiquées et vous contacter afin de mieux comprendre votre besoin et de définir avec vous le profil recherché. Votre recrutement commence avec Talendus.",
@@ -258,15 +264,32 @@
       if (typeof item === "string") return item;
       return isEn ? (item.label_en || item.label || item.value) : (item.label || item.value);
     }
-    function choiceSelect(name, items, selected, allLabel) {
-      var html = '<select name="' + name + '"><option value="">' + esc(allLabel == null ? t.pick : allLabel) + "</option>";
+    function optionGroup(item) {
+      if (!item || typeof item === "string") return "";
+      return isEn ? (item.group_en || item.group || "") : (item.group || "");
+    }
+    function catalogLabel(items, value) {
+      if (!value) return "";
+      var found = (items || []).find(function (item) { return String(optionValue(item)) === String(value); });
+      return found ? optionLabel(found) : String(value);
+    }
+    function choiceSelect(name, items, selected, allLabel, required) {
+      var html = '<select name="' + name + '"' + (required ? " required" : "") + '><option value="">' + esc(allLabel == null ? t.pick : allLabel) + "</option>";
       var seen = {};
+      var openGroup = null;
       (items || []).forEach(function (item) {
         var val = optionValue(item);
         if (!val || seen[val]) return;
         seen[val] = true;
+        var group = optionGroup(item);
+        if (group !== openGroup) {
+          if (openGroup) html += "</optgroup>";
+          if (group) html += '<optgroup label="' + esc(group) + '">';
+          openGroup = group || null;
+        }
         html += '<option value="' + esc(val) + '"' + (String(selected || "") === String(val) ? " selected" : "") + ">" + esc(optionLabel(item)) + "</option>";
       });
+      if (openGroup) html += "</optgroup>";
       if (selected && !seen[String(selected)]) {
         html += '<option value="' + esc(selected) + '" selected>' + esc(selected) + "</option>";
       }
@@ -319,7 +342,10 @@
         [t.location, job.location], [t.sector, job.sector], [t.contract, job.contract_type],
         [t.hours, job.schedule], [t.shiftLabel, job.shift], [t.workMode, job.work_mode],
         [t.languages, job.languages], [t.overtime, job.overtime], [t.license, job.driver_license],
-        [t.union, job.unionized], [t.travel, job.travel], [t.salary, job.salary_display],
+        [t.union, job.unionized], [t.travel, job.travel],
+        [t.workAuth, job.work_authorization && job.work_authorization !== "ouvert" ? catalogLabel((jobOptions || {}).work_requirements, job.work_authorization) : ""],
+        [t.sponsorYes, job.can_sponsor ? (isEn ? "Yes" : "Oui") : ""],
+        [t.salary, job.salary_display],
         [t.experience, job.experience_level], [t.certs, job.certifications], [t.benefits, job.benefits]
       ].filter(function (row) { return row[1]; });
       if (!rows.length) return "";
@@ -667,8 +693,9 @@
         "<div><label>" + esc(t.province) + '</label>' + choiceSelect("province", (jobOptions || {}).provinces, profile.province || "Québec", t.pick) + "</div></div>" +
         '<div class="tl-row-2"><div><label>' + esc(t.country) + '</label>' + choiceSelect("country", (jobOptions || {}).countries, profile.country || "Canada", t.pick) + '</div>' +
         "<div><label>" + esc(t.birth) + '</label><input name="birth_date" type="date" value="' + esc(profile.birth_date || "") + '"></div></div>' +
-        '<div class="tl-row-2"><div><label>' + esc(t.title) + '</label><input name="title" value="' + esc(profile.title || "") + '"></div>' +
+        '<div class="tl-row-2"><div><label>' + esc(t.title) + '</label>' + choiceSelect("title", (jobOptions || {}).occupations, profile.title, t.pick) + '</div>' +
         "<div><label>" + esc(t.experience) + '</label><input name="years_experience" type="number" min="0" value="' + esc(profile.years_experience || "") + '"></div></div>' +
+        "<label>" + esc(t.workStatus) + '</label>' + choiceSelect("work_status", (jobOptions || {}).work_statuses, profile.work_status, t.pick) +
         "<label>" + esc(t.sector) + '</label>' + choiceSelect("sector", (jobOptions || {}).sectors, profile.sector, t.pick) +
         "<label>" + esc(t.bio) + '</label><textarea name="bio" rows="4">' + esc(profile.bio || "") + "</textarea>" +
         "<label>" + esc(t.skills) + '</label><input name="skills" value="' + esc(profile.skills || "") + '">' +
@@ -715,7 +742,8 @@
             title: d.title, sector: d.sector, skills: d.skills, bio: d.bio, languages: d.languages,
             availability: d.availability, contract_type: d.contract_type, shift_preference: d.shift_preference,
             years_experience: d.years_experience ? Number(d.years_experience) : null,
-            desired_salary_min: d.desired_salary_min ? Number(d.desired_salary_min) : null, mobility: d.mobility
+            desired_salary_min: d.desired_salary_min ? Number(d.desired_salary_min) : null, mobility: d.mobility,
+            work_status: d.work_status
           } })
         ]).then(function () { flash(form.querySelector(".tl-success"), t.saved, true); }).catch(function (err) {
           flash(form.querySelector(".tl-success"), (err && err.message) || t.err, false);
@@ -764,7 +792,8 @@
       var o = jobOptions || {};
       var sort = f.sort || "relevance";
       var html = '<form class="tl-filters" id="acc-job-filters">' +
-        '<div><label>' + esc(t.search) + '</label><input name="q" value="' + esc(fv("q")) + '"></div>' +
+        "<div><label>" + esc(t.search) + '</label><input name="q" value="' + esc(fv("q")) + '"></div>' +
+        "<div><label>" + esc(t.occupation) + "</label>" + choiceSelect("title", o.occupations, fv("title"), t.pick) + "</div>" +
         "<div><label>" + esc(t.location) + "</label>" + choiceSelect("location", o.locations, fv("location"), t.pick) + "</div>" +
         "<div><label>" + esc(t.sector) + "</label>" + choiceSelect("sector", o.sectors, fv("sector"), t.pick) + "</div>" +
         "<div><label>" + esc(t.contract) + "</label>" + choiceSelect("contract_type", o.contract_types, fv("contract_type"), t.pick) + "</div>" +
@@ -772,6 +801,8 @@
         "<div><label>" + esc(t.hours) + "</label>" + choiceSelect("schedule", o.schedules, fv("schedule"), t.pick) + "</div>" +
         "<div><label>" + esc(t.workMode) + "</label>" + choiceSelect("work_mode", o.work_modes, fv("work_mode"), t.pick) + "</div>" +
         "<div><label>" + esc(t.experience) + "</label>" + choiceSelect("experience", o.experience_levels, fv("experience"), t.pick) + "</div>" +
+        "<div><label>" + esc(t.workAuth) + "</label>" + choiceSelect("work_authorization", o.work_requirements, fv("work_authorization"), t.pick) + "</div>" +
+        "<div><label>" + esc(t.sponsorYes) + "</label>" + choiceSelect("can_sponsor", o.sponsor_filters, fv("can_sponsor"), t.pick) + "</div>" +
         "<div><label>" + esc(t.salary) + '</label><input name="salary_min" type="number" value="' + esc(fv("salary_min")) + '"></div>' +
         "<div><label>" + esc(t.sort) + '</label><select name="sort">' +
         [["relevance", isEn ? "Relevance" : "Pertinence"], ["published_at", isEn ? "Date" : "Date"], ["salary", isEn ? "Salary" : "Salaire"]].map(function (opt) {
@@ -815,7 +846,7 @@
       function load(page) {
         var d = form ? Object.fromEntries(new FormData(form).entries()) : (state.jobFilters || {});
         var params = new URLSearchParams();
-        ["q", "location", "sector", "contract_type", "experience", "salary_min", "sort", "shift", "schedule", "work_mode"].forEach(function (k) {
+        ["q", "title", "location", "sector", "contract_type", "experience", "salary_min", "sort", "shift", "schedule", "work_mode", "work_authorization", "can_sponsor"].forEach(function (k) {
           var v = d[k];
           if (v) params.set(k, v);
         });
@@ -1264,7 +1295,7 @@
       job = job || {};
       var o = jobOptions || {};
       return '<p>' + esc(t.validate) + '</p><form class="tl-form" id="acc-hiring-form">' +
-        "<label>" + esc(t.title) + '</label><input name="title" required value="' + esc(job.title || "") + '">' +
+        "<label>" + esc(t.title) + "</label>" + choiceSelect("title", o.occupations, job.title, t.pick, true) +
         '<div class="tl-row-2"><div><label>' + esc(t.location) + '</label>' + choiceSelect("location", o.locations, job.location, t.pick) + '</div>' +
         "<div><label>" + esc(t.sector) + '</label>' + choiceSelect("sector", o.sectors, job.sector, t.pick) + "</div></div>" +
         '<div class="tl-row-2"><div><label>' + esc(t.contract) + '</label>' + choiceSelect("contract_type", o.contract_types, job.contract_type, t.pick) + '</div>' +
@@ -1277,6 +1308,8 @@
         "<div><label>" + esc(t.license) + '</label>' + choiceSelect("driver_license", o.driver_licenses, job.driver_license, t.pick) + "</div></div>" +
         '<div class="tl-row-2"><div><label>' + esc(t.union) + '</label>' + choiceSelect("unionized", o.union_status, job.unionized, t.pick) + '</div>' +
         "<div><label>" + esc(t.travel) + '</label>' + choiceSelect("travel", o.travel, job.travel, t.pick) + "</div></div>" +
+        '<div class="tl-row-2"><div><label>' + esc(t.workAuth) + '</label>' + choiceSelect("work_authorization", o.work_requirements, job.work_authorization || "ouvert", t.pick) + '</div>' +
+        '<div><label class="tl-check"><input type="checkbox" name="can_sponsor" value="true"' + (job.can_sponsor ? " checked" : "") + "> " + esc(t.canSponsor) + "</label></div></div>" +
         '<div class="tl-row-2"><div><label>' + esc(t.openings) + '</label><input name="seats" type="number" min="1" value="' + esc(job.seats || job.openings || 1) + '"></div>' +
         "<div><label>" + esc(t.startDate) + '</label><input name="start_date" type="date" value="' + esc(job.start_date || "") + '"></div></div>' +
         "<label>" + esc(t.skills) + '</label><input name="skills" value="' + esc(job.skills || "") + '">' +
@@ -1548,6 +1581,7 @@
         e.preventDefault();
         var body = Object.fromEntries(new FormData(hiringForm).entries());
         if (body.seats) body.seats = Number(body.seats);
+        body.can_sponsor = !!(hiringForm.can_sponsor && hiringForm.can_sponsor.checked);
         var req = state.editHiring
           ? api.request("/hiring-requests/" + state.editHiring.id, { method: "PATCH", body: body })
           : api.request("/hiring-requests", { method: "POST", body: body });

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, Enum, Float, ForeignKey, Index, Integer, String, Text, UniqueConstraint
+from sqlalchemy import Boolean, DateTime, Enum, Float, ForeignKey, Index, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -46,6 +46,8 @@ class JobOffer(Base):
     driver_license: Mapped[str | None] = mapped_column(String(80))
     unionized: Mapped[str | None] = mapped_column(String(40))
     travel: Mapped[str | None] = mapped_column(String(80))
+    work_authorization: Mapped[str | None] = mapped_column(String(40))
+    can_sponsor: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     benefits: Mapped[str | None] = mapped_column(Text)
     status: Mapped[JobStatus] = mapped_column(Enum(JobStatus), default=JobStatus.DRAFT, index=True)
     start_date: Mapped[str | None] = mapped_column(String(16))

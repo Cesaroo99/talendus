@@ -119,6 +119,7 @@ class CandidateProfileIn(BaseModel):
     birth_date: str | None = None
     title: str | None = None
     sector: str | None = None
+    work_status: str | None = None
     years_experience: int | None = Field(default=None, ge=0, le=60)
     experience_level: str | None = None
     availability: str | None = None
@@ -214,6 +215,8 @@ class JobIn(BaseModel):
     driver_license: str | None = None
     unionized: str | None = None
     travel: str | None = None
+    work_authorization: str | None = None
+    can_sponsor: bool | None = None
     benefits: str | None = None
     responsibilities: str | None = None
     qualifications: str | None = None
@@ -245,6 +248,8 @@ class JobPatchIn(BaseModel):
     driver_license: str | None = None
     unionized: str | None = None
     travel: str | None = None
+    work_authorization: str | None = None
+    can_sponsor: bool | None = None
     benefits: str | None = None
     responsibilities: str | None = None
     qualifications: str | None = None
@@ -272,6 +277,8 @@ class HiringRequestIn(BaseModel):
     driver_license: str | None = None
     unionized: str | None = None
     travel: str | None = None
+    work_authorization: str | None = None
+    can_sponsor: bool | None = None
     salary_display: str | None = None
     start_date: str | None = None
     notes: str | None = Field(default=None, max_length=5000)
@@ -301,6 +308,8 @@ class HiringRequestPatchIn(BaseModel):
     driver_license: str | None = None
     unionized: str | None = None
     travel: str | None = None
+    work_authorization: str | None = None
+    can_sponsor: bool | None = None
     salary_display: str | None = None
     start_date: str | None = None
     notes: str | None = None
@@ -343,6 +352,8 @@ class JobOut(ORMModel):
     driver_license: str | None = None
     unionized: str | None = None
     travel: str | None = None
+    work_authorization: str | None = None
+    can_sponsor: bool = False
     status: JobStatus
     published_at: datetime | None
     expires_at: datetime | None
@@ -488,6 +499,7 @@ class AdminCandidatePatchIn(BaseModel):
     years_experience: int | None = Field(default=None, ge=0, le=60)
     experience_level: str | None = None
     shift_preference: str | None = None
+    work_status: str | None = None
     desired_salary_min: int | None = None
     desired_salary_max: int | None = None
     pipeline_status: str | None = Field(default=None, max_length=40)

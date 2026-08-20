@@ -63,6 +63,7 @@ def profile_completeness(profile: Candidate) -> dict:
         "availability": bool(profile.availability),
         "languages": bool((profile.languages or "").strip()),
         "contract": bool(profile.contract_type),
+        "work_status": bool(profile.work_status),
     }
     filled = sum(1 for value in checks.values() if value)
     percent = round(100 * filled / len(checks)) if checks else 0

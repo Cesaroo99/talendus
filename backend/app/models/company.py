@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Column, DateTime, Enum, Float, ForeignKey, Index, Integer, String, Table, Text, UniqueConstraint
+from sqlalchemy import Boolean, Column, DateTime, Enum, Float, ForeignKey, Index, Integer, String, Table, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -126,6 +126,8 @@ class RecruitmentMission(Base):
     driver_license: Mapped[str | None] = mapped_column(String(80))
     unionized: Mapped[str | None] = mapped_column(String(40))
     travel: Mapped[str | None] = mapped_column(String(80))
+    work_authorization: Mapped[str | None] = mapped_column(String(40))
+    can_sponsor: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     salary_display: Mapped[str | None] = mapped_column(String(80))
     contact_name: Mapped[str | None] = mapped_column(String(120))
     contact_role: Mapped[str | None] = mapped_column(String(120))

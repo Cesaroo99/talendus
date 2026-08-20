@@ -84,6 +84,14 @@ def render_job_html(job: JobOffer, lang: str = "fr") -> str:
         facts.append(f"<li>{'Union' if is_en else 'Syndicat'} : {esc(job.unionized)}</li>")
     if job.travel:
         facts.append(f"<li>{'Travel' if is_en else 'Déplacements'} : {esc(job.travel)}</li>")
+    if job.work_authorization and job.work_authorization != "ouvert":
+        from app.services.job_catalog import requirement_label
+
+        auth_label = requirement_label(job.work_authorization, is_en=is_en)
+        if auth_label:
+            facts.append(f"<li>{'Work authorization' if is_en else 'Autorisation de travail'} : {esc(auth_label)}</li>")
+    if job.can_sponsor:
+        facts.append(f"<li>{'Sponsorship available' if is_en else 'Parrainage possible'}</li>")
     if experience:
         facts.append(f"<li>{'Experience' if is_en else 'Expérience'} : {esc(experience)}</li>")
     if job.education_required:

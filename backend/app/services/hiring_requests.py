@@ -102,6 +102,8 @@ def serialize_request(row: RecruitmentMission) -> dict:
         "driver_license": row.driver_license,
         "unionized": row.unionized,
         "travel": row.travel,
+        "work_authorization": row.work_authorization,
+        "can_sponsor": bool(row.can_sponsor),
         "salary_display": row.salary_display,
         "start_date": row.start_date,
         "notes": row.notes,
@@ -191,6 +193,8 @@ def create_request(db: Session, user: User, data: HiringRequestIn, ip: str | Non
         driver_license=data.driver_license,
         unionized=data.unionized,
         travel=data.travel,
+        work_authorization=data.work_authorization or "ouvert",
+        can_sponsor=bool(data.can_sponsor),
         salary_display=data.salary_display,
         start_date=data.start_date,
         notes=data.notes,
@@ -328,6 +332,8 @@ def convert_to_job(db: Session, user: User, request_id: str) -> RecruitmentMissi
             salary_display=row.salary_display,
             openings=row.seats or 1,
             start_date=row.start_date,
+            work_authorization=row.work_authorization,
+            can_sponsor=bool(row.can_sponsor),
         ),
     )
     row = db.get(RecruitmentMission, request_id) or row
