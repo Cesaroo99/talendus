@@ -20,7 +20,7 @@ SPEED_TALENT = speed_strip("en", "talent")
 CTA = cta_band("en", "entreprise")
 CTA_TALENT = cta_band("en", "talent")
 CTA_GATE = cta_band("en", "gateway")
-WA = "mailto:info@talendus.ca"
+WA = "https://wa.me/2635585225?text=Hello%20Talendus%2C%20I%20would%20like%20to%20talk%20about%20a%20hiring%20need."
 
 
 def img(name):
@@ -379,7 +379,7 @@ def build_en(write, wrap, page_hero):
 
     write("en/contact.html", wrap(
         "Contact | Talk to Talendus",
-        "Contact Talendus in Montreal. Describe a hiring need or create your profile. Calls by appointment. info@talendus.ca",
+        "Contact Talendus in Montreal. Describe a hiring need or create your profile. Calls by appointment. 263 558 5225 · info@talendus.ca",
         "en/contact.html",
         page_hero(
             "Contact",
@@ -395,7 +395,7 @@ def build_en(write, wrap, page_hero):
           <div class="icon" aria-hidden="true"><i class="fa-solid fa-phone"></i></div>
           <div>
             <h3>Phone</h3>
-            <p><a href="mailto:info@talendus.ca">info@talendus.ca</a></p>
+            <p><a href="tel:+2635585225">263 558 5225</a></p>
             <p>On weekdays we usually reply within 30 minutes.</p>
           </div>
         </div>
@@ -411,7 +411,7 @@ def build_en(write, wrap, page_hero):
           <div class="icon" aria-hidden="true"><i class="fa-brands fa-whatsapp"></i></div>
           <div>
             <h3>WhatsApp</h3>
-            <p><a href="{WA}">Write to Talendus</a></p>
+            <p><a href="{WA}" target="_blank" rel="noopener noreferrer">Open a conversation</a></p>
             <p>Replies during business hours.</p>
           </div>
         </div>

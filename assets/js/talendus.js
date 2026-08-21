@@ -154,18 +154,65 @@
       var tel = "tel:+" + e164;
       var waBase = "https://wa.me/" + e164;
       var display = c.phone_display || "";
-      document.querySelectorAll('a[href^="tel:"]').forEach(function (a) {
+      var waMsg = isEn
+        ? "?text=" + encodeURIComponent("Hello Talendus, I would like to talk about a hiring need.")
+        : "?text=" + encodeURIComponent("Bonjour Talendus, je souhaite discuter d'un besoin de recrutement.");
+      document.querySelectorAll('a[href^="tel:"], a.tl-call').forEach(function (a) {
+        a.hidden = false;
         a.setAttribute("href", tel);
-        if (display && /514\s*555/.test(a.textContent || "")) a.textContent = display;
+        if (display && /514\s*555|info@talendus\.ca|263\s*558/i.test(a.textContent || "") && !a.querySelector("svg")) {
+          a.textContent = display;
+        }
       });
-      document.querySelectorAll('a[href*="wa.me/"]').forEach(function (a) {
+      document.querySelectorAll(".fa-phone").forEach(function (icon) {
+        var a = icon.closest("a");
+        if (!a) return;
+        a.setAttribute("href", tel);
+        if (display && /info@talendus\.ca|514\s*555|263\s*558/.test(a.textContent || "")) {
+          a.innerHTML = icon.outerHTML + " " + display;
+        }
+      });
+      document.querySelectorAll("a.tl-whatsapp, a[href*='wa.me/']").forEach(function (a) {
+        a.hidden = false;
+        var href = a.getAttribute("href") || "";
         var keep = "";
-        try { keep = new URL(a.getAttribute("href"), location.origin).search; } catch (err) {}
-        a.setAttribute("href", waBase + keep);
+        if (href.indexOf("wa.me/") !== -1) {
+          try { keep = new URL(href, location.origin).search; } catch (err) {}
+        }
+        a.setAttribute("href", waBase + (keep || waMsg));
+      });
+      document.querySelectorAll(".fa-whatsapp").forEach(function (icon) {
+        var a = icon.closest("a");
+        if (!a) return;
+        a.hidden = false;
+        var href = a.getAttribute("href") || "";
+        var keep = "";
+        if (href.indexOf("wa.me/") !== -1) {
+          try { keep = new URL(href, location.origin).search; } catch (err) {}
+        }
+        a.setAttribute("href", waBase + (keep || waMsg));
+      });
+      document.querySelectorAll('script[type="application/ld+json"]').forEach(function (el) {
+        try {
+          var payload = JSON.parse(el.textContent);
+          var changed = false;
+          function setPhone(obj) {
+            if (!obj || typeof obj !== "object") return;
+            if (Array.isArray(obj)) { obj.forEach(setPhone); return; }
+            if (obj["@type"] === "EmploymentAgency") {
+              obj.telephone = "+" + e164;
+              changed = true;
+            }
+          }
+          setPhone(payload);
+          if (changed) el.textContent = JSON.stringify(payload);
+        } catch (err) {}
       });
       document.querySelectorAll('a[href^="mailto:"]').forEach(function (a) {
         var href = a.getAttribute("href") || "";
         if (href.indexOf("info@talendus.ca") === -1) return;
+        if (a.classList.contains("tl-call") || a.classList.contains("tl-whatsapp")) return;
+        if (a.querySelector(".fa-phone, .fa-whatsapp")) return;
         a.setAttribute("href", "mailto:" + email);
         if ((a.textContent || "").indexOf("info@talendus.ca") !== -1) a.textContent = email;
       });

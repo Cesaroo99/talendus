@@ -524,7 +524,7 @@ write("candidats.html", wrap(
 # Contact
 write("contact.html", wrap(
     "Contact | Confier un recrutement ou créer un profil | Talendus",
-    "Contactez Talendus à Montréal. Confiez un besoin de recrutement ou créez votre profil. Appels sur rendez-vous. info@talendus.ca",
+    "Contactez Talendus à Montréal. Confiez un besoin de recrutement ou créez votre profil. Appels sur rendez-vous. 263 558 5225 · info@talendus.ca",
     "contact.html",
     page_hero(
         "Contact",
@@ -540,7 +540,7 @@ write("contact.html", wrap(
           <div class="icon" aria-hidden="true"><i class="fa-solid fa-phone"></i></div>
           <div>
             <h3>Téléphone</h3>
-            <p><a href="mailto:info@talendus.ca">info@talendus.ca</a></p>
+            <p><a href="tel:+2635585225">263 558 5225</a></p>
             <p>En semaine, on répond en général en moins de 30 minutes.</p>
           </div>
         </div>
@@ -556,7 +556,7 @@ write("contact.html", wrap(
           <div class="icon" aria-hidden="true"><i class="fa-brands fa-whatsapp"></i></div>
           <div>
             <h3>WhatsApp</h3>
-            <p><a href="mailto:info@talendus.ca">Écrire à Talendus</a></p>
+            <p><a href="https://wa.me/2635585225?text=Bonjour%20Talendus%2C%20je%20souhaite%20discuter%20d%27un%20besoin%20de%20recrutement." target="_blank" rel="noopener noreferrer">Ouvrir une conversation</a></p>
             <p>Réponse durant les heures d’ouverture.</p>
           </div>
         </div>
