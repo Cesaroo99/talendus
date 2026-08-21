@@ -1,6 +1,6 @@
 """English pages for Talendus, native copy, not machine-translated chrome."""
 
-from parts import speed_strip, cta_band, faq_html, proof_stats, FAQ_EMPLOYERS_EN, FAQ_CANDIDATES_EN, FAQ_HOME_EN, homepage_faq, cv_file_field, install_board, native_app_page
+from parts import speed_strip, cta_band, faq_html, proof_stats, FAQ_EMPLOYERS_EN, FAQ_CANDIDATES_EN, FAQ_HOME_EN, homepage_faq, cv_file_field, install_board, native_app_page, HONEYPOT_INPUT
 from seo_pages import write_en as write_seo_en
 from positioning import (
     homepage_after_hero, job_search_filters, employer_need_fields,
@@ -20,7 +20,7 @@ SPEED_TALENT = speed_strip("en", "talent")
 CTA = cta_band("en", "entreprise")
 CTA_TALENT = cta_band("en", "talent")
 CTA_GATE = cta_band("en", "gateway")
-WA = "https://wa.me/15145550199?text=Hello%20Talendus%2C%20I%20would%20like%20to%20talk%20about%20a%20hiring%20need."
+WA = "mailto:info@talendus.ca"
 
 
 def img(name):
@@ -327,6 +327,7 @@ def build_en(write, wrap, page_hero):
         </div>
         <div class="col-lg-6 offset-lg-1">
           <form class="tl-form" action="#" method="post" data-form="talent-cv" enctype="multipart/form-data">
+            <input class="tl-hp" name="website_url" tabindex="-1" autocomplete="off" aria-hidden="true">
             <label>Name</label><input required name="nom" autocomplete="name">
             <label>Email</label><input type="email" required name="courriel" autocomplete="email">
             <label>Phone</label><input name="tel" autocomplete="tel">
@@ -378,7 +379,7 @@ def build_en(write, wrap, page_hero):
 
     write("en/contact.html", wrap(
         "Contact | Talk to Talendus",
-        "Contact Talendus in Montreal. Describe a hiring need or create your profile. Calls by appointment. 514 555-0199 · info@talendus.ca",
+        "Contact Talendus in Montreal. Describe a hiring need or create your profile. Calls by appointment. info@talendus.ca",
         "en/contact.html",
         page_hero(
             "Contact",
@@ -394,7 +395,7 @@ def build_en(write, wrap, page_hero):
           <div class="icon" aria-hidden="true"><i class="fa-solid fa-phone"></i></div>
           <div>
             <h3>Phone</h3>
-            <p><a href="tel:+15145550199">514 555-0199</a></p>
+            <p><a href="mailto:info@talendus.ca">info@talendus.ca</a></p>
             <p>On weekdays we usually reply within 30 minutes.</p>
           </div>
         </div>
@@ -410,7 +411,7 @@ def build_en(write, wrap, page_hero):
           <div class="icon" aria-hidden="true"><i class="fa-brands fa-whatsapp"></i></div>
           <div>
             <h3>WhatsApp</h3>
-            <p><a href="{WA}" target="_blank" rel="noopener noreferrer">Open a conversation</a></p>
+            <p><a href="{WA}">Write to Talendus</a></p>
             <p>Replies during business hours.</p>
           </div>
         </div>
@@ -451,6 +452,7 @@ def build_en(write, wrap, page_hero):
           <h2 class="tl-h2">Submit my resume or ask a question</h2>
           <p class="tl-lead">It's free. A consultant calls if a mandate matches.</p>
           <form class="tl-form" action="#" method="post" data-form="talent-cv" enctype="multipart/form-data">
+            <input class="tl-hp" name="website_url" tabindex="-1" autocomplete="off" aria-hidden="true">
             <input type="hidden" name="profil" value="Candidate, I am looking for a role">
             <label>Name</label><input required name="nom" autocomplete="name">
             <label>Email</label><input type="email" required name="courriel" autocomplete="email">
@@ -473,6 +475,7 @@ def build_en(write, wrap, page_hero):
           <h2 class="tl-h2">Describe my hiring need</h2>
           <p class="tl-lead">Industry, role, headcount, location, contract type. Free call, by appointment.</p>
           <form class="tl-form" action="#" method="post" data-form="hiring-need">
+            <input class="tl-hp" name="website_url" tabindex="-1" autocomplete="off" aria-hidden="true">
             <input type="hidden" name="profil" value="Employer, I am hiring">
             <label>Name</label><input required name="nom">
             <label>Company</label><input required name="entreprise">

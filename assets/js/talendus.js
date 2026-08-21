@@ -120,13 +120,40 @@
 
     function applyPublicContact(data) {
       var c = data && data.contact;
-      if (!c || c.demo) return;
+      if (!c) return;
+      var email = c.email || "info@talendus.ca";
+      if (c.demo) {
+        document.querySelectorAll("a.tl-whatsapp, a[href*='wa.me/']").forEach(function (a) {
+          a.hidden = true;
+          a.setAttribute("href", "mailto:" + email);
+        });
+        document.querySelectorAll('a[href^="tel:"]').forEach(function (a) {
+          a.setAttribute("href", "mailto:" + email);
+          if (/514\s*555|whatsapp/i.test(a.textContent || "")) a.textContent = email;
+        });
+        document.querySelectorAll('script[type="application/ld+json"]').forEach(function (el) {
+          try {
+            var data = JSON.parse(el.textContent);
+            var changed = false;
+            function stripPhone(obj) {
+              if (!obj || typeof obj !== "object") return;
+              if (Array.isArray(obj)) { obj.forEach(stripPhone); return; }
+              if (obj.telephone && /555/.test(String(obj.telephone))) {
+                delete obj.telephone;
+                changed = true;
+              }
+            }
+            stripPhone(data);
+            if (changed) el.textContent = JSON.stringify(data);
+          } catch (err) {}
+        });
+        return;
+      }
       var e164 = String(c.phone_e164 || "").replace(/\D/g, "");
       if (!e164) return;
       var tel = "tel:+" + e164;
       var waBase = "https://wa.me/" + e164;
       var display = c.phone_display || "";
-      var email = c.email || "";
       document.querySelectorAll('a[href^="tel:"]').forEach(function (a) {
         a.setAttribute("href", tel);
         if (display && /514\s*555/.test(a.textContent || "")) a.textContent = display;
@@ -136,14 +163,12 @@
         try { keep = new URL(a.getAttribute("href"), location.origin).search; } catch (err) {}
         a.setAttribute("href", waBase + keep);
       });
-      if (email) {
-        document.querySelectorAll('a[href^="mailto:"]').forEach(function (a) {
-          var href = a.getAttribute("href") || "";
-          if (href.indexOf("info@talendus.ca") === -1) return;
-          a.setAttribute("href", "mailto:" + email);
-          if ((a.textContent || "").indexOf("info@talendus.ca") !== -1) a.textContent = email;
-        });
-      }
+      document.querySelectorAll('a[href^="mailto:"]').forEach(function (a) {
+        var href = a.getAttribute("href") || "";
+        if (href.indexOf("info@talendus.ca") === -1) return;
+        a.setAttribute("href", "mailto:" + email);
+        if ((a.textContent || "").indexOf("info@talendus.ca") !== -1) a.textContent = email;
+      });
     }
 
     if (window.TalendusAPI && window.TalendusAPI.services) {

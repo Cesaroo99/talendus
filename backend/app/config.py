@@ -63,8 +63,8 @@ class Settings(BaseSettings):
     seed_password: str = "talendus"
     default_currency: str = "CAD"
     default_tax_rate_bp: int = 14975
-    public_phone_e164: str = "15145550199"
-    public_phone_display: str = "514 555-0199"
+    public_phone_e164: str = ""
+    public_phone_display: str = ""
     public_email: str = "info@talendus.ca"
 
     integrations_timeout_seconds: int = 15

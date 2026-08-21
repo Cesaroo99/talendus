@@ -84,6 +84,8 @@
     wrongPersonaTalent: "This account is a talent space. We opened that for you.",
     wrongPersonaEmployer: "This account is a company space. We opened that for you.",
     help: "Need help?",
+    updateApp: "A new Talendus app is available. Install it to send your resume from the phone.",
+    updateAppBtn: "Update the app",
     nextJob: "Roles that may fit",
     openJobs: "See roles",
     openApps: "Follow my applications",
@@ -334,6 +336,8 @@
     wrongPersonaTalent: "Ce compte est un espace talent. Nous l’avons ouvert pour vous.",
     wrongPersonaEmployer: "Ce compte est un espace entreprise. Nous l’avons ouvert pour vous.",
     help: "Besoin d’aide ?",
+    updateApp: "Une nouvelle version de l’appli Talendus est disponible. Installez-la pour déposer un CV depuis le téléphone.",
+    updateAppBtn: "Mettre à jour l’appli",
     nextJob: "Postes qui peuvent convenir",
     openJobs: "Voir les offres",
     openApps: "Suivre mes candidatures",
@@ -545,7 +549,7 @@
 
   var state = {
     user: api.currentUser(),
-    contact: { phone_e164: "15145550199", phone_display: "514 555-0199", email: "info@talendus.ca" },
+    contact: { phone_e164: "", phone_display: "", email: "info@talendus.ca", demo: true },
     jobs: [],
     job: null,
     dash: null,
@@ -718,11 +722,56 @@
     if ((location.hash || "") === hash) render();
     else location.hash = hash;
   }
-  function telHref() { return "tel:+" + String(state.contact.phone_e164 || "").replace(/\D/g, ""); }
+  function contactMail() { return (state.contact && state.contact.email) || "info@talendus.ca"; }
+  function hasPublicPhone() {
+    var c = state.contact || {};
+    if (c.demo) return false;
+    return String(c.phone_e164 || "").replace(/\D/g, "").length >= 10;
+  }
+  function telHref() {
+    if (!hasPublicPhone()) return "mailto:" + contactMail();
+    return "tel:+" + String(state.contact.phone_e164 || "").replace(/\D/g, "");
+  }
   function waHref() {
+    if (!hasPublicPhone()) return "mailto:" + contactMail();
     var n = String(state.contact.phone_e164 || "").replace(/\D/g, "");
     var msg = encodeURIComponent(isEn ? "Hello Talendus" : "Bonjour Talendus");
     return "https://wa.me/" + n + "?text=" + msg;
+  }
+  function nativeAppVersion() {
+    var ua = navigator.userAgent || "";
+    var m = ua.match(/TalendusApp\/(\d+(?:\.\d+)*)/);
+    if (m) return m[1];
+    try {
+      if (window.TalendusNative && typeof window.TalendusNative.appVersion === "function") {
+        return String(window.TalendusNative.appVersion() || "");
+      }
+    } catch (e) {}
+    return "";
+  }
+  function versionLt(a, b) {
+    var as = String(a || "").split(".").map(function (n) { return parseInt(n, 10) || 0; });
+    var bs = String(b || "").split(".").map(function (n) { return parseInt(n, 10) || 0; });
+    var len = Math.max(as.length, bs.length);
+    for (var i = 0; i < len; i++) {
+      var x = as[i] || 0;
+      var y = bs[i] || 0;
+      if (x < y) return true;
+      if (x > y) return false;
+    }
+    return false;
+  }
+  function needsApkUpdate() {
+    var ua = navigator.userAgent || "";
+    if (ua.indexOf("TalendusApp/") === -1 && !window.TalendusNative) return false;
+    var v = nativeAppVersion();
+    if (!v) return /TalendusApp\/1\.[0-7](?:\D|$)/.test(ua);
+    return versionLt(v, "1.8");
+  }
+  function apkUpdateBanner() {
+    if (!needsApkUpdate()) return "";
+    return '<div class="tn-card tn-push-card tn-update-card"><p class="tn-meta">' + esc(t.updateApp) +
+      '</p><a class="tn-btn" href="/download/talendus.apk">' + esc(t.updateAppBtn) + "</a></div>";
   }
   function setNotice(msg, err) {
     state.notice = err ? "" : (msg || "");
@@ -736,7 +785,8 @@
     return bits.join("");
   }
   function helpLine() {
-    return '<p class="tn-help">' + esc(t.help) + ' <a href="' + telHref() + '">' + esc(state.contact.phone_display || t.call) + "</a></p>";
+    var label = hasPublicPhone() ? (state.contact.phone_display || t.call) : contactMail();
+    return '<p class="tn-help">' + esc(t.help) + ' <a href="' + telHref() + '">' + esc(label) + "</a></p>";
   }
   function statusLabel(s) {
     var key = String(s || "").toUpperCase().replace(/-/g, "_");
@@ -954,6 +1004,7 @@
       return false;
     }
   }
+  var CV_ACCEPT = ".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp,application/pdf,image/png,image/jpeg";
   function filePicker(accept, multiple) {
     var imagesOnly = !!(accept && accept.indexOf("image/") === 0 && accept.indexOf("pdf") === -1);
     var native = hasNativePicker();
@@ -1250,7 +1301,7 @@
         '<span class="tn-persona-icon" aria-hidden="true">' + icons.hire + "</span>" +
         "<span><strong>" + esc(t.employer) + "</strong></span>" +
         '<span class="tn-chevron" aria-hidden="true">' + icons.chevron + "</span></a>" +
-      helpLine() + langSwitch() + "</div>";
+      apkUpdateBanner() + helpLine() + langSwitch() + "</div>";
   }
 
   function authView() {
@@ -1371,6 +1422,7 @@
       var needs = state.hiring || [];
       return '<p class="tn-kicker">' + esc(t.space) + "</p><h1 class=\"tn-title\">" + esc(t.hello) + (name ? " " + esc(name) : "") + "</h1>" +
         flash() +
+        apkUpdateBanner() +
         pushBanner() +
         '<div class="tn-stats">' +
         statLink("#/hiring", stats.active_jobs || needs.length || 0, t.hiring) +
@@ -1394,7 +1446,7 @@
     if (!hasCv) {
       next = '<section class="tn-card tn-file-card"><p class="tn-kicker">' + esc(t.cv) + "</p>" +
         '<p class="tn-meta">' + esc(t.noCv) + "</p>" +
-        '<form class="tn-form" data-cv>' + filePicker("", false) +
+        '<form class="tn-form" data-cv>' + filePicker(CV_ACCEPT, false) +
         '<button class="tn-btn" type="submit">' + esc(t.upload) + "</button></form></section>";
     } else if (pct < 80) {
       next = '<section class="tn-card tn-file-card"><p class="tn-kicker">' + esc(t.nextStep) + "</p>" +
@@ -1404,7 +1456,7 @@
         '<a class="tn-btn" href="#/profile">' + esc(t.completeFile) + "</a></section>";
     }
     return '<p class="tn-kicker">' + esc(t.space) + "</p><h1 class=\"tn-title\">" + esc(t.hello) + (name ? " " + esc(name) : "") + "</h1>" +
-      flash() + pushBanner() + next + interviewCard() +
+      flash() + apkUpdateBanner() + pushBanner() + next + interviewCard() +
       '<div class="tn-stats">' +
       statLink("#/apps", stats.applications || 0, t.statsApps) +
       statLink("#/interviews", stats.interviews || 0, t.statsInterviews) +
@@ -1475,7 +1527,7 @@
       (body ? '<div class="tn-card"><p>' + esc(body) + "</p></div>" : "") +
       (job.benefits ? '<div class="tn-card"><p>' + esc(t.benefits) + " · " + esc(job.benefits) + "</p></div>" : "") +
       flash() +
-      '<form class="tn-form" data-apply-form data-job="' + esc(job.id) + '"><label>' + esc(t.cover) + '</label><textarea name="cover_note" maxlength="800"></textarea>' +
+      '<form class="tn-form" data-apply-form data-job="' + esc(job.id) + '"><label>' + esc(t.cover) + '</label><textarea name="cover_note" maxlength="4000"></textarea>' +
       '<button class="tn-btn" type="submit">' + esc(t.apply) + "</button></form>" +
       '<button type="button" class="tn-btn tn-btn-ghost" data-save-job="' + esc(job.id) + '">' + esc(saved ? t.unsaveJob : t.saveJob) + "</button>";
   }
@@ -1572,12 +1624,18 @@
   }
   function savedView() {
     return listBlock(t.savedJobs, t.emptySaved, (state.saved || []).map(function (row) {
-      return jobCard(row.job || row);
+      var job = row.job || row;
+      var id = job.id || job.slug || "";
+      return '<div class="tn-saved">' + jobCard(job) +
+        '<div class="tn-row-actions"><button type="button" class="tn-btn" data-apply="' + esc(id) + '">' +
+        esc(t.apply) + "</button></div></div>";
     }), "#/me");
   }
   function alertsView() {
     var o = jobOpts();
-    return backTo("#/me") + "<h1 class=\"tn-title\">" + esc(t.alerts) + "</h1><p class=\"tn-lead\">" + esc(t.emptyAlerts) + "</p>" + flash() +
+    var hasAlerts = (state.alerts || []).length;
+    return backTo("#/me") + "<h1 class=\"tn-title\">" + esc(t.alerts) + "</h1>" +
+      (hasAlerts ? "" : '<p class="tn-lead">' + esc(t.emptyAlerts) + "</p>") + flash() +
       '<form class="tn-form" data-alert><label>' + esc(t.alertKeywords) + '</label><input name="keywords" required>' +
       labeledChoice("city", t.city, o.locations, "", t.pick) +
       labeledChoice("sector", t.sector, o.sectors, "", t.pick) +
@@ -1727,7 +1785,7 @@
     return backTo("#/me") + "<h1 class=\"tn-title\">" + esc(t.profile) + "</h1><p class=\"tn-lead\">" + esc(t.profileLead) + "</p><div data-flash>" + flash() + "</div>" +
       '<form class="tn-form" data-cv><label>' + esc(t.cv) + "</label><p class=\"tn-meta\">" +
       esc(resumes.length ? (resumes[0].original_name || t.cvReady) : t.noCv) + "</p>" +
-      filePicker("", false) +
+      filePicker(CV_ACCEPT, false) +
       '<button class="tn-btn" type="submit">' + esc(t.upload) + "</button></form>" +
       '<form class="tn-form" data-avatar><label>' + esc(t.photo) + '</label><p class="tn-meta">' + esc(t.photoHint) + "</p>" +
       filePicker("image/*", false) +
@@ -1770,7 +1828,7 @@
     var docs = state.docs || [];
     return backTo("#/me") + "<h1 class=\"tn-title\">" + esc(t.documents) + "</h1><div data-flash>" + flash() + "</div>" +
       '<form class="tn-form" data-cv><label>' + esc(t.cv) + "</label>" +
-      filePicker("", true) +
+      filePicker(CV_ACCEPT, true) +
       '<button class="tn-btn" type="submit">' + esc(t.upload) + "</button></form>" +
       '<div class="tn-grid tn-stack">' + (resumes.map(function (r) {
         return '<div class="tn-job"><h3>' + esc(r.original_name || t.cv) + '</h3><p class="tn-meta">' +
@@ -1790,12 +1848,14 @@
       }).join("") || '<div class="tn-empty">' + esc(t.emptyDocs) + "</div>") + "</div>";
   }
   function helpView() {
-    var mail = (state.contact && state.contact.email) || "info@talendus.ca";
+    var mail = contactMail();
+    var phoneBtn = hasPublicPhone()
+      ? '<a class="tn-btn" href="' + telHref() + '">' + esc(t.call) + " · " + esc(state.contact.phone_display || "") + "</a>" +
+        '<a class="tn-btn tn-btn-ghost" href="' + waHref() + '">' + esc(t.wa) + "</a>"
+      : "";
     return backTo("#/me") + "<h1 class=\"tn-title\">" + esc(t.helpTitle) + "</h1><p class=\"tn-lead\">" + esc(t.contactUs) + "</p>" +
-      '<div class="tn-help-actions">' +
-      '<a class="tn-btn" href="' + telHref() + '">' + esc(t.call) + " · " + esc(state.contact.phone_display || "") + "</a>" +
-      '<a class="tn-btn tn-btn-ghost" href="' + waHref() + '">' + esc(t.wa) + "</a>" +
-      '<a class="tn-btn tn-btn-ghost" href="mailto:' + esc(mail) + '">' + esc(t.emailUs) + " · " + esc(mail) + "</a></div>";
+      '<div class="tn-help-actions">' + phoneBtn +
+      '<a class="tn-btn' + (phoneBtn ? " tn-btn-ghost" : "") + '" href="mailto:' + esc(mail) + '">' + esc(t.emailUs) + " · " + esc(mail) + "</a></div>";
   }
   function meView() {
     var html = identityHead() + flash();

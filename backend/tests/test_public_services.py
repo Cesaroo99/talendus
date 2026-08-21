@@ -13,7 +13,9 @@ def test_public_services_hides_unconfigured_payments(client):
     assert data["messaging"]["email_sending"] is False
     assert data["messaging"]["sms"] is False
     assert data["contact"]["demo"] is True
-    assert data["contact"]["phone_display"] == "514 555-0199"
+    assert data["contact"]["phone_display"] == ""
+    assert data["contact"]["phone_e164"] == ""
+    assert "555-0199" not in str(data)
     blob = str(data).lower()
     assert "sk_" not in blob
     assert "secret" not in blob

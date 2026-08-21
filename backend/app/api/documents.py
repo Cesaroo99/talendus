@@ -9,6 +9,7 @@ from app.models import User
 from app.models.enums import UserRole
 from app.rbac import is_admin
 from app.services.portal import (
+    _finance_can_see,
     delete_document,
     get_document_for_user,
     list_all_documents,
@@ -32,9 +33,9 @@ def list_mine(
 ):
     if owner_id and (is_admin(user) or user.role in {UserRole.RECRUITER, UserRole.FINANCE}):
         otype = owner_type or "candidate"
-        return ok([serialize_document(row) for row in list_documents_for_owner(db, otype, owner_id)])
+        return ok([serialize_document(row) for row in list_documents_for_owner(db, otype, owner_id) if user.role != UserRole.FINANCE or _finance_can_see(row)])
     if (is_admin(user) or user.role in {UserRole.RECRUITER, UserRole.FINANCE}) and owner_type is None and owner_id is None:
-        return ok([serialize_document(row) for row in list_all_documents(db)])
+        return ok([serialize_document(row) for row in list_all_documents(db, user)])
     return ok(list_documents(db, user, owner_type))
 
 

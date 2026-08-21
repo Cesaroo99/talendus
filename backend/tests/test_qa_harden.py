@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from conftest import auth_header, register, staff_publish_job
+from conftest import auth_header, company_id_for, register, staff_publish_job
 
 from app.static_guard import is_hidden_static_path
 
@@ -93,7 +93,7 @@ def test_contact_honeypot_rejected(client):
     assert res.json()["code"] == "SPAM_REJECTED"
 
 
-def test_finance_can_download_document_but_not_delete(client):
+def test_finance_cannot_see_candidate_cv_but_can_see_company_docs(client):
     cand = register(client, "docs-fin@example.com")
     upload = client.post(
         "/api/documents",
@@ -102,11 +102,25 @@ def test_finance_can_download_document_but_not_delete(client):
         data={"kind": "cover_letter"},
     )
     assert upload.status_code == 200, upload.text
-    doc_id = upload.json()["data"]["id"]
+    cv_id = upload.json()["data"]["id"]
+    emp = register(client, "docs-fin-emp@example.com", "EMPLOYER")
+    company_id = company_id_for(client, emp)
     finance = _promote(client, "fin-docs@example.com", "FINANCE")
     headers = auth_header(finance)
     listed = client.get("/api/documents", headers=headers)
     assert listed.status_code == 200
+    assert all(item["id"] != cv_id for item in listed.json()["data"])
+    denied = client.get(f"/api/documents/{cv_id}/file", headers=headers)
+    assert denied.status_code == 403
+    company_doc = client.post(
+        "/api/documents",
+        headers=headers,
+        files={"file": ("contrat.pdf", PDF, "application/pdf")},
+        data={"kind": "contract", "owner_type": "company", "owner_id": company_id},
+    )
+    assert company_doc.status_code == 200, company_doc.text
+    doc_id = company_doc.json()["data"]["id"]
+    listed = client.get("/api/documents", headers=headers)
     assert any(item["id"] == doc_id for item in listed.json()["data"])
     downloaded = client.get(f"/api/documents/{doc_id}/file", headers=headers)
     assert downloaded.status_code == 200
@@ -141,3 +155,71 @@ def test_account_space_covers_apply_push_and_ios_download():
     auth = (ROOT / "assets" / "js" / "auth-gate.js").read_text(encoding="utf-8")
     assert "tl-auth-" in auth
     assert "history.replaceState" in auth
+
+
+def test_csp_header_is_present(client):
+    res = client.get("/api/health")
+    csp = res.headers.get("content-security-policy") or ""
+    assert "default-src 'self'" in csp
+    assert "object-src 'none'" in csp
+
+
+def test_site_static_hides_backend_source():
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+
+    from app.main import SITE_ROOT, SiteStatic
+
+    mini = FastAPI()
+    mini.mount("/", SiteStatic(directory=str(SITE_ROOT), html=True), name="site")
+    with TestClient(mini) as c:
+        hidden = c.get("/backend/app/main.py")
+        assert hidden.status_code == 404
+        ok = c.get("/index.html")
+        assert ok.status_code == 200
+
+
+def test_login_requires_verified_email_when_email_enabled(client, monkeypatch):
+    from app.config import get_settings
+
+    register(client, "need-verify@example.com")
+    monkeypatch.setenv("EMAIL_ENABLED", "true")
+    get_settings.cache_clear()
+    try:
+        res = client.post("/api/auth/login", json={"email": "need-verify@example.com", "password": "Password1!"})
+        assert res.status_code == 403
+        assert res.json()["code"] == "EMAIL_NOT_VERIFIED"
+    finally:
+        monkeypatch.setenv("EMAIL_ENABLED", "false")
+        get_settings.cache_clear()
+
+
+def test_client_ip_uses_real_ip_then_last_forwarded_hop():
+    from starlette.requests import Request
+
+    from app.deps import client_ip
+
+    base = {"type": "http", "method": "GET", "path": "/", "client": ("10.0.0.9", 1234)}
+    real = Request({**base, "headers": [(b"x-real-ip", b"203.0.113.10"), (b"x-forwarded-for", b"1.1.1.1, 10.0.0.2")]})
+    assert client_ip(real) == "203.0.113.10"
+    forwarded = Request({**base, "headers": [(b"x-forwarded-for", b"1.1.1.1, 10.0.0.2")]})
+    assert client_ip(forwarded) == "10.0.0.2"
+    none = Request({**base, "headers": []})
+    assert client_ip(none) == "10.0.0.9"
+
+
+def test_public_html_has_honeypot_and_industrial_trades_first():
+    candidats = (ROOT / "candidats.html").read_text(encoding="utf-8")
+    contact = (ROOT / "contact.html").read_text(encoding="utf-8")
+    besoin = (ROOT / "besoin-de-recrutement.html").read_text(encoding="utf-8")
+    for text in (candidats, contact, besoin):
+        assert 'name="website_url"' in text
+    select = candidats.split('<select name="metier">', 1)[1].split("</select>", 1)[0]
+    assert select.index("Cariste") < select.index("Développeur")
+    assert "514 555-0199" not in candidats
+    assert "tel:+15145550199" not in contact
+    admin = (ROOT / "admin" / "js" / "app.js").read_text(encoding="utf-8")
+    assert "TLStore.isLive() ? \"\"" in admin or "TLStore.isLive() ?" in admin
+    js = (ROOT / "assets" / "js" / "talendus.js").read_text(encoding="utf-8")
+    assert "c.demo" in js
+    assert "mailto:" in js

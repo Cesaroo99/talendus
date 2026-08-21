@@ -60,9 +60,14 @@ def require_permission(permission: str):
 
 
 def client_ip(request: Request, forwarded: str | None = None) -> str:
-    header = forwarded or request.headers.get("x-forwarded-for")
+    real = (request.headers.get("x-real-ip") or "").strip()
+    if real:
+        return real.split(",")[0].strip()[:64]
+    header = forwarded if forwarded is not None else request.headers.get("x-forwarded-for")
     if header:
-        return header.split(",")[0].strip()[:64]
+        parts = [part.strip() for part in header.split(",") if part.strip()]
+        if parts:
+            return parts[-1][:64]
     return (request.client.host if request.client else "")[:64]
 
 

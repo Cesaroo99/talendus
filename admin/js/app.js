@@ -1084,7 +1084,7 @@
     return `<div class="page-head"><div><h1>Notifications</h1><p>Centre d’alertes opérationnelles</p></div>
       <div class="actions"><button class="btn btn-ghost" id="mark-all">Tout marquer lu</button></div></div>
       <div class="card">${S().notifications.length ? S().notifications.map(function (n) {
-        return '<div class="n-item ' + (n.read ? "" : "unread") + '"><a href="' + n.href + '"><b>' + U.esc(n.text) + "</b></a><div style='color:var(--steel);font-size:12px'>" + U.esc(n.at) + " · " + n.type + "</div></div>";
+        return '<div class="n-item ' + (n.read ? "" : "unread") + '"><a href="' + U.esc(n.href || "#") + '"><b>' + U.esc(n.text) + "</b></a><div style='color:var(--steel);font-size:12px'>" + U.esc(n.at) + " · " + U.esc(n.type) + "</div></div>";
       }).join("") : U.empty("Aucune notification", "Les alertes opérationnelles apparaissent ici.")}</div>`;
   }
 
@@ -1160,7 +1160,7 @@
           <div class="card-head"><h3>Plateforme</h3></div>
           <p class="sub">Réglages internes de l’agence — pas visibles sur le site public.</p>
           <div id="adm-platform"><p class="sub">Chargement…</p></div>
-          <p style="margin-top:16px"><button class="btn btn-danger" id="reset-demo">Réinitialiser les données démo</button></p>
+          ${TLStore.isLive() ? "" : '<p style="margin-top:16px"><button class="btn btn-danger" id="reset-demo">Réinitialiser les données démo</button></p>'}
         </div>
       </div>` : ""}`;
   }
