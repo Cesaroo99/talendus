@@ -1,7 +1,7 @@
 SITE = "https://talendus.ca"
 PUBLIC_EMAIL = "info@talendus.ca"
-PHONE_E164 = "2635585225"
-PHONE_TEL = "tel:+2635585225"
+PHONE_E164 = "12635585225"
+PHONE_TEL = "tel:+12635585225"
 PHONE_DISPLAY = "263 558 5225"
 WA_HREF = f"https://wa.me/{PHONE_E164}?text="
 HONEYPOT_INPUT = '<input class="tl-hp" name="website_url" tabindex="-1" autocomplete="off" aria-hidden="true">'
@@ -428,7 +428,7 @@ def head(title, description, canonical, extra_css="", lang="fr", alt_path="", ro
         "@type": "EmploymentAgency",
         "name": "Talendus",
         "url": SITE,
-        "telephone": "+263-558-5225",
+        "telephone": "+1-263-558-5225",
         "email": PUBLIC_EMAIL,
         "slogan": t["tagline"],
         "areaServed": "Quebec",

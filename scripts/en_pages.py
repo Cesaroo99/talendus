@@ -20,7 +20,7 @@ SPEED_TALENT = speed_strip("en", "talent")
 CTA = cta_band("en", "entreprise")
 CTA_TALENT = cta_band("en", "talent")
 CTA_GATE = cta_band("en", "gateway")
-WA = "https://wa.me/2635585225?text=Hello%20Talendus%2C%20I%20would%20like%20to%20talk%20about%20a%20hiring%20need."
+WA = "https://wa.me/12635585225?text=Hello%20Talendus%2C%20I%20would%20like%20to%20talk%20about%20a%20hiring%20need."
 
 
 def img(name):
@@ -395,7 +395,7 @@ def build_en(write, wrap, page_hero):
           <div class="icon" aria-hidden="true"><i class="fa-solid fa-phone"></i></div>
           <div>
             <h3>Phone</h3>
-            <p><a href="tel:+2635585225">263 558 5225</a></p>
+            <p><a href="tel:+12635585225">263 558 5225</a></p>
             <p>On weekdays we usually reply within 30 minutes.</p>
           </div>
         </div>

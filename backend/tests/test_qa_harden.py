@@ -218,7 +218,7 @@ def test_public_html_has_honeypot_and_industrial_trades_first():
     assert select.index("Cariste") < select.index("Développeur")
     assert "514 555-0199" not in candidats
     assert "tel:+15145550199" not in contact
-    assert "tel:+2635585225" in contact
+    assert "tel:+12635585225" in contact
     assert "263 558 5225" in contact
     admin = (ROOT / "admin" / "js" / "app.js").read_text(encoding="utf-8")
     assert "TLStore.isLive() ? \"\"" in admin or "TLStore.isLive() ?" in admin

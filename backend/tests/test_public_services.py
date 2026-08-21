@@ -14,12 +14,30 @@ def test_public_services_hides_unconfigured_payments(client):
     assert data["messaging"]["sms"] is False
     assert data["contact"]["demo"] is False
     assert data["contact"]["phone_display"] == "263 558 5225"
-    assert data["contact"]["phone_e164"] == "2635585225"
-    assert data["contact"]["whatsapp_e164"] == "2635585225"
+    assert data["contact"]["phone_e164"] == "12635585225"
+    assert data["contact"]["whatsapp_e164"] == "12635585225"
     assert "555-0199" not in str(data)
     blob = str(data).lower()
     assert "sk_" not in blob
     assert "secret" not in blob
+
+
+def test_ten_digit_phone_gets_canada_country_code(client, monkeypatch):
+    from app.config import get_settings
+
+    monkeypatch.setenv("PUBLIC_PHONE_E164", "2635585225")
+    monkeypatch.setenv("PUBLIC_PHONE_DISPLAY", "263 558 5225")
+    get_settings.cache_clear()
+    try:
+        data = client.get("/api/services").json()["data"]
+        assert data["contact"]["demo"] is False
+        assert data["contact"]["phone_e164"] == "12635585225"
+        assert data["contact"]["whatsapp_e164"] == "12635585225"
+        assert data["contact"]["phone_display"] == "263 558 5225"
+    finally:
+        monkeypatch.delenv("PUBLIC_PHONE_E164", raising=False)
+        monkeypatch.delenv("PUBLIC_PHONE_DISPLAY", raising=False)
+        get_settings.cache_clear()
 
 
 def test_public_services_uses_real_phone_when_configured(client, monkeypatch):

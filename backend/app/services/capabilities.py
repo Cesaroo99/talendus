@@ -64,9 +64,16 @@ def _digits(value: str) -> str:
     return "".join(ch for ch in (value or "") if ch.isdigit())
 
 
+def _canada_e164(value: str) -> str:
+    digits = _digits(value)
+    if len(digits) == 10:
+        return "1" + digits
+    return digits
+
+
 def public_services() -> dict:
     settings = get_settings()
-    phone_e164 = _digits(settings.public_phone_e164)
+    phone_e164 = _canada_e164(settings.public_phone_e164)
     phone_display = (settings.public_phone_display or "").strip()
     email = (settings.public_email or "").strip() or "info@talendus.ca"
     demo = (not phone_e164) or phone_e164 in DEMO_PHONES
