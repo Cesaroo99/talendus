@@ -10,6 +10,7 @@ from app.models import User
 from app.models.enums import ApplicationStatus, UserRole
 from app.schemas import ApplicationCreateIn, PublicApplyIn, StatusChangeIn
 from app.services import applications as applications_service
+from app.services.spam import reject_honeypot
 
 
 def _form_text(form, key: str) -> str:
@@ -46,6 +47,7 @@ async def apply_public(request: Request, db: Session = Depends(get_db)):
     cv_filename = None
     if "multipart/form-data" in content_type:
         form = await request.form()
+        reject_honeypot(_form_text(form, "website_url"))
         payload = _public_payload(
             {
                 "job_slug": _form_text(form, "job_slug"),
@@ -65,7 +67,9 @@ async def apply_public(request: Request, db: Session = Depends(get_db)):
                 cv_file = data
                 cv_filename = (getattr(upload, "filename", None) or "").strip() or "cv"
     else:
-        payload = _public_payload(await request.json())
+        raw = await request.json()
+        reject_honeypot(str((raw or {}).get("website_url") or ""))
+        payload = _public_payload(raw)
     application = applications_service.apply_public(
         db, payload, client_ip(request), cv_file=cv_file, cv_filename=cv_filename
     )

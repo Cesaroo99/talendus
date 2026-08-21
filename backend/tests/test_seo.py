@@ -68,6 +68,15 @@ def test_legacy_urls_redirect_301(client):
     res = client.get("/employeurs.html", follow_redirects=False)
     assert res.status_code == 301
     assert res.headers["location"] == "/entreprises.html"
+    res = client.get("/index1.html", follow_redirects=False)
+    assert res.status_code == 301
+    assert res.headers["location"] == "/"
+    res = client.get("/projects.html", follow_redirects=False)
+    assert res.status_code == 301
+    assert res.headers["location"] == "/"
+    res = client.get("/team.html", follow_redirects=False)
+    assert res.status_code == 301
+    assert res.headers["location"] == "/"
 
 
 def test_blog_draft_not_public_then_publish(client):

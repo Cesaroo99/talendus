@@ -127,13 +127,18 @@
       var raw = (location.hash || "").replace(/^#\/?/, "");
       if (!raw) return null;
       var qIndex = raw.indexOf("?");
-      var name = (qIndex >= 0 ? raw.slice(0, qIndex) : raw).split("/")[0];
+      var path = qIndex >= 0 ? raw.slice(0, qIndex) : raw;
+      var parts = path.split("/").filter(Boolean);
+      var name = parts[0] || "";
       var query = {};
       var search = qIndex >= 0 ? raw.slice(qIndex + 1) : "";
       search.split("&").forEach(function (part) {
         var kv = part.split("=");
         if (kv[0]) query[decodeURIComponent(kv[0])] = decodeURIComponent((kv[1] || "").replace(/\+/g, " "));
       });
+      if (!query.token && parts.length > 1) {
+        try { query.token = decodeURIComponent(parts.slice(1).join("/")); } catch (e) { query.token = parts.slice(1).join("/"); }
+      }
       if (["login", "register", "forgot", "reset", "verify"].indexOf(name) === -1) return null;
       return { name: name, query: query };
     }
@@ -741,7 +746,14 @@
         history.replaceState(null, "", location.pathname + location.search);
         goToWorkspace(api.currentUser());
       } else {
-        openAuth(hash.name, { token: hash.query.token || "", role: hash.query.role, email: hash.query.email });
+        var token = hash.query.token || "";
+        if ((hash.name === "reset" || hash.name === "verify") && token) {
+          try { sessionStorage.setItem("tl-auth-" + hash.name, token); } catch (e) {}
+          try { history.replaceState(null, "", location.pathname + location.search + "#/" + hash.name); } catch (e) {}
+        } else if (hash.name === "reset" || hash.name === "verify") {
+          try { token = sessionStorage.getItem("tl-auth-" + hash.name) || ""; } catch (e) { token = ""; }
+        }
+        openAuth(hash.name, { token: token, role: hash.query.role, email: hash.query.email });
       }
     }
 

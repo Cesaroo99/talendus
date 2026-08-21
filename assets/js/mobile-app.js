@@ -651,6 +651,21 @@
     }
     return { name: name, id: id || "" };
   }
+  function stashAuthToken(name, id) {
+    var key = "tn-" + name + "-token";
+    if (id) {
+      try { sessionStorage.setItem(key, id); } catch (e) {}
+      var hash = location.hash || "";
+      if (hash.indexOf("#/" + name + "/") === 0 || hash.indexOf("#" + name + "/") === 0) {
+        try { history.replaceState(null, "", location.pathname + location.search + "#/" + name); } catch (e) {}
+      }
+      return id;
+    }
+    try { return sessionStorage.getItem(key) || ""; } catch (e) { return ""; }
+  }
+  function clearAuthToken(name) {
+    try { sessionStorage.removeItem("tn-" + name + "-token"); } catch (e) {}
+  }
   function route() {
     var raw = (location.hash || "").replace(/^#/, "");
     var query = {};
@@ -672,6 +687,9 @@
     var mapped = canonicalize(name, id);
     if (!mapped.id && query.token) mapped.id = query.token;
     mapped.query = query;
+    if (mapped.name === "reset" || mapped.name === "verify") {
+      mapped.id = stashAuthToken(mapped.name, mapped.id);
+    }
     return mapped;
   }
   function allowedRoute(name) {
@@ -2060,7 +2078,7 @@
       pending.push(api.request("/messages/" + encodeURIComponent(r.id)).then(function (json) { state.conversation = dataOf(json) || []; }).catch(function () { state.conversation = []; }));
     }
     if (!state.user && r.name === "verify" && r.id) {
-      pending.push(api.verifyEmail(r.id).then(function () { setNotice(t.verifyOk); }).catch(fail));
+      pending.push(api.verifyEmail(r.id).then(function () { clearAuthToken("verify"); setNotice(t.verifyOk); }).catch(fail));
     }
     return Promise.all(pending).then(function () {
       if (!localeChosen() && !storedLocale() && state.prefs && state.prefs.locale) {
@@ -2353,6 +2371,7 @@
       var resetData = Object.fromEntries(new FormData(form).entries());
       if (!resetData.token || !resetData.password) { fail({ message: t.err }); return; }
       api.resetPassword(resetData.token, resetData.password).then(function () {
+        clearAuthToken("reset");
         setNotice(t.saved);
         go(loginHref());
         return loadRoute();

@@ -17,6 +17,7 @@ from app.middleware import RateLimitMiddleware, SecurityHeadersMiddleware, SeoRe
 from app.seed import seed_if_empty
 from app.services.email import start_worker
 from app.services.scheduler import start_ops_worker
+from app.static_guard import is_hidden_static_path
 
 settings = get_settings()
 logger = logging.getLogger("talendus")
@@ -29,6 +30,8 @@ class SiteStatic(StaticFiles):
     """404 HTML Talendus au lieu d'une erreur brute / 502 proxy."""
 
     async def get_response(self, path: str, scope):
+        if is_hidden_static_path(path):
+            raise StarletteHTTPException(status_code=404)
         try:
             return await super().get_response(path, scope)
         except StarletteHTTPException as exc:

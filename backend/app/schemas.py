@@ -391,6 +391,7 @@ class PublicApplyIn(BaseModel):
     cover_note: str | None = None
     password: str | None = Field(default=None, min_length=8, max_length=128)
     cv_url: str | None = None
+    website_url: str | None = None  # honeypot anti-spam
 
 
 class StatusChangeIn(BaseModel):
@@ -420,6 +421,7 @@ class ContactIn(BaseModel):
     skills: str | None = None
     contact_role: str | None = None
     company_size: str | None = None
+    website_url: str | None = None  # honeypot anti-spam
 
 
 class PublicTalentProfileIn(BaseModel):
@@ -435,6 +437,7 @@ class PublicTalentProfileIn(BaseModel):
     message: str | None = None
     subject: str | None = None
     password: str | None = Field(default=None, min_length=8, max_length=128)
+    website_url: str | None = None  # honeypot anti-spam
 
 
 class CompanyMemberIn(BaseModel):

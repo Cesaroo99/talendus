@@ -146,15 +146,7 @@
   /* ---------- Auth ---------- */
   function renderLogin() {
     var production = TLStore.apiEnv === "production";
-    var emailPrefill = production ? "lea.super@talendus.ca" : "sophie.admin@talendus.ca";
-    var passPrefill = production ? "" : "talendus";
-    var demo = production ? "" : `<div class="demo-accounts">
-              Démo locale · mot de passe <b>talendus</b><br>
-              <button type="button" data-fill="sophie.admin@talendus.ca">Admin</button> ·
-              <button type="button" data-fill="marc.recruiter@talendus.ca">Recruteur</button> ·
-              <button type="button" data-fill="nathalie.finance@talendus.ca">Finance</button> ·
-              <button type="button" data-fill="alex.editeur@talendus.ca">Éditeur</button>
-            </div>`;
+    var emailPrefill = production ? "lea.super@talendus.ca" : "";
     app.innerHTML = `
       <div class="login">
         <section class="login-brand">
@@ -176,10 +168,9 @@
             <p class="sub">${production ? "Serveur de production — compte staff uniquement (ADMIN_EMAIL sur Render)." : "Espace privé — accès réservé à l’équipe Talendus."}</p>
             <form id="login-form" class="form-grid" style="grid-template-columns:1fr">
               ${U.field("Courriel", "email", emailPrefill, "email")}
-              ${U.field("Mot de passe", "password", passPrefill, "password")}
+              ${U.field("Mot de passe", "password", "", "password")}
               <button class="btn btn-orange" type="submit">Entrer dans le back-office</button>
             </form>
-            ${demo}
           </div>
         </section>
       </div>`;
@@ -190,6 +181,7 @@
       if (!u) {
         var err = TLStore.lastError;
         if (err === "not-staff") U.toast("Ce compte n’a pas accès au back-office. Utilisez le compte administrateur de production.", "err");
+        else if (err === "api") U.toast("Connexion au serveur impossible. Réessayez.", "err");
         else U.toast("Identifiants incorrects.", "err");
         return;
       }
@@ -197,12 +189,6 @@
       go("#/" + firstModule());
       render();
     };
-    U.$$("[data-fill]").forEach(function (b) {
-      b.onclick = function () {
-        $("input[name=email]").value = b.getAttribute("data-fill");
-        $("input[name=password]").value = "talendus";
-      };
-    });
   }
 
   /* ---------- Shell ---------- */
@@ -2202,12 +2188,12 @@
   });
   (async function boot() {
     if (TLStore.detectEnv) await TLStore.detectEnv();
-    if (TLStore.apiEnv === "production" && TLStore.me() && !TLStore.isLive()) {
-      sessionStorage.removeItem("talendus-admin-session");
-    }
     if (TLStore.restoreFromPublic) TLStore.restoreFromPublic();
-    if (TLStore.me() && window.TalendusAPI && TLStore.hydrateFromApi && TLStore.isLive()) {
-      await TLStore.hydrateFromApi();
+    if (TLStore.me() && window.TalendusAPI && TLStore.hydrateFromApi) {
+      var ok = await TLStore.hydrateFromApi();
+      if (!ok) TLStore.logout();
+    } else if (TLStore.me() && !TLStore.isLive()) {
+      TLStore.logout();
     }
     render();
   })();

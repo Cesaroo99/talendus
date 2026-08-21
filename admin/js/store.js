@@ -4,11 +4,11 @@
   const SESSION = "talendus-admin-session";
 
   const users = [
-    { id: "u-sophie", firstName: "Sophie", lastName: "Tremblay", email: "sophie.admin@talendus.ca", password: "talendus", role: "admin", title: "Directrice générale", initials: "ST" },
-    { id: "u-marc", firstName: "Marc", lastName: "Gagnon", email: "marc.recruiter@talendus.ca", password: "talendus", role: "recruiter", title: "Recruteur senior", initials: "MG" },
-    { id: "u-camille", firstName: "Camille", lastName: "Bouchard", email: "camille.recruiter@talendus.ca", password: "talendus", role: "recruiter", title: "Recruteuse industrielle", initials: "CB" },
-    { id: "u-nathalie", firstName: "Nathalie", lastName: "Roy", email: "nathalie.finance@talendus.ca", password: "talendus", role: "finance", title: "Contrôleure financière", initials: "NR" },
-    { id: "u-alex", firstName: "Alexandre", lastName: "Fortin", email: "alex.editeur@talendus.ca", password: "talendus", role: "editor", title: "Éditeur de contenu", initials: "AF" }
+    { id: "u-sophie", firstName: "Sophie", lastName: "Tremblay", email: "sophie.admin@talendus.ca", role: "admin", title: "Directrice générale", initials: "ST" },
+    { id: "u-marc", firstName: "Marc", lastName: "Gagnon", email: "marc.recruiter@talendus.ca", role: "recruiter", title: "Recruteur senior", initials: "MG" },
+    { id: "u-camille", firstName: "Camille", lastName: "Bouchard", email: "camille.recruiter@talendus.ca", role: "recruiter", title: "Recruteuse industrielle", initials: "CB" },
+    { id: "u-nathalie", firstName: "Nathalie", lastName: "Roy", email: "nathalie.finance@talendus.ca", role: "finance", title: "Contrôleure financière", initials: "NR" },
+    { id: "u-alex", firstName: "Alexandre", lastName: "Fortin", email: "alex.editeur@talendus.ca", role: "editor", title: "Éditeur de contenu", initials: "AF" }
   ];
 
   const PERMS = {
@@ -201,12 +201,23 @@
       state = clone(SEED);
       persist();
     },
+    _clearSeededLists: function () {
+      ["candidates", "clients", "jobs", "missions", "hiringRequests", "applications", "contracts", "notes", "notifications", "activities", "interviews", "invoices", "payments", "jobMatches", "documents", "pages", "posts", "testimonials", "faqs"].forEach(function (key) {
+        state[key] = [];
+      });
+      state.unreadMessages = 0;
+      state.live = false;
+    },
     hydrateFromApi: async function () {
       if (!window.TalendusAPI || !window.TalendusAPI.bootstrap) return false;
       try {
         var json = await window.TalendusAPI.bootstrap();
         var d = json && json.data;
-        if (!d) return false;
+        if (!d) {
+          this._clearSeededLists();
+          persist();
+          return false;
+        }
         ["candidates", "clients", "jobs", "missions", "hiringRequests", "applications", "contracts", "notes", "notifications", "activities", "interviews", "invoices", "payments", "jobMatches", "documents", "pages", "testimonials", "faqs"].forEach(function (key) {
           if (Array.isArray(d[key])) state[key] = d[key];
         });
@@ -220,6 +231,8 @@
         persist();
         return true;
       } catch (e) {
+        this._clearSeededLists();
+        persist();
         return false;
       }
     },
@@ -237,65 +250,55 @@
     },
     isLive: function () {
       var s = this.session();
-      return !!(s && s.access_token);
+      return !!(s && s.access_token && state.live);
     },
     subscribe: function (fn) { listeners.push(fn); },
     login: async function (email, password) {
       this.lastError = "";
-      var production = this.apiEnv === "production";
-      if (window.TalendusAPI) {
-        try {
-          var json = await window.TalendusAPI.login(email, password);
-          var apiUser = json && json.data && json.data.user;
-          if (apiUser) {
-            var staffMap = { ADMIN: "admin", SUPER_ADMIN: "admin", RECRUITER: "recruiter", FINANCE: "finance", EDITOR: "editor" };
-            var mapped = staffMap[apiUser.role];
-            if (!mapped) {
-              this.lastError = "not-staff";
-              return null;
-            }
-            var local = state.users.find(function (x) { return x.email === email; });
-            if (local) {
-              sessionStorage.setItem(SESSION, JSON.stringify({ id: local.id, role: local.role, access_token: json.data.access_token }));
-              await this.hydrateFromApi();
-              var again = state.users.find(function (x) { return x.email === email; });
-              if (again) {
-                sessionStorage.setItem(SESSION, JSON.stringify({ id: again.id, role: again.role, access_token: json.data.access_token }));
-                return again;
-              }
-              return local;
-            }
-            var created = {
-              id: apiUser.id,
-              firstName: apiUser.first_name,
-              lastName: apiUser.last_name,
-              email: apiUser.email,
-              role: mapped,
-              title: apiUser.title || "",
-              initials: ((apiUser.first_name || "?").charAt(0) + (apiUser.last_name || "?").charAt(0)).toUpperCase()
-            };
-            state.users.push(created);
-            sessionStorage.setItem(SESSION, JSON.stringify({ id: created.id, role: created.role, access_token: json.data.access_token }));
-            await this.hydrateFromApi();
-            return created;
-          }
-        } catch (e) {
-          if (e && e.message === "not-staff") {
-            this.lastError = "not-staff";
-            return null;
-          }
-          if (production) {
-            this.lastError = "api";
-            return null;
-          }
-        }
+      if (!window.TalendusAPI) {
+        this.lastError = "api";
+        return null;
       }
-      if (production) return null;
-      var u = state.users.find(function (x) { return x.email === email && x.password === password; });
-      if (!u) return null;
-      var session = { id: u.id, role: u.role };
-      sessionStorage.setItem(SESSION, JSON.stringify(session));
-      return u;
+      try {
+        var json = await window.TalendusAPI.login(email, password);
+        var apiUser = json && json.data && json.data.user;
+        if (!apiUser) {
+          this.lastError = "api";
+          return null;
+        }
+        var staffMap = { ADMIN: "admin", SUPER_ADMIN: "admin", RECRUITER: "recruiter", FINANCE: "finance", EDITOR: "editor" };
+        var mapped = staffMap[apiUser.role];
+        if (!mapped) {
+          this.lastError = "not-staff";
+          return null;
+        }
+        var local = state.users.find(function (x) { return x.email === email; });
+        if (!local) {
+          local = {
+            id: apiUser.id,
+            firstName: apiUser.first_name,
+            lastName: apiUser.last_name,
+            email: apiUser.email,
+            role: mapped,
+            title: apiUser.title || "",
+            initials: ((apiUser.first_name || "?").charAt(0) + (apiUser.last_name || "?").charAt(0)).toUpperCase()
+          };
+          state.users.push(local);
+        }
+        sessionStorage.setItem(SESSION, JSON.stringify({ id: local.id, role: mapped, access_token: json.data.access_token }));
+        var hydrated = await this.hydrateFromApi();
+        if (!hydrated) {
+          this.logout();
+          this.lastError = "api";
+          return null;
+        }
+        var again = state.users.find(function (x) { return x.email === email; }) || local;
+        sessionStorage.setItem(SESSION, JSON.stringify({ id: again.id, role: again.role, access_token: json.data.access_token }));
+        return again;
+      } catch (e) {
+        this.lastError = (e && e.message === "not-staff") ? "not-staff" : "api";
+        return null;
+      }
     },
     logout: function (opts) {
       sessionStorage.removeItem(SESSION);

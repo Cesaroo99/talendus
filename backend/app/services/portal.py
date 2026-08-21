@@ -366,7 +366,7 @@ def get_document_for_user(db: Session, user: User, document_id: str) -> PortalDo
     row = db.get(PortalDocument, document_id)
     if not row:
         raise AppError(404, "Document introuvable.", "DOCUMENT_NOT_FOUND")
-    if is_admin(user) or user.role == UserRole.RECRUITER:
+    if is_admin(user) or user.role in {UserRole.RECRUITER, UserRole.FINANCE}:
         return row
     if row.owner_type == "candidate":
         if user.role == UserRole.CANDIDATE:
@@ -399,6 +399,8 @@ def get_document_for_user(db: Session, user: User, document_id: str) -> PortalDo
 
 def delete_document(db: Session, user: User, document_id: str) -> None:
     row = get_document_for_user(db, user, document_id)
+    if user.role == UserRole.FINANCE:
+        raise AppError(403, "Vous n'avez pas accès à ce fichier.", "FORBIDDEN")
     if user.role == UserRole.EMPLOYER and row.owner_type == "company":
         require_company_perm(db, user, row.owner_id, "documents:write")
     elif user.role == UserRole.CANDIDATE:
