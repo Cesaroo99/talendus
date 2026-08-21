@@ -180,11 +180,11 @@ def test_mobile_shell_is_served(client):
     res = client.get("/m.html")
     assert res.status_code == 200, res.text
     assert "tl-native-app" in res.text
-    assert "mobile-app.css?v=26" in res.text
+    assert "mobile-app.css?v=28" in res.text
     en = client.get("/en/m.html")
     assert en.status_code == 200, en.text
     assert "tl-native-app" in en.text
-    assert "mobile-app.css?v=26" in en.text
+    assert "mobile-app.css?v=28" in en.text
 
 
 def test_mobile_app_hub_is_ordered():
@@ -364,9 +364,16 @@ def test_mobile_app_uploads_files_and_allows_multiple_choices():
         "uploadDoc",
         "api.appendFile",
         'esc(t.uploadDoc)',
+        "CV_ACCEPT",
+        'maxlength="4000"',
+        'data-apply="',
+        "TalendusApp/",
+        "function nativeAppVersion",
+        "function apkUpdateBanner",
+        "stashAuthToken",
     ):
         assert needle in js
-    assert ".pdf,.doc" not in js
+    assert ".pdf,.doc" in js
     css = (ROOT / "assets" / "css" / "mobile-app.css").read_text(encoding="utf-8")
     assert ".tn-file-btn" in css
     assert ".tn-file-hit" in css

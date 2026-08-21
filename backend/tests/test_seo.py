@@ -30,6 +30,8 @@ def test_robots_txt_blocks_private_paths(client):
     assert "Disallow: /api/" in text
     assert "Disallow: /espace.html" in text
     assert "Disallow: /espace-employeur.html" in text
+    assert "Disallow: /projects-left.html" in text
+    assert "Disallow: /service-left.html" in text
 
 
 def test_sitemap_excludes_private_and_includes_public(client):
@@ -77,6 +79,16 @@ def test_legacy_urls_redirect_301(client):
     res = client.get("/team.html", follow_redirects=False)
     assert res.status_code == 301
     assert res.headers["location"] == "/"
+    for path, target in (
+        ("/projects-left.html", "/"),
+        ("/projects-right.html", "/"),
+        ("/projects-single.html", "/"),
+        ("/service-left.html", "/services.html"),
+        ("/service-right.html", "/services.html"),
+    ):
+        res = client.get(path, follow_redirects=False)
+        assert res.status_code == 301, path
+        assert res.headers["location"] == target
 
 
 def test_blog_draft_not_public_then_publish(client):

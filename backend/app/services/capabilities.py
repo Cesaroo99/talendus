@@ -66,17 +66,20 @@ def _digits(value: str) -> str:
 
 def public_services() -> dict:
     settings = get_settings()
-    phone_e164 = _digits(settings.public_phone_e164) or "15145550199"
-    phone_display = (settings.public_phone_display or "").strip() or "514 555-0199"
+    phone_e164 = _digits(settings.public_phone_e164)
+    phone_display = (settings.public_phone_display or "").strip()
     email = (settings.public_email or "").strip() or "info@talendus.ca"
-    demo = phone_e164 in DEMO_PHONES
+    demo = (not phone_e164) or phone_e164 in DEMO_PHONES
+    if demo:
+        phone_e164 = ""
+        phone_display = ""
     tracking = tracking_public_config()
     return {
         "contact": {
             "phone_e164": phone_e164,
             "phone_display": phone_display,
             "email": email,
-            "whatsapp_e164": phone_e164,
+            "whatsapp_e164": "" if demo else phone_e164,
             "demo": demo,
         },
         "payments": {

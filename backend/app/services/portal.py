@@ -44,6 +44,7 @@ IN_PROGRESS = {
     ApplicationStatus.OFFER_SENT,
 }
 DOC_KINDS = {"cover_letter", "certification", "other", "contract", "mission", "company"}
+FINANCE_DOC_KINDS = {"contract", "mission", "company"}
 
 
 def profile_completeness(profile: Candidate) -> dict:
@@ -287,8 +288,11 @@ def list_documents_for_owner(db: Session, owner_type: str, owner_id: str) -> lis
     )
 
 
-def list_all_documents(db: Session) -> list[PortalDocument]:
-    return list(db.scalars(select(PortalDocument).order_by(PortalDocument.created_at.desc())).all())
+def list_all_documents(db: Session, user: User | None = None) -> list[PortalDocument]:
+    rows = list(db.scalars(select(PortalDocument).order_by(PortalDocument.created_at.desc())).all())
+    if user and user.role == UserRole.FINANCE:
+        rows = [row for row in rows if _finance_can_see(row)]
+    return rows
 
 
 def staff_upload_document(
@@ -308,6 +312,8 @@ def staff_upload_document(
     otype = (owner_type or "candidate").strip().lower()
     if otype not in {"candidate", "company"}:
         raise AppError(400, "Type de dossier invalide.", "VALIDATION_ERROR")
+    if user.role == UserRole.FINANCE and otype != "company" and kind not in FINANCE_DOC_KINDS:
+        raise AppError(403, "Vous n'avez pas accès à ce fichier.", "FORBIDDEN")
     if otype == "candidate":
         owner = db.get(Candidate, owner_id)
         if not owner:
@@ -362,12 +368,21 @@ def upload_document(db: Session, user: User, data: bytes, filename: str, kind: s
     return row
 
 
+def _finance_can_see(row: PortalDocument) -> bool:
+    kind = (row.kind or "").strip().lower()
+    return row.owner_type == "company" or kind in FINANCE_DOC_KINDS
+
+
 def get_document_for_user(db: Session, user: User, document_id: str) -> PortalDocument:
     row = db.get(PortalDocument, document_id)
     if not row:
         raise AppError(404, "Document introuvable.", "DOCUMENT_NOT_FOUND")
-    if is_admin(user) or user.role in {UserRole.RECRUITER, UserRole.FINANCE}:
+    if is_admin(user) or user.role == UserRole.RECRUITER:
         return row
+    if user.role == UserRole.FINANCE:
+        if _finance_can_see(row):
+            return row
+        raise AppError(403, "Vous n'avez pas accès à ce fichier.", "FORBIDDEN")
     if row.owner_type == "candidate":
         if user.role == UserRole.CANDIDATE:
             profile = ensure_candidate(db, user)

@@ -974,6 +974,8 @@ button.tn-text-link {
 .tn-check input { width: auto; }
 .tn-push-card { margin-bottom: 14px; }
 .tn-push-card .tn-btn { margin-top: 10px; }
+.tn-saved .tn-job-card { margin-bottom: 0; }
+.tn-saved .tn-row-actions { margin-top: 8px; margin-bottom: 16px; }
 .tn-row-actions {
   display: flex;
   flex-wrap: wrap;

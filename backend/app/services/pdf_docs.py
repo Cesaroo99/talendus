@@ -170,7 +170,7 @@ def invoice_pdf(row: Invoice) -> bytes:
         "--------",
         "Virement bancaire ou cheque a l'ordre de Talendus.",
         "Aucun intermediaire de paiement n'est requis. Talendus enregistre l'encaissement.",
-        "Questions : info@talendus.ca  ·  514 555-0199",
+        "Questions : info@talendus.ca",
     ]
     if row.notes:
         lines += ["", "Notes", "-----"] + _wrap(row.notes)
@@ -207,7 +207,7 @@ def contract_pdf(row: Contract) -> bytes:
         ]
     else:
         lines.append("En attente de signature dans l'espace employeur Talendus.")
-    lines += ["", "Talendus · info@talendus.ca · 514 555-0199"]
+    lines += ["", "Talendus · info@talendus.ca"]
     body: list[str] = []
     for line in lines:
         body.extend(_wrap(line) if len(line) > 92 else [line])

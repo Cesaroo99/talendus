@@ -167,6 +167,10 @@ def login(db: Session, data: LoginIn, ip: str | None = None, user_agent: str | N
         _log_login(db, email, False, user, ip, user_agent)
         db.commit()
         raise AppError(403, "Ce compte est désactivé.", "ACCOUNT_DISABLED")
+    if get_settings().email_enabled and not user.is_email_verified:
+        _log_login(db, email, False, user, ip, user_agent)
+        db.commit()
+        raise AppError(403, "Vérifiez votre courriel avant de vous connecter.", "EMAIL_NOT_VERIFIED")
     _clear_login_fail(email, ip)
     user.last_login_at = utcnow()
     tokens = _issue_tokens(db, user)

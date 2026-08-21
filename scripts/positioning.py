@@ -12,7 +12,7 @@ présélection au service des équipes Talendus. La qualification finale
 reste humaine.
 """
 
-# Pages SEO sectorielles à accueillir plus tard (ne pas générer de pages vides).
+HONEYPOT_INPUT = '<input class="tl-hp" name="website_url" tabindex="-1" autocomplete="off" aria-hidden="true">'
 FUTURE_SEO_SECTOR_PAGES = (
     "recrutement-construction",
     "recrutement-informatique",
@@ -73,16 +73,14 @@ SECTOR_EXAMPLES = {
 
 TRADE_EXAMPLES = {
     "fr": [
-        "Développeur", "Comptable", "Ingénieur", "Chauffeur", "Cariste", "Soudeur",
-        "Technicien", "Infirmier", "Vendeur", "Responsable RH", "Gestionnaire",
-        "Marketing", "Administration", "Production", "Logistique", "Électromécanicien",
-        "Machiniste", "Superviseur",
+        "Cariste", "Soudeur", "Machiniste", "Électromécanicien", "Technicien", "Chauffeur",
+        "Production", "Logistique", "Superviseur", "Ingénieur", "Développeur", "Comptable",
+        "Infirmier", "Vendeur", "Responsable RH", "Gestionnaire", "Marketing", "Administration",
     ],
     "en": [
-        "Developer", "Accountant", "Engineer", "Driver", "Forklift operator", "Welder",
-        "Technician", "Nurse", "Sales associate", "HR manager", "Manager",
-        "Marketing", "Administration", "Production", "Logistics", "Electromechanical technician",
-        "Machinist", "Supervisor",
+        "Forklift operator", "Welder", "Machinist", "Electromechanical technician", "Technician", "Driver",
+        "Production", "Logistics", "Supervisor", "Engineer", "Developer", "Accountant",
+        "Nurse", "Sales associate", "HR manager", "Manager", "Marketing", "Administration",
     ],
 }
 
@@ -980,6 +978,7 @@ def hiring_need_form_section(lang="fr"):
       <p>This is not a job-posting form. It helps Talendus understand the mandate so we can contact you, define the profile and take on the search.</p>
     </div>
     <form class="tl-form" action="#" method="post" data-form="hiring-need" style="max-width:720px;margin:0 auto">
+      {HONEYPOT_INPUT}
       <input type="hidden" name="profil" value="Employer, hiring need">
       <div class="tl-row-2"><div><label>Company name</label><input required name="entreprise"></div>
       <div><label>Your name</label><input required name="nom"></div></div>
@@ -1005,6 +1004,7 @@ def hiring_need_form_section(lang="fr"):
       <p>Ce n'est pas un formulaire de publication. Il permet à Talendus de comprendre le mandat, de vous recontacter et de définir le profil recherché avant de lancer la recherche.</p>
     </div>
     <form class="tl-form" action="#" method="post" data-form="hiring-need" style="max-width:720px;margin:0 auto">
+      {HONEYPOT_INPUT}
       <input type="hidden" name="profil" value="Employeur, je recrute">
       <div class="tl-row-2"><div><label>Nom de l'entreprise</label><input required name="entreprise"></div>
       <div><label>Nom du contact</label><input required name="nom"></div></div>
@@ -1639,6 +1639,7 @@ def _apply_form_html(slug, lang="fr"):
     if lang == "en":
         return f"""
           <form class="tl-form" data-form="apply" data-job-slug="{slug}" enctype="multipart/form-data">
+            {HONEYPOT_INPUT}
             <label>Name</label><input name="name" required autocomplete="name">
             <label>Email</label><input type="email" name="email" required autocomplete="email">
             <label>Phone</label><input name="phone" autocomplete="tel">
@@ -1648,13 +1649,14 @@ def _apply_form_html(slug, lang="fr"):
               <span class="tl-file-hint">PDF, Word (DOC, DOCX) or image (PNG, JPG). 5 MB max. The file reaches Talendus. A consultant calls you back.</span>
             </label>
             <label>Note for Talendus <span class="tl-optional">(optional)</span></label>
-            <textarea name="message" rows="3" maxlength="800" placeholder="Availability, permit, what you want us to know"></textarea>
+            <textarea name="message" rows="3" maxlength="4000" placeholder="Availability, permit, what you want us to know"></textarea>
             <button class="tl-btn tl-btn-lg" type="submit">Send my application</button>
             <div class="tl-success"></div>
           </form>
 """
     return f"""
           <form class="tl-form" data-form="apply" data-job-slug="{slug}" enctype="multipart/form-data">
+            {HONEYPOT_INPUT}
             <label>Nom</label><input name="nom" required autocomplete="name">
             <label>Courriel</label><input type="email" name="courriel" required autocomplete="email">
             <label>Téléphone</label><input name="tel" autocomplete="tel">
@@ -1664,7 +1666,7 @@ def _apply_form_html(slug, lang="fr"):
               <span class="tl-file-hint">PDF, Word (DOC, DOCX) ou image (PNG, JPG). 5 Mo max. Le fichier arrive chez Talendus. Un conseiller vous rappelle.</span>
             </label>
             <label>Note pour Talendus <span class="tl-optional">(facultatif)</span></label>
-            <textarea name="message" rows="3" maxlength="800" placeholder="Disponibilité, permis, ce que vous voulez qu'on sache"></textarea>
+            <textarea name="message" rows="3" maxlength="4000" placeholder="Disponibilité, permis, ce que vous voulez qu'on sache"></textarea>
             <button class="tl-btn tl-btn-lg" type="submit">Envoyer ma candidature</button>
             <div class="tl-success"></div>
           </form>

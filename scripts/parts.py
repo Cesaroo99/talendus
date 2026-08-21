@@ -1,8 +1,10 @@
 SITE = "https://talendus.ca"
-WA_HREF = "https://wa.me/15145550199?text="
-PHONE_E164 = "15145550199"
-PHONE_TEL = "tel:+15145550199"
-PHONE_DISPLAY = "514 555-0199"
+PUBLIC_EMAIL = "info@talendus.ca"
+WA_HREF = f"mailto:{PUBLIC_EMAIL}"
+PHONE_E164 = ""
+PHONE_TEL = f"mailto:{PUBLIC_EMAIL}"
+PHONE_DISPLAY = PUBLIC_EMAIL
+HONEYPOT_INPUT = '<input class="tl-hp" name="website_url" tabindex="-1" autocomplete="off" aria-hidden="true">'
 OG_IMAGE = "assets/img/all-images/industry/usine-equipe.jpg"
 
 import html as html_lib
@@ -14,12 +16,7 @@ def pfx(lang):
 
 
 def wa_link(lang):
-    msg = (
-        "Hello%20Talendus%2C%20I%20would%20like%20to%20talk%20about%20a%20hiring%20need."
-        if lang == "en"
-        else "Bonjour%20Talendus%2C%20je%20souhaite%20discuter%20d%27un%20besoin%20de%20recrutement."
-    )
-    return WA_HREF + msg
+    return f"mailto:{PUBLIC_EMAIL}"
 
 
 COPY = {
@@ -426,8 +423,7 @@ def head(title, description, canonical, extra_css="", lang="fr", alt_path="", ro
         "@type": "EmploymentAgency",
         "name": "Talendus",
         "url": SITE,
-        "telephone": "+1-514-555-0199",
-        "email": "info@talendus.ca",
+        "email": PUBLIC_EMAIL,
         "slogan": t["tagline"],
         "areaServed": "Quebec",
         "address": {
@@ -1187,7 +1183,7 @@ def native_app_page(lang="fr"):
   <link rel="manifest" href="{prefix}manifest.webmanifest">
   <link rel="apple-touch-icon" sizes="180x180" href="{prefix}assets/img/logo/apple-touch-icon.png">
   <link rel="icon" href="{prefix}assets/img/logo/icon-192.png" type="image/png">
-  <link rel="stylesheet" href="{prefix}assets/css/mobile-app.css?v=26">
+  <link rel="stylesheet" href="{prefix}assets/css/mobile-app.css?v=28">
 </head>
 <body class="tl-native tn-gated">
   <div id="tl-native-app" aria-live="polite">
@@ -1203,9 +1199,9 @@ def native_app_page(lang="fr"):
       <div class="tn-splash-bar" aria-hidden="true"><span></span></div>
     </div>
   </div>
-  <script src="{prefix}assets/js/api.js?v=26"></script>
-  <script src="{prefix}assets/js/talendus-call.js?v=26"></script>
-  <script src="{prefix}assets/js/mobile-app.js?v=26"></script>
+  <script src="{prefix}assets/js/api.js?v=28"></script>
+  <script src="{prefix}assets/js/talendus-call.js?v=28"></script>
+  <script src="{prefix}assets/js/mobile-app.js?v=28"></script>
 </body>
 </html>
 """

@@ -8,6 +8,7 @@ from parts import (
     FAQ_EMPLOYEURS, FAQ_CANDIDATS, FAQ_HOME, homepage_faq, cv_file_field,
     install_board,
     native_app_page,
+    HONEYPOT_INPUT,
 )
 from positioning import (
     homepage_after_hero, job_search_filters, employer_need_fields,
@@ -468,6 +469,7 @@ write("candidats.html", wrap(
         </div>
         <div class="col-lg-6 offset-lg-1">
           <form class="tl-form" action="#" method="post" data-form="talent-cv" enctype="multipart/form-data">
+            """ + HONEYPOT_INPUT + """
             <label>Nom</label><input required name="nom" autocomplete="name">
             <label>Courriel</label><input type="email" required name="courriel" autocomplete="email">
             <label>Téléphone</label><input name="tel" autocomplete="tel">
@@ -522,7 +524,7 @@ write("candidats.html", wrap(
 # Contact
 write("contact.html", wrap(
     "Contact | Confier un recrutement ou créer un profil | Talendus",
-    "Contactez Talendus à Montréal. Confiez un besoin de recrutement ou créez votre profil. Appels sur rendez-vous. 514 555-0199 · info@talendus.ca",
+    "Contactez Talendus à Montréal. Confiez un besoin de recrutement ou créez votre profil. Appels sur rendez-vous. info@talendus.ca",
     "contact.html",
     page_hero(
         "Contact",
@@ -538,7 +540,7 @@ write("contact.html", wrap(
           <div class="icon" aria-hidden="true"><i class="fa-solid fa-phone"></i></div>
           <div>
             <h3>Téléphone</h3>
-            <p><a href="tel:+15145550199">514 555-0199</a></p>
+            <p><a href="mailto:info@talendus.ca">info@talendus.ca</a></p>
             <p>En semaine, on répond en général en moins de 30 minutes.</p>
           </div>
         </div>
@@ -554,7 +556,7 @@ write("contact.html", wrap(
           <div class="icon" aria-hidden="true"><i class="fa-brands fa-whatsapp"></i></div>
           <div>
             <h3>WhatsApp</h3>
-            <p><a href="https://wa.me/15145550199?text=Bonjour%20Talendus%2C%20je%20souhaite%20discuter%20d%27un%20besoin%20de%20recrutement." target="_blank" rel="noopener noreferrer">Ouvrir une conversation</a></p>
+            <p><a href="mailto:info@talendus.ca">Écrire à Talendus</a></p>
             <p>Réponse durant les heures d’ouverture.</p>
           </div>
         </div>
@@ -595,6 +597,7 @@ write("contact.html", wrap(
           <h2 class="tl-h2">Déposer mon CV ou poser une question</h2>
           <p class="tl-lead">C'est gratuit. Un conseiller vous rappelle si un mandat correspond.</p>
           <form class="tl-form" action="#" method="post" data-form="talent-cv" enctype="multipart/form-data">
+            <input class="tl-hp" name="website_url" tabindex="-1" autocomplete="off" aria-hidden="true">
             <input type="hidden" name="profil" value="Candidat, je cherche un poste">
             <label>Nom</label><input required name="nom" autocomplete="name">
             <label>Courriel</label><input type="email" required name="courriel" autocomplete="email">
@@ -617,6 +620,7 @@ write("contact.html", wrap(
           <h2 class="tl-h2">Décrire mon besoin de recrutement</h2>
           <p class="tl-lead">Vous transmettez le poste. Talendus recherche et présélectionne. Appel gratuit, sur rendez-vous.</p>
           <form class="tl-form" action="#" method="post" data-form="hiring-need">
+            <input class="tl-hp" name="website_url" tabindex="-1" autocomplete="off" aria-hidden="true">
             <input type="hidden" name="profil" value="Employeur, je recrute">
             <label>Nom</label><input required name="nom">
             <label>Entreprise</label><input required name="entreprise">
