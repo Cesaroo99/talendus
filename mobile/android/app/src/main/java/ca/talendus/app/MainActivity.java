@@ -41,6 +41,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -59,6 +60,8 @@ public class MainActivity extends Activity {
     private PermissionRequest pendingWebPermission;
     private static ValueCallback<Uri[]> fileCallback;
     private String nativePickId;
+    private String nativePickKind;
+    private String nativePickToken;
     private final Handler ticker = new Handler(Looper.getMainLooper());
     private final Runnable pollTick = new Runnable() {
         @Override
@@ -86,7 +89,7 @@ public class MainActivity extends Activity {
         settings.setAllowFileAccess(true);
         settings.setAllowContentAccess(true);
         String ua = settings.getUserAgentString();
-        webUserAgent = (ua == null ? "" : ua) + " TalendusApp/1.7";
+        webUserAgent = (ua == null ? "" : ua) + " TalendusApp/1.8";
         settings.setUserAgentString(webUserAgent);
         CookieManager cookies = CookieManager.getInstance();
         cookies.setAcceptCookie(true);
@@ -560,8 +563,10 @@ public class MainActivity extends Activity {
         return uri != null ? new Uri[]{uri} : null;
     }
 
-    private void startNativePick(String requestId, boolean multiple, boolean imagesOnly) {
+    private void startNativePick(String requestId, boolean multiple, boolean imagesOnly, String kind, String token) {
         nativePickId = requestId;
+        nativePickKind = kind;
+        nativePickToken = token;
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType(imagesOnly ? "image/*" : "*/*");
@@ -585,7 +590,11 @@ public class MainActivity extends Activity {
 
     private void deliverNativeFiles(int resultCode, Intent data) {
         final String id = nativePickId;
+        final String kind = nativePickKind;
+        final String token = nativePickToken;
         nativePickId = null;
+        nativePickKind = null;
+        nativePickToken = null;
         if (id == null) {
             return;
         }
@@ -594,6 +603,10 @@ public class MainActivity extends Activity {
             return;
         }
         final Uri[] uris = fileChooserUris(RESULT_OK, data);
+        if (isDirectUploadKind(kind)) {
+            uploadNativeFiles(id, uris, kind, token);
+            return;
+        }
         new Thread(() -> {
             JSONArray rows = new JSONArray();
             String error = null;
@@ -612,6 +625,171 @@ public class MainActivity extends Activity {
             final String err = error;
             runOnUiThread(() -> evalNativeFiles(id, out, err));
         }).start();
+    }
+
+    private static boolean isDirectUploadKind(String kind) {
+        return "cv".equals(kind) || "doc".equals(kind) || "avatar".equals(kind);
+    }
+
+    private void uploadNativeFiles(String id, Uri[] uris, String kind, String token) {
+        new Thread(() -> {
+            if (uris == null || uris.length == 0) {
+                runOnUiThread(() -> evalNativeFiles(id, new JSONArray(), null));
+                return;
+            }
+            String error = null;
+            try {
+                for (Uri uri : uris) {
+                    if (uri == null) {
+                        continue;
+                    }
+                    String fail = postStoredFile(uri, kind, token);
+                    if (fail != null) {
+                        error = fail;
+                        break;
+                    }
+                }
+            } catch (Exception e) {
+                error = "Impossible d’envoyer le fichier.";
+            }
+            final String err = error;
+            runOnUiThread(() -> evalUploadDone(id, err == null, err));
+        }, "talendus-ul").start();
+    }
+
+    private void evalUploadDone(String id, boolean ok, String message) {
+        if (web == null) {
+            return;
+        }
+        String msgArg = message == null ? "null" : JSONObject.quote(message);
+        web.evaluateJavascript(
+            "window.__tnUploadDone&&window.__tnUploadDone(" + JSONObject.quote(id) + "," +
+                (ok ? "true" : "false") + "," + msgArg + ")",
+            null
+        );
+    }
+
+    private String postStoredFile(Uri uri, String kind, String token) {
+        try {
+            try {
+                getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            } catch (Exception ignored) {}
+            byte[] data = readUriBytes(uri, 8 * 1024 * 1024);
+            String name = displayName(uri);
+            String mime = getContentResolver().getType(uri);
+            if (mime == null || mime.isEmpty()) {
+                mime = mimeFromName(name);
+            }
+            if (name == null || name.isEmpty() || name.equals("document")) {
+                name = "cv".equals(kind) ? "cv.pdf" : ("avatar".equals(kind) ? "photo.jpg" : "document.pdf");
+                if (mime.contains("pdf")) name = name.replaceAll("\\.[^.]+$", ".pdf");
+                else if (mime.contains("jpeg") || mime.contains("jpg")) name = name.replaceAll("\\.[^.]+$", ".jpg");
+                else if (mime.contains("png")) name = name.replaceAll("\\.[^.]+$", ".png");
+                else if (mime.contains("wordprocessingml")) name = name.replaceAll("\\.[^.]+$", ".docx");
+            }
+            String path;
+            String extraKind = null;
+            if ("cv".equals(kind)) {
+                path = "/api/candidates/me/resume";
+            } else if ("doc".equals(kind)) {
+                path = "/api/documents";
+                extraKind = "other";
+            } else if ("avatar".equals(kind)) {
+                path = "/api/users/me/avatar";
+            } else {
+                return "Envoi impossible.";
+            }
+            String auth = (token != null && !token.isEmpty()) ? token : NotifPoller.token(this);
+            return postMultipart("https://talendus.ca" + path, auth, data, name, mime, extraKind);
+        } catch (Exception e) {
+            return "Impossible d’envoyer le fichier.";
+        }
+    }
+
+    private String postMultipart(String url, String token, byte[] data, String filename, String mime, String extraKind) {
+        HttpURLConnection conn = null;
+        try {
+            String boundary = "talendus" + System.currentTimeMillis();
+            String safeName = (filename == null ? "document" : filename).replace("\"", "").replace("\r", "").replace("\n", "");
+            String safeMime = (mime == null || mime.isEmpty()) ? "application/octet-stream" : mime;
+            conn = (HttpURLConnection) new URL(url).openConnection();
+            conn.setConnectTimeout(20000);
+            conn.setReadTimeout(60000);
+            conn.setDoOutput(true);
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Accept", "application/json");
+            conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
+            if (webUserAgent != null && !webUserAgent.isEmpty()) {
+                conn.setRequestProperty("User-Agent", webUserAgent);
+            }
+            if (token != null && !token.isEmpty()) {
+                conn.setRequestProperty("Authorization", "Bearer " + token);
+            }
+            String cookie = CookieManager.getInstance().getCookie(url);
+            if (cookie != null && !cookie.isEmpty()) {
+                conn.setRequestProperty("Cookie", cookie);
+            }
+            OutputStream out = conn.getOutputStream();
+            if (extraKind != null) {
+                writeFormField(out, boundary, "kind", extraKind);
+            }
+            out.write(("--" + boundary + "\r\n").getBytes(StandardCharsets.UTF_8));
+            out.write(("Content-Disposition: form-data; name=\"file\"; filename=\"" + safeName + "\"\r\n").getBytes(StandardCharsets.UTF_8));
+            out.write(("Content-Type: " + safeMime + "\r\n\r\n").getBytes(StandardCharsets.UTF_8));
+            out.write(data);
+            out.write(("\r\n--" + boundary + "--\r\n").getBytes(StandardCharsets.UTF_8));
+            out.flush();
+            int code = conn.getResponseCode();
+            InputStream resp = code >= 400 ? conn.getErrorStream() : conn.getInputStream();
+            String body = readStream(resp);
+            if (code >= 400) {
+                return jsonMessage(body, "Envoi impossible.");
+            }
+            if (body != null && body.contains("\"success\":false")) {
+                return jsonMessage(body, "Envoi impossible.");
+            }
+            return null;
+        } catch (Exception e) {
+            return "Impossible d’envoyer le fichier.";
+        } finally {
+            if (conn != null) {
+                conn.disconnect();
+            }
+        }
+    }
+
+    private static void writeFormField(OutputStream out, String boundary, String name, String value) throws Exception {
+        out.write(("--" + boundary + "\r\n").getBytes(StandardCharsets.UTF_8));
+        out.write(("Content-Disposition: form-data; name=\"" + name + "\"\r\n\r\n").getBytes(StandardCharsets.UTF_8));
+        out.write((value + "\r\n").getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static String readStream(InputStream in) {
+        if (in == null) {
+            return "";
+        }
+        try {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            byte[] buf = new byte[2048];
+            int n;
+            while ((n = in.read(buf)) != -1) {
+                out.write(buf, 0, n);
+            }
+            return out.toString(StandardCharsets.UTF_8.name());
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    private static String jsonMessage(String body, String fallback) {
+        if (body == null || body.isEmpty()) {
+            return fallback;
+        }
+        try {
+            return new JSONObject(body).optString("message", fallback);
+        } catch (Exception e) {
+            return fallback;
+        }
     }
 
     private void evalNativeFiles(String id, JSONArray rows, String error) {
@@ -746,8 +924,13 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface
-        public void openDocumentPicker(String requestId, int multiple, int imagesOnly) {
-            runOnUiThread(() -> startNativePick(requestId, multiple != 0, imagesOnly != 0));
+        public void openDocumentPicker(String requestId, int multiple, int imagesOnly, String kind, String token) {
+            runOnUiThread(() -> startNativePick(requestId, multiple != 0, imagesOnly != 0, kind, token));
+        }
+
+        @JavascriptInterface
+        public boolean canPickFiles() {
+            return true;
         }
 
         @JavascriptInterface
