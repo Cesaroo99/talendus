@@ -12,9 +12,10 @@ def test_public_services_hides_unconfigured_payments(client):
     assert data["login"]["google"] is False
     assert data["messaging"]["email_sending"] is False
     assert data["messaging"]["sms"] is False
-    assert data["contact"]["demo"] is True
-    assert data["contact"]["phone_display"] == ""
-    assert data["contact"]["phone_e164"] == ""
+    assert data["contact"]["demo"] is False
+    assert data["contact"]["phone_display"] == "263 558 5225"
+    assert data["contact"]["phone_e164"] == "2635585225"
+    assert data["contact"]["whatsapp_e164"] == "2635585225"
     assert "555-0199" not in str(data)
     blob = str(data).lower()
     assert "sk_" not in blob
@@ -52,7 +53,7 @@ def test_staff_services_overview_lists_next_steps(client):
     assert "email" in names
     assert any(row.get("next_step") for row in data["providers"])
     ids = {item["id"] for item in data["todos"]}
-    assert "phone" in ids
+    assert "phone" not in ids
     assert "email" in ids
     cand = register(client, "svc-cand@example.com")
     denied = client.get("/api/integrations/overview", headers=auth_header(cand))

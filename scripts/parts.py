@@ -1,9 +1,9 @@
 SITE = "https://talendus.ca"
 PUBLIC_EMAIL = "info@talendus.ca"
-WA_HREF = f"mailto:{PUBLIC_EMAIL}"
-PHONE_E164 = ""
-PHONE_TEL = f"mailto:{PUBLIC_EMAIL}"
-PHONE_DISPLAY = PUBLIC_EMAIL
+PHONE_E164 = "2635585225"
+PHONE_TEL = "tel:+2635585225"
+PHONE_DISPLAY = "263 558 5225"
+WA_HREF = f"https://wa.me/{PHONE_E164}?text="
 HONEYPOT_INPUT = '<input class="tl-hp" name="website_url" tabindex="-1" autocomplete="off" aria-hidden="true">'
 OG_IMAGE = "assets/img/all-images/industry/usine-equipe.jpg"
 
@@ -16,7 +16,12 @@ def pfx(lang):
 
 
 def wa_link(lang):
-    return f"mailto:{PUBLIC_EMAIL}"
+    msg = (
+        "Hello%20Talendus%2C%20I%20would%20like%20to%20talk%20about%20a%20hiring%20need."
+        if lang == "en"
+        else "Bonjour%20Talendus%2C%20je%20souhaite%20discuter%20d%27un%20besoin%20de%20recrutement."
+    )
+    return WA_HREF + msg
 
 
 COPY = {
@@ -423,6 +428,7 @@ def head(title, description, canonical, extra_css="", lang="fr", alt_path="", ro
         "@type": "EmploymentAgency",
         "name": "Talendus",
         "url": SITE,
+        "telephone": "+263-558-5225",
         "email": PUBLIC_EMAIL,
         "slogan": t["tagline"],
         "areaServed": "Quebec",
