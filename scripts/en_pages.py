@@ -460,13 +460,13 @@ def build_en(write, wrap, page_hero):
             <label>Subject</label>
             <select name="objet">
               <option>Submit my resume</option>
-              <option>Join the talent pool</option>
+              <option>Be considered for mandates</option>
               <option>Question about a job</option>
             </select>
             {cv_file_field("en", required=False)}
             <label>Link to your resume <span class="tl-optional">(optional)</span></label><input name="cv" placeholder="https://">
             <label>Message</label><textarea name="message" placeholder="Role, skills, city, job type"></textarea>
-            <button class="tl-btn tl-btn-lg" type="submit">Create my profile</button>
+            <button class="tl-btn tl-btn-lg" type="submit">Send</button>
             <div class="tl-success"></div>
           </form>
         </div>
@@ -663,7 +663,7 @@ def build_en(write, wrap, page_hero):
         "The requested page does not exist. Return to the Talendus home page.",
         "en/404.html",
         page_hero("404", "This page does not exist.", "The mandate might still exist.",
-                  actions='<a class="tl-btn" href="index.html">Back to home</a><a class="tl-btn tl-btn-ghost" href="contact.html">Write to us</a>',
+                  actions='<a class="tl-btn" href="index.html">Back to home</a><a class="tl-btn tl-btn-ghost" href="jobs.html">See jobs</a><a class="tl-btn tl-btn-ghost" href="contact.html">Write to us</a>',
                   badges=""),
         lang="en",
         alt="404.html",

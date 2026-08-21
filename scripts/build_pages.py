@@ -435,6 +435,7 @@ write("employeurs.html", wrap(
     "Redirection vers l’espace entreprises Talendus.",
     "employeurs.html",
     '<section class="tl-section"><div class="container"><p>Cette page a été déplacée. <a href="entreprises.html">Continuer vers Entreprises</a></p><script>location.replace("entreprises.html");</script></div></section>',
+    robots="noindex,nofollow",
 ))
 
 # Candidats
@@ -599,19 +600,19 @@ write("contact.html", wrap(
           <form class="tl-form" action="#" method="post" data-form="talent-cv" enctype="multipart/form-data">
             <input class="tl-hp" name="website_url" tabindex="-1" autocomplete="off" aria-hidden="true">
             <input type="hidden" name="profil" value="Candidat, je cherche un poste">
-            <label>Nom</label><input required name="nom" autocomplete="name">
-            <label>Courriel</label><input type="email" required name="courriel" autocomplete="email">
-            <label>Téléphone</label><input name="tel" autocomplete="tel">
-            <label>Objet</label>
-            <select name="objet">
+            <label for="tl-c-nom">Nom</label><input required name="nom" autocomplete="name" id="tl-c-nom">
+            <label for="tl-c-email">Courriel</label><input type="email" required name="courriel" autocomplete="email" id="tl-c-email">
+            <label for="tl-c-tel">Téléphone</label><input name="tel" autocomplete="tel" id="tl-c-tel">
+            <label for="tl-c-objet">Objet</label>
+            <select name="objet" id="tl-c-objet">
               <option>Déposer mon CV</option>
-              <option>Rejoindre la banque de talents</option>
+              <option>Être considéré pour des mandats</option>
               <option>Question sur une offre</option>
             </select>
             """ + cv_file_field("fr", required=False) + """
             <label>Lien vers votre CV <span class="tl-optional">(facultatif)</span></label><input name="cv" placeholder="https://">
             <label>Message</label><textarea name="message" placeholder="Métier, compétences, ville, type d'emploi"></textarea>
-            <button class="tl-btn tl-btn-lg" type="submit">Créer mon profil</button>
+            <button class="tl-btn tl-btn-lg" type="submit">Envoyer</button>
             <div class="tl-success"></div>
           </form>
         </div>
@@ -795,7 +796,7 @@ write("404.html", wrap(
     "La page demandée n'existe pas. Retournez à l'accueil Talendus.",
     "404.html",
     page_hero("404", "Cette page n'existe pas.", "Le poste, lui, existe peut-être encore.",
-              actions='<a class="tl-btn" href="index.html">Retour à l\'accueil</a><a class="tl-btn tl-btn-ghost" href="contact.html">Nous écrire</a>',
+              actions='<a class="tl-btn" href="index.html">Retour à l\'accueil</a><a class="tl-btn tl-btn-ghost" href="emplois.html">Voir les offres</a><a class="tl-btn tl-btn-ghost" href="contact.html">Nous écrire</a>',
               badges="")
     + '<section class="tl-section"><div class="container"><p class="tl-lead">Vérifiez l\'URL ou reprenez depuis l\'accueil, les offres ou le formulaire de contact.</p></div></section>',
     robots="noindex,nofollow",

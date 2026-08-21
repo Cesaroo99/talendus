@@ -134,24 +134,24 @@ gtag('consent', 'default', {
               </div>
               <div class="tl-header-tools">
                 <nav class="tl-lang" aria-label="Language / Langue">
-                    <a class="is-active" href="#" lang="fr" hreflang="fr-CA">FR</a>
+                    <a class="is-active" href="besoin-de-recrutement.html" lang="fr" hreflang="fr-CA">FR</a>
                     <a class="" href="en/hiring-need.html" lang="en" hreflang="en-CA">EN</a>
                   </nav>
                 <div class="tl-session" data-session="desktop">
-                  <a href="espace.html" class="tl-session-login" data-auth-open="login">
+                  <a href="espace-employeur.html" class="tl-session-login" data-auth-open="login" data-auth-role="EMPLOYER">
                     <i class="fa-regular fa-user" aria-hidden="true"></i>
                     <span>Connexion</span>
                   </a>
-                  <a href="espace.html" class="tl-btn tl-session-cta" data-auth-open="register">Créer un compte</a>
+                  <a href="espace-employeur.html" class="tl-btn tl-session-cta" data-auth-open="register" data-auth-role="EMPLOYER">Créer un compte</a>
                 </div>
               </div>
               <div class="tl-mobile-tools">
                   <nav class="tl-lang" aria-label="Language / Langue">
-                    <a class="is-active" href="#" lang="fr" hreflang="fr-CA">FR</a>
+                    <a class="is-active" href="besoin-de-recrutement.html" lang="fr" hreflang="fr-CA">FR</a>
                     <a class="" href="en/hiring-need.html" lang="en" hreflang="en-CA">EN</a>
                   </nav>
                   <div class="tl-session tl-session-compact" data-session="mobile">
-                    <a href="espace.html" class="tl-session-icon-btn" data-auth-open="login" aria-label="Connexion">
+                    <a href="espace-employeur.html" class="tl-session-icon-btn" data-auth-open="login" data-auth-role="EMPLOYER" aria-label="Connexion">
                       <i class="fa-regular fa-user" aria-hidden="true"></i>
                     </a>
                   </div>
@@ -172,7 +172,7 @@ gtag('consent', 'default', {
             </div>
             <div class="tl-offcanvas-tools">
                 <nav class="tl-lang" aria-label="Language / Langue">
-                    <a class="is-active" href="#" lang="fr" hreflang="fr-CA">FR</a>
+                    <a class="is-active" href="besoin-de-recrutement.html" lang="fr" hreflang="fr-CA">FR</a>
                     <a class="" href="en/hiring-need.html" lang="en" hreflang="en-CA">EN</a>
                   </nav>
                 <div class="vl-offcanvas-close">
@@ -191,8 +191,8 @@ gtag('consent', 'default', {
             <span><a href="https://wa.me/12635585225?text=Bonjour%20Talendus%2C%20je%20souhaite%20discuter%20d%27un%20besoin%20de%20recrutement." target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a></span>
             <p class="tl-offcanvas-note">En semaine, on répond en général en moins de 30 minutes.</p>
             <div class="vl-offcanvas-cta tl-session tl-session-offcanvas" data-session="offcanvas">
-              <a href="espace.html" class="tl-btn tl-btn-ghost" data-auth-open="login">Connexion</a>
-              <a href="espace.html" class="tl-btn" data-auth-open="register">Créer un compte</a>
+              <a href="espace-employeur.html" class="tl-btn tl-btn-ghost" data-auth-open="login" data-auth-role="EMPLOYER">Connexion</a>
+              <a href="espace-employeur.html" class="tl-btn" data-auth-open="register" data-auth-role="EMPLOYER">Créer un compte</a>
             </div>
         </div>
     </div>
@@ -237,7 +237,7 @@ gtag('consent', 'default', {
       <p>Ce n'est pas un formulaire de publication. Il permet à Talendus de comprendre le mandat, de vous recontacter et de définir le profil recherché avant de lancer la recherche.</p>
     </div>
     <form class="tl-form" action="#" method="post" data-form="hiring-need" style="max-width:720px;margin:0 auto">
-            <input class="tl-hp" name="website_url" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <input class="tl-hp" name="website_url" tabindex="-1" autocomplete="off" aria-hidden="true">
       <input type="hidden" name="profil" value="Employeur, je recrute">
       <div class="tl-row-2"><div><label>Nom de l'entreprise</label><input required name="entreprise"></div>
       <div><label>Nom du contact</label><input required name="nom"></div></div>
@@ -264,6 +264,22 @@ gtag('consent', 'default', {
             <option>Stage</option>
             <option>Plusieurs types de contrat</option>
         </select>
+            <label>Quart</label>
+            <select name="quart">
+              <option value="">Choisir</option>
+              <option>Quart de jour</option>
+              <option>Quart de soir</option>
+              <option>Quart de nuit</option>
+              <option>Quarts rotatifs</option>
+              <option>Fin de semaine</option>
+            </select>
+            <label>Horaire</label>
+            <select name="horaire">
+              <option value="">Choisir</option>
+              <option>Temps plein</option>
+              <option>Temps partiel</option>
+              <option>Sur appel</option>
+            </select>
             <label>Ce que nous devons savoir</label>
             <textarea name="message" required placeholder="Responsabilités, compétences indispensables, expérience, urgence, tout ce qui orientera la recherche"></textarea>
         

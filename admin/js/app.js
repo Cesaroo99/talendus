@@ -146,7 +146,7 @@
   /* ---------- Auth ---------- */
   function renderLogin() {
     var production = TLStore.apiEnv === "production";
-    var emailPrefill = production ? "lea.super@talendus.ca" : "";
+    var emailPrefill = "";
     app.innerHTML = `
       <div class="login">
         <section class="login-brand">

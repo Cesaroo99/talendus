@@ -26,7 +26,7 @@ $(document).ready(function(){
     $(vlSideMenu).find('.sub-menu, .vl-mega-menu').parent().append('<button class="vl-menu-close"><i class="fas fa-chevron-right"></i></button>');
   }
 
-  var sideMenuList = $('.vl-offcanvas-menu nav > ul > li button.vl-menu-close, .vl-offcanvas-menu nav > ul li.has-dropdown > a');
+  var sideMenuList = $('.vl-offcanvas-menu nav > ul > li button.vl-menu-close');
   $(sideMenuList).on('click', function (e) {
     e.preventDefault();
     var $parent = $(this).parent();

@@ -81,6 +81,7 @@
       sms: "SMS", wa: "WhatsApp", push: "Push notifications",
       profilePublic: "Allow a public professional summary", changeEmail: "Email address is used to sign in.",
       emptyInbox: "No profiles presented yet. Talendus will share qualified shortlists.", emptyInvoices: "No invoices.",
+      amount: "Amount", status: "Status",
       pay: "Record a card payment", payPal: "Pay with PayPal", pipeline: "Pipeline",
       contracts: "Contracts", emptyContracts: "No mandate yet.",
       sign: "Sign electronically", signed: "Signed", unsigned: "To sign",
@@ -191,6 +192,7 @@
       sms: "SMS", wa: "WhatsApp", push: "Notifications push",
       profilePublic: "Autoriser un résumé professionnel visible", changeEmail: "Le courriel sert à vous connecter.",
       emptyInbox: "Aucun dossier présenté pour le moment. Talendus vous transmet les profils qualifiés.", emptyInvoices: "Aucune facture.",
+      amount: "Montant", status: "Statut",
       pay: "Payer par carte", payPal: "Payer avec PayPal", pipeline: "Pipeline",
       contracts: "Contrats", emptyContracts: "Aucun mandat pour le moment.",
       sign: "Signer électroniquement", signed: "Signé", unsigned: "À signer",
@@ -533,6 +535,7 @@
           ["jobs", t.hiring, "fa-clipboard-list"],
           ["inbox", t.candidates, "fa-users"],
           ["pipeline", t.ats, "fa-diagram-project"],
+          ["interviews", t.interviews, "fa-video"],
           ["messages", t.messages, "fa-comments", unreadM]
         ];
         if (!state.company || state.company.can_read_invoices !== false) {
@@ -544,11 +547,13 @@
       }
       return [
         ["dashboard", t.dashboard, "fa-table-columns"],
+        ["jobs", t.jobs, "fa-magnifying-glass"],
         ["profile", t.profile, "fa-user"],
         ["documents", t.cv, "fa-file-lines"],
         ["apps", t.apps, "fa-briefcase"],
         ["saved", t.savedJobs, "fa-bookmark"],
         ["alerts", t.alerts, "fa-bell"],
+        ["interviews", t.interviews, "fa-video"],
         ["messages", t.messages, "fa-comments", unreadM],
         ["notifs", t.notifs, "fa-inbox", unreadN],
         ["settings", t.settings, "fa-gear"]
@@ -695,13 +700,13 @@
       profile = profile || {};
       var exp = (profile.experiences || []).map(function (e) {
         return "<li>" + esc(e.role) + ", " + esc(e.company) + ' <button type="button" class="tl-btn tl-btn-ghost" data-del-exp="' + esc(e.id) + '">' + esc(t.remove) + "</button></li>";
-      }).join("") || "<li>-</li>";
+      }).join("") || "<li>" + esc(t.emptyDocs) + "</li>";
       var edu = (profile.education || []).map(function (e) {
         return "<li>" + esc(e.diploma || "") + ", " + esc(e.school) + ' <button type="button" class="tl-btn tl-btn-ghost" data-del-edu="' + esc(e.id) + '">' + esc(t.remove) + "</button></li>";
-      }).join("") || "<li>-</li>";
+      }).join("") || "<li>" + esc(t.emptyDocs) + "</li>";
       var certs = (profile.certifications || []).map(function (e) {
         return "<li>" + esc(e.name) + ' <button type="button" class="tl-btn tl-btn-ghost" data-del-cert="' + esc(e.id) + '">' + esc(t.remove) + "</button></li>";
-      }).join("") || "<li>-</li>";
+      }).join("") || "<li>" + esc(t.emptyDocs) + "</li>";
       return '<p class="tl-meta">' + esc(t.updated) + " : " + esc(fmtDate(profile.updated_at)) + "</p>" +
         '<form class="tl-form" id="acc-avatar"><label>' + esc(t.photo) + '</label><input name="file" type="file" accept="image/jpeg,image/png,image/webp,image/*">' +
         '<button class="tl-btn tl-btn-ghost" type="submit">' + esc(t.save) + '</button><div class="tl-success"></div></form>' +
@@ -838,7 +843,7 @@
           "</button><span>" + esc(t.page) + " " + (meta.page || 1) + " " + esc(t.of) + " " + meta.pages + '</span><button type="button" class="tl-btn tl-btn-ghost" data-page="' +
           Math.min(meta.pages, (meta.page || 1) + 1) + '">' + esc(t.next) + "</button></div>";
       }
-      html += "<h3>" + esc(t.unbookmark) + "</h3><div id=\"acc-saved-jobs\">" + skeleton() + "</div>";
+      html += "<h3>" + esc(t.savedJobs) + "</h3><div id=\"acc-saved-jobs\">" + skeleton() + "</div>";
       return html;
     }
 
@@ -1028,12 +1033,12 @@
       var list = (docs || []).map(function (d) {
         return "<li>" + esc(d.original_name) + " · " + esc(d.kind) + ' <button type="button" class="tl-btn tl-btn-ghost" data-dl="' + esc(d.download_path) + '" data-dl-name="' + esc(d.original_name) + '">' + esc(t.download) +
           '</button> <button type="button" class="tl-btn tl-btn-ghost" data-del-doc="' + esc(d.id) + '">' + esc(t.remove) + "</button></li>";
-      }).join("") || "<li>-</li>";
+      }).join("") || "<li>" + esc(t.emptyDocs) + "</li>";
       var cvs = (resumes || []).map(function (r) {
         return "<li>" + esc(r.original_name) + (r.is_primary ? " · CV" : "") +
           ' <button type="button" class="tl-btn tl-btn-ghost" data-dl="' + esc(r.download_path) + '" data-dl-name="' + esc(r.original_name) + '">' + esc(t.download) + "</button>" +
           ' <button type="button" class="tl-btn tl-btn-ghost" data-del-cv="' + esc(r.id) + '">' + esc(t.remove) + "</button></li>";
-      }).join("") || "<li>-</li>";
+      }).join("") || "<li>" + esc(t.emptyDocs) + "</li>";
       return "<h3>CV</h3><ul>" + cvs + '</ul><form class="tl-form" id="acc-cv"><label>' + esc(t.upload) +
         '</label><input name="file" type="file" accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png,image/webp" required><button class="tl-btn" type="submit">' +
         esc(t.replace) + '</button><div class="tl-success"></div></form><h3>' + esc(t.otherDocs) + "</h3><ul>" + list +
@@ -1369,11 +1374,11 @@
     function renderInbox(apps) {
       if (!apps || !apps.length) return mediateNote() + empty(t.emptyInbox);
       return mediateNote() + '<div class="tl-table-wrap"><table class="tl-portal-table"><thead><tr><th>' + esc(t.first) + "</th><th>" + esc(t.title) +
-        "</th><th>" + esc(t.apps) + "</th><th>" + esc(t.experience) + "</th><th></th></tr></thead><tbody>" + apps.map(function (a) {
+        "</th><th>" + esc(t.status || t.decision) + "</th><th>" + esc(t.experience) + "</th><th></th></tr></thead><tbody>" + apps.map(function (a) {
         var c = a.candidate || {};
         var job = a.job || {};
         return "<tr><td data-label=\"" + esc(t.first) + "\">" + esc((c.first_name || "") + " " + (c.last_name || "")) +
-          "</td><td data-label=\"" + esc(t.title) + "\">" + esc(c.title || job.title || "") + "</td><td data-label=\"" + esc(t.apps) + "\">" +
+          "</td><td data-label=\"" + esc(t.title) + "\">" + esc(c.title || job.title || "") + "</td><td data-label=\"" + esc(t.status || t.decision) + "\">" +
           '<span class="tl-chip orange">' + esc(statusLabel(a.status)) + "</span></td><td data-label=\"" + esc(t.experience) + "\">" +
           esc(c.years_experience || "-") +
           '</td><td><button type="button" class="tl-btn tl-btn-ghost" data-nav="candidate" data-id="' + esc(c.id || "") + '">' +
@@ -1394,7 +1399,7 @@
       if (!rows || !rows.length) return empty(t.emptyInvoices);
       var payable = { SENT: 1, PENDING: 1, OVERDUE: 1 };
       return '<p class="tl-mediate">' + esc(t.transferHint) + "</p>" +
-        '<div class="tl-table-wrap"><table class="tl-portal-table"><thead><tr><th>' + esc(t.invoices) + "</th><th>" + esc(t.salary) +
+        '<div class="tl-table-wrap"><table class="tl-portal-table"><thead><tr><th>' + esc(t.invoices) + "</th><th>" + esc(t.amount || t.pay) +
         "</th><th></th><th></th></tr></thead><tbody>" + rows.map(function (inv) {
         var pay = "";
         if (payable[inv.status] && siteServices.payments && siteServices.payments.card) {
@@ -1405,7 +1410,7 @@
         }
         var pdf = inv.pdf_path ? '<button type="button" class="tl-btn tl-btn-ghost" data-dl="' + esc(inv.pdf_path) + '" data-dl-name="' + esc((inv.number || "facture") + ".pdf") + '">' + esc(t.downloadPdf) + "</button>" : "";
         return "<tr><td data-label=\"" + esc(t.invoices) + "\">" + esc(inv.number || inv.id) +
-          "</td><td data-label=\"" + esc(t.salary) + "\">" + esc(money(inv.amount_total || inv.amount)) +
+          "</td><td data-label=\"" + esc(t.amount || t.pay) + "\">" + esc(money(inv.amount_total || inv.amount)) +
           "</td><td><span class=\"tl-chip\">" + esc(statusLabel(inv.status)) + "</span></td><td>" + pdf + " " + pay + "</td></tr>";
       }).join("") + "</tbody></table></div><div class=\"tl-success\" id=\"acc-inv-msg\"></div>";
     }
@@ -1720,7 +1725,7 @@
           else if (route.name === "job-new") p = Promise.resolve(jobForm({}));
           else if (route.name === "job-edit") p = unwrap(api.request("/hiring-requests/" + route.id)).then(function (j) {
             state.editHiring = j;
-            return renderHiringDetail(j);
+            return renderHiringDetail(j) + "<h3>" + esc(t.edit) + "</h3>" + jobForm(j);
           });
           else if (route.name === "inbox" || route.name === "candidates") p = unwrap(api.request("/applications")).then(renderInbox);
           else if (route.name === "pipeline") p = unwrap(api.request("/applications")).then(renderPipeline);

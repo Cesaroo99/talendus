@@ -134,7 +134,7 @@ gtag('consent', 'default', {
               </div>
               <div class="tl-header-tools">
                 <nav class="tl-lang" aria-label="Language / Langue">
-                    <a class="is-active" href="#" lang="fr" hreflang="fr-CA">FR</a>
+                    <a class="is-active" href="contact.html" lang="fr" hreflang="fr-CA">FR</a>
                     <a class="" href="en/contact.html" lang="en" hreflang="en-CA">EN</a>
                   </nav>
                 <div class="tl-session" data-session="desktop">
@@ -147,7 +147,7 @@ gtag('consent', 'default', {
               </div>
               <div class="tl-mobile-tools">
                   <nav class="tl-lang" aria-label="Language / Langue">
-                    <a class="is-active" href="#" lang="fr" hreflang="fr-CA">FR</a>
+                    <a class="is-active" href="contact.html" lang="fr" hreflang="fr-CA">FR</a>
                     <a class="" href="en/contact.html" lang="en" hreflang="en-CA">EN</a>
                   </nav>
                   <div class="tl-session tl-session-compact" data-session="mobile">
@@ -172,7 +172,7 @@ gtag('consent', 'default', {
             </div>
             <div class="tl-offcanvas-tools">
                 <nav class="tl-lang" aria-label="Language / Langue">
-                    <a class="is-active" href="#" lang="fr" hreflang="fr-CA">FR</a>
+                    <a class="is-active" href="contact.html" lang="fr" hreflang="fr-CA">FR</a>
                     <a class="" href="en/contact.html" lang="en" hreflang="en-CA">EN</a>
                   </nav>
                 <div class="vl-offcanvas-close">
@@ -188,7 +188,7 @@ gtag('consent', 'default', {
             <span><a href="tel:+12635585225"><i class="fa-solid fa-phone"></i> 263 558 5225</a></span>
             <span><a href="mailto:info@talendus.ca"><i class="fa-regular fa-envelope"></i> info@talendus.ca</a></span>
             <span><a href="contact.html"><i class="fa-solid fa-location-dot"></i> Montréal, Québec · sur rendez-vous</a></span>
-            <span><a href="https://wa.me/12635585225?text=Bonjour%20Talendus%2C%20je%20souhaite%20discuter%20d%27un%20besoin%20de%20recrutement." target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a></span>
+            <span><a href="https://wa.me/12635585225?text=Bonjour%20Talendus%2C%20j%27aimerais%20vous%20parler." target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a></span>
             <p class="tl-offcanvas-note">En semaine, on répond en général en moins de 30 minutes.</p>
             <div class="vl-offcanvas-cta tl-session tl-session-offcanvas" data-session="offcanvas">
               <a href="espace.html" class="tl-btn tl-btn-ghost" data-auth-open="login">Connexion</a>
@@ -275,13 +275,13 @@ gtag('consent', 'default', {
           <form class="tl-form" action="#" method="post" data-form="talent-cv" enctype="multipart/form-data">
             <input class="tl-hp" name="website_url" tabindex="-1" autocomplete="off" aria-hidden="true">
             <input type="hidden" name="profil" value="Candidat, je cherche un poste">
-            <label>Nom</label><input required name="nom" autocomplete="name">
-            <label>Courriel</label><input type="email" required name="courriel" autocomplete="email">
-            <label>Téléphone</label><input name="tel" autocomplete="tel">
-            <label>Objet</label>
-            <select name="objet">
+            <label for="tl-c-nom">Nom</label><input required name="nom" autocomplete="name" id="tl-c-nom">
+            <label for="tl-c-email">Courriel</label><input type="email" required name="courriel" autocomplete="email" id="tl-c-email">
+            <label for="tl-c-tel">Téléphone</label><input name="tel" autocomplete="tel" id="tl-c-tel">
+            <label for="tl-c-objet">Objet</label>
+            <select name="objet" id="tl-c-objet">
               <option>Déposer mon CV</option>
-              <option>Rejoindre la banque de talents</option>
+              <option>Être considéré pour des mandats</option>
               <option>Question sur une offre</option>
             </select>
             <label class="tl-file">
@@ -291,7 +291,7 @@ gtag('consent', 'default', {
             </label>
             <label>Lien vers votre CV <span class="tl-optional">(facultatif)</span></label><input name="cv" placeholder="https://">
             <label>Message</label><textarea name="message" placeholder="Métier, compétences, ville, type d'emploi"></textarea>
-            <button class="tl-btn tl-btn-lg" type="submit">Créer mon profil</button>
+            <button class="tl-btn tl-btn-lg" type="submit">Envoyer</button>
             <div class="tl-success"></div>
           </form>
         </div>
@@ -331,6 +331,22 @@ gtag('consent', 'default', {
             <option>Stage</option>
             <option>Plusieurs types de contrat</option>
         </select>
+            <label>Quart</label>
+            <select name="quart">
+              <option value="">Choisir</option>
+              <option>Quart de jour</option>
+              <option>Quart de soir</option>
+              <option>Quart de nuit</option>
+              <option>Quarts rotatifs</option>
+              <option>Fin de semaine</option>
+            </select>
+            <label>Horaire</label>
+            <select name="horaire">
+              <option value="">Choisir</option>
+              <option>Temps plein</option>
+              <option>Temps partiel</option>
+              <option>Sur appel</option>
+            </select>
             <label>Ce que nous devons savoir</label>
             <textarea name="message" required placeholder="Responsabilités, compétences indispensables, expérience, urgence, tout ce qui orientera la recherche"></textarea>
         
@@ -350,7 +366,7 @@ gtag('consent', 'default', {
 <a class="tl-call" href="tel:+12635585225" aria-label="Appeler Talendus">
   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 10.8c1.4 2.7 3.9 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1.1-.3 1.2.4 2.5.6 3.8.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.6.6 3.8.1.4 0 .8-.3 1.1L6.6 10.8z"/></svg>
 </a>
-<a class="tl-whatsapp" href="https://wa.me/12635585225?text=Bonjour%20Talendus%2C%20je%20souhaite%20discuter%20d%27un%20besoin%20de%20recrutement." target="_blank" rel="noopener noreferrer" aria-label="Écrire à Talendus sur WhatsApp">
+<a class="tl-whatsapp" href="https://wa.me/12635585225?text=Bonjour%20Talendus%2C%20j%27aimerais%20vous%20parler." target="_blank" rel="noopener noreferrer" aria-label="Écrire à Talendus sur WhatsApp">
   <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M19.11 17.47c-.29-.15-1.73-.85-2-.95-.27-.1-.46-.15-.66.15s-.76.95-.93 1.15c-.17.2-.34.22-.63.07-.29-.15-1.22-.45-2.33-1.43-.86-.77-1.44-1.72-1.61-2.01-.17-.29-.02-.45.13-.6.13-.13.29-.34.43-.51.15-.17.2-.29.29-.48.1-.2.05-.36-.02-.51-.07-.15-.66-1.59-.9-2.18-.24-.57-.48-.49-.66-.5h-.56c-.2 0-.51.07-.78.36-.27.29-1.02.99-1.02 2.42s1.05 2.81 1.19 3 .07.15 2.06 3.15c1.64 1.41 2.96 1.85 3.58 2.06.54.17 1.04.15 1.43.09.44-.06 1.73-.71 1.97-1.39.24-.68.24-1.27.17-1.39-.07-.12-.26-.2-.55-.35zM16.03 4.05C9.41 4.05 4.05 9.4 4.05 16.03c0 2.11.55 4.17 1.6 5.99L4 28l6.12-1.6a11.94 11.94 0 0 0 5.91 1.51h.01c6.62 0 11.98-5.36 11.98-11.98 0-3.2-1.25-6.21-3.51-8.47a11.9 11.9 0 0 0-8.48-3.51zm0 21.86h-.01a9.94 9.94 0 0 1-5.06-1.38l-.36-.22-3.63.95.97-3.54-.23-.37a9.93 9.93 0 0 1-1.52-5.32c0-5.48 4.46-9.94 9.95-9.94 2.66 0 5.15 1.04 7.03 2.92a9.87 9.87 0 0 1 2.91 7.02c0 5.49-4.47 9.95-9.95 9.95z"/></svg>
 </a>
 <div class="vl-footer2-section-area">
@@ -397,7 +413,7 @@ gtag('consent', 'default', {
           <ul>
             <li><a href="tel:+12635585225">263 558 5225</a></li>
             <li><a href="mailto:info@talendus.ca">info@talendus.ca</a></li>
-            <li><a href="https://wa.me/12635585225?text=Bonjour%20Talendus%2C%20je%20souhaite%20discuter%20d%27un%20besoin%20de%20recrutement." target="_blank" rel="noopener noreferrer">WhatsApp</a></li>
+            <li><a href="https://wa.me/12635585225?text=Bonjour%20Talendus%2C%20j%27aimerais%20vous%20parler." target="_blank" rel="noopener noreferrer">WhatsApp</a></li>
             <li><a href="app.html">Installer l'appli</a></li>
             <li>Lun–Ven, 8 h à 17 h</li>
             <li><a href="contact.html">Montréal · sur rendez-vous</a></li>

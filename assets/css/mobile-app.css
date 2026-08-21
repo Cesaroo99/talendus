@@ -176,8 +176,8 @@ body.tn-gated #tl-native-app {
 }
 .tn-icon-btn {
   position: relative;
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
   border: 0;
   border-radius: 14px;
   background: rgba(255,255,255,.1);
@@ -186,7 +186,6 @@ body.tn-gated #tl-native-app {
   place-items: center;
   text-decoration: none;
 }
-.tn-icon-btn svg { width: 20px; height: 20px; }
 .tn-top-gate { justify-content: flex-start; background: transparent; box-shadow: none; }
 
 .tn-screen {
@@ -556,7 +555,7 @@ a.tn-stat {
   justify-content: space-between;
   gap: 8px;
   width: 100%;
-  min-height: 42px;
+  min-height: 44px;
   padding: 8px 12px;
   border: 1px solid var(--tn-line);
   border-radius: 12px;
@@ -587,7 +586,7 @@ a.tn-stat {
 }
 .tn-pick-search {
   width: 100%;
-  min-height: 42px;
+  min-height: 44px;
   border: 1px solid var(--tn-line);
   border-radius: 12px;
   padding: 8px 12px;

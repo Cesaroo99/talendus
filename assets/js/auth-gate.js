@@ -525,23 +525,40 @@
         var user = api.currentUser();
         if (user && user.role === "EMPLOYER") return Promise.resolve(user);
         pending = intent || { type: "portal" };
-        openAuth("register", { role: "EMPLOYER" });
+        openAuth("login", { role: "EMPLOYER" });
         return Promise.reject(new Error("auth"));
       }
     };
 
+    function isEmployerPage() {
+      var file = (location.pathname.split("/").pop() || "").toLowerCase();
+      var path = (location.pathname || "").toLowerCase();
+      return file === "espace-employeur.html" || file === "account-employer.html" || path.indexOf("/employer") !== -1;
+    }
+    function guestSpaceHref() {
+      if (isEmployerPage()) {
+        return siteRoot() + (isEn ? "account-employer.html" : "espace-employeur.html");
+      }
+      return siteRoot() + (isEn ? "account.html" : "espace.html");
+    }
+    function guestRoleAttr() {
+      return isEmployerPage() ? ' data-auth-role="EMPLOYER"' : "";
+    }
+
     function guestMarkup(kind) {
+      var space = guestSpaceHref();
+      var roleAttr = guestRoleAttr();
       if (kind === "mobile") {
-        return '<a href="' + esc(siteRoot() + (isEn ? "account.html" : "espace.html")) + '" class="tl-session-icon-btn" data-auth-open="login" aria-label="' + esc(t.login) + '">' +
+        return '<a href="' + esc(space) + '" class="tl-session-icon-btn" data-auth-open="login"' + roleAttr + ' aria-label="' + esc(t.login) + '">' +
           '<i class="fa-regular fa-user" aria-hidden="true"></i></a>';
       }
       if (kind === "offcanvas") {
-        return '<a href="' + esc(siteRoot() + (isEn ? "account.html" : "espace.html")) + '" class="tl-btn tl-btn-ghost" data-auth-open="login">' + esc(t.login) + "</a>" +
-          '<a href="' + esc(siteRoot() + (isEn ? "account.html" : "espace.html")) + '" class="tl-btn" data-auth-open="register">' + esc(t.register) + "</a>";
+        return '<a href="' + esc(space) + '" class="tl-btn tl-btn-ghost" data-auth-open="login"' + roleAttr + '>' + esc(t.login) + "</a>" +
+          '<a href="' + esc(space) + '" class="tl-btn" data-auth-open="register"' + roleAttr + '>' + esc(t.register) + "</a>";
       }
-      return '<a href="' + esc(siteRoot() + (isEn ? "account.html" : "espace.html")) + '" class="tl-session-login" data-auth-open="login">' +
+      return '<a href="' + esc(space) + '" class="tl-session-login" data-auth-open="login"' + roleAttr + '>' +
         '<i class="fa-regular fa-user" aria-hidden="true"></i><span>' + esc(t.login) + "</span></a>" +
-        '<a href="' + esc(siteRoot() + (isEn ? "account.html" : "espace.html")) + '" class="tl-btn tl-session-cta" data-auth-open="register">' + esc(t.register) + "</a>";
+        '<a href="' + esc(space) + '" class="tl-btn tl-session-cta" data-auth-open="register"' + roleAttr + '>' + esc(t.register) + "</a>";
     }
 
     function authedMarkup(user, unread, kind) {
@@ -696,7 +713,7 @@
           return;
         }
         var mode = open.getAttribute("data-auth-open") || "login";
-        var role = open.getAttribute("data-auth-role") || "";
+        var role = open.getAttribute("data-auth-role") || (isEmployerPage() ? "EMPLOYER" : "");
         if (mode === "register" || mode === "choose") openAuth("register", role ? { role: role } : {});
         else openAuth(mode, role ? { role: role } : {});
         return;
