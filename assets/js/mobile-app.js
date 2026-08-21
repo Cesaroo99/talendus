@@ -929,24 +929,27 @@
   }
   function hasNativePicker() {
     try {
-      return !!(window.TalendusNative && window.TalendusNative.openDocumentPicker);
+      if (!window.TalendusNative) return false;
+      if (typeof window.TalendusNative.canPickFiles === "function") return !!window.TalendusNative.canPickFiles();
+      return typeof window.TalendusNative.openDocumentPicker === "function";
     } catch (e) {
       return false;
     }
   }
   function filePicker(accept, multiple) {
     var imagesOnly = !!(accept && accept.indexOf("image/") === 0 && accept.indexOf("pdf") === -1);
-    if (hasNativePicker()) {
-      return '<div class="tn-file">' +
-        '<button type="button" class="tn-file-btn" data-native-pick data-multiple="' + (multiple ? "1" : "0") +
-        '" data-images="' + (imagesOnly ? "1" : "0") + '">' + esc(t.chooseFile) + "</button>" +
-        '<p class="tn-file-name">' + esc(t.noFile) + "</p></div>";
-    }
-    return '<div class="tn-file"><label class="tn-file-hit">' +
+    var native = hasNativePicker();
+    return '<div class="tn-file">' +
+      (native
+        ? '<button type="button" class="tn-file-btn" data-native-pick data-multiple="' + (multiple ? "1" : "0") +
+          '" data-images="' + (imagesOnly ? "1" : "0") + '">' + esc(t.chooseFile) + "</button>"
+        : "") +
+      '<label class="tn-file-hit"' + (native ? " hidden" : "") + ">" +
       '<input class="tn-file-input" type="file" name="file"' +
       (accept ? ' accept="' + esc(accept) + '"' : "") +
       (multiple ? " multiple" : "") + ">" +
-      '<span class="tn-file-btn">' + esc(t.chooseFile) + "</span></label>" +
+      (native ? "" : '<span class="tn-file-btn">' + esc(t.chooseFile) + "</span>") +
+      "</label>" +
       '<p class="tn-file-name">' + esc(t.noFile) + "</p></div>";
   }
   function pickedFiles(form) {
@@ -972,9 +975,18 @@
       var raw = atob(row.data);
       var buf = new Uint8Array(raw.length);
       for (var i = 0; i < raw.length; i++) buf[i] = raw.charCodeAt(i);
-      out.push(new File([buf], row.name || "document", { type: row.type || "application/octet-stream" }));
+      out.push(nativeFile(buf, row.name || "document", row.type || "application/octet-stream"));
     });
     return out;
+  }
+  function nativeFile(buf, name, type) {
+    try {
+      return new File([buf], name, { type: type });
+    } catch (e) {
+      var blob = new Blob([buf], { type: type });
+      try { blob.name = name; } catch (err) {}
+      return blob;
+    }
   }
   function sendPickedFiles(form, given) {
     if (!isCandidate() || form.getAttribute("data-busy") === "1") return Promise.resolve();
@@ -1358,9 +1370,15 @@
         dashNotifs();
     }
     var pct = (dash.completeness && dash.completeness.percent) || 0;
+    var hasCv = !!(dash.completeness && dash.completeness.checks && dash.completeness.checks.resume);
     var matches = (dash.matches || []).map(function (row) { return jobCard(row.job || row); }).join("");
     var next = "";
-    if (pct < 80) {
+    if (!hasCv) {
+      next = '<section class="tn-card tn-file-card"><p class="tn-kicker">' + esc(t.cv) + "</p>" +
+        '<p class="tn-meta">' + esc(t.noCv) + "</p>" +
+        '<form class="tn-form" data-cv>' + filePicker("", false) +
+        '<button class="tn-btn" type="submit">' + esc(t.upload) + "</button></form></section>";
+    } else if (pct < 80) {
       next = '<section class="tn-card tn-file-card"><p class="tn-kicker">' + esc(t.nextStep) + "</p>" +
         '<p class="tn-meta">' + esc(t.completeness) + " · " + pct + "%</p>" +
         '<div class="tn-progress"><span style="width:' + pct + '%"></span></div>' +
@@ -1678,6 +1696,7 @@
   function profileView() {
     var u = state.user || {};
     var p = state.profile || {};
+    var resumes = p.resumes || [];
     function listBlockMini(title, rows, emptyTxt, formAttrs, fields, delAttr) {
       var items = (rows || []).map(function (row) {
         return '<div class="tn-job"><h3>' + esc(row.role || row.diploma || row.name || "") + "</h3><p class=\"tn-meta\">" +
@@ -1688,6 +1707,10 @@
         '<form class="tn-form" ' + formAttrs + ">" + fields + '<button class="tn-btn tn-btn-ghost" type="submit">' + esc(t.add) + "</button></form>";
     }
     return backTo("#/me") + "<h1 class=\"tn-title\">" + esc(t.profile) + "</h1><p class=\"tn-lead\">" + esc(t.profileLead) + "</p><div data-flash>" + flash() + "</div>" +
+      '<form class="tn-form" data-cv><label>' + esc(t.cv) + "</label><p class=\"tn-meta\">" +
+      esc(resumes.length ? (resumes[0].original_name || t.cvReady) : t.noCv) + "</p>" +
+      filePicker("", false) +
+      '<button class="tn-btn" type="submit">' + esc(t.upload) + "</button></form>" +
       '<form class="tn-form" data-avatar><label>' + esc(t.photo) + '</label><p class="tn-meta">' + esc(t.photoHint) + "</p>" +
       filePicker("image/*", false) +
       '<button class="tn-btn tn-btn-ghost" type="submit">' + esc(t.save) + "</button></form>" +
@@ -2121,16 +2144,23 @@
       var id = "p" + Date.now() + "-" + Math.floor(Math.random() * 10000);
       window.__tnNativeForms = window.__tnNativeForms || {};
       window.__tnNativeForms[id] = form;
+      var kind = form.matches("[data-cv]") ? "cv" : (form.matches("[data-doc]") ? "doc" : (form.matches("[data-avatar]") ? "avatar" : ""));
+      var token = "";
+      try { token = localStorage.getItem("talendus_access_token") || ""; } catch (e) {}
       nativePick.disabled = true;
       try {
         window.TalendusNative.openDocumentPicker(
           id,
           nativePick.getAttribute("data-multiple") === "1" ? 1 : 0,
-          nativePick.getAttribute("data-images") === "1" ? 1 : 0
+          nativePick.getAttribute("data-images") === "1" ? 1 : 0,
+          kind,
+          token
         );
       } catch (err) {
         nativePick.disabled = false;
-        showFormNotice(form, t.err, true);
+        var input = form.querySelector(".tn-file-input");
+        if (input) input.click();
+        else showFormNotice(form, t.err, true);
       }
       return;
     }
@@ -2494,6 +2524,19 @@
       nameEl.textContent = files.length === 1 ? files[0].name : (files.length + " " + t.filesChosen);
     }
     sendPickedFiles(form, files);
+  };
+  window.__tnUploadDone = function (id, ok, message) {
+    var forms = window.__tnNativeForms || {};
+    var form = forms[id];
+    delete forms[id];
+    var pickBtn = form && form.querySelector("[data-native-pick]");
+    if (pickBtn) pickBtn.disabled = false;
+    if (!form) return;
+    if (!ok) {
+      showFormNotice(form, message || t.err, true);
+      return;
+    }
+    done(message || t.uploadedOk);
   };
   window.addEventListener("talendus:session-set", function () { syncNativeAuth(); });
   window.addEventListener("talendus:session-cleared", function () {

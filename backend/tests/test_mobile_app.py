@@ -177,11 +177,11 @@ def test_mobile_shell_is_served(client):
     res = client.get("/m.html")
     assert res.status_code == 200, res.text
     assert "tl-native-app" in res.text
-    assert "mobile-app.css?v=25" in res.text
+    assert "mobile-app.css?v=26" in res.text
     en = client.get("/en/m.html")
     assert en.status_code == 200, en.text
     assert "tl-native-app" in en.text
-    assert "mobile-app.css?v=25" in en.text
+    assert "mobile-app.css?v=26" in en.text
 
 
 def test_mobile_app_hub_is_ordered():
@@ -349,7 +349,10 @@ def test_mobile_app_uploads_files_and_allows_multiple_choices():
         "tn-file-hit",
         "openDocumentPicker",
         "__tnReceiveFiles",
+        "__tnUploadDone",
+        "canPickFiles",
         "hasNativePicker",
+        "nativeFile",
         'choiceGroup("languages"',
         'choiceGroup("contract_type"',
         'choiceGroup("shift_preference"',
@@ -374,9 +377,26 @@ def test_mobile_app_uploads_files_and_allows_multiple_choices():
     assert "FileChooserParams.parseResult" in java
     assert "openDocumentPicker" in java
     assert "NATIVE_PICK" in java
+    assert "postStoredFile" in java
+    assert "/api/candidates/me/resume" in java
+    assert "canPickFiles" in java
+    assert "__tnUploadDone" in java
     manifest = (ROOT / "mobile" / "android" / "app" / "src" / "main" / "AndroidManifest.xml").read_text(encoding="utf-8")
     assert 'android:launchMode="singleTop"' in manifest
     api = (ROOT / "assets" / "js" / "api.js").read_text(encoding="utf-8")
     assert "function filePartName" in api
     assert "function appendFile" in api
     assert 'opts.body instanceof FormData' in api
+
+
+def test_mobile_app_puts_resume_upload_on_home_and_profile():
+    js = (ROOT / "assets" / "js" / "mobile-app.js").read_text(encoding="utf-8")
+    home = js.split("function homeView")[1].split("function dashNotifs")[0]
+    assert 'form class="tn-form" data-cv' in home
+    assert "t.noCv" in home
+    profile = js.split("function profileView")[1].split("function cvView")[0]
+    assert 'form class="tn-form" data-cv' in profile
+    assert "uploadResume" in js
+    java = (ROOT / "mobile" / "android" / "app" / "src" / "main" / "java" / "ca" / "talendus" / "app" / "MainActivity.java").read_text(encoding="utf-8")
+    assert "TalendusApp/1.8" in java
+    assert "postMultipart" in java
