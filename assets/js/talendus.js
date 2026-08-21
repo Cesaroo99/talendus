@@ -683,7 +683,11 @@
       var ua = (navigator.userAgent || "").toLowerCase();
       var isIos = /iphone|ipad|ipod/.test(ua);
       var isAndroid = /android/.test(ua);
-      var isMobile = isIos || isAndroid || ((navigator.maxTouchPoints || 0) > 1 && window.innerWidth < 900);
+      var isDesktopOs = (/windows nt|macintosh|cros/.test(ua) && !/iphone|ipad|ipod|android/.test(ua))
+        || (/linux/.test(ua) && !/android|iphone|ipad/.test(ua))
+        || (navigator.userAgentData && navigator.userAgentData.mobile === false);
+      var isPhone = (isIos || isAndroid) && !isDesktopOs && window.innerWidth < 900;
+      if (isDesktopOs) document.documentElement.classList.add("tl-desktop-os");
       var isChromeIos = isIos && /crios/.test(ua);
       var isSafariIos = isIos && /safari/.test(ua) && !/crios|fxios|edgios/.test(ua);
       var standalone = isNativeApp();
@@ -835,8 +839,7 @@
         maybeShowBanner();
       });
       window.addEventListener("appinstalled", function () {
-        rememberDismiss(365);
-        hideBanner();
+        markInstalled();
         var sheet = document.querySelector(".tl-install-sheet");
         if (sheet) sheet.remove();
       });
@@ -863,15 +866,44 @@
         });
       }
 
-      function maybeShowBanner() {
-        if (isNativeApp() || standalone || dismissed || askedThisVisit()) return;
-        if (/\/admin\//.test(location.pathname)) return;
-        if (board) return;
-        if (!isMobile) return;
-        showBanner();
+      function alreadyInstalled() {
+        if (isNativeApp() || standalone) return true;
+        try {
+          if (window.matchMedia && (
+            window.matchMedia("(display-mode: standalone)").matches
+            || window.matchMedia("(display-mode: fullscreen)").matches
+            || window.matchMedia("(display-mode: minimal-ui)").matches
+          )) return true;
+        } catch (e) {}
+        return false;
       }
 
-      setTimeout(maybeShowBanner, 2500);
+      function markInstalled() {
+        document.documentElement.classList.add("tl-app-installed");
+        rememberDismiss(365);
+        hideBanner();
+      }
+
+      function maybeShowBanner() {
+        if (isDesktopOs || !isPhone || alreadyInstalled() || dismissed || askedThisVisit()) return;
+        if (/\/admin\//.test(location.pathname)) return;
+        if (board) return;
+        showBanner();
+      }
+      if (alreadyInstalled()) markInstalled();
+
+      if (navigator.getInstalledRelatedApps) {
+        try {
+          navigator.getInstalledRelatedApps().then(function (apps) {
+            if (apps && apps.length) markInstalled();
+            maybeShowBanner();
+          }).catch(function () { maybeShowBanner(); });
+        } catch (e) {
+          setTimeout(maybeShowBanner, 2500);
+        }
+      } else {
+        setTimeout(maybeShowBanner, 2500);
+      }
     })();
   });
 })();

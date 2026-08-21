@@ -415,6 +415,11 @@
       return String(v).replace("T", " ").slice(0, 16);
     }
     function authDownload(path, filename) {
+      if (window.TalendusAPI && typeof window.TalendusAPI.download === "function") {
+        var apiPath = String(path || "").replace(/^\/api/, "");
+        window.TalendusAPI.download(apiPath, filename).catch(function () { window.alert(t.err); });
+        return;
+      }
       var token = "";
       try { token = localStorage.getItem("talendus_access_token") || ""; } catch (e) {}
       fetch(path, { headers: { Authorization: token ? ("Bearer " + token) : "", Accept: "*/*" } }).then(function (res) {

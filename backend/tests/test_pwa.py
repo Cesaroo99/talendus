@@ -26,6 +26,7 @@ def test_web_manifest_is_installable(client):
     assert "512x512" in sizes
     assert any(icon.get("purpose") == "any" for icon in data["icons"])
     assert any(icon.get("purpose") == "maskable" for icon in data["icons"])
+    assert data.get("related_applications")
     for icon in data["icons"]:
         src = ROOT / icon["src"].lstrip("/")
         assert src.exists(), icon["src"]
@@ -40,7 +41,7 @@ def test_service_worker_allows_root_scope(client):
     assert res.status_code == 200, res.text
     assert "javascript" in (res.headers.get("content-type") or "")
     assert res.headers.get("service-worker-allowed") == "/"
-    assert "talendus-app-v24" in res.text
+    assert "talendus-app-v25" in res.text
     assert "/offline.html" in res.text
     assert "/download/" in res.text
     assert "showNotification" in res.text
@@ -82,6 +83,15 @@ def test_install_script_starts_a_file_download():
     assert "Télécharger l'appli" in js
     assert "rememberDismiss(365)" in js
     assert "Le fichier est en bas de l'écran" in js
+    assert "isDesktopOs" in js
+    assert "alreadyInstalled" in js
+    assert "getInstalledRelatedApps" in js
+    assert "tl-desktop-os" in js
+    assert "userAgentData" in js
+    css = (ROOT / "assets" / "css" / "talendus.css").read_text(encoding="utf-8")
+    assert "html.tl-desktop-os .tl-install-banner" in css
+    assert "html.tl-app-installed .tl-install-banner" in css
+    assert "(hover: hover) and (pointer: fine)" in css
 
 
 def test_android_apk_is_a_real_package(client):

@@ -155,6 +155,13 @@ def test_native_app_never_asks_to_install_again():
     assert "setAuthToken" in java
     assert "CAMERA" in java
     assert "RECORD_AUDIO" in java
+    assert "downloadUrl" in java
+    assert "setDownloadListener" in java
+    assert "saveAuthenticatedFile" in java
+    assert "DownloadManager" in java
+    api = (ROOT / "assets" / "js" / "api.js").read_text(encoding="utf-8")
+    assert "TalendusNative.downloadUrl" in api
+    assert "download: function" in api
     profile = (ROOT / "assets" / "app" / "talendus.mobileconfig").read_text(encoding="utf-8")
     assert "https://talendus.ca/m.html" in profile
 
@@ -162,15 +169,19 @@ def test_native_app_never_asks_to_install_again():
 def test_manifest_opens_the_mobile_shell():
     text = (ROOT / "manifest.webmanifest").read_text(encoding="utf-8")
     assert '"start_url": "/m.html"' in text
+    assert "related_applications" in text
+    assert "manifest.webmanifest" in text
 
 
 def test_mobile_shell_is_served(client):
     res = client.get("/m.html")
     assert res.status_code == 200, res.text
     assert "tl-native-app" in res.text
+    assert "mobile-app.css?v=25" in res.text
     en = client.get("/en/m.html")
     assert en.status_code == 200, en.text
     assert "tl-native-app" in en.text
+    assert "mobile-app.css?v=25" in en.text
 
 
 def test_mobile_app_hub_is_ordered():
@@ -248,6 +259,11 @@ def test_mobile_app_tracks_applications_and_offers_choice_filters():
         "o.occupations",
         "can_sponsor",
         '<optgroup label="',
+        "groupedPick",
+        "tn-job-card",
+        "tn-pick-btn",
+        "openPickSheet",
+        "fileSaved",
         'mini ? \' aria-hidden="true"\'',
         "if (!mini)",
     ):
@@ -262,6 +278,9 @@ def test_mobile_app_tracks_applications_and_offers_choice_filters():
         ".tn-filter-toggle",
         ".tn-tracker.is-mini li b",
         "overflow: hidden",
+        ".tn-job-card",
+        ".tn-pick-btn",
+        ".tn-job-facts-mini",
     ):
         assert needle in css
     jobs = (ROOT / "emplois.html").read_text(encoding="utf-8")

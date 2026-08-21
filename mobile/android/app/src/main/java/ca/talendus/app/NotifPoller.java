@@ -45,6 +45,10 @@ public final class NotifPoller {
         }
     }
 
+    public static String token(Context ctx) {
+        return prefs(ctx).getString(KEY_TOKEN, "");
+    }
+
     public static void clearToken(Context ctx) {
         prefs(ctx).edit().remove(KEY_TOKEN).apply();
     }

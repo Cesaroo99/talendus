@@ -477,6 +477,147 @@ a.tn-stat {
   overflow: hidden;
 }
 .tn-job h3, .tn-thread strong { margin: 0 0 4px; font-size: 1.05rem; }
+.tn-job-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  background: var(--tn-card);
+  border: 1px solid var(--tn-line);
+  border-radius: 16px;
+  box-shadow: var(--tn-shadow-sm);
+}
+.tn-job-card-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: linear-gradient(135deg, #0b1f3a 0%, #1a3a66 100%);
+  color: #fff;
+}
+.tn-job-card-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--tn-orange);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.tn-job-card-icon svg { width: 15px; height: 15px; }
+.tn-job-card-cat {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: #fff;
+}
+.tn-job-card-via {
+  margin: 1px 0 0;
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255,255,255,.75);
+}
+.tn-job-card-body { padding: 8px 10px 10px; }
+.tn-job-card-top { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px; }
+.tn-job-card h3 {
+  margin: 0 0 6px;
+  font-size: 1rem;
+  line-height: 1.2;
+  color: var(--tn-navy);
+}
+.tn-job-facts-mini {
+  display: grid;
+  gap: 3px;
+  margin: 0 0 8px;
+}
+.tn-job-facts-mini div {
+  display: grid;
+  grid-template-columns: 5.4rem minmax(0, 1fr);
+  gap: 6px;
+  align-items: baseline;
+}
+.tn-job-facts-mini dt { margin: 0; color: var(--tn-muted); font-size: .72rem; font-weight: 700; }
+.tn-job-facts-mini dd { margin: 0; font-size: .82rem; font-weight: 700; }
+.tn-job-card-cta {
+  display: inline-flex;
+  font-size: .78rem;
+  font-weight: 800;
+  color: var(--tn-orange);
+}
+.tn-pick { display: grid; gap: 0; }
+.tn-pick-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-height: 42px;
+  padding: 8px 12px;
+  border: 1px solid var(--tn-line);
+  border-radius: 12px;
+  background: #fff;
+  font: inherit;
+  font-weight: 650;
+  text-align: left;
+  cursor: pointer;
+}
+.tn-pick-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+.tn-pick-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgba(11, 31, 58, .42);
+  display: flex;
+  align-items: flex-end;
+}
+.tn-pick-card {
+  width: 100%;
+  max-height: 78vh;
+  background: #fff;
+  border-radius: 20px 20px 0 0;
+  padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 8px;
+}
+.tn-pick-search {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid var(--tn-line);
+  border-radius: 12px;
+  padding: 8px 12px;
+  font: inherit;
+}
+.tn-pick-list {
+  overflow: auto;
+  min-height: 180px;
+}
+.tn-pick-group {
+  margin: 10px 0 4px;
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--tn-muted);
+}
+.tn-pick-option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: none;
+  padding: 8px 4px;
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+  border-radius: 8px;
+}
+.tn-pick-option.is-on, .tn-pick-option:active { background: #fff4ec; color: #9a3b12; }
 .tn-meta { color: var(--tn-muted); font-size: .9rem; margin: 0; }
 .tn-status {
   display: inline-block;
