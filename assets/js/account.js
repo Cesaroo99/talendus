@@ -78,7 +78,7 @@
       appDetail: "Application", sent: "Submitted", review: "Under review", preselect: "Shortlist",
       interview: "Interview", decision: "Decision", companyDocs: "Company documents",
       notifyPrefs: "Notification preferences", emailNotif: "Email", inApp: "In-app",
-      sms: "SMS (coming soon)", wa: "WhatsApp (coming soon)", push: "Push (coming soon)",
+      sms: "SMS", wa: "WhatsApp", push: "Push notifications",
       profilePublic: "Allow a public professional summary", changeEmail: "Email address is used to sign in.",
       emptyInbox: "No profiles presented yet. Talendus will share qualified shortlists.", emptyInvoices: "No invoices.",
       pay: "Record a card payment", payPal: "Pay with PayPal", pipeline: "Pipeline",
@@ -106,7 +106,7 @@
       notifyPresented: "Presented files", notifyPresentedHint: "When Talendus shares a shortlist for one of your mandates.",
       notifyInterview: "Interviews", notifyInterviewHint: "Reminders and changes to interview times.",
       notifyMessage: "Messages from your consultant", notifyMessageHint: "When Talendus writes to you in the workspace.",
-      notifyChannels: "How we reach you", notifyChannelsHint: "Talendus writes by email and in this workspace. SMS and WhatsApp are not active yet.",
+      notifyChannels: "How we reach you", notifyChannelsHint: "Talendus writes by email, in this workspace, and by push on your phone. SMS and WhatsApp are not offered.",
       privacyHint: "Your file is followed by a consultant. Contact us whenever you want to move forward.",
       privacyTalendus: "Talendus may use a short professional summary when presenting you to a company.",
       dangerHint: "This deactivates the account. Your consultant can no longer consider you for mandates.",
@@ -118,7 +118,6 @@
       yourRole: "Your access",
       yourAccessHint: "What you can do in this workspace depends on the role your company assigned.",
       openProfile: "Edit my profile", openCompany: "Company file", openBilling: "Invoices",
-      comingSoon: "Coming soon",
       noSessions: "No other session recorded.",
       inviteHint: "The person receives access to this company workspace.",
       roleHintOwner: "Full access, including team and company file.",
@@ -189,7 +188,7 @@
       appDetail: "Candidature", sent: "Candidature envoyée", review: "Dossier examiné", preselect: "Présélection",
       interview: "Entretien", decision: "Décision", companyDocs: "Documents de l’entreprise",
       notifyPrefs: "Préférences de notification", emailNotif: "Courriel", inApp: "Dans l’application",
-      sms: "SMS (prochainement)", wa: "WhatsApp (prochainement)", push: "Push (prochainement)",
+      sms: "SMS", wa: "WhatsApp", push: "Notifications push",
       profilePublic: "Autoriser un résumé professionnel visible", changeEmail: "Le courriel sert à vous connecter.",
       emptyInbox: "Aucun dossier présenté pour le moment. Talendus vous transmet les profils qualifiés.", emptyInvoices: "Aucune facture.",
       pay: "Payer par carte", payPal: "Payer avec PayPal", pipeline: "Pipeline",
@@ -217,7 +216,7 @@
       notifyPresented: "Dossiers présentés", notifyPresentedHint: "Quand Talendus vous transmet une shortlist pour un mandat.",
       notifyInterview: "Entretiens", notifyInterviewHint: "Rappels et changements d’horaire.",
       notifyMessage: "Messages de votre conseiller", notifyMessageHint: "Quand Talendus vous écrit dans l’espace.",
-      notifyChannels: "Comment on vous joint", notifyChannelsHint: "Talendus vous écrit par courriel et dans cet espace. SMS et WhatsApp ne sont pas encore actifs.",
+      notifyChannels: "Comment on vous joint", notifyChannelsHint: "Talendus vous écrit par courriel, dans cet espace, et par notifications push sur votre téléphone. SMS et WhatsApp ne sont pas proposés.",
       privacyHint: "Votre dossier est suivi par un conseiller. Contactez-nous dès que vous voulez avancer.",
       privacyTalendus: "Talendus peut utiliser un court résumé professionnel au moment de vous présenter à une entreprise.",
       dangerHint: "Cette action désactive le compte. Votre conseiller ne pourra plus vous considérer pour des mandats.",
@@ -229,7 +228,6 @@
       yourRole: "Votre accès",
       yourAccessHint: "Ce que vous pouvez faire ici dépend du rôle attribué par votre entreprise.",
       openProfile: "Modifier mon profil", openCompany: "Fiche entreprise", openBilling: "Factures",
-      comingSoon: "Prochainement",
       noSessions: "Aucune autre session enregistrée.",
       inviteHint: "La personne reçoit un accès à l’espace de cette entreprise.",
       roleHintOwner: "Accès complet, y compris l’équipe et la fiche entreprise.",
@@ -429,10 +427,17 @@
           var a = document.createElement("a");
           a.href = url;
           a.download = filename || "document";
+          a.rel = "noopener";
           document.body.appendChild(a);
           a.click();
           a.remove();
-          URL.revokeObjectURL(url);
+          var ua = navigator.userAgent || "";
+          if (/iphone|ipad|ipod/i.test(ua)) {
+            var opened = null;
+            try { opened = window.open(url, "_blank"); } catch (e) {}
+            if (!opened) location.assign(url);
+          }
+          setTimeout(function () { URL.revokeObjectURL(url); }, 8000);
         });
       }).catch(function () { window.alert(t.err); });
     }
@@ -591,6 +596,14 @@
       root.querySelectorAll("[data-nav]").forEach(function (btn) {
         btn.onclick = function () { go(btn.getAttribute("data-nav"), btn.getAttribute("data-id") || ""); };
       });
+      root.querySelectorAll("[data-quick-apply]").forEach(function (btn) {
+        btn.onclick = function () {
+          api.request("/applications", {
+            method: "POST",
+            body: { job_id: btn.getAttribute("data-quick-apply") || null, job_slug: btn.getAttribute("data-slug") || null }
+          }).then(function () { go("apps"); }).catch(function (err) { window.alert((err && err.message) || t.err); });
+        };
+      });
     }
 
     function renderChecking() {
@@ -635,13 +648,16 @@
       var detailBtn = available
         ? '<button type="button" class="tl-btn tl-btn-ghost" data-nav="job" data-id="' + esc(job.slug || job.id) + '">' + esc(t.jobDetail) + "</button>"
         : '<span class="tl-save-hint">' + esc(t.jobUnavailable) + "</span>";
+      var applyBtn = available
+        ? '<button type="button" class="tl-btn" data-quick-apply="' + esc(job.id || "") + '" data-slug="' + esc(job.slug || "") + '">' + esc(t.apply) + "</button> "
+        : "";
       return '<article class="tl-list-card"><span class="tl-chip orange">' + esc(statusLabel(job.status || "PUBLISHED")) + "</span>" +
         (job.saved ? '<span class="tl-match-score">' + esc(t.unbookmark) + "</span>" : "") +
         "<h3>" + esc(job.title || "") + "</h3><p class=\"tl-meta\">" + esc(job.company_name || "") + " · " + esc(job.location || "") +
         (job.shift ? " · " + esc(job.shift) : "") +
         (job.schedule ? " · " + esc(job.schedule) : "") +
         (job.contract_type ? " · " + esc(job.contract_type) : "") + "</p>" + (extra || "") +
-        "<p>" + detailBtn + " " + (available && job.slug ? '<a class="tl-split-cta" href="' + href + '">' + (isEn ? "Public page →" : "Page publique →") + "</a>" : "") + "</p></article>";
+        "<p>" + applyBtn + detailBtn + " " + (available && job.slug ? '<a class="tl-split-cta" href="' + href + '">' + (isEn ? "Public page →" : "Page publique →") + "</a>" : "") + "</p></article>";
     }
 
     function renderCandidateDashboard(user, dash, profile) {
@@ -876,6 +892,14 @@
         root.querySelectorAll("[data-nav]").forEach(function (btn) {
           btn.onclick = function () { go(btn.getAttribute("data-nav"), btn.getAttribute("data-id") || ""); };
         });
+        root.querySelectorAll("[data-quick-apply]").forEach(function (btn) {
+          btn.onclick = function () {
+            api.request("/applications", {
+              method: "POST",
+              body: { job_id: btn.getAttribute("data-quick-apply") || null, job_slug: btn.getAttribute("data-slug") || null }
+            }).then(function () { go("apps"); }).catch(function (err) { window.alert((err && err.message) || t.err); });
+          };
+        });
       }).catch(function (err) {
         var box = document.getElementById("acc-saved-jobs");
         if (box) box.innerHTML = errBox((err && err.message) || t.err);
@@ -893,6 +917,7 @@
         (job.skills ? "<h4>" + esc(t.skills) + "</h4><p>" + esc(job.skills) + "</p>" : "") +
         (job.experience_level ? "<p>" + esc(t.experience) + " : " + esc(job.experience_level) + "</p>" : "") +
         "<p>" + esc(t.updated) + " : " + esc(fmtDate(job.published_at)) + (job.expires_at ? " · " + esc(t.deadline) + " " + esc(fmtDate(job.expires_at)) : "") + "</p>" +
+        "<label>" + esc(t.cover) + '</label><textarea id="acc-cover" maxlength="4000" rows="4"></textarea>' +
         '<p><button type="button" class="tl-btn" id="acc-apply">' + esc(t.apply) + "</button> " +
         '<button type="button" class="tl-btn tl-btn-ghost" id="acc-save-job">' + esc(job.saved ? t.unbookmark : t.bookmark) + "</button></p>" +
         '<div class="tl-success" id="acc-job-msg"></div>';
@@ -1141,7 +1166,8 @@
           settingsCard(t.settingsNotifs, "", events) +
           settingsCard(t.notifyChannels, t.notifyChannelsHint,
             settingsCheck("notify_email", prefs.notify_email !== false, t.emailNotif, "") +
-            settingsCheck("notify_in_app", prefs.notify_in_app !== false, t.inApp, "")) +
+            settingsCheck("notify_in_app", prefs.notify_in_app !== false, t.inApp, "") +
+            settingsCheck("notify_push", !!prefs.notify_push, t.push, "")) +
           '<button class="tl-btn" type="submit">' + esc(t.save) + '</button><div class="tl-success"></div></form>';
       } else if (tab === "privacy") {
         body = '<form class="tl-form" id="acc-privacy">' +
@@ -1207,7 +1233,7 @@
       var prefs = document.getElementById("acc-prefs");
       if (prefs) prefs.addEventListener("submit", function (e) {
         e.preventDefault();
-        savePrefs(prefs, ["notify_email", "notify_in_app", "notify_application", "notify_message", "notify_match", "notify_interview"])
+        savePrefs(prefs, ["notify_email", "notify_in_app", "notify_push", "notify_application", "notify_message", "notify_match", "notify_interview"])
           .then(function () { flash(prefs.querySelector(".tl-success"), t.saved, true); })
           .catch(function (err) { flash(prefs.querySelector(".tl-success"), (err && err.message) || t.err, false); });
       });
@@ -1559,7 +1585,10 @@
       });
       var apply = document.getElementById("acc-apply");
       if (apply && state.job) apply.onclick = function () {
-        api.request("/applications", { method: "POST", body: { job_id: state.job.id, job_slug: state.job.slug } })
+        var cover = ((document.getElementById("acc-cover") || {}).value || "").trim();
+        var body = { job_id: state.job.id, job_slug: state.job.slug };
+        if (cover) body.cover_note = cover;
+        api.request("/applications", { method: "POST", body: body })
           .then(function () { go("apps"); })
           .catch(function (err) { flash(document.getElementById("acc-job-msg"), (err && err.message) || t.err, false); });
       };

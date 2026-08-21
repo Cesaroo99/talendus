@@ -230,7 +230,19 @@
       return true;
     }
 
+    function injectHoneypot(form) {
+      if (!form || form.querySelector('input[name="website_url"]')) return;
+      var hp = document.createElement("input");
+      hp.className = "tl-hp";
+      hp.name = "website_url";
+      hp.tabIndex = -1;
+      hp.autocomplete = "off";
+      hp.setAttribute("aria-hidden", "true");
+      form.insertBefore(hp, form.firstChild);
+    }
+
     document.querySelectorAll(".tl-form").forEach(function (form) {
+      injectHoneypot(form);
       form.addEventListener("submit", function (e) {
         e.preventDefault();
         var kind = form.getAttribute("data-form") || (form.closest("#postuler") ? "apply" : "contact");
@@ -288,6 +300,7 @@
             var phone = formValue(form, ["tel", "telephone", "phone"]);
             if (phone) fd.append("phone", phone);
             if (cover) fd.append("cover_note", cover);
+            fd.append("website_url", formValue(form, ["website_url"]));
             if (file) api.appendFile(fd, file, "cv.pdf");
             send = api.request("/applications/public", { method: "POST", body: fd });
           }
@@ -334,6 +347,7 @@
           if (message) fd.append("message", message);
           var subject = formValue(form, ["objet", "subject", "profil"]);
           if (subject) fd.append("subject", subject);
+          fd.append("website_url", formValue(form, ["website_url"]));
           if (file) api.appendFile(fd, file, "cv.pdf");
           api.request("/talent-profile", { method: "POST", body: fd }).then(function () {
             showFormMessage(form, fallback, false);
@@ -389,7 +403,8 @@
           experience_level: formValue(form, ["experience"]) || null,
           skills: formValue(form, ["competences", "skills"]) || null,
           contact_role: formValue(form, ["fonction", "role"]) || null,
-          company_size: formValue(form, ["taille", "size"]) || null
+          company_size: formValue(form, ["taille", "size"]) || null,
+          website_url: formValue(form, ["website_url"]) || ""
         }).then(function () {
           showFormMessage(form, isHiring ? hiringOk : fallback, false);
           form.reset();

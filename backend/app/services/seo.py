@@ -16,6 +16,19 @@ from app.models.enums import BlogStatus, JobStatus, utcnow
 SITE_ROOT = Path(__file__).resolve().parents[3]
 
 REDIRECTS = {
+    "/index1.html": "/",
+    "/index2.html": "/",
+    "/index3.html": "/",
+    "/index4.html": "/",
+    "/index5.html": "/",
+    "/index6.html": "/",
+    "/index7.html": "/",
+    "/index8.html": "/",
+    "/index9.html": "/",
+    "/index10.html": "/",
+    "/projects.html": "/",
+    "/team.html": "/",
+    "/testimonial.html": "/",
     "/about.html": "/a-propos.html",
     "/service.html": "/services.html",
     "/employeurs.html": "/entreprises.html",

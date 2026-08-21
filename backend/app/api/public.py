@@ -15,6 +15,7 @@ from app.services.audit import audit
 from app.services.capabilities import public_services
 from app.services.email import send_email
 from app.services import candidates as cand_svc
+from app.services.spam import reject_honeypot
 
 router = APIRouter(tags=["public"])
 
@@ -51,6 +52,7 @@ def job_board(db: Session = Depends(get_db)):
 
 @router.post("/contact")
 def contact(payload: ContactIn, request: Request, db: Session = Depends(get_db)):
+    reject_honeypot(payload.website_url)
     details = [
         payload.message,
         f"Entreprise : {payload.company}" if payload.company else "",
@@ -114,6 +116,7 @@ async def talent_profile(request: Request, db: Session = Depends(get_db)):
     cv_filename = None
     if "multipart/form-data" in content_type:
         form = await request.form()
+        reject_honeypot(_form_text(form, "website_url"))
         payload = _talent_payload(
             {
                 "first_name": _form_text(form, "first_name") or _form_text(form, "nom"),
@@ -137,7 +140,9 @@ async def talent_profile(request: Request, db: Session = Depends(get_db)):
                 cv_file = data
                 cv_filename = (getattr(upload, "filename", None) or "").strip() or "cv"
     else:
-        payload = _talent_payload(await request.json())
+        raw = await request.json()
+        reject_honeypot(str((raw or {}).get("website_url") or ""))
+        payload = _talent_payload(raw)
     result = cand_svc.submit_public_talent(
         db, payload, client_ip(request), cv_file=cv_file, cv_filename=cv_filename
     )

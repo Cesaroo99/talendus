@@ -98,8 +98,9 @@ def _make_email_token(db: Session, user: User, purpose: str, hours: int) -> str:
 
 
 def register(db: Session, data: RegisterIn, ip: str | None = None, user_agent: str | None = None) -> tuple[User, dict]:
-    if (data.website_url or "").strip():
-        raise AppError(400, "Requête refusée.", "SPAM_REJECTED")
+    from app.services.spam import reject_honeypot
+
+    reject_honeypot(data.website_url)
     if data.role not in ALLOWED_SELF_ROLES:
         raise AppError(403, "Ce rôle ne peut pas s'inscrire publiquement.", "ROLE_NOT_ALLOWED")
     existing = db.scalar(select(User).where(User.email == data.email.lower()))

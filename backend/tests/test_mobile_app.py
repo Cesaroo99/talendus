@@ -123,6 +123,9 @@ def test_mobile_app_signs_in_before_creating_an_account():
     assert '<a class="tn-persona" href="#/register/talent"' not in js
     assert "#/forgot" in js
     assert "data-reset" in js
+    assert "stashAuthToken" in js
+    assert 'sessionStorage.setItem(key, id)' in js
+    assert "history.replaceState" in js
     assert "data-forgot" in js
     assert "sendReset" in js
     assert 'id="tn-forgot-email"' in js
