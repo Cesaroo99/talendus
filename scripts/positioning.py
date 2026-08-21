@@ -1284,7 +1284,7 @@ def job_search_filters(lang="fr"):
             <option value="">Toute expérience</option>
             <option value="debutant">Débutant</option>
             <option value="intermediaire">Intermédiaire</option>
-            <option value="senior">Senior</option>
+            <option value="senior">Expérimenté</option>
           </select>
         </label>
         <label class="tl-filter">
@@ -1640,9 +1640,9 @@ def _apply_form_html(slug, lang="fr"):
         return f"""
           <form class="tl-form" data-form="apply" data-job-slug="{slug}" enctype="multipart/form-data">
             {HONEYPOT_INPUT}
-            <label>Name</label><input name="name" required autocomplete="name">
-            <label>Email</label><input type="email" name="email" required autocomplete="email">
-            <label>Phone</label><input name="phone" autocomplete="tel">
+            <label>Name <input name="name" required autocomplete="name"></label>
+            <label>Email <input type="email" name="email" required autocomplete="email"></label>
+            <label>Phone <input name="phone" autocomplete="tel"></label>
             <label class="tl-file">
               <span>Your resume</span>
               <input type="file" name="cvfile" accept="{accept}" required>
@@ -1657,9 +1657,9 @@ def _apply_form_html(slug, lang="fr"):
     return f"""
           <form class="tl-form" data-form="apply" data-job-slug="{slug}" enctype="multipart/form-data">
             {HONEYPOT_INPUT}
-            <label>Nom</label><input name="nom" required autocomplete="name">
-            <label>Courriel</label><input type="email" name="courriel" required autocomplete="email">
-            <label>Téléphone</label><input name="tel" autocomplete="tel">
+            <label>Nom <input name="nom" required autocomplete="name"></label>
+            <label>Courriel <input type="email" name="courriel" required autocomplete="email"></label>
+            <label>Téléphone <input name="tel" autocomplete="tel"></label>
             <label class="tl-file">
               <span>Votre CV</span>
               <input type="file" name="cvfile" accept="{accept}" required>

@@ -363,7 +363,7 @@ body:not(.tl-solid-header) .homepage2-body .vl-transparent-header {
   justify-content: flex-start;
   width: 100%;
   height: auto;
-  min-height: 42px;
+  min-height: 44px;
   padding: 10px 18px !important;
   margin: 0;
   font-size: 14px !important;
@@ -1862,7 +1862,8 @@ table, .tl-job-card p, .tl-card .body p { color: var(--tl-navy); }
 }
 .tl-session-icon-btn,
 .tl-session-bell {
-  width: 40px;
+  width: 44px;
+  min-height: 44px;
   padding: 0;
   position: relative;
 }
@@ -3226,11 +3227,20 @@ body.tl-persona-entreprise .tl-gateway-hero .hero2-slider-area {
   background: #fff;
   color: var(--tl-navy);
 }
+@media (max-width: 699px) {
+  .tl-filters-search .tl-filter:nth-child(n+5) { display: none; }
+  .tl-filters-search.is-open .tl-filter { display: flex; }
+  .tl-filters-toggle {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
 @media (min-width: 700px) {
   .tl-filters-search {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .tl-filter-search { grid-column: 1 / -1; }
+  .tl-filters-toggle { display: none; }
 }
 @media (min-width: 1100px) {
   .tl-filters-search {
@@ -3621,7 +3631,7 @@ a.tl-job-card:hover .tl-job-card-cta::after {
 .tl-file span { font-weight: 800; color: var(--tl-navy); }
 .tl-file input[type=file] {
   width: 100%;
-  min-height: 42px;
+  min-height: 44px;
   padding: 8px 0;
   background: transparent;
   border: 0;

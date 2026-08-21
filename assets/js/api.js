@@ -60,7 +60,7 @@
     }).then(function (res) {
       return res.json().catch(function () { return {}; }).then(function (json) {
         if (!res.ok || json.success === false) {
-          throw new Error((json && json.message) || "Session expirée");
+          throw new Error((json && json.message) || sessionExpiredMsg());
         }
         setSession(json.data);
         return (json.data && json.data.access_token) || "";
@@ -76,8 +76,21 @@
     return refreshPromise;
   }
 
+  function pageIsEn() {
+    try {
+      if ((document.documentElement.lang || "").toLowerCase().indexOf("en") === 0) return true;
+      return /\/en(\/|$)/.test(location.pathname || "");
+    } catch (e) { return false; }
+  }
+  function fallbackErr() {
+    return pageIsEn() ? "Something went wrong." : "Une erreur s’est produite.";
+  }
+  function sessionExpiredMsg() {
+    return pageIsEn() ? "Session expired. Sign in again." : "Session expirée";
+  }
+
   function failPayload(res, json) {
-    var err = new Error((json && json.message) || "Erreur API");
+    var err = new Error((json && json.message) || fallbackErr());
     err.code = json && json.code;
     err.status = res.status;
     err.payload = json;

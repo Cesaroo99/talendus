@@ -15,12 +15,21 @@ def pfx(lang):
     return "../" if lang == "en" else ""
 
 
-def wa_link(lang):
-    msg = (
-        "Hello%20Talendus%2C%20I%20would%20like%20to%20talk%20about%20a%20hiring%20need."
-        if lang == "en"
-        else "Bonjour%20Talendus%2C%20je%20souhaite%20discuter%20d%27un%20besoin%20de%20recrutement."
-    )
+def wa_link(lang, persona="gateway"):
+    if lang == "en":
+        if persona == "talent":
+            msg = "Hello%20Talendus%2C%20I%20am%20looking%20for%20work."
+        elif persona == "entreprise":
+            msg = "Hello%20Talendus%2C%20I%20would%20like%20to%20talk%20about%20a%20hiring%20need."
+        else:
+            msg = "Hello%20Talendus%2C%20I%20would%20like%20to%20talk."
+    else:
+        if persona == "talent":
+            msg = "Bonjour%20Talendus%2C%20je%20cherche%20un%20emploi."
+        elif persona == "entreprise":
+            msg = "Bonjour%20Talendus%2C%20je%20souhaite%20discuter%20d%27un%20besoin%20de%20recrutement."
+        else:
+            msg = "Bonjour%20Talendus%2C%20j%27aimerais%20vous%20parler."
     return WA_HREF + msg
 
 
@@ -356,11 +365,12 @@ def nav_html(lang):
 """
 
 
-def lang_switcher(lang, alt_url):
+def lang_switcher(lang, alt_url, current="."):
+    self_href = current or "."
     if lang == "fr":
-        fr_href, en_href, fr_cls, en_cls = "#", alt_url or "en/index.html", "is-active", ""
+        fr_href, en_href, fr_cls, en_cls = self_href, alt_url or "en/index.html", "is-active", ""
     else:
-        fr_href, en_href, fr_cls, en_cls = alt_url or "../index.html", "#", "", "is-active"
+        fr_href, en_href, fr_cls, en_cls = alt_url or "../index.html", self_href, "", "is-active"
     return f"""<nav class="tl-lang" aria-label="Language / Langue">
                     <a class="{fr_cls}" href="{fr_href}" lang="fr" hreflang="fr-CA">FR</a>
                     <a class="{en_cls}" href="{en_href}" lang="en" hreflang="en-CA">EN</a>
@@ -390,9 +400,9 @@ def preloader(lang, a):
 """
 
 
-def whatsapp_fab(lang):
+def whatsapp_fab(lang, persona="gateway"):
     t = COPY[lang]
-    return f"""<a class="tl-whatsapp" href="{wa_link(lang)}" target="_blank" rel="noopener noreferrer" aria-label="{t['wa_label']}">
+    return f"""<a class="tl-whatsapp" href="{wa_link(lang, persona)}" target="_blank" rel="noopener noreferrer" aria-label="{t['wa_label']}">
   <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M19.11 17.47c-.29-.15-1.73-.85-2-.95-.27-.1-.46-.15-.66.15s-.76.95-.93 1.15c-.17.2-.34.22-.63.07-.29-.15-1.22-.45-2.33-1.43-.86-.77-1.44-1.72-1.61-2.01-.17-.29-.02-.45.13-.6.13-.13.29-.34.43-.51.15-.17.2-.29.29-.48.1-.2.05-.36-.02-.51-.07-.15-.66-1.59-.9-2.18-.24-.57-.48-.49-.66-.5h-.56c-.2 0-.51.07-.78.36-.27.29-1.02.99-1.02 2.42s1.05 2.81 1.19 3 .07.15 2.06 3.15c1.64 1.41 2.96 1.85 3.58 2.06.54.17 1.04.15 1.43.09.44-.06 1.73-.71 1.97-1.39.24-.68.24-1.27.17-1.39-.07-.12-.26-.2-.55-.35zM16.03 4.05C9.41 4.05 4.05 9.4 4.05 16.03c0 2.11.55 4.17 1.6 5.99L4 28l6.12-1.6a11.94 11.94 0 0 0 5.91 1.51h.01c6.62 0 11.98-5.36 11.98-11.98 0-3.2-1.25-6.21-3.51-8.47a11.9 11.9 0 0 0-8.48-3.51zm0 21.86h-.01a9.94 9.94 0 0 1-5.06-1.38l-.36-.22-3.63.95.97-3.54-.23-.37a9.93 9.93 0 0 1-1.52-5.32c0-5.48 4.46-9.94 9.95-9.94 2.66 0 5.15 1.04 7.03 2.92a9.87 9.87 0 0 1 2.91 7.02c0 5.49-4.47 9.95-9.95 9.95z"/></svg>
 </a>"""
 
@@ -541,14 +551,16 @@ gtag('consent', 'default', {
 """
 
 
-def header(solid=True, lang="fr", alt_url="", persona="gateway"):
+def header(solid=True, lang="fr", alt_url="", persona="gateway", current="."):
     t, h, a = COPY[lang], HREFS[lang], pfx(lang)
     classes = []
     if solid:
         classes.append("tl-solid-header")
     classes.append(f"tl-persona-{persona}")
     cls = " ".join(classes)
-    switch = lang_switcher(lang, alt_url)
+    switch = lang_switcher(lang, alt_url, current)
+    acc = h["employer_account"] if persona == "entreprise" else h["account"]
+    role_attr = ' data-auth-role="EMPLOYER"' if persona == "entreprise" else ""
     return f"""<body class="{cls}" data-persona="{persona}">
 {preloader(lang, a)}
 <header class="homepage2-body">
@@ -568,17 +580,17 @@ def header(solid=True, lang="fr", alt_url="", persona="gateway"):
               <div class="tl-header-tools">
                 {switch}
                 <div class="tl-session" data-session="desktop">
-                  <a href="{h['account']}" class="tl-session-login" data-auth-open="login">
+                  <a href="{acc}" class="tl-session-login" data-auth-open="login"{role_attr}>
                     <i class="fa-regular fa-user" aria-hidden="true"></i>
                     <span>{t['nav_account']}</span>
                   </a>
-                  <a href="{h['account']}" class="tl-btn tl-session-cta" data-auth-open="register">{t['nav_register']}</a>
+                  <a href="{acc}" class="tl-btn tl-session-cta" data-auth-open="register"{role_attr}>{t['nav_register']}</a>
                 </div>
               </div>
               <div class="tl-mobile-tools">
                   {switch}
                   <div class="tl-session tl-session-compact" data-session="mobile">
-                    <a href="{h['account']}" class="tl-session-icon-btn" data-auth-open="login" aria-label="{t['nav_account']}">
+                    <a href="{acc}" class="tl-session-icon-btn" data-auth-open="login"{role_attr} aria-label="{t['nav_account']}">
                       <i class="fa-regular fa-user" aria-hidden="true"></i>
                     </a>
                   </div>
@@ -612,11 +624,11 @@ def header(solid=True, lang="fr", alt_url="", persona="gateway"):
             <span><a href="{PHONE_TEL}"><i class="fa-solid fa-phone"></i> {PHONE_DISPLAY}</a></span>
             <span><a href="mailto:info@talendus.ca"><i class="fa-regular fa-envelope"></i> info@talendus.ca</a></span>
             <span><a href="{h['contact']}"><i class="fa-solid fa-location-dot"></i> {t['offcanvas_place']}</a></span>
-            <span><a href="{wa_link(lang)}" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a></span>
+            <span><a href="{wa_link(lang, persona)}" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a></span>
             <p class="tl-offcanvas-note">{t['offcanvas_note']}</p>
             <div class="vl-offcanvas-cta tl-session tl-session-offcanvas" data-session="offcanvas">
-              <a href="{h['account']}" class="tl-btn tl-btn-ghost" data-auth-open="login">{t['nav_account']}</a>
-              <a href="{h['account']}" class="tl-btn" data-auth-open="register">{t['nav_register']}</a>
+              <a href="{acc}" class="tl-btn tl-btn-ghost" data-auth-open="login"{role_attr}>{t['nav_account']}</a>
+              <a href="{acc}" class="tl-btn" data-auth-open="register"{role_attr}>{t['nav_register']}</a>
             </div>
         </div>
     </div>
@@ -700,11 +712,11 @@ def cta_band(lang="fr", persona="gateway"):
 """
 
 
-def footer(lang="fr"):
+def footer(lang="fr", persona="gateway"):
     t, h, a = COPY[lang], HREFS[lang], pfx(lang)
     return f"""
 {call_fab(lang)}
-{whatsapp_fab(lang)}
+{whatsapp_fab(lang, persona)}
 <div class="vl-footer2-section-area">
   <div class="container">
     <div class="row">
@@ -749,7 +761,7 @@ def footer(lang="fr"):
           <ul>
             <li><a href="{PHONE_TEL}">{PHONE_DISPLAY}</a></li>
             <li><a href="mailto:info@talendus.ca">info@talendus.ca</a></li>
-            <li><a href="{wa_link(lang)}" target="_blank" rel="noopener noreferrer">WhatsApp</a></li>
+            <li><a href="{wa_link(lang, persona)}" target="_blank" rel="noopener noreferrer">WhatsApp</a></li>
             <li><a href="{h['app']}">{t['app_install']}</a></li>
             <li>{t['footer_hours']}</li>
             <li><a href="{h['contact']}">{t['footer_place']}</a></li>
@@ -1176,7 +1188,7 @@ def native_app_page(lang="fr"):
 <html lang="{html_lang}">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>{title}</title>
   <meta name="description" content="{desc}">
   <meta name="robots" content="noindex,nofollow">
@@ -1189,7 +1201,7 @@ def native_app_page(lang="fr"):
   <link rel="manifest" href="{prefix}manifest.webmanifest">
   <link rel="apple-touch-icon" sizes="180x180" href="{prefix}assets/img/logo/apple-touch-icon.png">
   <link rel="icon" href="{prefix}assets/img/logo/icon-192.png" type="image/png">
-  <link rel="stylesheet" href="{prefix}assets/css/mobile-app.css?v=28">
+  <link rel="stylesheet" href="{prefix}assets/css/mobile-app.css?v=29">
 </head>
 <body class="tl-native tn-gated">
   <div id="tl-native-app" aria-live="polite">
@@ -1205,9 +1217,9 @@ def native_app_page(lang="fr"):
       <div class="tn-splash-bar" aria-hidden="true"><span></span></div>
     </div>
   </div>
-  <script src="{prefix}assets/js/api.js?v=28"></script>
-  <script src="{prefix}assets/js/talendus-call.js?v=28"></script>
-  <script src="{prefix}assets/js/mobile-app.js?v=28"></script>
+  <script src="{prefix}assets/js/api.js?v=29"></script>
+  <script src="{prefix}assets/js/talendus-call.js?v=29"></script>
+  <script src="{prefix}assets/js/mobile-app.js?v=29"></script>
 </body>
 </html>
 """
@@ -1233,9 +1245,9 @@ def wrap(title, desc, slug, body, solid=True, lang="fr", alt="", robots="index,f
             og_type=og_type,
             og_image=og_image,
         )
-        + header(solid, lang=lang, alt_url=switch, persona=persona)
+        + header(solid, lang=lang, alt_url=switch, persona=persona, current=slug.split("/")[-1] or "index.html")
         + body
-        + footer(lang)
+        + footer(lang, persona=persona)
     )
 
 

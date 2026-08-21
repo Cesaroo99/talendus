@@ -66,15 +66,26 @@
     });
   }
 
+  function wireFormLabels() {
+    document.querySelectorAll(".tl-form label").forEach(function (label, i) {
+      if (label.htmlFor || label.querySelector("input, select, textarea")) return;
+      var next = label.nextElementSibling;
+      if (!next || !/^(INPUT|SELECT|TEXTAREA)$/.test(next.tagName)) return;
+      if (!next.id) next.id = "tl-field-" + (next.getAttribute("name") || i);
+      label.setAttribute("for", next.id);
+    });
+  }
+
   ready(function () {
     markActiveNav();
     setTimeout(markActiveNav, 250);
+    wireFormLabels();
 
     if (window.jQuery) {
       var $ = window.jQuery;
       $(window).off("load");
       $(window).on("load.talendus", function () {
-        var minMs = 900;
+        var minMs = 180;
         var start = window.performance && performance.now ? performance.now() : Date.now();
         function hide() {
           var elapsed = (window.performance && performance.now ? performance.now() : Date.now()) - start;
@@ -154,9 +165,19 @@
       var tel = "tel:+" + e164;
       var waBase = "https://wa.me/" + e164;
       var display = c.phone_display || "";
-      var waMsg = isEn
-        ? "?text=" + encodeURIComponent("Hello Talendus, I would like to talk about a hiring need.")
-        : "?text=" + encodeURIComponent("Bonjour Talendus, je souhaite discuter d'un besoin de recrutement.");
+      var persona = (document.body.getAttribute("data-persona") || "");
+      var waMsg;
+      if (isEn) {
+        if (persona === "talent") waMsg = "?text=" + encodeURIComponent("Hello Talendus, I am looking for work.");
+        else if (persona === "entreprise") waMsg = "?text=" + encodeURIComponent("Hello Talendus, I would like to talk about a hiring need.");
+        else waMsg = "?text=" + encodeURIComponent("Hello Talendus, I would like to talk.");
+      } else if (persona === "talent") {
+        waMsg = "?text=" + encodeURIComponent("Bonjour Talendus, je cherche un emploi.");
+      } else if (persona === "entreprise") {
+        waMsg = "?text=" + encodeURIComponent("Bonjour Talendus, je souhaite discuter d'un besoin de recrutement.");
+      } else {
+        waMsg = "?text=" + encodeURIComponent("Bonjour Talendus, j'aimerais vous parler.");
+      }
       document.querySelectorAll('a[href^="tel:"], a.tl-call').forEach(function (a) {
         a.hidden = false;
         a.setAttribute("href", tel);
@@ -324,10 +345,12 @@
         var fallback = isEn
           ? "Thanks. On weekdays we usually reply within 30 minutes. A consultant will follow up."
           : "Merci. En semaine, on répond en général en moins de 30 minutes. Un conseiller vous rappelle.";
+        var sendFail = isEn
+          ? "The message could not be sent. Check your connection and try again."
+          : "L’envoi n’a pas abouti. Vérifiez votre connexion et réessayez.";
         var api = window.TalendusAPI;
         if (!api) {
-          showFormMessage(form, kind === "hiring-need" ? hiringOk : fallback, false);
-          form.reset();
+          showFormMessage(form, sendFail, true);
           return;
         }
         var btn = form.querySelector("button[type=submit]");
@@ -485,9 +508,8 @@
             else if (kind === "contact" || (form.getAttribute("data-form") === "contact")) window.TalendusTrack.contact({ content_name: "contact" });
             else window.TalendusTrack.lead({ content_name: kind || "form" });
           }
-        }).catch(function () {
-          showFormMessage(form, isHiring ? hiringOk : fallback, false);
-          form.reset();
+        }).catch(function (err) {
+          showFormMessage(form, (err && err.message) || sendFail, true);
         }).then(done);
       });
     });
@@ -611,11 +633,29 @@
         window.TalendusTrack.search({ search_term: q, content_category: "jobs" });
       }, 600);
     }
-    [search, cat, city, type, shift, sal, sector, exp].forEach(function (el) {
+    [search, cat, city, type, shift, schedule, mode, sal, sector, exp].forEach(function (el) {
       if (el) el.addEventListener("input", filterJobsAndTrack);
       if (el) el.addEventListener("change", filterJobsAndTrack);
     });
     if (document.getElementById("job-list")) filterJobs();
+
+    var filtersRoot = document.querySelector(".tl-filters-search");
+    if (filtersRoot && !filtersRoot.querySelector(".tl-filters-toggle")) {
+      var extra = filtersRoot.querySelectorAll(".tl-filter");
+      if (extra.length > 4) {
+        var toggle = document.createElement("button");
+        toggle.type = "button";
+        toggle.className = "tl-text-btn tl-filters-toggle";
+        toggle.textContent = isEn ? "More filters" : "Plus de filtres";
+        toggle.addEventListener("click", function () {
+          var open = filtersRoot.classList.toggle("is-open");
+          toggle.textContent = open
+            ? (isEn ? "Fewer filters" : "Moins de filtres")
+            : (isEn ? "More filters" : "Plus de filtres");
+        });
+        filtersRoot.appendChild(toggle);
+      }
+    }
 
     var jobList = document.getElementById("job-list");
     if (jobList && window.TalendusAPI) {

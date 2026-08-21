@@ -180,11 +180,11 @@ def test_mobile_shell_is_served(client):
     res = client.get("/m.html")
     assert res.status_code == 200, res.text
     assert "tl-native-app" in res.text
-    assert "mobile-app.css?v=28" in res.text
+    assert "mobile-app.css?v=29" in res.text
     en = client.get("/en/m.html")
     assert en.status_code == 200, en.text
     assert "tl-native-app" in en.text
-    assert "mobile-app.css?v=28" in en.text
+    assert "mobile-app.css?v=29" in en.text
 
 
 def test_mobile_app_hub_is_ordered():

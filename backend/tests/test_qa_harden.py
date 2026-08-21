@@ -128,6 +128,49 @@ def test_finance_cannot_see_candidate_cv_but_can_see_company_docs(client):
     assert deleted.status_code == 403
 
 
+def test_admin_login_does_not_prefill_staff_email():
+    app = (ROOT / "admin" / "js" / "app.js").read_text(encoding="utf-8")
+    assert "lea.super@talendus.ca" not in app
+
+
+def test_public_forms_do_not_fake_success_on_error():
+    js = (ROOT / "assets" / "js" / "talendus.js").read_text(encoding="utf-8")
+    assert "sendFail" in js
+    assert "showFormMessage(form, (err && err.message) || sendFail, true);" in js
+    assert "job-schedule" in js
+    assert "job-mode" in js
+    assert "wireFormLabels" in js
+
+
+def test_whatsapp_prefill_follows_persona():
+    parts = (ROOT / "scripts" / "parts.py").read_text(encoding="utf-8")
+    assert "cherche%20un%20emploi" in parts
+    assert "looking%20for%20work" in parts
+    assert 'if persona == "talent"' in parts
+    js = (ROOT / "assets" / "js" / "talendus.js").read_text(encoding="utf-8")
+    assert "je cherche un emploi" in js
+
+
+def test_employer_guest_auth_points_to_employer_space():
+    auth = (ROOT / "assets" / "js" / "auth-gate.js").read_text(encoding="utf-8")
+    assert "guestSpaceHref" in auth
+    assert "espace-employeur.html" in auth
+    assert 'openAuth("login", { role: "EMPLOYER" })' in auth
+    account = (ROOT / "assets" / "js" / "account.js").read_text(encoding="utf-8")
+    assert '["jobs", t.jobs' in account
+    assert '["interviews", t.interviews' in account
+    mobile = (ROOT / "assets" / "js" / "mobile-app.js").read_text(encoding="utf-8")
+    assert "alreadyApplied" in mobile
+    assert "data-job-more" in mobile
+    assert "t.withdrawn" in mobile
+    assert "alertsLead" in mobile
+    assert "APPLICATION_ALREADY_EXISTS" in mobile
+    assert 'route().name === "notifs" && (state.notifs' not in mobile
+    offline = (ROOT / "offline.html").read_text(encoding="utf-8")
+    assert "tel:+12635585225" in offline
+    assert "mailto:info@talendus.ca" not in offline
+
+
 def test_admin_store_has_no_demo_password():
     store = (ROOT / "admin" / "js" / "store.js").read_text(encoding="utf-8")
     app = (ROOT / "admin" / "js" / "app.js").read_text(encoding="utf-8")
@@ -155,6 +198,24 @@ def test_account_space_covers_apply_push_and_ios_download():
     auth = (ROOT / "assets" / "js" / "auth-gate.js").read_text(encoding="utf-8")
     assert "tl-auth-" in auth
     assert "history.replaceState" in auth
+
+
+def test_generated_contact_copy_and_redirects():
+    contact = (ROOT / "contact.html").read_text(encoding="utf-8")
+    assert "banque de talents" not in contact.lower()
+    assert "Être considéré pour des mandats" in contact
+    emp = (ROOT / "employeurs.html").read_text(encoding="utf-8")
+    assert "noindex" in emp
+    page_404 = (ROOT / "404.html").read_text(encoding="utf-8")
+    assert "emplois.html" in page_404
+    employer_space = (ROOT / "espace-employeur.html").read_text(encoding="utf-8")
+    assert "espace-employeur.html" in employer_space
+    assert 'data-auth-role="EMPLOYER"' in employer_space
+    jobs = (ROOT / "emplois.html").read_text(encoding="utf-8")
+    assert "cherche%20un%20emploi" in jobs
+    mpage = (ROOT / "m.html").read_text(encoding="utf-8")
+    assert "maximum-scale" not in mpage
+    assert "mobile-app.css?v=29" in mpage
 
 
 def test_csp_header_is_present(client):

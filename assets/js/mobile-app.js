@@ -107,6 +107,12 @@
     createAlert: "Create an alert",
     cover: "A line for your consultant (optional)",
     withdraw: "Withdraw",
+    withdrawn: "Application withdrawn.",
+    alreadyApplied: "Talendus already has this request.",
+    viewApp: "Follow this application",
+    notFound: "This page is no longer available.",
+    readMore: "Read more",
+    alertsLead: "Add a keyword. We watch matching roles for you.",
     forgot: "Forgot password?",
     forgotSent: "If an account exists, we sent a reset email.",
     invoices: "Invoices",
@@ -359,6 +365,12 @@
     createAlert: "Créer une alerte",
     cover: "Un mot pour votre conseiller (facultatif)",
     withdraw: "Retirer",
+    withdrawn: "Candidature retirée.",
+    alreadyApplied: "Talendus a déjà cette demande.",
+    viewApp: "Suivre cette candidature",
+    notFound: "Cette page n’est plus disponible.",
+    readMore: "Lire la suite",
+    alertsLead: "Ajoutez un mot-clé. On surveille les offres pour vous.",
     forgot: "Mot de passe oublié ?",
     forgotSent: "Si un compte existe, un courriel de réinitialisation part.",
     invoices: "Factures",
@@ -451,7 +463,7 @@
     moreFilters: "Préciser la recherche",
     pick: "Choisir",
     searchOccupation: "Rechercher un métier",
-    viaTalendus: "Via Talendus",
+    viaTalendus: "Par Talendus",
     seeJob: "Voir l’offre",
     fileSaved: "Fichier enregistré dans Téléchargements.",
     chooseFile: "Choisir un fichier",
@@ -1230,9 +1242,9 @@
   function interviewCard() {
     var row = nextInterview();
     if (!row) return "";
-    var href = canJoinCall(row) ? ("#/call/" + encodeURIComponent(row.id) + (row.call_video === false ? "?video=0" : "?video=1")) : "#/interviews";
-    return '<a class="tn-job" href="' + href + '"><h3>' + esc(t.nextInterview) + "</h3><p class=\"tn-meta\">" +
-      esc(when(row.scheduled_at) + (row.location ? " · " + row.location : "") + (row.type ? " · " + (statusLabel(row.type) || row.type_label || "") : "")) + "</p></a>";
+    return '<div class="tn-card"><h3>' + esc(t.nextInterview) + "</h3><p class=\"tn-meta\">" +
+      esc(when(row.scheduled_at) + (row.location ? " · " + row.location : "") + (row.type ? " · " + (statusLabel(row.type) || row.type_label || "") : "")) +
+      "</p>" + (canJoinCall(row) ? callActions(row) : '<a class="tn-btn tn-btn-ghost" href="#/interviews">' + esc(t.seeAll) + "</a>") + "</div>";
   }
 
   function topBar() {
@@ -1342,7 +1354,8 @@
         '<button class="tn-btn" type="submit">' + esc(t.submitLogin) + "</button></form>" +
         '<p class="tn-forgot"><a class="tn-auth-link" href="#/forgot">' + esc(t.forgot) + "</a></p>" +
         '<p class="tn-note tn-auth-alt">' + esc(t.needAccount) + ' <a href="' + registerHref() + '">' + esc(t.register) + "</a></p>" +
-        helpLine() + "</div></div>";
+        '<p class="tn-note">' + esc(t.switchPrompt) + ' <a href="#/welcome">' + esc(t.changeChoice) + "</a></p>" +
+        helpLine() + langSwitch() + "</div></div>";
     }
     var regLead = employer ? t.registerEmployerLead : t.registerTalentLead;
     var regTitle = employer ? t.employer : t.talent;
@@ -1357,7 +1370,8 @@
       (employer ? "<label>" + esc(t.company) + '</label><input name="company_name" autocomplete="organization" required>' : "") +
       '<button class="tn-btn" type="submit">' + esc(t.submitRegister) + "</button></form>" +
       '<p class="tn-note tn-auth-alt">' + esc(t.haveAccount) + ' <a href="' + loginHref() + '">' + esc(t.login) + "</a></p>" +
-      helpLine() + "</div></div>";
+      '<p class="tn-note">' + esc(t.switchPrompt) + ' <a href="#/welcome">' + esc(t.changeChoice) + "</a></p>" +
+      helpLine() + langSwitch() + "</div></div>";
   }
 
   function jobCard(job) {
@@ -1391,7 +1405,7 @@
     if (!key) return "";
     if (key.indexOf("debut") >= 0 || key.indexOf("entry") >= 0) return isEn ? "Entry-level" : "Débutant";
     if (key.indexOf("inter") >= 0 || key.indexOf("mid") >= 0) return isEn ? "Mid-level" : "Intermédiaire";
-    if (key.indexOf("senior") >= 0) return "Senior";
+    if (key.indexOf("senior") >= 0) return isEn ? "Senior" : "Expérimenté";
     return raw;
   }
   function sectorGlyph(sector) {
@@ -1517,18 +1531,35 @@
       '<div class="tn-grid" data-jobs-grid>' + jobsGridHtml() + "</div>";
   }
 
+  function existingAppForJob(job) {
+    if (!job) return null;
+    return (state.apps || []).find(function (a) {
+      if (!a || a.status === "WITHDRAWN") return false;
+      var j = a.job || {};
+      return j.id === job.id || j.slug === job.slug || a.job_id === job.id;
+    }) || null;
+  }
+
   function jobView() {
     var job = state.job;
-    if (!job) return '<div class="tn-empty">' + esc(t.loading) + "</div>";
-    var body = (job.description || job.qualifications || "").slice(0, 900);
+    if (!job) return backTo("#/jobs") + '<div class="tn-empty">' + esc(t.notFound) + "</div>";
+    var full = job.description || job.qualifications || "";
+    var open = !!state.jobDescOpen;
+    var body = (!open && full.length > 900) ? full.slice(0, 900) + "…" : full;
+    var more = (!open && full.length > 900)
+      ? '<button type="button" class="tn-text-link" data-job-more>' + esc(t.readMore) + "</button>"
+      : "";
     var saved = !!(job.saved || (state.saved || []).some(function (row) { return (row.id || (row.job && row.job.id)) === job.id; }));
+    var existing = existingAppForJob(job);
+    var applyBlock = existing
+      ? '<p class="tn-lead">' + esc(t.alreadyApplied) + '</p><a class="tn-btn" href="#/app/' + encodeURIComponent(existing.id) + '">' + esc(t.viewApp) + "</a>"
+      : '<form class="tn-form" data-apply-form data-job="' + esc(job.id) + '"><label>' + esc(t.cover) + '</label><textarea name="cover_note" maxlength="4000"></textarea>' +
+        '<button class="tn-btn" type="submit">' + esc(t.apply) + "</button></form>";
     return '<a class="tn-back" href="#/jobs">' + esc(t.back) + "</a><h1 class=\"tn-title\">" + esc(job.title) + "</h1>" +
       jobFacts(job) +
-      (body ? '<div class="tn-card"><p>' + esc(body) + "</p></div>" : "") +
+      (body ? '<div class="tn-card"><p>' + esc(body) + "</p>" + more + "</div>" : "") +
       (job.benefits ? '<div class="tn-card"><p>' + esc(t.benefits) + " · " + esc(job.benefits) + "</p></div>" : "") +
-      flash() +
-      '<form class="tn-form" data-apply-form data-job="' + esc(job.id) + '"><label>' + esc(t.cover) + '</label><textarea name="cover_note" maxlength="4000"></textarea>' +
-      '<button class="tn-btn" type="submit">' + esc(t.apply) + "</button></form>" +
+      flash() + applyBlock +
       '<button type="button" class="tn-btn tn-btn-ghost" data-save-job="' + esc(job.id) + '">' + esc(saved ? t.unsaveJob : t.saveJob) + "</button>";
   }
 
@@ -1633,9 +1664,8 @@
   }
   function alertsView() {
     var o = jobOpts();
-    var hasAlerts = (state.alerts || []).length;
     return backTo("#/me") + "<h1 class=\"tn-title\">" + esc(t.alerts) + "</h1>" +
-      (hasAlerts ? "" : '<p class="tn-lead">' + esc(t.emptyAlerts) + "</p>") + flash() +
+      '<p class="tn-lead">' + esc(t.alertsLead) + "</p>" + flash() +
       '<form class="tn-form" data-alert><label>' + esc(t.alertKeywords) + '</label><input name="keywords" required>' +
       labeledChoice("city", t.city, o.locations, "", t.pick) +
       labeledChoice("sector", t.sector, o.sectors, "", t.pick) +
@@ -1661,7 +1691,7 @@
   }
   function inboxDetail() {
     var a = state.application;
-    if (!a) return '<div class="tn-empty">' + esc(t.loading) + "</div>";
+    if (!a) return backTo("#/inbox") + '<div class="tn-empty">' + esc(t.notFound) + "</div>";
     var job = a.job || {};
     var cand = a.candidate || {};
     return backTo("#/inbox") + "<h1 class=\"tn-title\">" + esc(personName(cand) || t.presentedFile) + "</h1>" +
@@ -1693,7 +1723,7 @@
   }
   function appView() {
     var a = state.application;
-    if (!a) return '<div class="tn-empty">' + esc(t.loading) + "</div>";
+    if (!a) return backTo("#/apps") + '<div class="tn-empty">' + esc(t.notFound) + "</div>";
     var job = a.job || {};
     return backTo("#/apps") + "<h1 class=\"tn-title\">" + esc(job.title || t.appDetail) + "</h1>" +
       '<p class="tn-meta">' + esc([job.location, job.shift, job.schedule, statusLabel(a.status)].filter(Boolean).join(" · ")) + "</p>" + flash() +
@@ -2048,7 +2078,7 @@
       if (name === "cv") {
         need("docs", function () { return api.request("/documents"); }, "docs", true);
       }
-      if (name === "me" || name === "apps" || name === "app") {
+      if (name === "me" || name === "apps" || name === "app" || name === "job") {
         need("apps", function () { return api.myApplications(); }, "apps", true);
       }
       if (name === "saved" || name === "job") {
@@ -2108,6 +2138,7 @@
 
   function loadRoute() {
     state.user = api.currentUser();
+    if (route().name !== "job") state.jobDescOpen = false;
     if (!syncHash()) return Promise.resolve();
     render();
     var r = route();
@@ -2146,14 +2177,6 @@
         if (!(prefEn && !pageIsEn())) applyLocale(state.prefs.locale, false);
       }
       if (!syncHash()) return;
-      if (state.user && route().name === "notifs" && (state.notifs || []).some(function (n) { return !n.is_read; })) {
-        return api.request("/notifications/read-all", { method: "POST" }).then(function () {
-          (state.notifs || []).forEach(function (n) { n.is_read = true; });
-          bustCache(["notifs"]);
-          render();
-          syncCallScreen();
-        });
-      }
       render();
       syncCallScreen();
     }).catch(function () { render(); });
@@ -2277,7 +2300,17 @@
     if (applyBtn) {
       e.preventDefault();
       if (!isCandidate()) return;
-      api.apply({ job_id: applyBtn.getAttribute("data-apply") }).then(function () { done(t.applied); }).catch(fail);
+      api.apply({ job_id: applyBtn.getAttribute("data-apply") }).then(function () { done(t.applied); }).catch(function (err) {
+        if (err && err.code === "APPLICATION_ALREADY_EXISTS") { done(t.alreadyApplied); return; }
+        fail(err);
+      });
+    }
+    var moreBtn = e.target.closest("[data-job-more]");
+    if (moreBtn) {
+      e.preventDefault();
+      state.jobDescOpen = true;
+      render();
+      return;
     }
     var saveBtn = e.target.closest("[data-save-job]");
     if (saveBtn) {
@@ -2292,7 +2325,7 @@
       e.preventDefault();
       if (!isCandidate()) return;
       api.request("/applications/" + withdraw.getAttribute("data-withdraw") + "/withdraw", { method: "POST" })
-        .then(function () { done(t.saved); }).catch(fail);
+        .then(function () { done(t.withdrawn); }).catch(fail);
     }
     var delAlert = e.target.closest("[data-del-alert]");
     if (delAlert) {
@@ -2319,7 +2352,10 @@
     }
     if (e.target.closest("[data-read-all]")) {
       e.preventDefault();
-      api.request("/notifications/read-all", { method: "POST" }).then(function () { return loadRoute(); }).catch(fail);
+      api.request("/notifications/read-all", { method: "POST" }).then(function () {
+        bustCache(["notifs"]);
+        return loadRoute();
+      }).catch(fail);
     }
     var intBtn = e.target.closest("[data-int-status]");
     if (intBtn) {
@@ -2442,7 +2478,10 @@
       var cover = (new FormData(form).get("cover_note") || "").trim();
       var payload = { job_id: form.getAttribute("data-job") };
       if (cover) payload.cover_note = cover;
-      api.apply(payload).then(function () { done(t.applied); }).catch(fail);
+      api.apply(payload).then(function () { done(t.applied); }).catch(function (err) {
+        if (err && err.code === "APPLICATION_ALREADY_EXISTS") { done(t.alreadyApplied); go("#/apps"); return loadRoute(); }
+        fail(err);
+      });
     } else if (form.matches("[data-alert]")) {
       e.preventDefault();
       if (!isCandidate()) return;
