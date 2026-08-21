@@ -73,6 +73,6 @@ services:
       - key: PUBLIC_EMAIL
         value: info@talendus.ca
       - key: PUBLIC_PHONE_E164
-        value: "2635585225"
+        value: "12635585225"
       - key: PUBLIC_PHONE_DISPLAY
         value: "263 558 5225"

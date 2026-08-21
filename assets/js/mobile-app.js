@@ -549,7 +549,7 @@
 
   var state = {
     user: api.currentUser(),
-    contact: { phone_e164: "2635585225", phone_display: "263 558 5225", email: "info@talendus.ca", demo: false },
+    contact: { phone_e164: "12635585225", phone_display: "263 558 5225", email: "info@talendus.ca", demo: false },
     jobs: [],
     job: null,
     dash: null,
