@@ -3982,6 +3982,14 @@ button.tl-btn.tl-btn-ghost-dark:hover,
 @media (min-width: 900px) {
   .tl-install-banner { display: none !important; }
 }
+@media (hover: hover) and (pointer: fine) {
+  .tl-install-banner { display: none !important; }
+}
+html.tl-desktop-os .tl-install-banner,
+html.tl-app-installed .tl-install-banner,
+html.tl-app-installed .tl-install-sheet {
+  display: none !important;
+}
 @media (display-mode: standalone) {
   .tl-whatsapp { display: none !important; }
   .tl-call { display: none !important; }

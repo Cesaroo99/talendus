@@ -228,19 +228,34 @@
     createContract: function (body) { return request("/contracts", { method: "POST", body: body }); },
     download: function (path, filename) {
       var token = getAccess();
+      var abs = apiRoot() + path;
+      if (abs.indexOf("http") !== 0) abs = (location.origin || "") + abs;
+      if (window.TalendusNative && typeof window.TalendusNative.downloadUrl === "function") {
+        try {
+          window.TalendusNative.downloadUrl(abs, filename || "document", token || "");
+          return Promise.resolve();
+        } catch (err) {}
+      }
       var headers = { "Accept": "*/*" };
       if (token) headers.Authorization = "Bearer " + token;
-      return fetch(apiRoot() + path, { headers: headers }).then(function (res) {
+      return fetch(abs, { headers: headers, credentials: "same-origin" }).then(function (res) {
         if (!res.ok) throw new Error("Téléchargement impossible.");
         return res.blob().then(function (blob) {
           var url = URL.createObjectURL(blob);
           var a = document.createElement("a");
           a.href = url;
           a.download = filename || "document";
+          a.rel = "noopener";
           document.body.appendChild(a);
           a.click();
           a.remove();
-          setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+          var ua = navigator.userAgent || "";
+          if (/iphone|ipad|ipod/i.test(ua)) {
+            var opened = null;
+            try { opened = window.open(url, "_blank"); } catch (e) {}
+            if (!opened) location.assign(url);
+          }
+          setTimeout(function () { URL.revokeObjectURL(url); }, 8000);
         });
       });
     }

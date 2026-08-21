@@ -196,6 +196,10 @@
     jobStart: "Start date",
     moreFilters: "Narrow the search",
     pick: "Select",
+    searchOccupation: "Search a role",
+    viaTalendus: "Via Talendus",
+    seeJob: "View opening",
+    fileSaved: "Saved to Downloads.",
     chooseFile: "Choose a file",
     noFile: "No file chosen",
     filesChosen: "files chosen",
@@ -442,6 +446,10 @@
     jobStart: "Entrée en poste",
     moreFilters: "Préciser la recherche",
     pick: "Choisir",
+    searchOccupation: "Rechercher un métier",
+    viaTalendus: "Via Talendus",
+    seeJob: "Voir l’offre",
+    fileSaved: "Fichier enregistré dans Téléchargements.",
     chooseFile: "Choisir un fichier",
     noFile: "Aucun fichier choisi",
     filesChosen: "fichiers choisis",
@@ -789,6 +797,9 @@
     return found ? optionLabel(found) : String(value);
   }
   function choiceSelect(name, items, selected, allLabel, required) {
+    if (items && items.length && items[0] && items[0].group) {
+      return groupedPick(name, items, selected, allLabel, required);
+    }
     var html = '<select name="' + name + '"' + (required ? " required" : "") + '><option value="">' + esc(allLabel == null ? t.anyChoice : allLabel) + "</option>";
     var seen = {};
     var openGroup = null;
@@ -809,6 +820,75 @@
       html += '<option value="' + esc(selected) + '" selected>' + esc(selected) + "</option>";
     }
     return html + "</select>";
+  }
+  function groupedPick(name, items, selected, allLabel, required) {
+    var empty = allLabel == null ? t.anyChoice : allLabel;
+    var shown = selected ? catalogLabel(items, selected) : empty;
+    var list = name === "title" ? "occupations" : name;
+    return '<div class="tn-pick">' +
+      '<input type="hidden" name="' + name + '" value="' + esc(selected || "") + '"' + (required ? " required" : "") + ">" +
+      '<button type="button" class="tn-pick-btn" data-pick-open data-pick-list="' + esc(list) +
+      '" data-pick-empty="' + esc(empty) + '"' + (required ? " data-pick-required" : "") + ">" +
+      '<span data-pick-label>' + esc(shown) + "</span>" + icons.chevron + "</button></div>";
+  }
+  function closePickSheet() {
+    var sheet = document.querySelector(".tn-pick-sheet");
+    if (sheet) sheet.remove();
+  }
+  function openPickSheet(input, items, emptyLabel, required) {
+    closePickSheet();
+    if (!input) return;
+    items = items || [];
+    var sheet = document.createElement("div");
+    sheet.className = "tn-pick-sheet is-on";
+    sheet.setAttribute("role", "dialog");
+    sheet.innerHTML = '<div class="tn-pick-card">' +
+      '<input type="search" class="tn-pick-search" placeholder="' + esc(t.searchOccupation) + '" autocomplete="off">' +
+      '<div class="tn-pick-list"></div>' +
+      '<button type="button" class="tn-btn tn-btn-ghost" data-pick-close>' + esc(t.back) + "</button></div>";
+    document.body.appendChild(sheet);
+    var listEl = sheet.querySelector(".tn-pick-list");
+    var searchEl = sheet.querySelector(".tn-pick-search");
+    function paint(q) {
+      q = String(q || "").toLowerCase().trim();
+      var html = "";
+      var openGroup = "";
+      if (!required && !q) {
+        html += '<button type="button" class="tn-pick-option' + (input.value ? "" : " is-on") +
+          '" data-pick-value="">' + esc(emptyLabel || t.anyChoice) + "</button>";
+      }
+      items.forEach(function (item) {
+        var val = optionValue(item);
+        var label = optionLabel(item);
+        if (!val) return;
+        if (q && (label + " " + val + " " + optionGroup(item)).toLowerCase().indexOf(q) === -1) return;
+        var group = optionGroup(item);
+        if (group && group !== openGroup) {
+          html += '<p class="tn-pick-group">' + esc(group) + "</p>";
+          openGroup = group;
+        }
+        html += '<button type="button" class="tn-pick-option' + (String(input.value) === String(val) ? " is-on" : "") +
+          '" data-pick-value="' + esc(val) + '">' + esc(label) + "</button>";
+      });
+      listEl.innerHTML = html || '<p class="tn-meta">' + esc(t.emptyJobs) + "</p>";
+    }
+    paint("");
+    searchEl.addEventListener("input", function () { paint(searchEl.value); });
+    sheet.addEventListener("click", function (ev) {
+      if (ev.target === sheet || ev.target.closest("[data-pick-close]")) {
+        closePickSheet();
+        return;
+      }
+      var opt = ev.target.closest("[data-pick-value]");
+      if (!opt) return;
+      input.value = opt.getAttribute("data-pick-value") || "";
+      var wrap = input.closest(".tn-pick");
+      var lab = wrap && wrap.querySelector("[data-pick-label]");
+      if (lab) lab.textContent = catalogLabel(items, input.value) || emptyLabel || t.pick;
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+      closePickSheet();
+    });
+    setTimeout(function () { searchEl.focus(); }, 40);
   }
   function labeledChoice(name, label, items, selected, allLabel, required) {
     return "<label>" + esc(label) + "</label>" + choiceSelect(name, items, selected, allLabel, required);
@@ -1201,8 +1281,51 @@
 
   function jobCard(job) {
     if (!job) return "";
-    return '<a class="tn-job" href="#/job/' + encodeURIComponent(job.slug || job.id) + '"><h3>' + esc(job.title) + "</h3>" +
-      '<p class="tn-meta">' + esc([job.location, job.shift, job.schedule, job.contract_type || job.sector, job.salary || job.salary_display].filter(Boolean).join(" · ")) + "</p></a>";
+    var href = "#/job/" + encodeURIComponent(job.slug || job.id);
+    var loc = job.location || "";
+    var pay = job.salary_display || job.salary || "";
+    var hours = job.schedule || "";
+    var shift = job.shift || "";
+    var typ = job.contract_type || "";
+    var sector = job.sector || "";
+    var exp = expChip(job.experience_level);
+    var facts = "";
+    if (loc) facts += "<div><dt>" + esc(t.jobCity) + "</dt><dd>" + esc(loc) + "</dd></div>";
+    if (pay) facts += "<div><dt>" + esc(t.salary) + "</dt><dd>" + esc(pay) + "</dd></div>";
+    if (hours) facts += "<div><dt>" + esc(t.schedule) + "</dt><dd>" + esc(hours) + "</dd></div>";
+    if (shift) facts += "<div><dt>" + esc(t.shift) + "</dt><dd>" + esc(shift) + "</dd></div>";
+    return '<a class="tn-job-card" href="' + href + '">' +
+      '<div class="tn-job-card-banner"><span class="tn-job-card-icon" aria-hidden="true">' + sectorGlyph(sector) +
+      '</span><div><p class="tn-job-card-cat">' + esc(sector || t.jobs) + '</p><p class="tn-job-card-via">' +
+      esc(t.viaTalendus) + "</p></div></div>" +
+      '<div class="tn-job-card-body">' +
+      '<div class="tn-job-card-top">' + (typ ? '<span class="tn-chip">' + esc(typ) + "</span>" : "") +
+      (exp ? '<span class="tn-chip">' + esc(exp) + "</span>" : "") + "</div>" +
+      "<h3>" + esc(job.title || t.jobs) + "</h3>" +
+      (facts ? '<dl class="tn-job-facts-mini">' + facts + "</dl>" : "") +
+      '<span class="tn-job-card-cta">' + esc(t.seeJob) + "</span></div></a>";
+  }
+  function expChip(raw) {
+    var key = String(raw || "").toLowerCase().replace(/é/g, "e");
+    if (!key) return "";
+    if (key.indexOf("debut") >= 0 || key.indexOf("entry") >= 0) return isEn ? "Entry-level" : "Débutant";
+    if (key.indexOf("inter") >= 0 || key.indexOf("mid") >= 0) return isEn ? "Mid-level" : "Intermédiaire";
+    if (key.indexOf("senior") >= 0) return "Senior";
+    return raw;
+  }
+  function sectorGlyph(sector) {
+    var key = String(sector || "").toLowerCase().replace(/é/g, "e").replace(/è/g, "e");
+    var path = "M4 11l8-7 8 7M6 10v9h12v-9";
+    if (/entrepot|logistiq|warehouse/.test(key)) path = "M3 9l9-5 9 5v10l-9 5-9-5V9zM12 4v16";
+    else if (/prod|manuf|usine/.test(key)) path = "M4 20V9l5 3V9l5 3V6l6 3v11H4z";
+    else if (/transport|chauff/.test(key)) path = "M3 16h13V8H3v8zm13 0h4l3-4v4h-1M6 19a2 2 0 100-4 2 2 0 000 4zm10 0a2 2 0 100-4 2 2 0 000 4z";
+    else if (/sante|health|soin/.test(key)) path = "M12 21s-7-4.4-7-10a4 4 0 017-2 4 4 0 017 2c0 5.6-7 10-7 10z";
+    else if (/tech|info/.test(key)) path = "M4 6h16v10H4V6zm4 14h8";
+    else if (/admin|bureau|finance/.test(key)) path = "M4 20h16V8l-8-4-8 4v12zm4-8h2m4 0h2m-8 4h2m4 0h2";
+    else if (/resto|commerce|vente/.test(key)) path = "M4 10h16l-1 10H5L4 10zm4-6h8v6";
+    else if (/construct|chantier/.test(key)) path = "M3 20h18M6 20V10l6-4 6 4v10M10 20v-5h4v5";
+    else path = "M4 8h16v12H4V8zm4-4h8v4";
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="' + path + '"/></svg>';
   }
   function quickLinks(items) {
     return '<div class="tn-quick">' + items.map(function (it) {
@@ -2026,6 +2149,20 @@
       render();
       return;
     }
+    var pickOpen = e.target.closest("[data-pick-open]");
+    if (pickOpen) {
+      e.preventDefault();
+      var wrap = pickOpen.closest(".tn-pick");
+      var input = wrap && wrap.querySelector("input");
+      var listName = pickOpen.getAttribute("data-pick-list") || "occupations";
+      openPickSheet(
+        input,
+        jobOpts()[listName] || jobOpts().occupations || [],
+        pickOpen.getAttribute("data-pick-empty") || t.anyChoice,
+        pickOpen.hasAttribute("data-pick-required")
+      );
+      return;
+    }
     var choose = e.target.closest("[data-choose]");
     if (choose) setPersona(choose.getAttribute("data-choose"));
     var applyBtn = e.target.closest("[data-apply]");
@@ -2098,7 +2235,8 @@
       e.preventDefault();
       var kind = pdfBtn.getAttribute("data-pdf");
       var id = pdfBtn.getAttribute("data-id");
-      api.download("/" + kind + "/" + id + "/pdf", kind === "invoices" ? "facture.pdf" : "mandat.pdf").catch(fail);
+      api.download("/" + kind + "/" + id + "/pdf", kind === "invoices" ? "facture.pdf" : "mandat.pdf")
+        .then(function () { setNotice(t.fileSaved); }).catch(fail);
     }
     var payBtn = e.target.closest("[data-pay]");
     if (payBtn) {
@@ -2128,7 +2266,8 @@
     if (dlCv) {
       e.preventDefault();
       if (!isCandidate()) return;
-      api.download("/candidates/resumes/" + dlCv.getAttribute("data-dl-cv") + "/file", "cv.pdf").catch(fail);
+      api.download("/candidates/resumes/" + dlCv.getAttribute("data-dl-cv") + "/file", "cv.pdf")
+        .then(function () { setNotice(t.fileSaved); }).catch(fail);
     }
     var delDoc = e.target.closest("[data-del-doc]");
     if (delDoc) {
@@ -2138,7 +2277,8 @@
     var dlDoc = e.target.closest("[data-dl-doc]");
     if (dlDoc) {
       e.preventDefault();
-      api.download("/documents/" + dlDoc.getAttribute("data-dl-doc") + "/file", dlDoc.getAttribute("data-name") || "document").catch(fail);
+      api.download("/documents/" + dlDoc.getAttribute("data-dl-doc") + "/file", dlDoc.getAttribute("data-name") || "document")
+        .then(function () { setNotice(t.fileSaved); }).catch(fail);
     }
     if (e.target.closest("[data-logout]")) {
       e.preventDefault();
@@ -2321,7 +2461,7 @@
       return;
     }
     var form = e.target.closest("[data-search-jobs]");
-    if (!form || e.target.tagName !== "SELECT") return;
+    if (!form || e.target.name === "q") return;
     clearTimeout(jobSearchTimer);
     runJobSearch(form);
   });

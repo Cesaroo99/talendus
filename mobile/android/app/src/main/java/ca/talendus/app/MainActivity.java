@@ -3,32 +3,44 @@ package ca.talendus.app;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.DownloadManager;
 import android.content.ClipData;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.database.Cursor;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.MediaStore;
 import android.provider.OpenableColumns;
 import android.util.Base64;
+import android.webkit.CookieManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.MimeTypeMap;
 import android.webkit.PermissionRequest;
+import android.webkit.URLUtil;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,7 +50,12 @@ public class MainActivity extends Activity {
     private static final int MEDIA_PERMISSION = 92;
     private static final int FILE_CHOOSER = 93;
     private static final int NATIVE_PICK = 94;
+    private static final int DL_PERMISSION = 95;
     private WebView web;
+    private String webUserAgent = "";
+    private String pendingDlUrl;
+    private String pendingDlName;
+    private String pendingDlToken;
     private PermissionRequest pendingWebPermission;
     private static ValueCallback<Uri[]> fileCallback;
     private String nativePickId;
@@ -69,7 +86,11 @@ public class MainActivity extends Activity {
         settings.setAllowFileAccess(true);
         settings.setAllowContentAccess(true);
         String ua = settings.getUserAgentString();
-        settings.setUserAgentString((ua == null ? "" : ua) + " TalendusApp/1.6");
+        webUserAgent = (ua == null ? "" : ua) + " TalendusApp/1.7";
+        settings.setUserAgentString(webUserAgent);
+        CookieManager cookies = CookieManager.getInstance();
+        cookies.setAcceptCookie(true);
+        cookies.setAcceptThirdPartyCookies(web, true);
         web.addJavascriptInterface(new TalendusNative(), "TalendusNative");
         web.setWebChromeClient(new WebChromeClient() {
             @Override
@@ -115,8 +136,16 @@ public class MainActivity extends Activity {
                     view.loadUrl(APP_URL);
                     return true;
                 }
+                if (isDownloadPath(path)) {
+                    enqueueDownload(uri.toString(), filenameFrom(path, uri.getLastPathSegment()), NotifPoller.token(MainActivity.this));
+                    return true;
+                }
                 return false;
             }
+        });
+        web.setDownloadListener((url, userAgent, contentDisposition, mimeType, contentLength) -> {
+            String name = URLUtil.guessFileName(url, contentDisposition, mimeType);
+            enqueueDownload(url, name, NotifPoller.token(MainActivity.this));
         });
         String start = urlFromIntent(getIntent());
         web.loadUrl(start != null ? start : APP_URL);
@@ -197,6 +226,17 @@ public class MainActivity extends Activity {
         }
         if (requestCode == NOTIF_PERMISSION) {
             NotifPoller.pollAsync(this);
+        }
+        if (requestCode == DL_PERMISSION) {
+            String url = pendingDlUrl;
+            String name = pendingDlName;
+            String token = pendingDlToken;
+            pendingDlUrl = pendingDlName = pendingDlToken = null;
+            if (url != null && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                enqueueDownload(url, name, token);
+            } else if (url != null) {
+                Toast.makeText(this, "Téléchargement impossible.", Toast.LENGTH_LONG).show();
+            }
         }
     }
 
@@ -287,6 +327,221 @@ public class MainActivity extends Activity {
             }
         }
         return sawImage;
+    }
+
+    private static boolean isDownloadPath(String path) {
+        if (path == null) {
+            return false;
+        }
+        return path.startsWith("/download/")
+            || path.startsWith("/assets/app/")
+            || path.endsWith("/file")
+            || path.endsWith("/pdf");
+    }
+
+    private static String filenameFrom(String path, String fallback) {
+        if (fallback != null && !fallback.isEmpty() && !fallback.equals("file") && fallback.contains(".")) {
+            return fallback;
+        }
+        if (path != null) {
+            if (path.endsWith("/pdf") || path.contains("/pdf")) {
+                return path.contains("invoice") || path.contains("facture") ? "facture.pdf" : "document.pdf";
+            }
+            int slash = path.lastIndexOf('/');
+            if (slash >= 0 && slash < path.length() - 1) {
+                String last = path.substring(slash + 1);
+                if (!last.isEmpty() && !last.equals("file") && last.contains(".")) {
+                    return last;
+                }
+            }
+        }
+        return (fallback == null || fallback.isEmpty() || "file".equals(fallback)) ? "document" : fallback;
+    }
+
+    private boolean ensureStoragePermission() {
+        if (Build.VERSION.SDK_INT >= 29) {
+            return true;
+        }
+        if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+            return true;
+        }
+        requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, DL_PERMISSION);
+        return false;
+    }
+
+    private static String safeFilename(String name) {
+        String clean = name == null ? "" : name.replaceAll("[\\\\/:*?\"<>|]", "_").trim();
+        return clean.isEmpty() ? "document" : clean;
+    }
+
+    private static String mimeFromName(String filename) {
+        String name = filename == null ? "" : filename.toLowerCase();
+        int dot = name.lastIndexOf('.');
+        String ext = dot >= 0 ? name.substring(dot + 1) : "";
+        String mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext);
+        if (mime != null && !mime.isEmpty()) {
+            return mime;
+        }
+        if ("pdf".equals(ext)) return "application/pdf";
+        if ("doc".equals(ext)) return "application/msword";
+        if ("docx".equals(ext)) return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+        if ("png".equals(ext)) return "image/png";
+        if ("jpg".equals(ext) || "jpeg".equals(ext)) return "image/jpeg";
+        return "application/octet-stream";
+    }
+
+    private void enqueueDownload(String url, String filename, String token) {
+        if (url == null || url.isEmpty() || url.startsWith("blob:") || url.startsWith("data:")) {
+            return;
+        }
+        if (url.startsWith("/")) {
+            url = "https://talendus.ca" + url;
+        }
+        String name = safeFilename(filenameFrom(url, filename));
+        if (!ensureStoragePermission()) {
+            pendingDlUrl = url;
+            pendingDlName = name;
+            pendingDlToken = token;
+            return;
+        }
+        final String finalUrl = url;
+        final String finalName = name;
+        final String finalToken = token == null ? "" : token;
+        new Thread(() -> {
+            if (saveAuthenticatedFile(finalUrl, finalName, finalToken)) {
+                return;
+            }
+            runOnUiThread(() -> downloadViaManager(finalUrl, finalName, finalToken));
+        }, "talendus-dl").start();
+    }
+
+    private boolean saveAuthenticatedFile(String url, String filename, String token) {
+        HttpURLConnection conn = null;
+        InputStream in = null;
+        OutputStream out = null;
+        Uri pendingUri = null;
+        File destFile = null;
+        try {
+            conn = (HttpURLConnection) new URL(url).openConnection();
+            conn.setInstanceFollowRedirects(true);
+            conn.setConnectTimeout(20000);
+            conn.setReadTimeout(60000);
+            conn.setRequestProperty("Accept", "*/*");
+            if (webUserAgent != null && !webUserAgent.isEmpty()) {
+                conn.setRequestProperty("User-Agent", webUserAgent);
+            }
+            if (token != null && !token.isEmpty()) {
+                conn.setRequestProperty("Authorization", "Bearer " + token);
+            }
+            String cookie = CookieManager.getInstance().getCookie(url);
+            if (cookie != null && !cookie.isEmpty()) {
+                conn.setRequestProperty("Cookie", cookie);
+            }
+            int code = conn.getResponseCode();
+            if (code >= 400) {
+                return false;
+            }
+            String mime = conn.getContentType();
+            if (mime != null && mime.contains(";")) {
+                mime = mime.split(";")[0].trim();
+            }
+            if (mime == null || mime.isEmpty() || "application/octet-stream".equals(mime)) {
+                mime = mimeFromName(filename);
+            }
+            if (mime.contains("text/html")) {
+                return false;
+            }
+            in = conn.getInputStream();
+            if (Build.VERSION.SDK_INT >= 29) {
+                ContentValues values = new ContentValues();
+                values.put(MediaStore.Downloads.DISPLAY_NAME, filename);
+                values.put(MediaStore.Downloads.MIME_TYPE, mime);
+                values.put(MediaStore.Downloads.IS_PENDING, 1);
+                pendingUri = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
+                if (pendingUri == null) {
+                    return false;
+                }
+                out = getContentResolver().openOutputStream(pendingUri);
+            } else {
+                File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+                if (dir == null || (!dir.exists() && !dir.mkdirs())) {
+                    return false;
+                }
+                destFile = new File(dir, filename);
+                out = new FileOutputStream(destFile);
+            }
+            if (out == null) {
+                return false;
+            }
+            byte[] buf = new byte[8192];
+            int n;
+            long total = 0;
+            while ((n = in.read(buf)) > 0) {
+                out.write(buf, 0, n);
+                total += n;
+            }
+            out.flush();
+            if (total == 0) {
+                return false;
+            }
+            if (Build.VERSION.SDK_INT >= 29 && pendingUri != null) {
+                ContentValues done = new ContentValues();
+                done.put(MediaStore.Downloads.IS_PENDING, 0);
+                getContentResolver().update(pendingUri, done, null, null);
+            }
+            runOnUiThread(() -> Toast.makeText(this, "Fichier enregistré dans Téléchargements.", Toast.LENGTH_SHORT).show());
+            return true;
+        } catch (Exception ignored) {
+            if (pendingUri != null && Build.VERSION.SDK_INT >= 29) {
+                try {
+                    getContentResolver().delete(pendingUri, null, null);
+                } catch (Exception ignoredToo) {}
+            }
+            if (destFile != null && destFile.exists()) {
+                destFile.delete();
+            }
+            return false;
+        } finally {
+            try { if (out != null) out.close(); } catch (Exception ignored) {}
+            try { if (in != null) in.close(); } catch (Exception ignored) {}
+            if (conn != null) conn.disconnect();
+        }
+    }
+
+    private void downloadViaManager(String url, String filename, String token) {
+        try {
+            DownloadManager manager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
+            if (manager == null) {
+                Toast.makeText(this, "Téléchargement impossible.", Toast.LENGTH_LONG).show();
+                return;
+            }
+            DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
+            if (token != null && !token.isEmpty()) {
+                request.addRequestHeader("Authorization", "Bearer " + token);
+            }
+            String cookie = CookieManager.getInstance().getCookie(url);
+            if (cookie != null && !cookie.isEmpty()) {
+                request.addRequestHeader("Cookie", cookie);
+            }
+            if (webUserAgent != null && !webUserAgent.isEmpty()) {
+                request.addRequestHeader("User-Agent", webUserAgent);
+            }
+            request.setTitle(filename);
+            request.setDescription("Talendus");
+            request.allowScanningByMediaScanner();
+            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+            request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, filename);
+            request.setAllowedOverMetered(true);
+            request.setAllowedOverRoaming(true);
+            manager.enqueue(request);
+            Toast.makeText(this, "Fichier enregistré dans Téléchargements.", Toast.LENGTH_SHORT).show();
+        } catch (Exception ignored) {
+            try {
+                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+            } catch (Exception failed) {
+                Toast.makeText(this, "Téléchargement impossible.", Toast.LENGTH_LONG).show();
+            }
+        }
     }
 
     private static Uri[] fileChooserUris(int resultCode, Intent data) {
@@ -493,6 +748,11 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void openDocumentPicker(String requestId, int multiple, int imagesOnly) {
             runOnUiThread(() -> startNativePick(requestId, multiple != 0, imagesOnly != 0));
+        }
+
+        @JavascriptInterface
+        public void downloadUrl(String url, String filename, String token) {
+            runOnUiThread(() -> enqueueDownload(url, filename, token));
         }
 
         @JavascriptInterface
