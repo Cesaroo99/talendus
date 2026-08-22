@@ -1201,7 +1201,7 @@ def native_app_page(lang="fr"):
   <link rel="manifest" href="{prefix}manifest.webmanifest">
   <link rel="apple-touch-icon" sizes="180x180" href="{prefix}assets/img/logo/apple-touch-icon.png">
   <link rel="icon" href="{prefix}assets/img/logo/icon-192.png" type="image/png">
-  <link rel="stylesheet" href="{prefix}assets/css/mobile-app.css?v=29">
+  <link rel="stylesheet" href="{prefix}assets/css/mobile-app.css?v=30">
 </head>
 <body class="tl-native tn-gated">
   <div id="tl-native-app" aria-live="polite">
@@ -1217,9 +1217,9 @@ def native_app_page(lang="fr"):
       <div class="tn-splash-bar" aria-hidden="true"><span></span></div>
     </div>
   </div>
-  <script src="{prefix}assets/js/api.js?v=29"></script>
-  <script src="{prefix}assets/js/talendus-call.js?v=29"></script>
-  <script src="{prefix}assets/js/mobile-app.js?v=29"></script>
+  <script src="{prefix}assets/js/api.js?v=30"></script>
+  <script src="{prefix}assets/js/talendus-call.js?v=30"></script>
+  <script src="{prefix}assets/js/mobile-app.js?v=30"></script>
 </body>
 </html>
 """

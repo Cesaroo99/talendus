@@ -15,7 +15,7 @@
     me: "Me",
     hello: "Hello",
     welcomeTitle: "You are",
-    welcomeLead: "",
+    welcomeLead: "Choose how you want to work with Talendus.",
     tagline: "Placement agency · Every industry",
     talent: "Looking for work",
     talentHint: "A consultant follows you. Submit your resume — we call you when a real mandate fits.",
@@ -55,6 +55,8 @@
     skills: "Skills",
     save: "Save",
     saved: "Saved.",
+    removed: "Removed.",
+    passwordUpdated: "Password updated.",
     cv: "Resume",
     upload: "Add my resume",
     uploadDoc: "Add the document",
@@ -273,7 +275,7 @@
     me: "Moi",
     hello: "Bonjour",
     welcomeTitle: "Vous êtes",
-    welcomeLead: "",
+    welcomeLead: "Choisissez comment avancer avec Talendus.",
     tagline: "Agence de placement · Tous secteurs",
     talent: "Je cherche un emploi",
     talentHint: "Un conseiller vous suit. Déposez votre CV, on vous rappelle pour un vrai mandat.",
@@ -313,6 +315,8 @@
     skills: "Compétences",
     save: "Enregistrer",
     saved: "Enregistré.",
+    removed: "Retiré.",
+    passwordUpdated: "Mot de passe mis à jour.",
     cv: "CV",
     upload: "Ajouter mon CV",
     uploadDoc: "Ajouter le document",
@@ -849,8 +853,8 @@
     };
     var mapped = (isEn ? en : fr)[key];
     if (mapped) return mapped;
-    if (/^[A-Z0-9_]+$/.test(key) && key.length > 1) return "";
-    return s || "";
+    if (s) return String(s).replace(/_/g, " ");
+    return "";
   }
   function langSwitch() {
     return '<div class="tn-langs" role="group" aria-label="' + esc(t.langTitle) + '">' +
@@ -971,7 +975,9 @@
     setTimeout(function () { searchEl.focus(); }, 40);
   }
   function labeledChoice(name, label, items, selected, allLabel, required) {
-    return "<label>" + esc(label) + "</label>" + choiceSelect(name, items, selected, allLabel, required);
+    var id = "tn-f-" + name;
+    return '<label for="' + id + '">' + esc(label) + "</label>" +
+      choiceSelect(name, items, selected, allLabel, required).replace("<select ", '<select id="' + esc(id) + '" ');
   }
   function selectedSet(raw) {
     var out = {};
@@ -1237,7 +1243,7 @@
     if (!canJoinCall(row)) return "";
     var audio = '<a class="tn-btn tn-btn-ghost" href="#/call/' + encodeURIComponent(row.id) + '?video=0">' + esc(t.callAudio) + "</a>";
     var video = row.call_video === false ? "" : '<a class="tn-btn" href="#/call/' + encodeURIComponent(row.id) + '?video=1">' + esc(t.callVideo) + "</a>";
-    return '<div class="tn-row-actions">' + audio + video + "</div>";
+    return '<div class="tn-row-actions"><p class="tn-meta">' + esc(t.joinCall) + "</p>" + audio + video + "</div>";
   }
   function interviewCard() {
     var row = nextInterview();
@@ -1305,6 +1311,7 @@
       '<p class="tn-tag">' + esc(t.tagline) + "</p>" +
       "</div>" +
       "<h1 class=\"tn-title tn-title-light\">" + esc(t.welcomeTitle) + "</h1>" +
+      (t.welcomeLead ? '<p class="tn-lead tn-lead-light">' + esc(t.welcomeLead) + "</p>" : "") +
       '<a class="tn-persona" href="#/login/talent" data-choose="talent">' +
         '<span class="tn-persona-icon" aria-hidden="true">' + icons.talent + "</span>" +
         "<span><strong>" + esc(t.talent) + "</strong></span>" +
@@ -1329,21 +1336,21 @@
         "<label for=\"tn-forgot-email\">" + esc(t.email) + '</label><input id="tn-forgot-email" name="email" type="email" autocomplete="username" inputmode="email" required value="' + esc(state.authEmail || "") + '">' +
         '<button class="tn-btn" type="submit">' + esc(t.sendReset) + "</button></form>" +
         '<p class="tn-note tn-auth-alt"><a href="' + loginHref() + '">' + esc(t.login) + "</a></p>" +
-        helpLine() + "</div></div>";
+        helpLine() + langSwitch() + "</div></div>";
     }
     if (r.name === "reset") {
       return head + backWelcome.replace("#/welcome", loginHref()) +
         "<h1 class=\"tn-title\">" + esc(t.resetTitle) + "</h1><p class=\"tn-lead\">" + esc(t.resetLead) + "</p>" + flash() +
         '<form class="tn-form" data-reset>' +
         '<input type="hidden" name="token" value="' + esc(r.id || "") + '">' +
-        "<label>" + esc(t.newPass) + '</label><input name="password" type="password" required minlength="8" autocomplete="new-password">' +
+        "<label for=\"tn-new-pass\">" + esc(t.newPass) + '</label><input id="tn-new-pass" name="password" type="password" required minlength="8" autocomplete="new-password">' +
         '<button class="tn-btn" type="submit">' + esc(t.resetBtn) + "</button></form>" +
-        helpLine() + "</div></div>";
+        helpLine() + langSwitch() + "</div></div>";
     }
     if (r.name === "verify") {
       return head + "<h1 class=\"tn-title\">" + esc(t.verifyTitle) + "</h1>" + flash() +
         '<p class="tn-note tn-auth-alt"><a href="' + loginHref() + '">' + esc(t.login) + "</a></p>" +
-        helpLine() + "</div></div>";
+        helpLine() + langSwitch() + "</div></div>";
     }
     if (r.name === "login") {
       var lead = employer ? t.loginEmployerLead : (persona === "talent" ? t.loginTalentLead : t.loginGenericLead);
@@ -1363,11 +1370,11 @@
       "<h1 class=\"tn-title\">" + esc(regTitle) + "</h1><p class=\"tn-lead\">" + esc(regLead) + "</p>" + flash() +
       '<form class="tn-form" data-register data-role="' + (employer ? "EMPLOYER" : "CANDIDATE") + '">' +
       '<input class="tn-hp" name="website_url" tabindex="-1" autocomplete="off">' +
-      "<label>" + esc(t.first) + '</label><input name="first_name" autocomplete="given-name" required>' +
-      "<label>" + esc(t.last) + '</label><input name="last_name" autocomplete="family-name" required>' +
-      "<label>" + esc(t.email) + '</label><input name="email" type="email" autocomplete="email" inputmode="email" required>' +
-      "<label>" + esc(t.password) + '</label><input name="password" type="password" autocomplete="new-password" required minlength="8">' +
-      (employer ? "<label>" + esc(t.company) + '</label><input name="company_name" autocomplete="organization" required>' : "") +
+      "<label for=\"tn-first\">" + esc(t.first) + '</label><input id="tn-first" name="first_name" autocomplete="given-name" required>' +
+      "<label for=\"tn-last\">" + esc(t.last) + '</label><input id="tn-last" name="last_name" autocomplete="family-name" required>' +
+      "<label for=\"tn-reg-email\">" + esc(t.email) + '</label><input id="tn-reg-email" name="email" type="email" autocomplete="email" inputmode="email" required>' +
+      "<label for=\"tn-reg-pass\">" + esc(t.password) + '</label><input id="tn-reg-pass" name="password" type="password" autocomplete="new-password" required minlength="8">' +
+      (employer ? "<label for=\"tn-company\">" + esc(t.company) + '</label><input id="tn-company" name="company_name" autocomplete="organization" required>' : "") +
       '<button class="tn-btn" type="submit">' + esc(t.submitRegister) + "</button></form>" +
       '<p class="tn-note tn-auth-alt">' + esc(t.haveAccount) + ' <a href="' + loginHref() + '">' + esc(t.login) + "</a></p>" +
       '<p class="tn-note">' + esc(t.switchPrompt) + ' <a href="#/welcome">' + esc(t.changeChoice) + "</a></p>" +
@@ -1542,7 +1549,10 @@
 
   function jobView() {
     var job = state.job;
-    if (!job) return backTo("#/jobs") + '<div class="tn-empty">' + esc(t.notFound) + "</div>";
+    if (!job) {
+      if (route().id && !state.detailMiss) return backTo("#/jobs") + '<div class="tn-empty">' + esc(t.loading) + "</div>";
+      return backTo("#/jobs") + '<div class="tn-empty">' + esc(t.notFound) + "</div>";
+    }
     var full = job.description || job.qualifications || "";
     var open = !!state.jobDescOpen;
     var body = (!open && full.length > 900) ? full.slice(0, 900) + "…" : full;
@@ -1553,7 +1563,7 @@
     var existing = existingAppForJob(job);
     var applyBlock = existing
       ? '<p class="tn-lead">' + esc(t.alreadyApplied) + '</p><a class="tn-btn" href="#/app/' + encodeURIComponent(existing.id) + '">' + esc(t.viewApp) + "</a>"
-      : '<form class="tn-form" data-apply-form data-job="' + esc(job.id) + '"><label>' + esc(t.cover) + '</label><textarea name="cover_note" maxlength="4000"></textarea>' +
+      : '<form class="tn-form" data-apply-form data-job="' + esc(job.id) + '"><label for="tn-cover">' + esc(t.cover) + '</label><textarea id="tn-cover" name="cover_note" maxlength="4000"></textarea>' +
         '<button class="tn-btn" type="submit">' + esc(t.apply) + "</button></form>";
     return '<a class="tn-back" href="#/jobs">' + esc(t.back) + "</a><h1 class=\"tn-title\">" + esc(job.title) + "</h1>" +
       jobFacts(job) +
@@ -1598,7 +1608,10 @@
     var r = route();
     var n = r.id ? (state.need || {}) : {};
     var o = jobOpts();
-    if (r.id && !state.need) return backTo("#/hiring") + '<div class="tn-empty">' + esc(t.loading) + "</div>";
+    if (r.id && !state.need) {
+      if (!state.detailMiss) return backTo("#/hiring") + '<div class="tn-empty">' + esc(t.loading) + "</div>";
+      return backTo("#/hiring") + '<div class="tn-empty">' + esc(t.notFound) + "</div>";
+    }
     return backTo("#/hiring") + "<h1 class=\"tn-title\">" + esc(r.id ? t.editNeed : t.addNeed) + "</h1><p class=\"tn-lead\">" + esc(t.needLead) + "</p>" + flash() +
       '<form class="tn-form" data-hiring' + (r.id ? ' data-id="' + esc(r.id) + '"' : "") + '>' +
       labeledChoice("title", t.needTitle, o.occupations, n.title, t.pick, true) +
@@ -1657,9 +1670,12 @@
     return listBlock(t.savedJobs, t.emptySaved, (state.saved || []).map(function (row) {
       var job = row.job || row;
       var id = job.id || job.slug || "";
+      var existing = existingAppForJob(job);
+      var cta = existing
+        ? '<a class="tn-btn" href="#/app/' + encodeURIComponent(existing.id) + '">' + esc(t.viewApp) + "</a>"
+        : '<button type="button" class="tn-btn" data-apply="' + esc(id) + '">' + esc(t.apply) + "</button>";
       return '<div class="tn-saved">' + jobCard(job) +
-        '<div class="tn-row-actions"><button type="button" class="tn-btn" data-apply="' + esc(id) + '">' +
-        esc(t.apply) + "</button></div></div>";
+        '<div class="tn-row-actions">' + cta + "</div></div>";
     }), "#/me");
   }
   function alertsView() {
@@ -1691,7 +1707,11 @@
   }
   function inboxDetail() {
     var a = state.application;
-    if (!a) return backTo("#/inbox") + '<div class="tn-empty">' + esc(t.notFound) + "</div>";
+    var r = route();
+    if (!a) {
+      if (r.id && !state.detailMiss) return backTo("#/inbox") + '<div class="tn-empty">' + esc(t.loading) + "</div>";
+      return backTo("#/inbox") + '<div class="tn-empty">' + esc(t.notFound) + "</div>";
+    }
     var job = a.job || {};
     var cand = a.candidate || {};
     return backTo("#/inbox") + "<h1 class=\"tn-title\">" + esc(personName(cand) || t.presentedFile) + "</h1>" +
@@ -1723,7 +1743,11 @@
   }
   function appView() {
     var a = state.application;
-    if (!a) return backTo("#/apps") + '<div class="tn-empty">' + esc(t.notFound) + "</div>";
+    var r = route();
+    if (!a) {
+      if (r.id && !state.detailMiss) return backTo("#/apps") + '<div class="tn-empty">' + esc(t.loading) + "</div>";
+      return backTo("#/apps") + '<div class="tn-empty">' + esc(t.notFound) + "</div>";
+    }
     var job = a.job || {};
     return backTo("#/apps") + "<h1 class=\"tn-title\">" + esc(job.title || t.appDetail) + "</h1>" +
       '<p class="tn-meta">' + esc([job.location, job.shift, job.schedule, statusLabel(a.status)].filter(Boolean).join(" · ")) + "</p>" + flash() +
@@ -1903,6 +1927,7 @@
         menuGroup(t.groupCompany, [["#/company", t.companyProfile], ["#/contracts", t.contracts], ["#/invoices", t.invoices]]) +
         menuGroup(t.groupAccount, [["#/settings", t.settings], ["#/help", t.helpTitle]]);
     }
+    html += '<p class="tn-note">' + esc(t.switchPrompt) + ' <a href="#/welcome">' + esc(t.changeChoice) + "</a></p>";
     html += '<button class="tn-btn tn-btn-ghost tn-logout" data-logout>' + esc(t.logout) + "</button>";
     return html;
   }
@@ -2078,7 +2103,7 @@
       if (name === "cv") {
         need("docs", function () { return api.request("/documents"); }, "docs", true);
       }
-      if (name === "me" || name === "apps" || name === "app" || name === "job") {
+      if (name === "me" || name === "apps" || name === "app" || name === "job" || name === "saved") {
         need("apps", function () { return api.myApplications(); }, "apps", true);
       }
       if (name === "saved" || name === "job") {
@@ -2140,24 +2165,32 @@
     state.user = api.currentUser();
     if (route().name !== "job") state.jobDescOpen = false;
     if (!syncHash()) return Promise.resolve();
-    render();
     var r = route();
+    function sameId(obj, id) {
+      if (!obj || !id) return false;
+      return String(obj.id) === String(id) || String(obj.slug) === String(id);
+    }
+    if (r.name === "job" && r.id && !sameId(state.job, r.id)) { state.job = null; state.detailMiss = false; }
+    if (r.name === "app" && r.id && !sameId(state.application, r.id)) { state.application = null; state.detailMiss = false; }
+    if (r.name === "inbox" && r.id && !sameId(state.application, r.id)) { state.application = null; state.detailMiss = false; }
+    if (r.name === "need" && r.id && !sameId(state.need, r.id)) { state.need = null; state.detailMiss = false; }
+    render();
     var pending = [loadSessionData(), loadJobOptions()];
     if (state.user && isCandidate() && (r.name === "home" || r.name === "jobs")) {
       var haveMatches = !!(state.dash && (state.dash.matches || []).length);
       if (r.name === "jobs" || !haveMatches) pending.push(loadJobs(state.query));
     }
     if (state.user && isCandidate() && r.name === "job" && r.id) {
-      pending.push(api.request("/jobs/" + encodeURIComponent(r.id)).then(function (json) { state.job = dataOf(json); }).catch(function () { state.job = null; }));
+      pending.push(api.request("/jobs/" + encodeURIComponent(r.id)).then(function (json) { state.job = dataOf(json); state.detailMiss = !state.job; }).catch(function () { state.job = null; state.detailMiss = true; }));
     }
     if (state.user && isCandidate() && r.name === "app" && r.id) {
-      pending.push(api.request("/applications/" + encodeURIComponent(r.id)).then(function (json) { state.application = dataOf(json); }).catch(function () { state.application = null; }));
+      pending.push(api.request("/applications/" + encodeURIComponent(r.id)).then(function (json) { state.application = dataOf(json); state.detailMiss = !state.application; }).catch(function () { state.application = null; state.detailMiss = true; }));
     }
     if (state.user && isEmployer() && r.name === "inbox" && r.id) {
-      pending.push(api.request("/applications/" + encodeURIComponent(r.id)).then(function (json) { state.application = dataOf(json); }).catch(function () { state.application = null; }));
+      pending.push(api.request("/applications/" + encodeURIComponent(r.id)).then(function (json) { state.application = dataOf(json); state.detailMiss = !state.application; }).catch(function () { state.application = null; state.detailMiss = true; }));
     }
     if (state.user && isEmployer() && r.name === "need" && r.id) {
-      pending.push(api.request("/hiring-requests/" + encodeURIComponent(r.id)).then(function (json) { state.need = dataOf(json); }).catch(function () { state.need = null; }));
+      pending.push(api.request("/hiring-requests/" + encodeURIComponent(r.id)).then(function (json) { state.need = dataOf(json); state.detailMiss = !state.need; }).catch(function () { state.need = null; state.detailMiss = true; }));
     }
     if (state.user && r.name === "settings") {
       pending.push(api.request("/users/me/preferences").then(function (json) { state.prefs = dataOf(json) || {}; }).catch(function () { state.prefs = {}; }));
@@ -2219,7 +2252,8 @@
   }
 
   function fail(err) {
-    setNotice((err && err.message) || t.err, true);
+    var msg = (err && err.code === "NETWORK") ? t.networkErr : ((err && err.message) || t.err);
+    setNotice(msg, true);
     render();
   }
   function done(msg) {
@@ -2318,7 +2352,7 @@
       if (!isCandidate()) return;
       var jobId = saveBtn.getAttribute("data-save-job");
       var already = (state.saved || []).some(function (row) { return String(row.id || (row.job && row.job.id)) === String(jobId); });
-      (already ? api.unsaveJob(jobId) : api.saveJob(jobId)).then(function () { done(t.saved); }).catch(fail);
+      (already ? api.unsaveJob(jobId) : api.saveJob(jobId)).then(function () { done(already ? t.removed : t.saved); }).catch(fail);
     }
     var withdraw = e.target.closest("[data-withdraw]");
     if (withdraw) {
@@ -2332,7 +2366,7 @@
       e.preventDefault();
       if (!isCandidate()) return;
       api.request("/alerts/" + delAlert.getAttribute("data-del-alert"), { method: "DELETE" })
-        .then(function () { done(t.saved); }).catch(fail);
+        .then(function () { done(t.removed); }).catch(fail);
     }
     var readOne = e.target.closest("[data-read-notif]");
     if (readOne) {
@@ -2398,13 +2432,13 @@
       if (!isCandidate()) return;
       var kind = delRow.hasAttribute("data-del-exp") ? "experiences" : (delRow.hasAttribute("data-del-edu") ? "education" : "certifications");
       var rid = delRow.getAttribute("data-del-exp") || delRow.getAttribute("data-del-edu") || delRow.getAttribute("data-del-cert");
-      api.request("/candidates/me/" + kind + "/" + rid, { method: "DELETE" }).then(function () { done(t.saved); }).catch(fail);
+      api.request("/candidates/me/" + kind + "/" + rid, { method: "DELETE" }).then(function () { done(t.removed); }).catch(fail);
     }
     var delCv = e.target.closest("[data-del-cv]");
     if (delCv) {
       e.preventDefault();
       if (!isCandidate()) return;
-      api.request("/candidates/me/resume/" + delCv.getAttribute("data-del-cv"), { method: "DELETE" }).then(function () { done(t.saved); }).catch(fail);
+      api.request("/candidates/me/resume/" + delCv.getAttribute("data-del-cv"), { method: "DELETE" }).then(function () { done(t.removed); }).catch(fail);
     }
     var dlCv = e.target.closest("[data-dl-cv]");
     if (dlCv) {
@@ -2416,7 +2450,7 @@
     var delDoc = e.target.closest("[data-del-doc]");
     if (delDoc) {
       e.preventDefault();
-      api.request("/documents/" + delDoc.getAttribute("data-del-doc"), { method: "DELETE" }).then(function () { done(t.saved); }).catch(fail);
+      api.request("/documents/" + delDoc.getAttribute("data-del-doc"), { method: "DELETE" }).then(function () { done(t.removed); }).catch(fail);
     }
     var dlDoc = e.target.closest("[data-dl-doc]");
     if (dlDoc) {
@@ -2468,7 +2502,7 @@
       if (!resetData.token || !resetData.password) { fail({ message: t.err }); return; }
       api.resetPassword(resetData.token, resetData.password).then(function () {
         clearAuthToken("reset");
-        setNotice(t.saved);
+        setNotice(t.passwordUpdated);
         go(loginHref());
         return loadRoute();
       }).catch(fail);

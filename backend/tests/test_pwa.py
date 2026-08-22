@@ -41,7 +41,7 @@ def test_service_worker_allows_root_scope(client):
     assert res.status_code == 200, res.text
     assert "javascript" in (res.headers.get("content-type") or "")
     assert res.headers.get("service-worker-allowed") == "/"
-    assert "talendus-app-v29" in res.text
+    assert "talendus-app-v30" in res.text
     assert "/offline.html" in res.text
     assert "/download/" in res.text
     assert "showNotification" in res.text

@@ -468,12 +468,7 @@ $(".brand-images-area").slick({
 });
 
 
-//========== PRELOADER ============= //
-$(window).on("load", function (event) {
-  setTimeout(function () {
-    $(".preloader").fadeToggle();
-  }, 200);
-});
+// Preloader is handled in talendus.js (minMs + is-done).
 })(jQuery);
 
 
