@@ -275,11 +275,11 @@ gtag('consent', 'default', {
           <form class="tl-form" action="#" method="post" data-form="talent-cv" enctype="multipart/form-data">
             <input class="tl-hp" name="website_url" tabindex="-1" autocomplete="off" aria-hidden="true">
             <input type="hidden" name="profil" value="Candidate, I am looking for a role">
-            <label>Name</label><input required name="nom" autocomplete="name">
-            <label>Email</label><input type="email" required name="courriel" autocomplete="email">
-            <label>Phone</label><input name="tel" autocomplete="tel">
-            <label>Subject</label>
-            <select name="objet">
+            <label for="tl-c-nom">Name</label><input required name="nom" autocomplete="name" id="tl-c-nom">
+            <label for="tl-c-email">Email</label><input type="email" required name="courriel" autocomplete="email" id="tl-c-email">
+            <label for="tl-c-tel">Phone</label><input name="tel" autocomplete="tel" id="tl-c-tel">
+            <label for="tl-c-objet">Subject</label>
+            <select name="objet" id="tl-c-objet">
               <option>Submit my resume</option>
               <option>Be considered for mandates</option>
               <option>Question about a job</option>

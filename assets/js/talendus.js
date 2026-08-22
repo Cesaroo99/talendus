@@ -129,7 +129,10 @@
 
     var isEn = (document.documentElement.lang || "").toLowerCase().indexOf("en") === 0;
 
+    var lastPublicContact = null;
     function applyPublicContact(data) {
+      if (data) lastPublicContact = data;
+      else data = lastPublicContact;
       var c = data && data.contact;
       if (!c) return;
       var email = c.email || "info@talendus.ca";
@@ -195,23 +198,13 @@
       });
       document.querySelectorAll("a.tl-whatsapp, a[href*='wa.me/']").forEach(function (a) {
         a.hidden = false;
-        var href = a.getAttribute("href") || "";
-        var keep = "";
-        if (href.indexOf("wa.me/") !== -1) {
-          try { keep = new URL(href, location.origin).search; } catch (err) {}
-        }
-        a.setAttribute("href", waBase + (keep || waMsg));
+        a.setAttribute("href", waBase + waMsg);
       });
       document.querySelectorAll(".fa-whatsapp").forEach(function (icon) {
         var a = icon.closest("a");
         if (!a) return;
         a.hidden = false;
-        var href = a.getAttribute("href") || "";
-        var keep = "";
-        if (href.indexOf("wa.me/") !== -1) {
-          try { keep = new URL(href, location.origin).search; } catch (err) {}
-        }
-        a.setAttribute("href", waBase + (keep || waMsg));
+        a.setAttribute("href", waBase + waMsg);
       });
       document.querySelectorAll('script[type="application/ld+json"]').forEach(function (el) {
         try {
@@ -246,6 +239,9 @@
         try { window.dispatchEvent(new CustomEvent("talendus:services", { detail: json.data })); } catch (e) {}
       }).catch(function () {});
     }
+    window.addEventListener("talendus:persona", function () {
+      if (lastPublicContact) applyPublicContact(lastPublicContact);
+    });
 
     function escapeHtml(value) {
       return String(value == null ? "" : value)
@@ -299,6 +295,8 @@
       box.style.display = "block";
       box.textContent = text;
       box.style.color = isError ? "#8a1f11" : "";
+      box.classList.toggle("tl-error", !!isError);
+      box.setAttribute("role", isError ? "alert" : "status");
     }
 
     function cvFileFromForm(form) {
@@ -409,7 +407,7 @@
               form.dispatchEvent(new CustomEvent("talendus:applied", { bubbles: true }));
             }
           }).catch(function (err) {
-            showFormMessage(form, (err && err.message) || fallback, true);
+            showFormMessage(form, (err && err.message) || sendFail, true);
           }).then(done);
           return;
         }
@@ -449,7 +447,7 @@
             form.reset();
             if (window.TalendusTrack) window.TalendusTrack.lead({ content_name: "talent-cv" });
           }).catch(function (err) {
-            showFormMessage(form, (err && err.message) || fallback, true);
+            showFormMessage(form, (err && err.message) || sendFail, true);
           }).then(done);
           return;
         }
@@ -479,7 +477,7 @@
             form.reset();
             if (window.TalendusTrack) window.TalendusTrack.lead({ content_name: "hiring-need" });
           }).catch(function (err) {
-            showFormMessage(form, (err && err.message) || hiringOk, true);
+            showFormMessage(form, (err && err.message) || sendFail, true);
           }).then(done);
           return;
         }
@@ -593,15 +591,42 @@
       var minSal = sal && sal.value ? Number(sal.value) : 0;
       var shown = 0;
       var root = document.getElementById("job-list") || document;
+      function hayOf(card) { return (card.getAttribute("data-job") || "").toLowerCase(); }
+      function remoteLike(text) {
+        return /remote|télétravail|teletravail|work from home|wfh/.test(String(text || "").toLowerCase());
+      }
+      function hybridLike(text) {
+        return /hybride|hybrid/.test(String(text || "").toLowerCase());
+      }
+      function onsiteLike(text) {
+        return /sur place|on-site|onsite|on site/.test(String(text || "").toLowerCase());
+      }
+      function cardMode(card) {
+        return ((card.getAttribute("data-mode") || "") + " " + (card.getAttribute("data-city") || "") + " " + hayOf(card)).toLowerCase();
+      }
+      function cityOk(card) {
+        if (!v) return true;
+        if (v.toLowerCase() === "remote" || remoteLike(v)) return remoteLike(cardMode(card));
+        var cityVal = (card.getAttribute("data-city") || "").toLowerCase();
+        return cityVal === v.toLowerCase() || hayOf(card).indexOf(v.toLowerCase()) !== -1;
+      }
+      function modeOk(card) {
+        if (!md) return true;
+        var blob = cardMode(card);
+        if (remoteLike(md)) return remoteLike(blob);
+        if (hybridLike(md)) return hybridLike(blob);
+        if (onsiteLike(md)) return onsiteLike(blob);
+        return blob.indexOf(md.toLowerCase()) !== -1 || hayOf(card).indexOf(md.toLowerCase()) !== -1;
+      }
       root.querySelectorAll("[data-job]").forEach(function (card) {
-        var hay = (card.getAttribute("data-job") || "").toLowerCase();
+        var hay = hayOf(card);
         var ok = (!q || hay.indexOf(q.toLowerCase()) !== -1)
           && (!c || hay.indexOf(c.toLowerCase()) !== -1)
-          && (!v || (card.getAttribute("data-city") || "").toLowerCase() === v.toLowerCase() || hay.indexOf(v.toLowerCase()) !== -1)
+          && cityOk(card)
           && (!ty || (card.getAttribute("data-type") || "").toLowerCase() === ty.toLowerCase() || hay.indexOf(ty.toLowerCase()) !== -1)
           && (!sh || (card.getAttribute("data-shift") || "").indexOf(sh) !== -1 || hay.indexOf(sh.toLowerCase()) !== -1)
           && (!sch || (card.getAttribute("data-schedule") || "").indexOf(sch) !== -1 || hay.indexOf(sch.toLowerCase()) !== -1)
-          && (!md || (card.getAttribute("data-mode") || "").indexOf(md) !== -1 || hay.indexOf(md.toLowerCase()) !== -1)
+          && modeOk(card)
           && (!sec || (card.getAttribute("data-sector") || "").toLowerCase() === sec.toLowerCase() || hay.indexOf(sec.toLowerCase()) !== -1)
           && (!ex || (card.getAttribute("data-exp") || "").toLowerCase() === ex.toLowerCase() || hay.indexOf(ex.toLowerCase()) !== -1);
         if (ok && minSal) {

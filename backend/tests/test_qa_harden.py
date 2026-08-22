@@ -137,9 +137,13 @@ def test_public_forms_do_not_fake_success_on_error():
     js = (ROOT / "assets" / "js" / "talendus.js").read_text(encoding="utf-8")
     assert "sendFail" in js
     assert "showFormMessage(form, (err && err.message) || sendFail, true);" in js
+    assert js.count("|| sendFail, true)") >= 3
     assert "job-schedule" in js
     assert "job-mode" in js
+    assert "job-sal" in js
     assert "wireFormLabels" in js
+    assert "talendus:persona" in js
+    assert "remoteLike" in js
 
 
 def test_whatsapp_prefill_follows_persona():
@@ -149,6 +153,9 @@ def test_whatsapp_prefill_follows_persona():
     assert 'if persona == "talent"' in parts
     js = (ROOT / "assets" / "js" / "talendus.js").read_text(encoding="utf-8")
     assert "je cherche un emploi" in js
+    assert "talendus:persona" in js
+    persona = (ROOT / "assets" / "js" / "persona.js").read_text(encoding="utf-8")
+    assert "talendus:persona" in persona
 
 
 def test_employer_guest_auth_points_to_employer_space():
@@ -156,6 +163,8 @@ def test_employer_guest_auth_points_to_employer_space():
     assert "guestSpaceHref" in auth
     assert "espace-employeur.html" in auth
     assert 'openAuth("login", { role: "EMPLOYER" })' in auth
+    assert "authRole = \"\";" in auth
+    assert "isHirePersona" in auth
     account = (ROOT / "assets" / "js" / "account.js").read_text(encoding="utf-8")
     assert '["jobs", t.jobs' in account
     assert '["interviews", t.interviews' in account
@@ -166,9 +175,28 @@ def test_employer_guest_auth_points_to_employer_space():
     assert "alertsLead" in mobile
     assert "APPLICATION_ALREADY_EXISTS" in mobile
     assert 'route().name === "notifs" && (state.notifs' not in mobile
+    assert "existingAppForJob(job)" in mobile
+    assert "state.detailMiss" in mobile
+    assert "t.networkErr" in mobile
+    assert "name === \"saved\"" in mobile
+    call_js = (ROOT / "assets" / "js" / "talendus-call.js").read_text(encoding="utf-8")
+    assert "function showCallError" in call_js
+    assert "labels().unsupported" in call_js
+    assert "data-call-hang" in call_js
+    api_js = (ROOT / "assets" / "js" / "api.js").read_text(encoding="utf-8")
+    assert "Cannot reach Talendus" in api_js
+    account = (ROOT / "assets" / "js" / "account.js").read_text(encoding="utf-8")
+    assert 'if (name === "jobs" && id) return { name: "job", id: id };' in account
+    assert "scheduleLeadEmployer" in account
+    assert "emptyDirectory" in account
+    assert "pageTitleFor" in account
+    assert "can_read_invoices === false" in account
     offline = (ROOT / "offline.html").read_text(encoding="utf-8")
     assert "tel:+12635585225" in offline
     assert "mailto:info@talendus.ca" not in offline
+    en_offline = (ROOT / "en" / "offline.html").read_text(encoding="utf-8")
+    assert "You are offline" in en_offline
+    assert "tel:+12635585225" in en_offline
 
 
 def test_admin_store_has_no_demo_password():
@@ -215,7 +243,7 @@ def test_generated_contact_copy_and_redirects():
     assert "cherche%20un%20emploi" in jobs
     mpage = (ROOT / "m.html").read_text(encoding="utf-8")
     assert "maximum-scale" not in mpage
-    assert "mobile-app.css?v=29" in mpage
+    assert "mobile-app.css?v=30" in mpage
 
 
 def test_csp_header_is_present(client):

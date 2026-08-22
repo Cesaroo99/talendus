@@ -194,6 +194,7 @@
       overlay.hidden = true;
       overlay.innerHTML = "";
       document.body.classList.remove("tl-auth-open");
+      authRole = "";
       if (pending && pending.type === "save") pending = null;
     }
 
@@ -535,14 +536,17 @@
       var path = (location.pathname || "").toLowerCase();
       return file === "espace-employeur.html" || file === "account-employer.html" || path.indexOf("/employer") !== -1;
     }
+    function isHirePersona() {
+      return (document.body.getAttribute("data-persona") || "") === "entreprise";
+    }
     function guestSpaceHref() {
-      if (isEmployerPage()) {
+      if (isEmployerPage() || isHirePersona()) {
         return siteRoot() + (isEn ? "account-employer.html" : "espace-employeur.html");
       }
       return siteRoot() + (isEn ? "account.html" : "espace.html");
     }
     function guestRoleAttr() {
-      return isEmployerPage() ? ' data-auth-role="EMPLOYER"' : "";
+      return (isEmployerPage() || isHirePersona()) ? ' data-auth-role="EMPLOYER"' : "";
     }
 
     function guestMarkup(kind) {
@@ -713,7 +717,7 @@
           return;
         }
         var mode = open.getAttribute("data-auth-open") || "login";
-        var role = open.getAttribute("data-auth-role") || (isEmployerPage() ? "EMPLOYER" : "");
+        var role = open.getAttribute("data-auth-role") || (isEmployerPage() || isHirePersona() ? "EMPLOYER" : "");
         if (mode === "register" || mode === "choose") openAuth("register", role ? { role: role } : {});
         else openAuth(mode, role ? { role: role } : {});
         return;
@@ -826,6 +830,10 @@
         extra.innerHTML = '<button type="button" class="tl-text-btn" data-auth-open="register">' + esc(t.applyTrack) + "</button>";
         box.appendChild(extra);
       });
+    });
+
+    window.addEventListener("talendus:persona", function () {
+      paintSession();
     });
   });
 })();

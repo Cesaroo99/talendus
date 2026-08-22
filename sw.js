@@ -1,6 +1,7 @@
-const CACHE = "talendus-app-v29";
+const CACHE = "talendus-app-v30";
 const PRECACHE = [
   "/offline.html",
+  "/en/offline.html",
   "/m.html",
   "/en/m.html",
   "/manifest.webmanifest",
@@ -28,6 +29,14 @@ self.addEventListener("activate", function (event) {
   );
 });
 
+function isEnPath(pathname) {
+  return /\/en(\/|$)/.test(pathname || "");
+}
+
+function defaultNotifsHref(en) {
+  return (en ? "/en/m.html" : "/m.html") + "#/notifs";
+}
+
 self.addEventListener("fetch", function (event) {
   var req = event.request;
   if (req.method !== "GET") return;
@@ -46,7 +55,10 @@ self.addEventListener("fetch", function (event) {
     }).catch(function () {
       return caches.match(req).then(function (cached) {
         if (cached) return cached;
-        if (req.mode === "navigate") return caches.match("/offline.html");
+        if (req.mode === "navigate") {
+          var offline = isEnPath(url.pathname) ? "/en/offline.html" : "/offline.html";
+          return caches.match(offline).then(function (page) { return page || caches.match("/offline.html"); });
+        }
         return Response.error();
       });
     })
@@ -54,26 +66,35 @@ self.addEventListener("fetch", function (event) {
 });
 
 self.addEventListener("push", function (event) {
-  var payload = {
-    title: "Talendus",
-    body: "",
-    href: "/m.html#/notifs",
-    icon: "/assets/img/logo/icon-192.png"
-  };
-  try {
-    if (event.data) payload = Object.assign(payload, event.data.json());
-  } catch (e) {
-    try { payload.body = event.data ? event.data.text() : ""; } catch (err) {}
-  }
-  var tag = payload.tag || payload.id || [payload.title || "", payload.body || payload.message || ""].join("|") || "talendus";
-  event.waitUntil(self.registration.showNotification(payload.title || "Talendus", {
-    body: payload.body || payload.message || "",
-    icon: payload.icon || "/assets/img/logo/icon-192.png",
-    badge: "/assets/img/logo/icon-192.png",
-    data: { href: payload.href || "/m.html#/notifs" },
-    tag: tag,
-    renotify: false
-  }));
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(function (list) {
+      var en = false;
+      for (var i = 0; i < list.length; i++) {
+        if (list[i].url && list[i].url.indexOf("/en/m.html") !== -1) { en = true; break; }
+      }
+      var payload = {
+        title: "Talendus",
+        body: "",
+        href: defaultNotifsHref(en),
+        icon: "/assets/img/logo/icon-192.png"
+      };
+      try {
+        if (event.data) payload = Object.assign(payload, event.data.json());
+      } catch (e) {
+        try { payload.body = event.data ? event.data.text() : ""; } catch (err) {}
+      }
+      if (!payload.href || payload.href === "/m.html#/notifs") payload.href = defaultNotifsHref(en);
+      var tag = payload.tag || payload.id || [payload.title || "", payload.body || payload.message || ""].join("|") || "talendus";
+      return self.registration.showNotification(payload.title || "Talendus", {
+        body: payload.body || payload.message || "",
+        icon: payload.icon || "/assets/img/logo/icon-192.png",
+        badge: "/assets/img/logo/icon-192.png",
+        data: { href: payload.href || defaultNotifsHref(en) },
+        tag: tag,
+        renotify: false
+      });
+    })
+  );
 });
 
 self.addEventListener("notificationclick", function (event) {

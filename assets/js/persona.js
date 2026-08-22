@@ -43,6 +43,7 @@
     body.classList.remove("tl-persona-talent", "tl-persona-entreprise", "tl-persona-gateway");
     body.classList.add("tl-persona-" + persona);
     body.setAttribute("data-persona", persona);
+    try { window.dispatchEvent(new CustomEvent("talendus:persona", { detail: persona })); } catch (err) {}
   }
 
   function init() {

@@ -128,7 +128,9 @@
       });
     }).catch(function (err) {
       if (err && (err.status || err.code || err.payload)) throw err;
-      var net = new Error("Impossible de joindre Talendus. Vérifiez la connexion, puis réessayez.");
+      var net = new Error(pageIsEn()
+        ? "Cannot reach Talendus. Check your connection and try again."
+        : "Impossible de joindre Talendus. Vérifiez la connexion, puis réessayez.");
       net.code = "NETWORK";
       throw net;
     });
@@ -252,7 +254,7 @@
       var headers = { "Accept": "*/*" };
       if (token) headers.Authorization = "Bearer " + token;
       return fetch(abs, { headers: headers, credentials: "same-origin" }).then(function (res) {
-        if (!res.ok) throw new Error("Téléchargement impossible.");
+        if (!res.ok) throw new Error(pageIsEn() ? "Download failed." : "Téléchargement impossible.");
         return res.blob().then(function (blob) {
           var url = URL.createObjectURL(blob);
           var a = document.createElement("a");

@@ -303,23 +303,23 @@
     });
   }
 
-  function mediaError() {
+  function showCallError(message) {
     var el = overlay();
     injectCss();
     el.classList.add("is-on");
     el.removeAttribute("hidden");
-    el.innerHTML = '<p class="tn-call-err">' + labels().micDenied + '</p><div class="tn-call-bar"><button type="button" class="tn-call-btn is-hang" data-call-hang>' + labels().hangup + "</button></div>";
+    el.innerHTML = '<p class="tn-call-err">' + message + '</p><div class="tn-call-bar"><button type="button" class="tn-call-btn is-hang" data-call-hang>' + labels().hangup + "</button></div>";
     el.querySelector("[data-call-hang]").onclick = function () { hangup(false); };
+  }
+
+  function mediaError() {
+    showCallError(labels().micDenied);
   }
 
   function start(opts) {
     opts = opts || {};
     if (!api() || typeof RTCPeerConnection === "undefined" || !navigator.mediaDevices) {
-      injectCss();
-      var el = overlay();
-      el.classList.add("is-on");
-      el.removeAttribute("hidden");
-      el.innerHTML = '<p class="tn-call-err">' + labels().unsupported + "</p>";
+      showCallError(labels().unsupported);
       return Promise.resolve(false);
     }
     var interviewId = opts.interviewId;
