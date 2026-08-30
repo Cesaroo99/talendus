@@ -60,7 +60,10 @@
       address: "Address", country: "Country", description: "Description", openings: "Openings",
       startDate: "Start date", deadline: "Deadline", responsibilities: "Responsibilities",
       extra: "Additional information", validate: "Talendus reviews the need, defines the profile and takes on the search. You do not publish a job yourself.",
-      hours: "Hours", shiftLabel: "Shift", workMode: "Workplace", pick: "Select",
+      hours: "Hours", hoursHint: "Weekly workload, not the contract type.",
+      shiftLabel: "Shift", shiftHint: "Time of day or week.",
+      contractHint: "Permanent, temporary, seasonal — not full-time or part-time.",
+      workMode: "Workplace", pick: "Select",
       workStatus: "Work status", workAuth: "Work authorization",
       canSponsor: "We can sponsor a candidate", sponsorYes: "Sponsorship available",
       occupation: "Occupation",
@@ -177,7 +180,10 @@
       website: "Site web", address: "Adresse", country: "Pays", description: "Description", openings: "Nombre de postes",
       startDate: "Date de début", deadline: "Date limite", responsibilities: "Responsabilités",
       extra: "Informations complémentaires", validate: "Talendus étudie le besoin, définit le profil et lance la recherche. Vous ne publiez pas l’offre vous-même.",
-      hours: "Horaire", shiftLabel: "Quart", workMode: "Présence", pick: "Choisir",
+      hours: "Horaire", hoursHint: "Charge dans la semaine, pas le type de contrat.",
+      shiftLabel: "Quart", shiftHint: "Moment de la journée ou de la semaine.",
+      contractHint: "Permanent, temporaire, saisonnier — pas le temps plein ou partiel.",
+      workMode: "Présence", pick: "Choisir",
       workStatus: "Statut d’autorisation", workAuth: "Autorisation de travail",
       canSponsor: "Nous pouvons parrainer un candidat", sponsorYes: "Parrainage possible",
       occupation: "Métier",
@@ -891,9 +897,9 @@
         "<div><label>" + esc(t.occupation) + "</label>" + choiceSelect("title", o.occupations, fv("title"), t.pick) + "</div>" +
         "<div><label>" + esc(t.location) + "</label>" + choiceSelect("location", o.locations, fv("location"), t.pick) + "</div>" +
         "<div><label>" + esc(t.sector) + "</label>" + choiceSelect("sector", o.sectors, fv("sector"), t.pick) + "</div>" +
-        "<div><label>" + esc(t.contract) + "</label>" + choiceSelect("contract_type", o.contract_types, fv("contract_type"), t.pick) + "</div>" +
-        "<div><label>" + esc(t.shiftLabel) + "</label>" + choiceSelect("shift", o.shifts, fv("shift"), t.pick) + "</div>" +
-        "<div><label>" + esc(t.hours) + "</label>" + choiceSelect("schedule", o.schedules, fv("schedule"), t.pick) + "</div>" +
+        "<div><label>" + esc(t.contract) + "</label><p class=\"tl-field-hint\">" + esc(t.contractHint) + "</p>" + choiceSelect("contract_type", o.contract_types, fv("contract_type"), t.pick) + "</div>" +
+        "<div><label>" + esc(t.shiftLabel) + "</label><p class=\"tl-field-hint\">" + esc(t.shiftHint) + "</p>" + choiceSelect("shift", o.shifts, fv("shift"), t.pick) + "</div>" +
+        "<div><label>" + esc(t.hours) + "</label><p class=\"tl-field-hint\">" + esc(t.hoursHint) + "</p>" + choiceSelect("schedule", o.schedules, fv("schedule"), t.pick) + "</div>" +
         "<div><label>" + esc(t.workMode) + "</label>" + choiceSelect("work_mode", o.work_modes, fv("work_mode"), t.pick) + "</div>" +
         "<div><label>" + esc(t.experience) + "</label>" + choiceSelect("experience", o.experience_levels, fv("experience"), t.pick) + "</div>" +
         "<div><label>" + esc(t.workAuth) + "</label>" + choiceSelect("work_authorization", o.work_requirements, fv("work_authorization"), t.pick) + "</div>" +
@@ -1414,10 +1420,10 @@
         "<label>" + esc(t.title) + "</label>" + choiceSelect("title", o.occupations, job.title, t.pick, true) +
         '<div class="tl-row-2"><div><label>' + esc(t.location) + '</label>' + choiceSelect("location", o.locations, job.location, t.pick) + '</div>' +
         "<div><label>" + esc(t.sector) + '</label>' + choiceSelect("sector", o.sectors, job.sector, t.pick) + "</div></div>" +
-        '<div class="tl-row-2"><div><label>' + esc(t.contract) + '</label>' + choiceSelect("contract_type", o.contract_types, job.contract_type, t.pick) + '</div>' +
+        '<div class="tl-row-2"><div><label>' + esc(t.contract) + '</label><p class="tl-field-hint">' + esc(t.contractHint) + '</p>' + choiceSelect("contract_type", o.contract_types, job.contract_type, t.pick) + '</div>' +
         "<div><label>" + esc(t.experience) + '</label>' + choiceSelect("experience_level", o.experience_levels, job.experience_level, t.pick) + "</div></div>" +
-        '<div class="tl-row-2"><div><label>' + esc(t.shiftLabel) + '</label>' + choiceSelect("shift", o.shifts, job.shift, t.pick) + '</div>' +
-        "<div><label>" + esc(t.hours) + '</label>' + choiceSelect("schedule", o.schedules, job.schedule, t.pick) + "</div></div>" +
+        '<div class="tl-row-2"><div><label>' + esc(t.shiftLabel) + '</label><p class="tl-field-hint">' + esc(t.shiftHint) + '</p>' + choiceSelect("shift", o.shifts, job.shift, t.pick) + '</div>' +
+        "<div><label>" + esc(t.hours) + '</label><p class="tl-field-hint">' + esc(t.hoursHint) + '</p>' + choiceSelect("schedule", o.schedules, job.schedule, t.pick) + "</div></div>" +
         '<div class="tl-row-2"><div><label>' + esc(t.workMode) + '</label>' + choiceSelect("work_mode", o.work_modes, job.work_mode, t.pick) + '</div>' +
         "<div><label>" + esc(t.languages) + '</label>' + choiceSelect("languages", o.languages, job.languages, t.pick) + "</div></div>" +
         '<div class="tl-row-2"><div><label>' + esc(t.overtime) + '</label>' + choiceSelect("overtime", o.overtime, job.overtime, t.pick) + '</div>' +

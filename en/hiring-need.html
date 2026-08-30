@@ -237,33 +237,16 @@ gtag('consent', 'default', {
             <label>Number of hires</label>
             <input name="volume" type="number" min="1" value="1">
             <label>Location</label>
-            <input name="localisation" placeholder="City, region, country or remote">
+            <input name="localisation" placeholder="City, region or country">
             <label>Contract type</label>
-            <select name="contrat">
-            <option value="">Select</option>
-            <option>Full-time</option>
-            <option>Part-time</option>
-            <option>Temporary</option>
-            <option>Contract</option>
-            <option>Internship</option>
-            <option>Several contract types</option>
-        </select>
+            <p class="tl-field-hint">Permanent, temporary, seasonal… — not weekly hours.</p>
+            <select name="contrat"><option value="">Select</option><option>Permanent</option><option>Temporary</option><option>Contract</option><option>Seasonal</option><option>Internship</option><option>Several contract types</option></select>
             <label>Shift</label>
-            <select name="quart">
-              <option value="">Select</option>
-              <option>Day shift</option>
-              <option>Evening shift</option>
-              <option>Night shift</option>
-              <option>Rotating shifts</option>
-              <option>Weekend</option>
-            </select>
+            <p class="tl-field-hint">Time of day or week.</p>
+            <select name="quart"><option value="">Select</option><option>Day shift</option><option>Evening shift</option><option>Night shift</option><option>Rotating shifts</option><option>Weekend</option><option>Split shifts</option></select>
             <label>Hours</label>
-            <select name="horaire">
-              <option value="">Select</option>
-              <option>Full-time</option>
-              <option>Part-time</option>
-              <option>On call</option>
-            </select>
+            <p class="tl-field-hint">Weekly workload: full-time, part-time, on call.</p>
+            <select name="horaire"><option value="">Select</option><option>Full-time</option><option>Part-time</option><option>On call</option><option>4 days / 3</option></select>
             <label>What we should know</label>
             <textarea name="message" required placeholder="Responsibilities, must-have skills, experience, urgency, anything that will shape the search"></textarea>
         

@@ -237,33 +237,16 @@ gtag('consent', 'default', {
             <label>Nombre de personnes à recruter</label>
             <input name="volume" type="number" min="1" value="1">
             <label>Localisation</label>
-            <input name="localisation" placeholder="Ville, région, pays ou télétravail">
+            <input name="localisation" placeholder="Ville, région ou pays">
             <label>Type de contrat</label>
-            <select name="contrat">
-            <option value="">Choisir</option>
-            <option>Temps plein</option>
-            <option>Temps partiel</option>
-            <option>Temporaire</option>
-            <option>Contractuel</option>
-            <option>Stage</option>
-            <option>Plusieurs types de contrat</option>
-        </select>
+            <p class="tl-field-hint">Permanent, temporaire, saisonnier… — pas le temps plein ou partiel.</p>
+            <select name="contrat"><option value="">Choisir</option><option>Permanent</option><option>Temporaire</option><option>Contractuel</option><option>Saisonnier</option><option>Stage</option><option>Plusieurs types de contrat</option></select>
             <label>Quart</label>
-            <select name="quart">
-              <option value="">Choisir</option>
-              <option>Quart de jour</option>
-              <option>Quart de soir</option>
-              <option>Quart de nuit</option>
-              <option>Quarts rotatifs</option>
-              <option>Fin de semaine</option>
-            </select>
+            <p class="tl-field-hint">Moment de la journée ou de la semaine.</p>
+            <select name="quart"><option value="">Choisir</option><option>Quart de jour</option><option>Quart de soir</option><option>Quart de nuit</option><option>Quarts rotatifs</option><option>Fin de semaine</option><option>Quarts brisés</option></select>
             <label>Horaire</label>
-            <select name="horaire">
-              <option value="">Choisir</option>
-              <option>Temps plein</option>
-              <option>Temps partiel</option>
-              <option>Sur appel</option>
-            </select>
+            <p class="tl-field-hint">Charge dans la semaine : temps plein, partiel, sur appel.</p>
+            <select name="horaire"><option value="">Choisir</option><option>Temps plein</option><option>Temps partiel</option><option>Sur appel</option><option>4 jours / 3</option></select>
             <label>Ce que nous devons savoir</label>
             <textarea name="message" required placeholder="Responsabilités, compétences indispensables, expérience, urgence, tout ce qui orientera la recherche"></textarea>
         

@@ -8,8 +8,14 @@ def test_job_options_catalog_includes_shift(client):
     shifts = [item["value"] for item in data["shifts"]]
     assert "Quart de jour" in shifts
     assert "Quart de soir" in shifts
+    contracts = [item["value"] for item in data["contract_types"]]
+    assert "Permanent" in contracts
+    assert "Temps plein" not in contracts
+    locations = [item["value"] for item in data["locations"]]
+    assert "Télétravail" not in locations
     schedules = [item["value"] for item in data["schedules"]]
     assert "Temps plein" in schedules
+    assert "Permanent" not in schedules
     assert data["work_modes"]
     assert data["languages"]
     assert data["language_choices"]
