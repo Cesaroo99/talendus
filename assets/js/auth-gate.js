@@ -102,15 +102,12 @@
     }
     function portalHref(role, hash) {
       if (staffRole(role)) return "/admin/";
-      if (isNativeApp()) {
-        var mapped = String(hash || "#/home").replace("#/dashboard", "#/home");
-        if (mapped === "#/dashboard" || !mapped) mapped = "#/home";
-        return (isEn ? "/en/m.html" : "/m.html") + mapped;
-      }
       var dest = role === "EMPLOYER"
         ? siteRoot() + (isEn ? "account-employer.html" : "espace-employeur.html")
         : siteRoot() + (isEn ? "account.html" : "espace.html");
-      return dest + (hash || "#/dashboard");
+      var destHash = hash || "#/dashboard";
+      if (isNativeApp()) destHash = String(destHash).replace("#/home", "#/dashboard");
+      return dest + destHash;
     }
     function roleLabel(role) {
       if (role === "EMPLOYER") return t.hire;

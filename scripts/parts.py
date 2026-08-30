@@ -414,6 +414,32 @@ def call_fab(lang):
 </a>"""
 
 
+def place_card(lang="fr"):
+    """Bloc lieu sans iframe : la CSP bloque maps.google.com et Chrome affiche une page cassée."""
+    maps = "https://www.google.com/maps/search/?api=1&query=Montreal%20Quebec"
+    if lang == "en":
+        return f"""<aside class="tl-place">
+            <p class="tl-kicker">Reach Talendus</p>
+            <h3>Montreal · Quebec</h3>
+            <p>We work across Quebec. Calls are by appointment.</p>
+            <ul class="tl-place-links">
+              <li><a href="{PHONE_TEL}"><i class="fa-solid fa-phone" aria-hidden="true"></i> {PHONE_DISPLAY}</a></li>
+              <li><a href="mailto:info@talendus.ca"><i class="fa-solid fa-envelope" aria-hidden="true"></i> info@talendus.ca</a></li>
+            </ul>
+            <a class="tl-btn tl-btn-ghost" href="{maps}" target="_blank" rel="noopener noreferrer">Open in Maps</a>
+          </aside>"""
+    return f"""<aside class="tl-place">
+            <p class="tl-kicker">Nous joindre</p>
+            <h3>Montréal · Québec</h3>
+            <p>Talendus intervient partout au Québec. Les appels se font sur rendez-vous.</p>
+            <ul class="tl-place-links">
+              <li><a href="{PHONE_TEL}"><i class="fa-solid fa-phone" aria-hidden="true"></i> {PHONE_DISPLAY}</a></li>
+              <li><a href="mailto:info@talendus.ca"><i class="fa-solid fa-envelope" aria-hidden="true"></i> info@talendus.ca</a></li>
+            </ul>
+            <a class="tl-btn tl-btn-ghost" href="{maps}" target="_blank" rel="noopener noreferrer">Ouvrir dans Maps</a>
+          </aside>"""
+
+
 def head(title, description, canonical, extra_css="", lang="fr", alt_path="", robots="index,follow", extra_json_ld=None, og_type="website", og_image=""):
     t = COPY[lang]
     a = pfx(lang)
@@ -484,23 +510,7 @@ gtag('consent', 'default', {
   wait_for_update: 500
 });
 </script>"""
-    app_shell_redirect = """<script>
-(function () {
-  var ua = navigator.userAgent || "";
-  var native = /TalendusApp/i.test(ua)
-    || (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches)
-    || (window.matchMedia && window.matchMedia("(display-mode: fullscreen)").matches)
-    || !!(window.navigator && window.navigator.standalone);
-  if (!native) return;
-  document.documentElement.classList.add("tl-standalone", "tl-native-app");
-  var path = location.pathname || "/";
-  if (/\\/m\\.html$/.test(path) || path.indexOf("/download/") === 0 || path.indexOf("/admin") === 0 || path.indexOf("/api/") === 0) return;
-  var hash = location.hash || "";
-  var portal = path.match(/\\/(candidate|employer)(?:\\/(.*))?$/);
-  if (portal) hash = "#/" + (portal[2] || "home");
-  location.replace((path.indexOf("/en/") === 0 ? "/en/m.html" : "/m.html") + hash);
-})();
-</script>"""
+    app_shell_redirect = ""
     return f"""<!DOCTYPE html>
 <html lang="{t['html_lang']}">
 <head>
@@ -762,7 +772,6 @@ def footer(lang="fr", persona="gateway"):
             <li><a href="{PHONE_TEL}">{PHONE_DISPLAY}</a></li>
             <li><a href="mailto:info@talendus.ca">info@talendus.ca</a></li>
             <li><a href="{wa_link(lang, persona)}" target="_blank" rel="noopener noreferrer">WhatsApp</a></li>
-            <li><a href="{h['app']}">{t['app_install']}</a></li>
             <li>{t['footer_hours']}</li>
             <li><a href="{h['contact']}">{t['footer_place']}</a></li>
             <li><a href="{h['geo_mtl']}">{'Montréal' if lang == 'fr' else 'Montreal'}</a></li>
@@ -1164,62 +1173,41 @@ def install_board(lang="fr"):
 
 
 def native_app_page(lang="fr"):
-    """Coque de l'appli téléphone, sans le chrome du site public."""
-    if lang == "en":
-        title = "Talendus"
-        desc = "Jobs, your file and your Talendus consultant, on your phone."
-        loading = "Loading Talendus"
-        tag = "Placement agency · Every industry"
-        html_lang = "en-CA"
-        path = "/en/m.html"
-        prefix = "../"
-    else:
-        title = "Talendus"
-        desc = "Les offres, votre dossier et votre conseiller Talendus, sur votre téléphone."
-        loading = "Chargement Talendus"
-        tag = "Agence de placement · Tous secteurs"
-        html_lang = "fr-CA"
-        path = "/m.html"
-        prefix = ""
-    mark = """<svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
-            <path fill="#ffffff" fill-rule="evenodd" d="M18 1.5c9.113 0 16.5 7.387 16.5 16.5S27.113 34.5 18 34.5 1.5 27.113 1.5 18 8.887 1.5 18 1.5zm-7.25 9.75h14.5a1.75 1.75 0 1 1 0 3.5h-5.5v12.75a1.75 1.75 0 1 1-3.5 0V14.75h-5.5a1.75 1.75 0 1 1 0-3.5z"/>
-          </svg>"""
+    """L’appli mobile est mise de côté : on renvoie vers le site, en gardant verify/reset."""
+    is_en = lang == "en"
+    jobs = "/en/jobs.html" if is_en else "/emplois.html"
+    portal = "/en/account.html" if is_en else "/espace.html"
+    employer = "/en/account-employer.html" if is_en else "/espace-employeur.html"
+    html_lang = "en-CA" if is_en else "fr-CA"
+    lead = "Continue on the Talendus website." if is_en else "Continuez sur le site Talendus."
     return f"""<!DOCTYPE html>
 <html lang="{html_lang}">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>{title}</title>
-  <meta name="description" content="{desc}">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
-  <meta name="theme-color" content="#0b1f3a">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Talendus">
-  <meta name="mobile-web-app-capable" content="yes">
-  <link rel="canonical" href="https://talendus.ca{path}">
-  <link rel="manifest" href="{prefix}manifest.webmanifest">
-  <link rel="apple-touch-icon" sizes="180x180" href="{prefix}assets/img/logo/apple-touch-icon.png">
-  <link rel="icon" href="{prefix}assets/img/logo/icon-192.png" type="image/png">
-  <link rel="stylesheet" href="{prefix}assets/css/mobile-app.css?v=31">
+  <title>Talendus</title>
+  <script>
+  (function () {{
+    var raw = (location.hash || "").replace(/^#\\/?/, "");
+    var parts = raw.split("/").filter(Boolean);
+    var name = parts[0] || "";
+    var id = parts.slice(1).join("/");
+    var jobs = {jobs!r};
+    var portal = {portal!r};
+    var employer = {employer!r};
+    var dest = jobs;
+    if (name === "verify" && id) dest = portal + "#/verify/" + encodeURIComponent(id);
+    else if (name === "reset" && id) dest = portal + "#/reset/" + encodeURIComponent(id);
+    else if (name === "forgot") dest = portal + "#/forgot";
+    else if (name === "hiring" || name === "need" || name === "inbox" || name === "invoices" || name === "company" || name === "pipeline") dest = employer;
+    else if (name === "login" || name === "register" || name === "home" || name === "apps" || name === "saved" || name === "settings" || name === "profile" || name === "messages" || name === "notifs") dest = portal;
+    location.replace(dest);
+  }})();
+  </script>
 </head>
-<body class="tl-native tn-gated">
-  <div id="tl-native-app" aria-live="polite">
-    <div class="tn-splash" role="status" aria-label="{loading}">
-      <div class="tn-orbit" aria-hidden="true">
-        <span class="tn-ring tn-ring-a"></span>
-        <span class="tn-ring tn-ring-b"></span>
-        <span class="tn-ring tn-ring-c"></span>
-        <div class="tn-mark">{mark}</div>
-      </div>
-      <p class="tn-word">Talendus</p>
-      <p class="tn-tag">{tag}</p>
-      <div class="tn-splash-bar" aria-hidden="true"><span></span></div>
-    </div>
-  </div>
-  <script src="{prefix}assets/js/api.js?v=31"></script>
-  <script src="{prefix}assets/js/talendus-call.js?v=31"></script>
-  <script src="{prefix}assets/js/mobile-app.js?v=31"></script>
+<body>
+  <p><a href="{jobs}">{lead}</a></p>
 </body>
 </html>
 """

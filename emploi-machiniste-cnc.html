@@ -3,23 +3,7 @@
 <head>
      <meta charset="UTF-8">
      <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-     <script>
-(function () {
-  var ua = navigator.userAgent || "";
-  var native = /TalendusApp/i.test(ua)
-    || (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches)
-    || (window.matchMedia && window.matchMedia("(display-mode: fullscreen)").matches)
-    || !!(window.navigator && window.navigator.standalone);
-  if (!native) return;
-  document.documentElement.classList.add("tl-standalone", "tl-native-app");
-  var path = location.pathname || "/";
-  if (/\/m\.html$/.test(path) || path.indexOf("/download/") === 0 || path.indexOf("/admin") === 0 || path.indexOf("/api/") === 0) return;
-  var hash = location.hash || "";
-  var portal = path.match(/\/(candidate|employer)(?:\/(.*))?$/);
-  if (portal) hash = "#/" + (portal[2] || "home");
-  location.replace((path.indexOf("/en/") === 0 ? "/en/m.html" : "/m.html") + hash);
-})();
-</script>
+     
      <title>Machiniste CNC à Saint-Jérôme | Emploi | Talendus</title>
      <meta name="description" content="Poste de Machiniste CNC à Saint-Jérôme, Québec. Permanent. Postulez via Talendus : un conseiller présente votre dossier. Agence de placement, tous secteurs.">
      <meta name="keywords" content="agence de recrutement, agence de placement, recrutement externalisé, recherche de talents, présélection de candidats, recrutement intelligent, recrutement assisté par IA, placement de personnel, solution de recrutement, recrutement de talents, Talendus Québec">
@@ -299,12 +283,12 @@ gtag('consent', 'default', {
           <span class="tl-chip">Débutant</span>
         </div>
         <h3>Opérateur de production</h3>
-        <dl class="tl-job-facts-mini">
-          <div><dt>Lieu</dt><dd>Longueuil</dd></div>
-          <div><dt>Rémunération</dt><dd>20 à 24 $/h</dd></div>
-          <div><dt>Horaire</dt><dd>Temps plein</dd></div>
-          <div><dt>Quart</dt><dd>Quarts rotatifs</dd></div>
-        </dl>
+        <ul class="tl-job-pills">
+          <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Longueuil</span></li>
+          <li class="is-pay"><i class="fa-solid fa-coins" aria-hidden="true"></i><span>20 à 24 $/h</span></li>
+          <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Temps plein</span></li>
+          <li><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>Quarts rotatifs</span></li>
+        </ul>
         <p class="tl-job-excerpt-label">Profil recherché</p>
         <p class="tl-job-excerpt">Expérience de production, capacité à suivre des procédures, travail d'équipe.</p>
         <div class="tl-job-skills"><span>production</span></div>
@@ -325,12 +309,12 @@ gtag('consent', 'default', {
           <span class="tl-chip">Intermédiaire</span>
         </div>
         <h3>Soudeur-monteur</h3>
-        <dl class="tl-job-facts-mini">
-          <div><dt>Lieu</dt><dd>Drummondville</dd></div>
-          <div><dt>Rémunération</dt><dd>28 à 34 $/h</dd></div>
-          <div><dt>Horaire</dt><dd>Temps plein</dd></div>
-          <div><dt>Quart</dt><dd>Quart de jour</dd></div>
-        </dl>
+        <ul class="tl-job-pills">
+          <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Drummondville</span></li>
+          <li class="is-pay"><i class="fa-solid fa-coins" aria-hidden="true"></i><span>28 à 34 $/h</span></li>
+          <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Temps plein</span></li>
+          <li><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>Quart de jour</span></li>
+        </ul>
         <p class="tl-job-excerpt-label">Profil recherché</p>
         <p class="tl-job-excerpt">Soudure MIG/TIG, lecture de plans, cartes de compétences un atout.</p>
         <div class="tl-job-skills"><span>soudure</span></div>
@@ -351,12 +335,12 @@ gtag('consent', 'default', {
           <span class="tl-chip">Intermédiaire</span>
         </div>
         <h3>Mécanicien industriel</h3>
-        <dl class="tl-job-facts-mini">
-          <div><dt>Lieu</dt><dd>Sherbrooke</dd></div>
-          <div><dt>Rémunération</dt><dd>30 à 36 $/h</dd></div>
-          <div><dt>Horaire</dt><dd>Temps plein</dd></div>
-          <div><dt>Quart</dt><dd>Quart de jour</dd></div>
-        </dl>
+        <ul class="tl-job-pills">
+          <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Sherbrooke</span></li>
+          <li class="is-pay"><i class="fa-solid fa-coins" aria-hidden="true"></i><span>30 à 36 $/h</span></li>
+          <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Temps plein</span></li>
+          <li><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>Quart de jour</span></li>
+        </ul>
         <p class="tl-job-excerpt-label">Profil recherché</p>
         <p class="tl-job-excerpt">Entretien préventif, alignement, convoyeurs, fiabilité.</p>
         <div class="tl-job-skills"><span>mécanique</span></div>
@@ -419,7 +403,6 @@ gtag('consent', 'default', {
             <li><a href="tel:+12635585225">263 558 5225</a></li>
             <li><a href="mailto:info@talendus.ca">info@talendus.ca</a></li>
             <li><a href="https://wa.me/12635585225?text=Bonjour%20Talendus%2C%20je%20cherche%20un%20emploi." target="_blank" rel="noopener noreferrer">WhatsApp</a></li>
-            <li><a href="app.html">Installer l'appli</a></li>
             <li>Lun–Ven, 8 h à 17 h</li>
             <li><a href="contact.html">Montréal · sur rendez-vous</a></li>
             <li><a href="recrutement-industriel-montreal.html">Montréal</a></li>

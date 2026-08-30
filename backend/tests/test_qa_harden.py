@@ -267,7 +267,12 @@ def test_generated_contact_copy_and_redirects():
     assert "cherche%20un%20emploi" in jobs
     mpage = (ROOT / "m.html").read_text(encoding="utf-8")
     assert "maximum-scale" not in mpage
-    assert "mobile-app.css?v=31" in mpage
+    assert "location.replace" in mpage
+    assert "mobile-app.js" not in mpage
+    contact = (ROOT / "contact.html").read_text(encoding="utf-8")
+    assert "maps.google.com/maps" not in contact
+    assert "tl-place" in contact
+    assert "Installer l'appli" not in contact
 
 
 def test_csp_header_is_present(client):

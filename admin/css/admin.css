@@ -585,3 +585,43 @@ table.data .check { width: 36px; cursor: default; }
 @media (max-width: 900px) {
   .svc-grid { grid-template-columns: 1fr; }
 }
+.offer-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+.offer-card {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+}
+.offer-card:hover { box-shadow: var(--shadow); transform: translateY(-3px); }
+.offer-card-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, var(--navy) 0%, #1a3a66 100%);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.offer-card-body { padding: 16px 18px 12px; }
+.offer-card-body h3 { margin: 0 0 6px; font-size: 18px; }
+.offer-pills { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; padding: 0; margin: 10px 0; }
+.offer-pills li {
+  background: var(--ice);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.offer-pills li.is-pay { background: rgba(255,107,0,.12); }

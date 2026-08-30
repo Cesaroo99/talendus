@@ -5,21 +5,15 @@ ROOT = Path(__file__).resolve().parents[2]
 
 def test_mobile_shell_is_not_the_website():
     page = (ROOT / "m.html").read_text(encoding="utf-8")
-    assert 'id="tl-native-app"' in page
-    assert "mobile-app.js" in page
-    assert "talendus-call.js" in page
-    assert "mobile-app.css" in page
-    assert "vl-header-area" not in page
-    assert "footer-widget" not in page
-    assert "preloader" not in page
-    assert "tn-splash" in page
-    assert "tn-orbit" in page
-    assert "tn-ring-a" in page
+    assert "location.replace" in page
+    assert "/emplois.html" in page
+    assert "/espace.html" in page
+    assert "mobile-app.js" not in page
     assert "data-install-now" not in page
     assert "talendus.js" not in page
     en = (ROOT / "en" / "m.html").read_text(encoding="utf-8")
-    assert 'id="tl-native-app"' in en
-    assert "mobile-app.js" in en
+    assert "location.replace" in en
+    assert "/en/jobs.html" in en
 
 
 def test_mobile_app_has_recruiting_screens():
@@ -82,11 +76,14 @@ def test_mobile_app_uses_the_dashboard_session():
     assert "localStorage.setItem(USER, JSON.stringify(json.data))" in api
     auth = (ROOT / "assets" / "js" / "auth-gate.js").read_text(encoding="utf-8")
     assert 'isNativeApp()' in auth
-    assert "/m.html" in auth
+    assert "espace-employeur.html" in auth
+    assert 'return (isEn ? "/en/m.html" : "/m.html")' not in auth
     native = (ROOT / "assets" / "js" / "talendus.js").read_text(encoding="utf-8")
-    assert "candidate|employer" in native
+    assert "INSTALL_LIVE = false" in native
+    assert 'location.replace((path.indexOf("/en/") === 0 ? "/en/m.html"' not in native
     page = (ROOT / "espace.html").read_text(encoding="utf-8")
-    assert "candidate|employer" in page
+    assert "tl-native-app" not in page
+    assert 'location.replace((path.indexOf("/en/") === 0 ? "/en/m.html"' not in page
     css = (ROOT / "assets" / "css" / "mobile-app.css").read_text(encoding="utf-8")
     assert ".tn-check" in css
 
@@ -145,7 +142,8 @@ def test_native_app_never_asks_to_install_again():
     js = (ROOT / "assets" / "js" / "talendus.js").read_text(encoding="utf-8")
     assert "TalendusApp" in js
     assert "isNativeApp" in js
-    assert "/m.html" in js
+    assert "INSTALL_LIVE = false" in js
+    assert 'location.replace((path.indexOf("/en/") === 0 ? "/en/m.html"' not in js
     java = (ROOT / "mobile" / "android" / "app" / "src" / "main" / "java" / "ca" / "talendus" / "app" / "MainActivity.java").read_text(encoding="utf-8")
     assert "TalendusApp/" in java
     assert "https://talendus.ca/m.html" in java
@@ -171,7 +169,8 @@ def test_native_app_never_asks_to_install_again():
 
 def test_manifest_opens_the_mobile_shell():
     text = (ROOT / "manifest.webmanifest").read_text(encoding="utf-8")
-    assert '"start_url": "/m.html"' in text
+    assert '"start_url": "/emplois.html"' in text
+    assert '"display": "browser"' in text
     assert "related_applications" in text
     assert "manifest.webmanifest" in text
 
@@ -179,12 +178,12 @@ def test_manifest_opens_the_mobile_shell():
 def test_mobile_shell_is_served(client):
     res = client.get("/m.html")
     assert res.status_code == 200, res.text
-    assert "tl-native-app" in res.text
-    assert "mobile-app.css?v=31" in res.text
+    assert "location.replace" in res.text
+    assert "/emplois.html" in res.text
     en = client.get("/en/m.html")
     assert en.status_code == 200, en.text
-    assert "tl-native-app" in en.text
-    assert "mobile-app.css?v=31" in en.text
+    assert "location.replace" in en.text
+    assert "/en/jobs.html" in en.text
 
 
 def test_mobile_app_hub_is_ordered():

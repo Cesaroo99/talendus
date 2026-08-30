@@ -8,6 +8,7 @@ from parts import (
     FAQ_EMPLOYEURS, FAQ_CANDIDATS, FAQ_HOME, homepage_faq, cv_file_field,
     install_board,
     native_app_page,
+    place_card,
     HONEYPOT_INPUT,
 )
 from positioning import (
@@ -649,9 +650,7 @@ write("contact.html", wrap(
         </div>
         <div data-persona-only="gateway"></div>
         <div>
-          <div class="tl-map">
-            <iframe title="Carte Montréal" src="https://maps.google.com/maps?q=Montréal%20Québec&t=&z=11&ie=UTF8&iwloc=&output=embed" loading="lazy"></iframe>
-          </div>
+          """ + place_card("fr") + """
         </div>
       </div>
     </div></section>
@@ -905,33 +904,33 @@ for old, new in [("about.html", "a-propos.html"), ("service.html", "services.htm
                     robots="noindex,nofollow"))
 
 write("app.html", wrap(
-    "Télécharger Talendus | Android et iPhone",
-    "Mettez Talendus sur votre téléphone. Offres, messages et votre conseiller, en un tap — comme vos autres applis.",
+    "Talendus | Site web",
+    "Talendus s’utilise sur le site : offres, espace candidat et espace employeur.",
     "app.html",
     page_hero(
-        "Sur votre téléphone",
-        "Talendus dans votre poche.",
-        "Téléchargez l'application une fois. Ensuite, elle s'ouvre comme vos autres applis — offres, messages et votre conseiller compris.",
-        actions='<a class="tl-btn" href="#tl-install-board">Télécharger l\'appli</a><a class="tl-btn tl-btn-ghost" href="espace.html">Ouvrir mon espace</a>',
-        badges='<span class="tl-badge tl-badge-light">Android</span> <span class="tl-badge tl-badge-light">iPhone</span>'
+        "Sur le site",
+        "Talendus s’utilise ici, sur le web.",
+        "L’application mobile n’est pas proposée pour le moment. Créez votre profil, postulez ou confiez un recrutement directement sur le site.",
+        actions='<a class="tl-btn" href="emplois.html">Voir les offres</a><a class="tl-btn tl-btn-ghost" href="espace.html">Ouvrir mon espace</a>',
     )
-    + install_board("fr")
     + """
     <section class="tl-section"><div class="container">
       <div class="tl-app-grid">
         <article class="tl-app-card">
           <h3>Candidats</h3>
-          <p>Profil, CV, candidatures et messages avec votre conseiller. Il vous rappelle pour un vrai mandat. Écrivez-nous dès que vous voulez avancer.</p>
+          <p>Profil, CV, candidatures et messages avec votre conseiller, dans votre espace web.</p>
           <p><a class="tl-btn" href="espace.html">Ouvrir mon espace</a></p>
         </article>
         <article class="tl-app-card">
           <h3>Entreprises</h3>
-          <p>Mandats, profils présentés, contrats à signer et factures. Un conseiller prend votre recrutement : décrivez le poste, on vous rappelle.</p>
+          <p>Mandats, profils présentés, contrats et factures : tout se suit depuis l’espace employeur.</p>
           <p><a class="tl-btn" href="espace-employeur.html">Espace employeur</a></p>
         </article>
       </div>
     </div></section>
-    """
+    <script>if (!location.hash) location.replace("emplois.html");</script>
+    """,
+    robots="noindex,nofollow",
 ))
 
 write("m.html", native_app_page("fr"))

@@ -3,42 +3,26 @@
 <head>
      <meta charset="UTF-8">
      <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-     <script>
-(function () {
-  var ua = navigator.userAgent || "";
-  var native = /TalendusApp/i.test(ua)
-    || (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches)
-    || (window.matchMedia && window.matchMedia("(display-mode: fullscreen)").matches)
-    || !!(window.navigator && window.navigator.standalone);
-  if (!native) return;
-  document.documentElement.classList.add("tl-standalone", "tl-native-app");
-  var path = location.pathname || "/";
-  if (/\/m\.html$/.test(path) || path.indexOf("/download/") === 0 || path.indexOf("/admin") === 0 || path.indexOf("/api/") === 0) return;
-  var hash = location.hash || "";
-  var portal = path.match(/\/(candidate|employer)(?:\/(.*))?$/);
-  if (portal) hash = "#/" + (portal[2] || "home");
-  location.replace((path.indexOf("/en/") === 0 ? "/en/m.html" : "/m.html") + hash);
-})();
-</script>
-     <title>Download Talendus | Android and iPhone</title>
-     <meta name="description" content="Put Talendus on your phone. Jobs, messages and your consultant — one tap, like your other apps.">
+     
+     <title>Talendus | Website</title>
+     <meta name="description" content="Talendus is used on the website: jobs, candidate workspace and employer workspace.">
      <meta name="keywords" content="recruitment agency, staffing agency, outsourced recruiting, talent search, candidate screening, intelligent recruiting, AI-assisted recruiting, personnel placement, recruiting solution, talent recruiting, Talendus Quebec">
      <link rel="canonical" href="https://talendus.ca/en/app.html">
      <link rel="alternate" hreflang="fr-CA" href="https://talendus.ca/app.html">
      <link rel="alternate" hreflang="en-CA" href="https://talendus.ca/en/app.html">
      <link rel="alternate" hreflang="x-default" href="https://talendus.ca/app.html">
-     <meta name="robots" content="index,follow">
+     <meta name="robots" content="noindex,nofollow">
      <meta property="og:locale" content="en_CA">
      <meta property="og:locale:alternate" content="fr_CA">
-     <meta property="og:title" content="Download Talendus | Android and iPhone">
-     <meta property="og:description" content="Put Talendus on your phone. Jobs, messages and your consultant — one tap, like your other apps.">
+     <meta property="og:title" content="Talendus | Website">
+     <meta property="og:description" content="Talendus is used on the website: jobs, candidate workspace and employer workspace.">
      <meta property="og:type" content="website">
      <meta property="og:url" content="https://talendus.ca/en/app.html">
      <meta property="og:site_name" content="Talendus">
      <meta property="og:image" content="https://talendus.ca/assets/img/all-images/industry/usine-equipe.jpg">
      <meta name="twitter:card" content="summary_large_image">
-     <meta name="twitter:title" content="Download Talendus | Android and iPhone">
-     <meta name="twitter:description" content="Put Talendus on your phone. Jobs, messages and your consultant — one tap, like your other apps.">
+     <meta name="twitter:title" content="Talendus | Website">
+     <meta name="twitter:description" content="Talendus is used on the website: jobs, candidate workspace and employer workspace.">
      <meta name="twitter:image" content="https://talendus.ca/assets/img/all-images/industry/usine-equipe.jpg">
      <meta name="theme-color" content="#0b1f3a">
      <meta name="apple-mobile-web-app-capable" content="yes">
@@ -202,117 +186,29 @@ gtag('consent', 'default', {
 
 <section class="tl-page-hero">
   <div class="container">
-    <span class="tl-badge tl-badge-light">Android</span> <span class="tl-badge tl-badge-light">iPhone</span>
-    <div class="tl-kicker">On your phone</div>
-    <h1 class="tl-h1">Talendus in your pocket.</h1>
-    <p class="tl-lead">Download the app once. Then it opens like your other apps — offers, messages and your consultant included.</p>
-    <div class="tl-actions"><a class="tl-btn" href="#tl-install-board">Download the app</a><a class="tl-btn tl-btn-ghost" href="account.html">Open my workspace</a></div>
+    
+    <div class="tl-kicker">On the website</div>
+    <h1 class="tl-h1">Talendus is used here, on the web.</h1>
+    <p class="tl-lead">The mobile app is not offered for now. Create your profile, apply or hand us a hire directly on the site.</p>
+    <div class="tl-actions"><a class="tl-btn" href="jobs.html">See job openings</a><a class="tl-btn tl-btn-ghost" href="account.html">Open my workspace</a></div>
   </div>
 </section>
 
-    <section class="tl-section tl-install-section" id="tl-install-board">
-      <div class="container">
-        <div class="tl-install-canvas">
-          <div class="tl-install-hero-card">
-            <div class="tl-install-icon-preview" aria-hidden="true">
-              <img src="../assets/img/logo/icon-192.png" width="72" height="72" alt="">
-              <span>Talendus</span>
-            </div>
-            <p class="tl-install-already" data-install-already hidden>Talendus is already installed. Tap the icon on your home screen to open it.</p>
-            <h2>Get Talendus on your phone</h2>
-            <p>Download once. Offers, messages and your consultant stay one tap away — like your other apps.</p>
-            <p class="tl-install-safari-note" data-install-safari hidden>On iPhone, installation works best in Safari (the blue compass icon).</p>
-            <button type="button" class="tl-btn" data-install-now>Download the app</button>
-            <div class="tl-install-direct">
-              <a class="tl-btn" href="/download/talendus.apk" data-install-android-file>Download for Android</a>
-              <a class="tl-btn tl-btn-ghost" href="/download/talendus.mobileconfig" data-install-ios-file>Download for iPhone</a>
-            </div>
-          </div>
-          <div class="tl-install-lanes">
-            <article class="tl-install-lane" data-install-android>
-              <h3>On Android</h3>
-              <ol class="tl-install-steps">
-                
-        <li>
-          <span class="tl-install-step-num">1</span>
-          <div class="tl-install-step-copy">
-            <h3>Tap Download for Android</h3>
-            <p>Your phone downloads the Talendus file.</p>
-          </div>
-          <div class="tl-install-glyph" aria-hidden="true"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 8v22" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M16 24l8 8 8-8" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 38h28" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></div>
-        </li>
-                
-        <li>
-          <span class="tl-install-step-num">2</span>
-          <div class="tl-install-step-copy">
-            <h3>Tap the file once</h3>
-            <p>It sits at the bottom of the screen, or in Downloads.</p>
-          </div>
-          <div class="tl-install-glyph" aria-hidden="true"><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="12" y="8" width="24" height="32" rx="4" fill="none" stroke="currentColor" stroke-width="3"/><path d="M18 20h12M18 28h8" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></div>
-        </li>
-                
-        <li>
-          <span class="tl-install-step-num">3</span>
-          <div class="tl-install-step-copy">
-            <h3>Tap Install</h3>
-            <p>If asked, allow Chrome to install apps. The Talendus icon appears.</p>
-          </div>
-          <div class="tl-install-glyph" aria-hidden="true"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="16" fill="#ff6b00"/><path d="M16 24.5l5 5 11-12" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        </li>
-              </ol>
-            </article>
-            <article class="tl-install-lane" data-install-ios>
-              <h3>On iPhone</h3>
-              <ol class="tl-install-steps">
-                
-        <li>
-          <span class="tl-install-step-num">1</span>
-          <div class="tl-install-step-copy">
-            <h3>Tap Download for iPhone</h3>
-            <p>Safari downloads the Talendus profile.</p>
-          </div>
-          <div class="tl-install-glyph" aria-hidden="true"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 8v22" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M16 24l8 8 8-8" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 38h28" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></div>
-        </li>
-                
-        <li>
-          <span class="tl-install-step-num">2</span>
-          <div class="tl-install-step-copy">
-            <h3>Allow the profile</h3>
-            <p>Then open Settings. At the top, tap Profile Downloaded.</p>
-          </div>
-          <div class="tl-install-glyph" aria-hidden="true"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="7" fill="none" stroke="currentColor" stroke-width="3"/><path d="M24 8v4M24 36v4M8 24h4M36 24h4M12.5 12.5l2.8 2.8M32.7 32.7l2.8 2.8M12.5 35.5l2.8-2.8M32.7 15.3l2.8-2.8" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></div>
-        </li>
-                
-        <li>
-          <span class="tl-install-step-num">3</span>
-          <div class="tl-install-step-copy">
-            <h3>Tap Install</h3>
-            <p>Enter your code if asked. The Talendus icon appears on the home screen.</p>
-          </div>
-          <div class="tl-install-glyph" aria-hidden="true"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="16" fill="#ff6b00"/><path d="M16 24.5l5 5 11-12" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        </li>
-              </ol>
-            </article>
-          </div>
-          <p class="tl-muted tl-install-after">After that, open Talendus from the icon, like any other app.</p>
-        </div>
-      </div>
-    </section>
-    
     <section class="tl-section"><div class="container">
       <div class="tl-app-grid">
         <article class="tl-app-card">
           <h3>Talent</h3>
-          <p>Profile, resume, applications and messages with your consultant. They call you for a real mandate. Write to us whenever you want to move forward.</p>
+          <p>Profile, resume, applications and messages with your consultant, in your web workspace.</p>
           <p><a class="tl-btn" href="account.html">Open my workspace</a></p>
         </article>
         <article class="tl-app-card">
           <h3>Employers</h3>
-          <p>Mandates, presented files, contracts to sign and invoices. A consultant takes your hire: describe the role, we call you back.</p>
+          <p>Mandates, presented files, contracts and invoices — all from the employer workspace.</p>
           <p><a class="tl-btn" href="account-employer.html">Employer workspace</a></p>
         </article>
       </div>
     </div></section>
+    <script>if (!location.hash) location.replace("jobs.html");</script>
     
 <a class="tl-call" href="tel:+12635585225" aria-label="Call Talendus">
   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 10.8c1.4 2.7 3.9 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1.1-.3 1.2.4 2.5.6 3.8.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.6.6 3.8.1.4 0 .8-.3 1.1L6.6 10.8z"/></svg>
@@ -365,7 +261,6 @@ gtag('consent', 'default', {
             <li><a href="tel:+12635585225">263 558 5225</a></li>
             <li><a href="mailto:info@talendus.ca">info@talendus.ca</a></li>
             <li><a href="https://wa.me/12635585225?text=Hello%20Talendus%2C%20I%20would%20like%20to%20talk." target="_blank" rel="noopener noreferrer">WhatsApp</a></li>
-            <li><a href="app.html">Install the app</a></li>
             <li>Mon–Fri, 8 a.m. to 5 p.m.</li>
             <li><a href="contact.html">Montreal · by appointment</a></li>
             <li><a href="industrial-recruiting-montreal.html">Montreal</a></li>

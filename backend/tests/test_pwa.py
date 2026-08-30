@@ -18,8 +18,8 @@ def test_web_manifest_is_installable(client):
     assert "manifest" in (res.headers.get("content-type") or "")
     data = json.loads(res.text)
     assert data["name"] == "Talendus"
-    assert data["display"] == "standalone"
-    assert data["start_url"].startswith("/m.html")
+    assert data["display"] == "browser"
+    assert data["start_url"].startswith("/emplois.html")
     assert data["scope"] == "/"
     sizes = {icon["sizes"]: icon for icon in data["icons"]}
     assert "192x192" in sizes
@@ -58,18 +58,17 @@ def test_apple_touch_icon_is_square(client):
 
 def test_app_page_downloads_real_packages():
     page = (ROOT / "app.html").read_text(encoding="utf-8")
-    assert 'id="tl-install-board"' in page
-    assert "Télécharger l'appli" in page
-    assert 'href="/download/talendus.apk"' in page
-    assert 'href="/download/talendus.mobileconfig"' in page
+    assert 'id="tl-install-board"' not in page
+    assert "Télécharger l'appli" not in page
+    assert 'href="/download/talendus.apk"' not in page
+    assert "s’utilise ici" in page or "s'utilise ici" in page
     assert "Trois petits gestes" not in page
     for banned in ("Xcode", "WKWebView", "Google Play", "App Store"):
         assert banned not in page
     en = (ROOT / "en" / "app.html").read_text(encoding="utf-8")
-    assert 'id="tl-install-board"' in en
-    assert "Download the app" in en
-    assert 'href="/download/talendus.apk"' in en
-    assert 'href="/download/talendus.mobileconfig"' in en
+    assert 'id="tl-install-board"' not in en
+    assert "Download the app" not in en
+    assert 'href="/download/talendus.apk"' not in en
     for banned in ("Xcode", "WKWebView"):
         assert banned not in en
 
@@ -80,7 +79,7 @@ def test_install_script_starts_a_file_download():
     assert "/download/talendus.mobileconfig" in js
     assert "location.assign" in js
     assert "openGuide" not in js
-    assert "Télécharger l'appli" in js
+    assert "var INSTALL_LIVE = false" in js
     assert "rememberDismiss(365)" in js
     assert "Le fichier est en bas de l'écran" in js
     assert "isDesktopOs" in js

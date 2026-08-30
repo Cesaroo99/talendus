@@ -3,23 +3,7 @@
 <head>
      <meta charset="UTF-8">
      <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-     <script>
-(function () {
-  var ua = navigator.userAgent || "";
-  var native = /TalendusApp/i.test(ua)
-    || (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches)
-    || (window.matchMedia && window.matchMedia("(display-mode: fullscreen)").matches)
-    || !!(window.navigator && window.navigator.standalone);
-  if (!native) return;
-  document.documentElement.classList.add("tl-standalone", "tl-native-app");
-  var path = location.pathname || "/";
-  if (/\/m\.html$/.test(path) || path.indexOf("/download/") === 0 || path.indexOf("/admin") === 0 || path.indexOf("/api/") === 0) return;
-  var hash = location.hash || "";
-  var portal = path.match(/\/(candidate|employer)(?:\/(.*))?$/);
-  if (portal) hash = "#/" + (portal[2] || "home");
-  location.replace((path.indexOf("/en/") === 0 ? "/en/m.html" : "/m.html") + hash);
-})();
-</script>
+     
      <title>HR manager in Montreal | Job | Talendus</title>
      <meta name="description" content="HR manager role in Montreal, Quebec. Permanent. Apply through Talendus: a consultant presents your file. Placement agency, every industry.">
      <meta name="keywords" content="recruitment agency, staffing agency, outsourced recruiting, talent search, candidate screening, intelligent recruiting, AI-assisted recruiting, personnel placement, recruiting solution, talent recruiting, Talendus Quebec">
@@ -299,12 +283,12 @@ gtag('consent', 'default', {
           <span class="tl-chip">Mid-level</span>
         </div>
         <h3>Forklift operator</h3>
-        <dl class="tl-job-facts-mini">
-          <div><dt>Location</dt><dd>Laval</dd></div>
-          <div><dt>Pay</dt><dd>$22 to $26/hr</dd></div>
-          <div><dt>Hours</dt><dd>Full-time</dd></div>
-          <div><dt>Shift</dt><dd>Day shift</dd></div>
-        </dl>
+        <ul class="tl-job-pills">
+          <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Laval</span></li>
+          <li class="is-pay"><i class="fa-solid fa-coins" aria-hidden="true"></i><span>$22 to $26/hr</span></li>
+          <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Full-time</span></li>
+          <li><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>Day shift</span></li>
+        </ul>
         <p class="tl-job-excerpt-label">Profile we look for</p>
         <p class="tl-job-excerpt">Forklift permit, 1 year warehouse experience.</p>
         <div class="tl-job-skills"><span>forklift</span></div>
@@ -325,12 +309,12 @@ gtag('consent', 'default', {
           <span class="tl-chip">Entry-level</span>
         </div>
         <h3>Production operator</h3>
-        <dl class="tl-job-facts-mini">
-          <div><dt>Location</dt><dd>Longueuil</dd></div>
-          <div><dt>Pay</dt><dd>$20 to $24/hr</dd></div>
-          <div><dt>Hours</dt><dd>Full-time</dd></div>
-          <div><dt>Shift</dt><dd>Rotating shifts</dd></div>
-        </dl>
+        <ul class="tl-job-pills">
+          <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Longueuil</span></li>
+          <li class="is-pay"><i class="fa-solid fa-coins" aria-hidden="true"></i><span>$20 to $24/hr</span></li>
+          <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Full-time</span></li>
+          <li><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>Rotating shifts</span></li>
+        </ul>
         <p class="tl-job-excerpt-label">Profile we look for</p>
         <p class="tl-job-excerpt">Production experience, ability to follow procedures, teamwork.</p>
         <div class="tl-job-skills"><span>production</span></div>
@@ -351,12 +335,12 @@ gtag('consent', 'default', {
           <span class="tl-chip">Mid-level</span>
         </div>
         <h3>Welder-fitter</h3>
-        <dl class="tl-job-facts-mini">
-          <div><dt>Location</dt><dd>Drummondville</dd></div>
-          <div><dt>Pay</dt><dd>$28 to $34/hr</dd></div>
-          <div><dt>Hours</dt><dd>Full-time</dd></div>
-          <div><dt>Shift</dt><dd>Day shift</dd></div>
-        </dl>
+        <ul class="tl-job-pills">
+          <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Drummondville</span></li>
+          <li class="is-pay"><i class="fa-solid fa-coins" aria-hidden="true"></i><span>$28 to $34/hr</span></li>
+          <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Full-time</span></li>
+          <li><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>Day shift</span></li>
+        </ul>
         <p class="tl-job-excerpt-label">Profile we look for</p>
         <p class="tl-job-excerpt">MIG/TIG welding, blueprint reading, competency cards an asset.</p>
         <div class="tl-job-skills"><span>welding</span></div>
@@ -419,7 +403,6 @@ gtag('consent', 'default', {
             <li><a href="tel:+12635585225">263 558 5225</a></li>
             <li><a href="mailto:info@talendus.ca">info@talendus.ca</a></li>
             <li><a href="https://wa.me/12635585225?text=Hello%20Talendus%2C%20I%20am%20looking%20for%20work." target="_blank" rel="noopener noreferrer">WhatsApp</a></li>
-            <li><a href="app.html">Install the app</a></li>
             <li>Mon–Fri, 8 a.m. to 5 p.m.</li>
             <li><a href="contact.html">Montreal · by appointment</a></li>
             <li><a href="industrial-recruiting-montreal.html">Montreal</a></li>

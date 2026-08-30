@@ -3,23 +3,7 @@
 <head>
      <meta charset="UTF-8">
      <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-     <script>
-(function () {
-  var ua = navigator.userAgent || "";
-  var native = /TalendusApp/i.test(ua)
-    || (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches)
-    || (window.matchMedia && window.matchMedia("(display-mode: fullscreen)").matches)
-    || !!(window.navigator && window.navigator.standalone);
-  if (!native) return;
-  document.documentElement.classList.add("tl-standalone", "tl-native-app");
-  var path = location.pathname || "/";
-  if (/\/m\.html$/.test(path) || path.indexOf("/download/") === 0 || path.indexOf("/admin") === 0 || path.indexOf("/api/") === 0) return;
-  var hash = location.hash || "";
-  var portal = path.match(/\/(candidate|employer)(?:\/(.*))?$/);
-  if (portal) hash = "#/" + (portal[2] || "home");
-  location.replace((path.indexOf("/en/") === 0 ? "/en/m.html" : "/m.html") + hash);
-})();
-</script>
+     
      <title>Contact | Confier un recrutement ou créer un profil | Talendus</title>
      <meta name="description" content="Contactez Talendus à Montréal. Confiez un besoin de recrutement ou créez votre profil. Appels sur rendez-vous. 263 558 5225 · info@talendus.ca">
      <meta name="keywords" content="agence de recrutement, agence de placement, recrutement externalisé, recherche de talents, présélection de candidats, recrutement intelligent, recrutement assisté par IA, placement de personnel, solution de recrutement, recrutement de talents, Talendus Québec">
@@ -356,9 +340,16 @@ gtag('consent', 'default', {
         </div>
         <div data-persona-only="gateway"></div>
         <div>
-          <div class="tl-map">
-            <iframe title="Carte Montréal" src="https://maps.google.com/maps?q=Montréal%20Québec&t=&z=11&ie=UTF8&iwloc=&output=embed" loading="lazy"></iframe>
-          </div>
+          <aside class="tl-place">
+            <p class="tl-kicker">Nous joindre</p>
+            <h3>Montréal · Québec</h3>
+            <p>Talendus intervient partout au Québec. Les appels se font sur rendez-vous.</p>
+            <ul class="tl-place-links">
+              <li><a href="tel:+12635585225"><i class="fa-solid fa-phone" aria-hidden="true"></i> 263 558 5225</a></li>
+              <li><a href="mailto:info@talendus.ca"><i class="fa-solid fa-envelope" aria-hidden="true"></i> info@talendus.ca</a></li>
+            </ul>
+            <a class="tl-btn tl-btn-ghost" href="https://www.google.com/maps/search/?api=1&query=Montreal%20Quebec" target="_blank" rel="noopener noreferrer">Ouvrir dans Maps</a>
+          </aside>
         </div>
       </div>
     </div></section>
@@ -414,7 +405,6 @@ gtag('consent', 'default', {
             <li><a href="tel:+12635585225">263 558 5225</a></li>
             <li><a href="mailto:info@talendus.ca">info@talendus.ca</a></li>
             <li><a href="https://wa.me/12635585225?text=Bonjour%20Talendus%2C%20j%27aimerais%20vous%20parler." target="_blank" rel="noopener noreferrer">WhatsApp</a></li>
-            <li><a href="app.html">Installer l'appli</a></li>
             <li>Lun–Ven, 8 h à 17 h</li>
             <li><a href="contact.html">Montréal · sur rendez-vous</a></li>
             <li><a href="recrutement-industriel-montreal.html">Montréal</a></li>
