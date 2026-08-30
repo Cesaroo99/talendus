@@ -1053,20 +1053,42 @@ def human_hire_band(lang="fr"):
 """
 
 
+# Aligné sur backend/app/services/job_catalog.py :
+# contrat = nature du lien, horaire = charge de la semaine, quart = moment.
+CONTRACT_CHOICES = {
+    "fr": ["Permanent", "Temporaire", "Contractuel", "Saisonnier", "Stage"],
+    "en": ["Permanent", "Temporary", "Contract", "Seasonal", "Internship"],
+}
+SCHEDULE_CHOICES = {
+    "fr": ["Temps plein", "Temps partiel", "Sur appel", "4 jours / 3"],
+    "en": ["Full-time", "Part-time", "On call", "4 days / 3"],
+}
+SHIFT_CHOICES = {
+    "fr": ["Quart de jour", "Quart de soir", "Quart de nuit", "Quarts rotatifs", "Fin de semaine", "Quarts brisés"],
+    "en": ["Day shift", "Evening shift", "Night shift", "Rotating shifts", "Weekend", "Split shifts"],
+}
+
+
+def _plain_options(blank, values, extra=None):
+    parts = [f'<option value="">{blank}</option>']
+    parts.extend(f"<option>{v}</option>" for v in values)
+    if extra:
+        parts.append(f"<option>{extra}</option>")
+    return "".join(parts)
+
+
+def _hint(text):
+    return f'<p class="tl-field-hint">{text}</p>'
+
+
 def employer_need_fields(lang="fr"):
     """Champs du formulaire entreprise : secteur, poste, volume, localisation, contrat, besoins."""
     if lang == "en":
         sectors = _options(SECTOR_EXAMPLES["en"], "Select an industry")
         sectors += '<option value="autre">Other / several industries</option>'
-        contracts = """
-            <option value="">Select</option>
-            <option>Full-time</option>
-            <option>Part-time</option>
-            <option>Temporary</option>
-            <option>Contract</option>
-            <option>Internship</option>
-            <option>Several contract types</option>
-        """
+        contracts = _plain_options("Select", CONTRACT_CHOICES["en"], "Several contract types")
+        shifts = _plain_options("Select", SHIFT_CHOICES["en"])
+        hours = _plain_options("Select", SCHEDULE_CHOICES["en"])
         return f"""
             <label>Industry</label>
             <select name="secteur">{sectors}</select>
@@ -1075,39 +1097,24 @@ def employer_need_fields(lang="fr"):
             <label>Number of hires</label>
             <input name="volume" type="number" min="1" value="1">
             <label>Location</label>
-            <input name="localisation" placeholder="City, region, country or remote">
+            <input name="localisation" placeholder="City, region or country">
             <label>Contract type</label>
+            {_hint("Permanent, temporary, seasonal… — not weekly hours.")}
             <select name="contrat">{contracts}</select>
             <label>Shift</label>
-            <select name="quart">
-              <option value="">Select</option>
-              <option>Day shift</option>
-              <option>Evening shift</option>
-              <option>Night shift</option>
-              <option>Rotating shifts</option>
-              <option>Weekend</option>
-            </select>
+            {_hint("Time of day or week.")}
+            <select name="quart">{shifts}</select>
             <label>Hours</label>
-            <select name="horaire">
-              <option value="">Select</option>
-              <option>Full-time</option>
-              <option>Part-time</option>
-              <option>On call</option>
-            </select>
+            {_hint("Weekly workload: full-time, part-time, on call.")}
+            <select name="horaire">{hours}</select>
             <label>What we should know</label>
             <textarea name="message" required placeholder="Responsibilities, must-have skills, experience, urgency, anything that will shape the search"></textarea>
         """
     sectors = _options(SECTOR_EXAMPLES["fr"], "Choisir un secteur")
     sectors += '<option value="autre">Autre / plusieurs secteurs</option>'
-    contracts = """
-            <option value="">Choisir</option>
-            <option>Temps plein</option>
-            <option>Temps partiel</option>
-            <option>Temporaire</option>
-            <option>Contractuel</option>
-            <option>Stage</option>
-            <option>Plusieurs types de contrat</option>
-        """
+    contracts = _plain_options("Choisir", CONTRACT_CHOICES["fr"], "Plusieurs types de contrat")
+    shifts = _plain_options("Choisir", SHIFT_CHOICES["fr"])
+    hours = _plain_options("Choisir", SCHEDULE_CHOICES["fr"])
     return f"""
             <label>Secteur</label>
             <select name="secteur">{sectors}</select>
@@ -1116,25 +1123,16 @@ def employer_need_fields(lang="fr"):
             <label>Nombre de personnes à recruter</label>
             <input name="volume" type="number" min="1" value="1">
             <label>Localisation</label>
-            <input name="localisation" placeholder="Ville, région, pays ou télétravail">
+            <input name="localisation" placeholder="Ville, région ou pays">
             <label>Type de contrat</label>
+            {_hint("Permanent, temporaire, saisonnier… — pas le temps plein ou partiel.")}
             <select name="contrat">{contracts}</select>
             <label>Quart</label>
-            <select name="quart">
-              <option value="">Choisir</option>
-              <option>Quart de jour</option>
-              <option>Quart de soir</option>
-              <option>Quart de nuit</option>
-              <option>Quarts rotatifs</option>
-              <option>Fin de semaine</option>
-            </select>
+            {_hint("Moment de la journée ou de la semaine.")}
+            <select name="quart">{shifts}</select>
             <label>Horaire</label>
-            <select name="horaire">
-              <option value="">Choisir</option>
-              <option>Temps plein</option>
-              <option>Temps partiel</option>
-              <option>Sur appel</option>
-            </select>
+            {_hint("Charge dans la semaine : temps plein, partiel, sur appel.")}
+            <select name="horaire">{hours}</select>
             <label>Ce que nous devons savoir</label>
             <textarea name="message" required placeholder="Responsabilités, compétences indispensables, expérience, urgence, tout ce qui orientera la recherche"></textarea>
         """
@@ -1144,14 +1142,9 @@ def job_search_filters(lang="fr"):
     """Filtres de recherche d'offres publiées par Talendus (côté candidat)."""
     if lang == "en":
         sectors = _options(SECTOR_EXAMPLES["en"], "All industries")
-        types = """
-          <option value="">All job types</option>
-          <option value="Permanent">Full-time / permanent</option>
-          <option value="Part-time">Part-time</option>
-          <option value="Temporary">Temporary</option>
-          <option value="Contract">Contract</option>
-          <option value="Internship">Internship</option>
-        """
+        types = _plain_options("All contract types", CONTRACT_CHOICES["en"])
+        hours = _plain_options("Any hours", SCHEDULE_CHOICES["en"])
+        shifts = _plain_options("Any shift", SHIFT_CHOICES["en"])
         return f"""
       <div class="tl-jobs-toolbar">
       <div class="tl-filters tl-filters-search" data-ai-ready="true">
@@ -1167,11 +1160,10 @@ def job_search_filters(lang="fr"):
             <option>Drummondville</option><option>Saint-Jérôme</option>
             <option>Sherbrooke</option><option>Boucherville</option>
             <option>Anjou</option><option>Trois-Rivières</option><option>Quebec City</option>
-            <option value="remote">Remote</option>
           </select>
         </label>
         <label class="tl-filter">
-          <span>Job type</span>
+          <span>Contract type</span>
           <select id="job-type">{types}</select>
         </label>
         <label class="tl-filter">
@@ -1189,23 +1181,11 @@ def job_search_filters(lang="fr"):
         </label>
         <label class="tl-filter">
           <span>Shift</span>
-          <select id="job-shift">
-            <option value="">Any shift</option>
-            <option>Day shift</option>
-            <option>Evening shift</option>
-            <option>Night shift</option>
-            <option>Rotating shifts</option>
-            <option>Weekend</option>
-          </select>
+          <select id="job-shift">{shifts}</select>
         </label>
         <label class="tl-filter">
           <span>Hours</span>
-          <select id="job-schedule">
-            <option value="">Any hours</option>
-            <option>Full-time</option>
-            <option>Part-time</option>
-            <option>On call</option>
-          </select>
+          <select id="job-schedule">{hours}</select>
         </label>
         <label class="tl-filter">
           <span>Workplace</span>
@@ -1257,14 +1237,9 @@ def job_search_filters(lang="fr"):
       </div>
 """
     sectors = _options(SECTOR_EXAMPLES["fr"], "Tous les secteurs")
-    types = """
-          <option value="">Tous les types d'emploi</option>
-          <option value="Permanent">Temps plein / permanent</option>
-          <option value="Partiel">Temps partiel</option>
-          <option value="Temporaire">Temporaire</option>
-          <option value="Contractuel">Contractuel</option>
-          <option value="Stage">Stage</option>
-        """
+    types = _plain_options("Tous les types de contrat", CONTRACT_CHOICES["fr"])
+    hours = _plain_options("Tous les horaires", SCHEDULE_CHOICES["fr"])
+    shifts = _plain_options("Tous les quarts", SHIFT_CHOICES["fr"])
     return f"""
       <div class="tl-jobs-toolbar">
       <div class="tl-filters tl-filters-search" data-ai-ready="true">
@@ -1280,11 +1255,10 @@ def job_search_filters(lang="fr"):
             <option>Drummondville</option><option>Saint-Jérôme</option>
             <option>Sherbrooke</option><option>Boucherville</option>
             <option>Anjou</option><option>Trois-Rivières</option><option>Québec</option>
-            <option value="remote">Télétravail</option>
           </select>
         </label>
         <label class="tl-filter">
-          <span>Type d'emploi</span>
+          <span>Type de contrat</span>
           <select id="job-type">{types}</select>
         </label>
         <label class="tl-filter">
@@ -1302,23 +1276,11 @@ def job_search_filters(lang="fr"):
         </label>
         <label class="tl-filter">
           <span>Quart</span>
-          <select id="job-shift">
-            <option value="">Tous les quarts</option>
-            <option>Quart de jour</option>
-            <option>Quart de soir</option>
-            <option>Quart de nuit</option>
-            <option>Quarts rotatifs</option>
-            <option>Fin de semaine</option>
-          </select>
+          <select id="job-shift">{shifts}</select>
         </label>
         <label class="tl-filter">
           <span>Horaire</span>
-          <select id="job-schedule">
-            <option value="">Tous les horaires</option>
-            <option>Temps plein</option>
-            <option>Temps partiel</option>
-            <option>Sur appel</option>
-          </select>
+          <select id="job-schedule">{hours}</select>
         </label>
         <label class="tl-filter">
           <span>Présence</span>

@@ -86,6 +86,20 @@ def canonical_host() -> str:
     return (get_settings().seo_canonical_host or "https://talendus.ca").rstrip("/")
 
 
+def _job_employment_type(job: JobOffer) -> str:
+    hours = str(getattr(job, "schedule", None) or "").lower()
+    if "partiel" in hours or "part-time" in hours or "part time" in hours:
+        return "PART_TIME"
+    if "appel" in hours or "on call" in hours:
+        return "OTHER"
+    if "plein" in hours or "full-time" in hours or "full time" in hours:
+        return "FULL_TIME"
+    kind = str(getattr(job, "contract_type", None) or "").lower()
+    if kind.startswith("perm"):
+        return "FULL_TIME"
+    return "OTHER"
+
+
 def job_posting_schema(job: JobOffer) -> dict:
     host = canonical_host()
     url = f"{host}/emploi-{job.slug}.html"
@@ -96,7 +110,7 @@ def job_posting_schema(job: JobOffer) -> dict:
         "description": (job.description or job.title)[:8000],
         "identifier": {"@type": "PropertyValue", "name": "Talendus", "value": job.slug or job.id},
         "datePosted": job.published_at.date().isoformat() if job.published_at else None,
-        "employmentType": "FULL_TIME" if (job.contract_type or "").lower().startswith("perm") else "OTHER",
+        "employmentType": _job_employment_type(job),
         "hiringOrganization": {"@type": "EmploymentAgency", "name": "Talendus", "sameAs": host, "logo": f"{host}/assets/img/logo/logo1.png"},
         "jobLocation": {
             "@type": "Place",

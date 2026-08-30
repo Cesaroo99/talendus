@@ -333,7 +333,7 @@ def build_en(write, wrap, page_hero):
             <label>Phone</label><input name="tel" autocomplete="tel">
             <label>Target role</label>
             <select name="metier">""" + talent_trade_options("en") + """</select>
-            <label>Region</label><input name="region" placeholder="Laval, Montérégie, Quebec City, remote…">
+            <label>Region</label><input name="region" placeholder="Laval, Montérégie, Quebec City…">
             """ + cv_file_field("en", required=True) + """
             <label>Link to your resume <span class="tl-optional">(optional)</span></label><input name="cv" placeholder="https://">
             <button class="tl-btn tl-btn-lg" type="submit">Create my profile</button>

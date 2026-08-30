@@ -42,6 +42,20 @@
     ["CLOSED", "Recrutement terminé"]
   ];
   const JOB_ACT_API = { publiee: "publish", suspendue: "pause", archivee: "archive" };
+  const JOB_CONTRACTS = ["Permanent", "Temporaire", "Contractuel", "Saisonnier", "Stage"];
+  const JOB_HOURS = ["Temps plein", "Temps partiel", "Sur appel", "4 jours / 3"];
+  const JOB_SHIFTS = ["Quart de jour", "Quart de soir", "Quart de nuit", "Quarts rotatifs", "Fin de semaine", "Quarts brisés"];
+
+  function jobSelect(label, name, values, selected) {
+    return U.field(label, name, { options: values, selected: selected || values[0] }, "select");
+  }
+
+  function jobVocabFields(job) {
+    job = job || {};
+    return jobSelect("Type de contrat", "contract_type", JOB_CONTRACTS, job.contract_type || job.type) +
+      jobSelect("Horaire", "schedule", JOB_HOURS, job.schedule) +
+      jobSelect("Quart", "shift", JOB_SHIFTS, job.shift);
+  }
 
   function live() {
     return !!(window.TalendusAPI && TLStore.isLive && TLStore.isLive());
@@ -726,7 +740,8 @@
         </div>
         <div class="card card-pad">
           <div class="row"><span>Salaire</span><b>${U.esc(j.salary)}</b></div>
-          <div class="row"><span>Type</span><b>${U.esc(j.type)}</b></div>
+          <div class="row"><span>Type de contrat</span><b>${U.esc(j.contract_type || j.type)}</b></div>
+          <div class="row"><span>Horaire</span><b>${U.esc(j.schedule || "—")}</b></div>
           <div class="row"><span>Quart</span><b>${U.esc(j.shift)}</b></div>
           <div class="row"><span>Expérience</span><b>${U.esc(j.experience)}</b></div>
           <div class="row"><span>Compétences</span><b>${U.esc(j.skills)}</b></div>
@@ -1214,7 +1229,7 @@
       body = '<form id="cf" class="form-grid">' + U.field("Entreprise", "name") + U.field("Secteur", "sector") + U.field("Ville", "city") + U.field("Contact", "contact") + U.field("Courriel", "email") + U.field("Téléphone", "phone") + "</form>";
     } else if (type === "job") {
       if (!S().clients.length) { U.toast("Créez d’abord une entreprise cliente.", "err"); return; }
-      body = '<form id="cf" class="form-grid">' + U.field("Titre", "title") + U.field("Entreprise", "clientId", { options: S().clients.map(function (c) { return { v: c.id, l: c.name }; }), selected: firstId(S().clients) }, "select") + U.field("Ville", "city") + U.field("Salaire", "salary") + U.field("Description", "description", "", "textarea", "full") + "</form>";
+      body = '<form id="cf" class="form-grid">' + U.field("Titre", "title") + U.field("Entreprise", "clientId", { options: S().clients.map(function (c) { return { v: c.id, l: c.name }; }), selected: firstId(S().clients) }, "select") + U.field("Ville", "city") + U.field("Salaire", "salary") + jobVocabFields() + U.field("Description", "description", "", "textarea", "full") + "</form>";
     } else if (type === "mission") {
       if (!S().clients.length) { U.toast("Créez d’abord une entreprise cliente.", "err"); return; }
       body = '<form id="cf" class="form-grid">' + U.field("Titre", "title") + U.field("Client", "clientId", { options: S().clients.map(function (c) { return { v: c.id, l: c.name }; }), selected: firstId(S().clients) }, "select") + U.field("Offre", "jobId", { options: [{ v: "", l: "Sans offre liée" }].concat(S().jobs.map(function (j) { return { v: j.id, l: j.title }; })), selected: firstId(S().jobs) }, "select") + U.field("Nombre de postes", "seats", "1", "number") + "</form>";
@@ -1256,7 +1271,7 @@
             if (type === "job" && window.TalendusAPI && d.clientId) {
               var created = await window.TalendusAPI.request("/jobs", {
                 method: "POST",
-                body: { title: d.title, company_id: d.clientId, location: d.city, salary_display: d.salary, description: d.description }
+                body: { title: d.title, company_id: d.clientId, location: d.city, salary_display: d.salary, description: d.description, contract_type: d.contract_type, schedule: d.schedule, shift: d.shift }
               });
               var job = created && created.data;
               if (publish && job && job.id) {
@@ -1314,7 +1329,7 @@
             } else if (type === "client") {
               st.clients.unshift({ id: TLStore.nid("cl"), name: d.name, sector: d.sector, city: d.city, contact: d.contact, email: d.email, phone: d.phone, status: "Prospect", recruiterId: me.id, employees: 0, website: "", since: new Date().toISOString().slice(0, 10) });
             } else if (type === "job") {
-              st.jobs.unshift({ id: TLStore.nid("j"), title: d.title, clientId: d.clientId, city: d.city, sector: "Production", type: "Permanent", salary: d.salary, shift: "Quart de jour", status: publish ? "publiee" : "brouillon", publishedAt: publish ? new Date().toISOString().slice(0, 10) : "", expiresAt: "", applications: 0, experience: "—", skills: "", benefits: "", description: d.description, responsibilities: "", qualifications: "" });
+              st.jobs.unshift({ id: TLStore.nid("j"), title: d.title, clientId: d.clientId, city: d.city, sector: "Production", type: d.contract_type || "Permanent", contract_type: d.contract_type || "Permanent", salary: d.salary, schedule: d.schedule || "Temps plein", shift: d.shift || "Quart de jour", status: publish ? "publiee" : "brouillon", publishedAt: publish ? new Date().toISOString().slice(0, 10) : "", expiresAt: "", applications: 0, experience: "—", skills: "", benefits: "", description: d.description, responsibilities: "", qualifications: "" });
             } else if (type === "mission") {
               st.missions.unshift({ id: TLStore.nid("m"), clientId: d.clientId, jobId: d.jobId, title: d.title, seats: Number(d.seats) || 1, recruiterId: me.id, start: new Date().toISOString().slice(0, 10), due: "", status: "en-cours", value: 40000, commission: 6400, progress: 5, stageMap: {} });
             } else {
@@ -1549,14 +1564,14 @@
           var j = TLStore.job(jid);
           U.modal({
             title: "Modifier l’offre",
-            body: '<form id="jf" class="form-grid">' + U.field("Titre", "title", j.title) + U.field("Salaire", "salary", j.salary) + U.field("Description", "description", j.description, "textarea", "full") + "</form>",
+            body: '<form id="jf" class="form-grid">' + U.field("Titre", "title", j.title) + U.field("Salaire", "salary", j.salary) + jobVocabFields(j) + U.field("Description", "description", j.description, "textarea", "full") + "</form>",
             footer: '<button class="btn btn-ghost" data-close>Annuler</button><button class="btn btn-orange" id="save">Enregistrer</button>',
             onMount: function (box, close) {
               box.querySelector("#save").onclick = async function () {
                 var d = U.formData(box.querySelector("#jf"));
                 try {
                   if (live()) {
-                    await window.TalendusAPI.request("/jobs/" + jid, { method: "PATCH", body: { title: d.title, salary_display: d.salary, description: d.description } });
+                    await window.TalendusAPI.request("/jobs/" + jid, { method: "PATCH", body: { title: d.title, salary_display: d.salary, description: d.description, contract_type: d.contract_type, schedule: d.schedule, shift: d.shift } });
                     await refreshLive();
                     close(); U.toast("Offre mise à jour — le site public suit cette fiche.", "ok"); render();
                     return;

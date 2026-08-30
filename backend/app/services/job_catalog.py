@@ -29,7 +29,6 @@ LOCATIONS = [
     "Gatineau",
     "Saguenay",
     "Salaberry-de-Valleyfield",
-    "Télétravail",
 ]
 
 SECTORS = [
@@ -73,7 +72,7 @@ LANGUAGE_CHOICES = ["Français", "Anglais", "Espagnol", "Arabe", "Créole", "Ita
 EXPERIENCE_LEVELS = [
     {"value": "debutant", "label": "Débutant", "label_en": "Entry-level"},
     {"value": "intermediaire", "label": "Intermédiaire", "label_en": "Mid-level"},
-    {"value": "senior", "label": "Senior", "label_en": "Senior"},
+    {"value": "senior", "label": "Expérimenté", "label_en": "Senior"},
 ]
 
 PROVINCES = ["Québec", "Ontario", "Nouveau-Brunswick", "Nouvelle-Écosse", "Manitoba"]

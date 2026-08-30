@@ -486,7 +486,7 @@ write("candidats.html", wrap(
             <label>Téléphone</label><input name="tel" autocomplete="tel">
             <label>Métier visé</label>
             <select name="metier">""" + talent_trade_options("fr") + """</select>
-            <label>Région</label><input name="region" placeholder="Laval, Montérégie, Québec, télétravail…">
+            <label>Région</label><input name="region" placeholder="Laval, Montérégie, Québec…">
             """ + cv_file_field("fr", required=True) + """
             <label>Lien vers votre CV <span class="tl-optional">(facultatif)</span></label><input name="cv" placeholder="https://">
             <button class="tl-btn tl-btn-lg" type="submit">Créer mon profil</button>
