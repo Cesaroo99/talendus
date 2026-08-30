@@ -691,7 +691,7 @@
         var expLabel = {
           debutant: isEn ? "Entry-level" : "Débutant",
           intermediaire: isEn ? "Mid-level" : "Intermédiaire",
-          senior: isEn ? "Senior" : "Senior"
+          senior: isEn ? "Senior" : "Expérimenté"
         };
         var catLabel = {
           entrepot: isEn ? "Warehouse" : "Entrepôt",

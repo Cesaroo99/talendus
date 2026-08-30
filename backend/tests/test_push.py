@@ -128,7 +128,7 @@ def test_mobile_app_asks_for_phone_notifications():
         assert needle in js
     assert ".showNotification(" not in js
     sw = (ROOT / "sw.js").read_text(encoding="utf-8")
-    assert "talendus-app-v30" in sw
+    assert "talendus-app-v31" in sw
     assert "showNotification" in sw
     assert "renotify: false" in sw
     java = (ROOT / "mobile" / "android" / "app" / "src" / "main" / "java" / "ca" / "talendus" / "app" / "MainActivity.java").read_text(encoding="utf-8")

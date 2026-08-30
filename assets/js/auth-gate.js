@@ -70,6 +70,16 @@
       return String(v == null ? "" : v)
         .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
     }
+    function wireAuthLabels() {
+      if (!overlay) return;
+      overlay.querySelectorAll("label").forEach(function (label, i) {
+        if (label.htmlFor || label.querySelector("input, select, textarea")) return;
+        var next = label.nextElementSibling;
+        if (!next || !/^(INPUT|SELECT|TEXTAREA)$/.test(next.tagName)) return;
+        if (!next.id) next.id = "tl-auth-field-" + (next.getAttribute("name") || i);
+        label.setAttribute("for", next.id);
+      });
+    }
     function staffRole(role) {
       return ["ADMIN", "SUPER_ADMIN", "RECRUITER", "FINANCE", "EDITOR"].indexOf(role) !== -1;
     }
@@ -458,6 +468,7 @@
             t.verifyTitle
           );
           overlay.innerHTML = inner;
+          wireAuthLabels();
           bindAuthForm(mode, role);
           api.verifyEmail(token).then(function () {
             flashBox(".tl-success", t.verifyOk, true);
@@ -501,6 +512,7 @@
           );
         }
         overlay.innerHTML = inner;
+        wireAuthLabels();
         bindAuthForm(mode, role);
         var first = overlay.querySelector("input:not(.tl-hp), button.tl-btn");
         if (first && first.focus) first.focus();
