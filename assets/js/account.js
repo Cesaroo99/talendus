@@ -467,12 +467,6 @@
     }
     function accountHref(role) {
       if (staffRole(role)) return "/admin/";
-      var native = /TalendusApp/i.test(navigator.userAgent || "")
-        || (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches)
-        || (window.matchMedia && window.matchMedia("(display-mode: fullscreen)").matches)
-        || !!(window.navigator && window.navigator.standalone)
-        || /\/m\.html$/.test(location.pathname || "");
-      if (native) return (isEn ? "/en/m.html" : "/m.html") + "#/home";
       if (role === "EMPLOYER") return siteRoot() + (isEn ? "account-employer.html" : "espace-employeur.html") + "#/dashboard";
       return siteRoot() + (isEn ? "account.html" : "espace.html") + "#/dashboard";
     }
@@ -719,13 +713,25 @@
         ? '<button type="button" class="tl-btn tl-btn-ghost" data-nav="job" data-id="' + esc(job.slug || job.id) + '">' + esc(t.jobDetail) + "</button>"
         : '<span class="tl-save-hint">' + esc(t.jobUnavailable) + "</span>";
       var applyBtn = applyCta(job);
-      return '<article class="tl-list-card"><span class="tl-chip orange">' + esc(statusLabel(job.status || "PUBLISHED")) + "</span>" +
-        (job.saved ? '<span class="tl-match-score">' + esc(t.unbookmark) + "</span>" : "") +
-        "<h3>" + esc(job.title || "") + "</h3><p class=\"tl-meta\">" + esc(job.company_name || "") + " · " + esc(job.location || "") +
-        (job.shift ? " · " + esc(job.shift) : "") +
-        (job.schedule ? " · " + esc(job.schedule) : "") +
-        (job.contract_type ? " · " + esc(job.contract_type) : "") + "</p>" + (extra || "") +
-        "<p>" + applyBtn + detailBtn + " " + (available && job.slug ? '<a class="tl-split-cta" href="' + href + '">' + (isEn ? "Public page →" : "Page publique →") + "</a>" : "") + "</p></article>";
+      var pills = "";
+      if (job.location) pills += '<li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>' + esc(job.location) + "</span></li>";
+      if (job.salary_display || job.salary) pills += '<li class="is-pay"><i class="fa-solid fa-coins" aria-hidden="true"></i><span>' + esc(job.salary_display || job.salary) + "</span></li>";
+      if (job.schedule) pills += '<li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>' + esc(job.schedule) + "</span></li>";
+      if (job.shift) pills += '<li><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>' + esc(job.shift) + "</span></li>";
+      return '<article class="tl-list-card tl-job-card is-portal">' +
+        '<div class="tl-job-card-banner"><span class="tl-job-card-icon" aria-hidden="true"><i class="fa-solid fa-briefcase"></i></span>' +
+        '<div class="tl-job-card-banner-text"><p class="tl-job-card-cat">' + esc(job.company_name || "Talendus") + "</p>" +
+        '<p class="tl-job-card-via">' + esc(statusLabel(job.status || "PUBLISHED")) + "</p></div></div>" +
+        '<div class="tl-job-card-body">' +
+        '<div class="tl-job-card-top">' +
+        (job.contract_type ? '<span class="tl-chip orange">' + esc(job.contract_type) + "</span>" : "") +
+        (job.saved ? '<span class="tl-chip">' + esc(t.unbookmark) + "</span>" : "") + "</div>" +
+        "<h3>" + esc(job.title || "") + "</h3>" +
+        (pills ? '<ul class="tl-job-pills">' + pills + "</ul>" : "") +
+        (extra || "") +
+        '<p class="tl-job-card-actions">' + applyBtn + detailBtn +
+        (available && job.slug ? ' <a class="tl-split-cta" href="' + href + '">' + (isEn ? "Public page →" : "Page publique →") + "</a>" : "") +
+        "</p></div></article>";
     }
 
     function renderCandidateDashboard(user, dash, profile) {

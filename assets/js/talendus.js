@@ -9,17 +9,7 @@
     return false;
   }
 
-  if (isNativeApp()) {
-    document.documentElement.classList.add("tl-standalone", "tl-native-app");
-    var path = location.pathname || "/";
-    if (!/\/m\.html$/.test(path) && path.indexOf("/download/") !== 0 && path.indexOf("/admin") !== 0 && path.indexOf("/api/") !== 0) {
-      var hash = location.hash || "";
-      var portal = path.match(/\/(candidate|employer)(?:\/(.*))?$/);
-      if (portal) hash = "#/" + (portal[2] || "home");
-      location.replace((path.indexOf("/en/") === 0 ? "/en/m.html" : "/m.html") + hash);
-      return;
-    }
-  }
+  /* L’appli mobile est hors service : on reste sur le site, même en mode standalone. */
 
   function ready(fn) {
     if (document.readyState !== "loading") fn();
@@ -750,17 +740,17 @@
           var chips = String(skills).split(/[,;]/).map(function (s) { return s.trim(); }).filter(Boolean).slice(0, 6)
             .map(function (s) { return "<span>" + escapeHtml(s) + "</span>"; }).join("");
           var facts = "";
-          if (loc) facts += "<div><dt>" + (isEn ? "Location" : "Lieu") + "</dt><dd>" + escapeHtml(loc) + "</dd></div>";
-          if (salary) facts += "<div><dt>" + (isEn ? "Pay" : "Rémunération") + "</dt><dd>" + escapeHtml(salary) + "</dd></div>";
-          if (scheduleVal) facts += "<div><dt>" + (isEn ? "Hours" : "Horaire") + "</dt><dd>" + escapeHtml(scheduleVal) + "</dd></div>";
-          if (shiftVal) facts += "<div><dt>" + (isEn ? "Shift" : "Quart") + "</dt><dd>" + escapeHtml(shiftVal) + "</dd></div>";
+          if (loc) facts += '<li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>' + escapeHtml(loc) + "</span></li>";
+          if (salary) facts += '<li class="is-pay"><i class="fa-solid fa-coins" aria-hidden="true"></i><span>' + escapeHtml(salary) + "</span></li>";
+          if (scheduleVal) facts += '<li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>' + escapeHtml(scheduleVal) + "</span></li>";
+          if (shiftVal) facts += '<li><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>' + escapeHtml(shiftVal) + "</span></li>";
           return '<a class="tl-job-card" href="' + href + '" aria-label="' + escapeHtml(cta + " : " + job.title) + '" data-job="' + escapeHtml(hay) + '" data-city="' + escapeHtml(loc) + '" data-cat="' + escapeHtml(cat) + '" data-type="' + escapeHtml(typ) + '" data-shift="' + escapeHtml(shiftVal) + '" data-schedule="' + escapeHtml(scheduleVal) + '" data-mode="' + escapeHtml(modeVal) + '" data-salary="' + escapeHtml(salary) + '" data-sector="' + escapeHtml(sector.toLowerCase()) + '" data-exp="' + escapeHtml(String(exp).toLowerCase()) + '">' +
             '<div class="tl-job-card-banner"><span class="tl-job-card-icon" aria-hidden="true"><i class="fa-solid ' + icon + '"></i></span><div class="tl-job-card-banner-text"><p class="tl-job-card-cat">' + escapeHtml(shownCat) + '</p><p class="tl-job-card-via">Via Talendus</p></div></div>' +
             '<div class="tl-job-card-body">' +
             '<div class="tl-job-card-top">' + (typ ? '<span class="tl-chip orange">' + escapeHtml(typ) + "</span>" : "") +
             (expLabel[exp] ? '<span class="tl-chip">' + escapeHtml(expLabel[exp]) + "</span>" : "") + "</div>" +
             "<h3>" + escapeHtml(job.title) + "</h3>" +
-            (facts ? '<dl class="tl-job-facts-mini">' + facts + "</dl>" : "") +
+            (facts ? '<ul class="tl-job-pills">' + facts + "</ul>" : "") +
             (excerpt ? '<p class="tl-job-excerpt-label">' + (isEn ? "Profile we look for" : "Profil recherché") + '</p><p class="tl-job-excerpt">' + escapeHtml(excerpt) + "</p>" : "") +
             (chips ? '<div class="tl-job-skills">' + chips + "</div>" : "") +
             '</div><span class="tl-job-card-cta">' + cta + "</span></a>";
@@ -830,6 +820,9 @@
     });
 
     (function setupPwa() {
+      var INSTALL_LIVE = false;
+      window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); });
+      if (!INSTALL_LIVE) return;
       var DISMISS_KEY = "talendus_install_dismissed_at";
       var ASKED_KEY = "talendus_install_asked";
       var ua = (navigator.userAgent || "").toLowerCase();

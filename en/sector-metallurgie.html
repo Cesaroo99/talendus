@@ -3,23 +3,7 @@
 <head>
      <meta charset="UTF-8">
      <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-     <script>
-(function () {
-  var ua = navigator.userAgent || "";
-  var native = /TalendusApp/i.test(ua)
-    || (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches)
-    || (window.matchMedia && window.matchMedia("(display-mode: fullscreen)").matches)
-    || !!(window.navigator && window.navigator.standalone);
-  if (!native) return;
-  document.documentElement.classList.add("tl-standalone", "tl-native-app");
-  var path = location.pathname || "/";
-  if (/\/m\.html$/.test(path) || path.indexOf("/download/") === 0 || path.indexOf("/admin") === 0 || path.indexOf("/api/") === 0) return;
-  var hash = location.hash || "";
-  var portal = path.match(/\/(candidate|employer)(?:\/(.*))?$/);
-  if (portal) hash = "#/" + (portal[2] || "home");
-  location.replace((path.indexOf("/en/") === 0 ? "/en/m.html" : "/m.html") + hash);
-})();
-</script>
+     
      <title>Metals and welding recruitment Quebec | Talendus</title>
      <meta name="description" content="Welding, machining, metal fabrication. Other roles and industries are equally in scope.">
      <meta name="keywords" content="recruitment agency, staffing agency, outsourced recruiting, talent search, candidate screening, intelligent recruiting, AI-assisted recruiting, personnel placement, recruiting solution, talent recruiting, Talendus Quebec">
@@ -275,7 +259,6 @@ gtag('consent', 'default', {
             <li><a href="tel:+12635585225">263 558 5225</a></li>
             <li><a href="mailto:info@talendus.ca">info@talendus.ca</a></li>
             <li><a href="https://wa.me/12635585225?text=Hello%20Talendus%2C%20I%20would%20like%20to%20talk%20about%20a%20hiring%20need." target="_blank" rel="noopener noreferrer">WhatsApp</a></li>
-            <li><a href="app.html">Install the app</a></li>
             <li>Mon–Fri, 8 a.m. to 5 p.m.</li>
             <li><a href="contact.html">Montreal · by appointment</a></li>
             <li><a href="industrial-recruiting-montreal.html">Montreal</a></li>

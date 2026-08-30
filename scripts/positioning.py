@@ -1602,12 +1602,12 @@ def job_card_html(job, lang="fr"):
           <span class="tl-chip">{exp_label}</span>
         </div>
         <h3>{title}</h3>
-        <dl class="tl-job-facts-mini">
-          <div><dt>{loc_l}</dt><dd>{city}</dd></div>
-          <div><dt>{pay_l}</dt><dd>{sal}</dd></div>
-          <div><dt>{time_l}</dt><dd>{horaire}</dd></div>
-          <div><dt>{shift_l}</dt><dd>{quart}</dd></div>
-        </dl>
+        <ul class="tl-job-pills">
+          <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>{city}</span></li>
+          <li class="is-pay"><i class="fa-solid fa-coins" aria-hidden="true"></i><span>{sal}</span></li>
+          <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>{horaire}</span></li>
+          <li><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>{quart}</span></li>
+        </ul>
         <p class="tl-job-excerpt-label">{profile_l}</p>
         <p class="tl-job-excerpt">{req}</p>
         {chips}

@@ -678,10 +678,20 @@
     });
     var rows = list.map(function (j) {
       var cl = TLStore.client(j.clientId);
-      return `<tr data-go="#/jobs/${j.id}"><td><b>${U.esc(j.title)}</b></td><td>${U.esc(cl ? cl.name : "—")}</td><td>${U.esc(j.city)}</td><td>${U.esc(j.sector)}</td><td>${U.esc(j.type)}</td><td>${U.esc(j.salary)}</td><td>${U.badge(j.status)}</td><td>${j.applications}</td>
-        <td onclick="event.stopPropagation()">
-          <button class="btn btn-ghost btn-sm" data-job-act="dup:${j.id}">Dupliquer</button>
-        </td></tr>`;
+      return `<article class="offer-card" data-go="#/jobs/${j.id}">
+        <div class="offer-card-banner"><span>${U.esc(j.sector || "Talendus")}</span>${U.badge(j.status)}</div>
+        <div class="offer-card-body">
+          <h3>${U.esc(j.title)}</h3>
+          <p class="muted">${U.esc(cl ? cl.name : "—")}</p>
+          <ul class="offer-pills">
+            ${j.city ? "<li>" + U.esc(j.city) + "</li>" : ""}
+            ${j.salary ? '<li class="is-pay">' + U.esc(j.salary) + "</li>" : ""}
+            ${j.type ? "<li>" + U.esc(j.type) + "</li>" : ""}
+            <li>${j.applications || 0} candidature${(j.applications || 0) > 1 ? "s" : ""}</li>
+          </ul>
+          <p onclick="event.stopPropagation()"><button class="btn btn-ghost btn-sm" data-job-act="dup:${j.id}">Dupliquer</button></p>
+        </div>
+      </article>`;
     }).join("");
     return `
       <div class="page-head"><div><h1>Offres d’emploi</h1><p>Publication vers le site public Talendus</p></div>
@@ -690,7 +700,7 @@
         <input data-f="q" placeholder="Titre" value="${U.esc(filters.q || "")}">
         <select data-f="status"><option value="">Statut</option>${["brouillon","publiee","suspendue","expiree","archivee"].map(function (s) { return "<option value=\"" + s + "\"" + (filters.status === s ? " selected" : "") + ">" + U.STATUS[s][0] + "</option>"; }).join("")}</select>
       </div>
-      <div class="card"><div class="table-wrap"><table class="data"><thead><tr><th>Titre</th><th>Entreprise</th><th>Localisation</th><th>Secteur</th><th>Type</th><th>Salaire</th><th>Statut</th><th>Candidatures</th><th></th></tr></thead><tbody>${rows || '<tr><td colspan="9">' + U.empty("Aucune offre", "Créez une offre, puis publiez-la pour qu’elle apparaisse sur le site.") + "</td></tr>"}</tbody></table></div></div>`;
+      <div class="offer-grid">${rows || '<div class="card card-pad">' + U.empty("Aucune offre", "Créez une offre, puis publiez-la pour qu’elle apparaisse sur le site.") + "</div>"}</div>`;
   }
 
   function viewJob(id) {

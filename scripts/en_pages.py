@@ -1,6 +1,6 @@
 """English pages for Talendus, native copy, not machine-translated chrome."""
 
-from parts import speed_strip, cta_band, faq_html, proof_stats, FAQ_EMPLOYERS_EN, FAQ_CANDIDATES_EN, FAQ_HOME_EN, homepage_faq, cv_file_field, install_board, native_app_page, HONEYPOT_INPUT
+from parts import speed_strip, cta_band, faq_html, proof_stats, FAQ_EMPLOYERS_EN, FAQ_CANDIDATES_EN, FAQ_HOME_EN, homepage_faq, cv_file_field, install_board, native_app_page, place_card, HONEYPOT_INPUT
 from seo_pages import write_en as write_seo_en
 from positioning import (
     homepage_after_hero, job_search_filters, employer_need_fields,
@@ -494,9 +494,7 @@ def build_en(write, wrap, page_hero):
         </div>
         <div data-persona-only="gateway"></div>
         <div>
-          <div class="tl-map">
-            <iframe title="Montreal map" src="https://maps.google.com/maps?q=Montreal%20Quebec&t=&z=11&ie=UTF8&iwloc=&output=embed" loading="lazy"></iframe>
-          </div>
+          """ + place_card("en") + """
         </div>
       </div>
     </div></section>
@@ -784,35 +782,35 @@ def build_en(write, wrap, page_hero):
         alt="solutions-rh.html",
     ))
     write("en/app.html", wrap(
-        "Download Talendus | Android and iPhone",
-        "Put Talendus on your phone. Jobs, messages and your consultant — one tap, like your other apps.",
+        "Talendus | Website",
+        "Talendus is used on the website: jobs, candidate workspace and employer workspace.",
         "en/app.html",
         page_hero(
-            "On your phone",
-            "Talendus in your pocket.",
-            "Download the app once. Then it opens like your other apps — offers, messages and your consultant included.",
-            actions='<a class="tl-btn" href="#tl-install-board">Download the app</a><a class="tl-btn tl-btn-ghost" href="account.html">Open my workspace</a>',
-            badges='<span class="tl-badge tl-badge-light">Android</span> <span class="tl-badge tl-badge-light">iPhone</span>',
+            "On the website",
+            "Talendus is used here, on the web.",
+            "The mobile app is not offered for now. Create your profile, apply or hand us a hire directly on the site.",
+            actions='<a class="tl-btn" href="jobs.html">See job openings</a><a class="tl-btn tl-btn-ghost" href="account.html">Open my workspace</a>',
         )
-        + install_board("en")
         + """
     <section class="tl-section"><div class="container">
       <div class="tl-app-grid">
         <article class="tl-app-card">
           <h3>Talent</h3>
-          <p>Profile, resume, applications and messages with your consultant. They call you for a real mandate. Write to us whenever you want to move forward.</p>
+          <p>Profile, resume, applications and messages with your consultant, in your web workspace.</p>
           <p><a class="tl-btn" href="account.html">Open my workspace</a></p>
         </article>
         <article class="tl-app-card">
           <h3>Employers</h3>
-          <p>Mandates, presented files, contracts to sign and invoices. A consultant takes your hire: describe the role, we call you back.</p>
+          <p>Mandates, presented files, contracts and invoices — all from the employer workspace.</p>
           <p><a class="tl-btn" href="account-employer.html">Employer workspace</a></p>
         </article>
       </div>
     </div></section>
+    <script>if (!location.hash) location.replace("jobs.html");</script>
     """,
         lang="en",
         alt="app.html",
+        robots="noindex,nofollow",
     ))
     write("en/m.html", native_app_page("en"))
     write_seo_en(write, wrap, page_hero, CTA)

@@ -2,12 +2,11 @@
   "id": "/",
   "name": "Talendus",
   "short_name": "Talendus",
-  "description": "Talendus sur votre téléphone : offres, profil, messages et appel direct.",
-  "start_url": "/m.html",
+  "description": "Agence de placement Talendus : offres, espace candidat et espace employeur sur le site.",
+  "start_url": "/emplois.html",
   "scope": "/",
-  "display": "standalone",
-  "display_override": ["standalone", "minimal-ui"],
-  "orientation": "portrait-primary",
+  "display": "browser",
+  "orientation": "any",
   "background_color": "#0b1f3a",
   "theme_color": "#0b1f3a",
   "lang": "fr-CA",
@@ -50,13 +49,13 @@
     {
       "name": "Offres · Jobs",
       "short_name": "Jobs",
-      "url": "/m.html#/jobs",
+      "url": "/emplois.html",
       "icons": [{ "src": "/assets/img/logo/icon-192.png", "sizes": "192x192" }]
     },
     {
-      "name": "Messages",
-      "short_name": "Messages",
-      "url": "/m.html#/messages",
+      "name": "Espace",
+      "short_name": "Espace",
+      "url": "/espace.html",
       "icons": [{ "src": "/assets/img/logo/icon-192.png", "sizes": "192x192" }]
     }
   ]

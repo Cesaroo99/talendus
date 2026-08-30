@@ -3,23 +3,7 @@
 <head>
      <meta charset="UTF-8">
      <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-     <script>
-(function () {
-  var ua = navigator.userAgent || "";
-  var native = /TalendusApp/i.test(ua)
-    || (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches)
-    || (window.matchMedia && window.matchMedia("(display-mode: fullscreen)").matches)
-    || !!(window.navigator && window.navigator.standalone);
-  if (!native) return;
-  document.documentElement.classList.add("tl-standalone", "tl-native-app");
-  var path = location.pathname || "/";
-  if (/\/m\.html$/.test(path) || path.indexOf("/download/") === 0 || path.indexOf("/admin") === 0 || path.indexOf("/api/") === 0) return;
-  var hash = location.hash || "";
-  var portal = path.match(/\/(candidate|employer)(?:\/(.*))?$/);
-  if (portal) hash = "#/" + (portal[2] || "home");
-  location.replace((path.indexOf("/en/") === 0 ? "/en/m.html" : "/m.html") + hash);
-})();
-</script>
+     
      <title>Offres d&#x27;emploi | Opportunités Talendus</title>
      <meta name="description" content="Postes accompagnés par Talendus dans tous les secteurs. Postulez : un conseiller étudie votre dossier et vous rappelle.">
      <meta name="keywords" content="agence de recrutement, agence de placement, recrutement externalisé, recherche de talents, présélection de candidats, recrutement intelligent, recrutement assisté par IA, placement de personnel, solution de recrutement, recrutement de talents, Talendus Québec">
@@ -338,12 +322,12 @@ gtag('consent', 'default', {
           <span class="tl-chip">Intermédiaire</span>
         </div>
         <h3>Cariste</h3>
-        <dl class="tl-job-facts-mini">
-          <div><dt>Lieu</dt><dd>Laval</dd></div>
-          <div><dt>Rémunération</dt><dd>22 à 26 $/h</dd></div>
-          <div><dt>Horaire</dt><dd>Temps plein</dd></div>
-          <div><dt>Quart</dt><dd>Quart de jour</dd></div>
-        </dl>
+        <ul class="tl-job-pills">
+          <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Laval</span></li>
+          <li class="is-pay"><i class="fa-solid fa-coins" aria-hidden="true"></i><span>22 à 26 $/h</span></li>
+          <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Temps plein</span></li>
+          <li><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>Quart de jour</span></li>
+        </ul>
         <p class="tl-job-excerpt-label">Profil recherché</p>
         <p class="tl-job-excerpt">Permis chariot élévateur, 1 an d'expérience en entrepôt.</p>
         <div class="tl-job-skills"><span>conduite de chariot élévateur</span></div>
@@ -364,12 +348,12 @@ gtag('consent', 'default', {
           <span class="tl-chip">Débutant</span>
         </div>
         <h3>Opérateur de production</h3>
-        <dl class="tl-job-facts-mini">
-          <div><dt>Lieu</dt><dd>Longueuil</dd></div>
-          <div><dt>Rémunération</dt><dd>20 à 24 $/h</dd></div>
-          <div><dt>Horaire</dt><dd>Temps plein</dd></div>
-          <div><dt>Quart</dt><dd>Quarts rotatifs</dd></div>
-        </dl>
+        <ul class="tl-job-pills">
+          <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Longueuil</span></li>
+          <li class="is-pay"><i class="fa-solid fa-coins" aria-hidden="true"></i><span>20 à 24 $/h</span></li>
+          <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Temps plein</span></li>
+          <li><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>Quarts rotatifs</span></li>
+        </ul>
         <p class="tl-job-excerpt-label">Profil recherché</p>
         <p class="tl-job-excerpt">Expérience de production, capacité à suivre des procédures, travail d'équipe.</p>
         <div class="tl-job-skills"><span>production</span></div>
@@ -390,12 +374,12 @@ gtag('consent', 'default', {
           <span class="tl-chip">Intermédiaire</span>
         </div>
         <h3>Soudeur-monteur</h3>
-        <dl class="tl-job-facts-mini">
-          <div><dt>Lieu</dt><dd>Drummondville</dd></div>
-          <div><dt>Rémunération</dt><dd>28 à 34 $/h</dd></div>
-          <div><dt>Horaire</dt><dd>Temps plein</dd></div>
-          <div><dt>Quart</dt><dd>Quart de jour</dd></div>
-        </dl>
+        <ul class="tl-job-pills">
+          <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Drummondville</span></li>
+          <li class="is-pay"><i class="fa-solid fa-coins" aria-hidden="true"></i><span>28 à 34 $/h</span></li>
+          <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Temps plein</span></li>
+          <li><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>Quart de jour</span></li>
+        </ul>
         <p class="tl-job-excerpt-label">Profil recherché</p>
         <p class="tl-job-excerpt">Soudure MIG/TIG, lecture de plans, cartes de compétences un atout.</p>
         <div class="tl-job-skills"><span>soudure</span></div>
@@ -416,12 +400,12 @@ gtag('consent', 'default', {
           <span class="tl-chip">Expérimenté</span>
         </div>
         <h3>Machiniste CNC</h3>
-        <dl class="tl-job-facts-mini">
-          <div><dt>Lieu</dt><dd>Saint-Jérôme</dd></div>
-          <div><dt>Rémunération</dt><dd>30 à 38 $/h</dd></div>
-          <div><dt>Horaire</dt><dd>Temps plein</dd></div>
-          <div><dt>Quart</dt><dd>Quart de jour</dd></div>
-        </dl>
+        <ul class="tl-job-pills">
+          <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Saint-Jérôme</span></li>
+          <li class="is-pay"><i class="fa-solid fa-coins" aria-hidden="true"></i><span>30 à 38 $/h</span></li>
+          <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Temps plein</span></li>
+          <li><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>Quart de jour</span></li>
+        </ul>
         <p class="tl-job-excerpt-label">Profil recherché</p>
         <p class="tl-job-excerpt">Programmation ou set-up, lecture de dessins, 3 ans d'expérience.</p>
         <div class="tl-job-skills"><span>usinage CNC</span></div>
@@ -442,12 +426,12 @@ gtag('consent', 'default', {
           <span class="tl-chip">Intermédiaire</span>
         </div>
         <h3>Électromécanicien</h3>
-        <dl class="tl-job-facts-mini">
-          <div><dt>Lieu</dt><dd>Montréal</dd></div>
-          <div><dt>Rémunération</dt><dd>32 à 40 $/h</dd></div>
-          <div><dt>Horaire</dt><dd>Temps plein</dd></div>
-          <div><dt>Quart</dt><dd>Quarts rotatifs</dd></div>
-        </dl>
+        <ul class="tl-job-pills">
+          <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Montréal</span></li>
+          <li class="is-pay"><i class="fa-solid fa-coins" aria-hidden="true"></i><span>32 à 40 $/h</span></li>
+          <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Temps plein</span></li>
+          <li><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>Quarts rotatifs</span></li>
+        </ul>
         <p class="tl-job-excerpt-label">Profil recherché</p>
         <p class="tl-job-excerpt">Dépannage, hydraulique, pneumatique, électricité.</p>
         <div class="tl-job-skills"><span>électromécanique</span></div>
@@ -468,12 +452,12 @@ gtag('consent', 'default', {
           <span class="tl-chip">Intermédiaire</span>
         </div>
         <h3>Mécanicien industriel</h3>
-        <dl class="tl-job-facts-mini">
-          <div><dt>Lieu</dt><dd>Sherbrooke</dd></div>
-          <div><dt>Rémunération</dt><dd>30 à 36 $/h</dd></div>
-          <div><dt>Horaire</dt><dd>Temps plein</dd></div>
-          <div><dt>Quart</dt><dd>Quart de jour</dd></div>
-        </dl>
+        <ul class="tl-job-pills">
+          <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Sherbrooke</span></li>
+          <li class="is-pay"><i class="fa-solid fa-coins" aria-hidden="true"></i><span>30 à 36 $/h</span></li>
+          <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Temps plein</span></li>
+          <li><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>Quart de jour</span></li>
+        </ul>
         <p class="tl-job-excerpt-label">Profil recherché</p>
         <p class="tl-job-excerpt">Entretien préventif, alignement, convoyeurs, fiabilité.</p>
         <div class="tl-job-skills"><span>mécanique</span></div>
@@ -494,12 +478,12 @@ gtag('consent', 'default', {
           <span class="tl-chip">Débutant</span>
         </div>
         <h3>Journalier d'usine</h3>
-        <dl class="tl-job-facts-mini">
-          <div><dt>Lieu</dt><dd>Boucherville</dd></div>
-          <div><dt>Rémunération</dt><dd>18 à 21 $/h</dd></div>
-          <div><dt>Horaire</dt><dd>Temps plein</dd></div>
-          <div><dt>Quart</dt><dd>Quart de soir</dd></div>
-        </dl>
+        <ul class="tl-job-pills">
+          <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Boucherville</span></li>
+          <li class="is-pay"><i class="fa-solid fa-coins" aria-hidden="true"></i><span>18 à 21 $/h</span></li>
+          <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Temps plein</span></li>
+          <li><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>Quart de soir</span></li>
+        </ul>
         <p class="tl-job-excerpt-label">Profil recherché</p>
         <p class="tl-job-excerpt">Bonne condition physique, ponctualité, formation interne offerte.</p>
         <div class="tl-job-skills"><span>production</span></div>
@@ -520,12 +504,12 @@ gtag('consent', 'default', {
           <span class="tl-chip">Expérimenté</span>
         </div>
         <h3>Superviseur de production</h3>
-        <dl class="tl-job-facts-mini">
-          <div><dt>Lieu</dt><dd>Trois-Rivières</dd></div>
-          <div><dt>Rémunération</dt><dd>70 000 à 85 000 $</dd></div>
-          <div><dt>Horaire</dt><dd>Temps plein</dd></div>
-          <div><dt>Quart</dt><dd>Quart de jour</dd></div>
-        </dl>
+        <ul class="tl-job-pills">
+          <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Trois-Rivières</span></li>
+          <li class="is-pay"><i class="fa-solid fa-coins" aria-hidden="true"></i><span>70 000 à 85 000 $</span></li>
+          <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Temps plein</span></li>
+          <li><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>Quart de jour</span></li>
+        </ul>
         <p class="tl-job-excerpt-label">Profil recherché</p>
         <p class="tl-job-excerpt">Leadership d'équipe, KPI, 5 ans en production.</p>
         <div class="tl-job-skills"><span>supervision</span></div>
@@ -546,12 +530,12 @@ gtag('consent', 'default', {
           <span class="tl-chip">Intermédiaire</span>
         </div>
         <h3>Coordonnateur logistique</h3>
-        <dl class="tl-job-facts-mini">
-          <div><dt>Lieu</dt><dd>Anjou</dd></div>
-          <div><dt>Rémunération</dt><dd>55 000 à 68 000 $</dd></div>
-          <div><dt>Horaire</dt><dd>Temps plein</dd></div>
-          <div><dt>Quart</dt><dd>Quart de jour</dd></div>
-        </dl>
+        <ul class="tl-job-pills">
+          <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Anjou</span></li>
+          <li class="is-pay"><i class="fa-solid fa-coins" aria-hidden="true"></i><span>55 000 à 68 000 $</span></li>
+          <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Temps plein</span></li>
+          <li><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>Quart de jour</span></li>
+        </ul>
         <p class="tl-job-excerpt-label">Profil recherché</p>
         <p class="tl-job-excerpt">WMS, planification, anglais un atout.</p>
         <div class="tl-job-skills"><span>logistique</span><span>WMS</span></div>
@@ -572,12 +556,12 @@ gtag('consent', 'default', {
           <span class="tl-chip">Expérimenté</span>
         </div>
         <h3>Directeur d'usine</h3>
-        <dl class="tl-job-facts-mini">
-          <div><dt>Lieu</dt><dd>Québec</dd></div>
-          <div><dt>Rémunération</dt><dd>120 000 à 150 000 $</dd></div>
-          <div><dt>Horaire</dt><dd>Temps plein</dd></div>
-          <div><dt>Quart</dt><dd>Quart de jour</dd></div>
-        </dl>
+        <ul class="tl-job-pills">
+          <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Québec</span></li>
+          <li class="is-pay"><i class="fa-solid fa-coins" aria-hidden="true"></i><span>120 000 à 150 000 $</span></li>
+          <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Temps plein</span></li>
+          <li><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>Quart de jour</span></li>
+        </ul>
         <p class="tl-job-excerpt-label">Profil recherché</p>
         <p class="tl-job-excerpt">P&L, Lean, gestion d'un site 100+ employés. Mandat confidentiel.</p>
         <div class="tl-job-skills"><span>direction</span></div>
@@ -598,12 +582,12 @@ gtag('consent', 'default', {
           <span class="tl-chip">Intermédiaire</span>
         </div>
         <h3>Développeur</h3>
-        <dl class="tl-job-facts-mini">
-          <div><dt>Lieu</dt><dd>Montréal</dd></div>
-          <div><dt>Rémunération</dt><dd>75 000 à 95 000 $</dd></div>
-          <div><dt>Horaire</dt><dd>Temps plein</dd></div>
-          <div><dt>Quart</dt><dd>Quart de jour</dd></div>
-        </dl>
+        <ul class="tl-job-pills">
+          <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Montréal</span></li>
+          <li class="is-pay"><i class="fa-solid fa-coins" aria-hidden="true"></i><span>75 000 à 95 000 $</span></li>
+          <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Temps plein</span></li>
+          <li><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>Quart de jour</span></li>
+        </ul>
         <p class="tl-job-excerpt-label">Profil recherché</p>
         <p class="tl-job-excerpt">Python ou JavaScript, 2 ans d'expérience, travail en équipe.</p>
         <div class="tl-job-skills"><span>Python</span><span>JavaScript</span></div>
@@ -624,12 +608,12 @@ gtag('consent', 'default', {
           <span class="tl-chip">Intermédiaire</span>
         </div>
         <h3>Comptable</h3>
-        <dl class="tl-job-facts-mini">
-          <div><dt>Lieu</dt><dd>Québec</dd></div>
-          <div><dt>Rémunération</dt><dd>55 000 à 70 000 $</dd></div>
-          <div><dt>Horaire</dt><dd>Temps plein</dd></div>
-          <div><dt>Quart</dt><dd>Quart de jour</dd></div>
-        </dl>
+        <ul class="tl-job-pills">
+          <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Québec</span></li>
+          <li class="is-pay"><i class="fa-solid fa-coins" aria-hidden="true"></i><span>55 000 à 70 000 $</span></li>
+          <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Temps plein</span></li>
+          <li><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>Quart de jour</span></li>
+        </ul>
         <p class="tl-job-excerpt-label">Profil recherché</p>
         <p class="tl-job-excerpt">Comptabilité, Excel, diplôme pertinent.</p>
         <div class="tl-job-skills"><span>Excel</span><span>comptabilité</span></div>
@@ -650,12 +634,12 @@ gtag('consent', 'default', {
           <span class="tl-chip">Expérimenté</span>
         </div>
         <h3>Ingénieur</h3>
-        <dl class="tl-job-facts-mini">
-          <div><dt>Lieu</dt><dd>Sherbrooke</dd></div>
-          <div><dt>Rémunération</dt><dd>80 000 à 100 000 $</dd></div>
-          <div><dt>Horaire</dt><dd>Temps plein</dd></div>
-          <div><dt>Quart</dt><dd>Quart de jour</dd></div>
-        </dl>
+        <ul class="tl-job-pills">
+          <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Sherbrooke</span></li>
+          <li class="is-pay"><i class="fa-solid fa-coins" aria-hidden="true"></i><span>80 000 à 100 000 $</span></li>
+          <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Temps plein</span></li>
+          <li><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>Quart de jour</span></li>
+        </ul>
         <p class="tl-job-excerpt-label">Profil recherché</p>
         <p class="tl-job-excerpt">Ingénierie, gestion de projet, 3 ans d'expérience.</p>
         <div class="tl-job-skills"><span>gestion de projet</span></div>
@@ -676,12 +660,12 @@ gtag('consent', 'default', {
           <span class="tl-chip">Intermédiaire</span>
         </div>
         <h3>Chauffeur</h3>
-        <dl class="tl-job-facts-mini">
-          <div><dt>Lieu</dt><dd>Anjou</dd></div>
-          <div><dt>Rémunération</dt><dd>22 à 28 $/h</dd></div>
-          <div><dt>Horaire</dt><dd>Temps plein</dd></div>
-          <div><dt>Quart</dt><dd>Quart de jour</dd></div>
-        </dl>
+        <ul class="tl-job-pills">
+          <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Anjou</span></li>
+          <li class="is-pay"><i class="fa-solid fa-coins" aria-hidden="true"></i><span>22 à 28 $/h</span></li>
+          <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Temps plein</span></li>
+          <li><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>Quart de jour</span></li>
+        </ul>
         <p class="tl-job-excerpt-label">Profil recherché</p>
         <p class="tl-job-excerpt">Permis de conduire valide, ponctualité, dossier de conduite propre.</p>
         <div class="tl-job-skills"><span>conduite</span></div>
@@ -702,12 +686,12 @@ gtag('consent', 'default', {
           <span class="tl-chip">Intermédiaire</span>
         </div>
         <h3>Infirmier</h3>
-        <dl class="tl-job-facts-mini">
-          <div><dt>Lieu</dt><dd>Laval</dd></div>
-          <div><dt>Rémunération</dt><dd>32 à 42 $/h</dd></div>
-          <div><dt>Horaire</dt><dd>Temps plein</dd></div>
-          <div><dt>Quart</dt><dd>Quarts rotatifs</dd></div>
-        </dl>
+        <ul class="tl-job-pills">
+          <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Laval</span></li>
+          <li class="is-pay"><i class="fa-solid fa-coins" aria-hidden="true"></i><span>32 à 42 $/h</span></li>
+          <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Temps plein</span></li>
+          <li><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>Quarts rotatifs</span></li>
+        </ul>
         <p class="tl-job-excerpt-label">Profil recherché</p>
         <p class="tl-job-excerpt">Permis OIIQ, expérience clinique, travail d'équipe.</p>
         <div class="tl-job-skills"><span>soins</span></div>
@@ -728,12 +712,12 @@ gtag('consent', 'default', {
           <span class="tl-chip">Débutant</span>
         </div>
         <h3>Vendeur</h3>
-        <dl class="tl-job-facts-mini">
-          <div><dt>Lieu</dt><dd>Longueuil</dd></div>
-          <div><dt>Rémunération</dt><dd>18 à 24 $/h</dd></div>
-          <div><dt>Horaire</dt><dd>Temps plein</dd></div>
-          <div><dt>Quart</dt><dd>Quart de jour</dd></div>
-        </dl>
+        <ul class="tl-job-pills">
+          <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Longueuil</span></li>
+          <li class="is-pay"><i class="fa-solid fa-coins" aria-hidden="true"></i><span>18 à 24 $/h</span></li>
+          <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Temps plein</span></li>
+          <li><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>Quart de jour</span></li>
+        </ul>
         <p class="tl-job-excerpt-label">Profil recherché</p>
         <p class="tl-job-excerpt">Vente au détail, service client, aisance relationnelle.</p>
         <div class="tl-job-skills"><span>vente</span></div>
@@ -754,12 +738,12 @@ gtag('consent', 'default', {
           <span class="tl-chip">Expérimenté</span>
         </div>
         <h3>Responsable RH</h3>
-        <dl class="tl-job-facts-mini">
-          <div><dt>Lieu</dt><dd>Montréal</dd></div>
-          <div><dt>Rémunération</dt><dd>70 000 à 90 000 $</dd></div>
-          <div><dt>Horaire</dt><dd>Temps plein</dd></div>
-          <div><dt>Quart</dt><dd>Quart de jour</dd></div>
-        </dl>
+        <ul class="tl-job-pills">
+          <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Montréal</span></li>
+          <li class="is-pay"><i class="fa-solid fa-coins" aria-hidden="true"></i><span>70 000 à 90 000 $</span></li>
+          <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Temps plein</span></li>
+          <li><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>Quart de jour</span></li>
+        </ul>
         <p class="tl-job-excerpt-label">Profil recherché</p>
         <p class="tl-job-excerpt">Recrutement, relations de travail, 5 ans en RH.</p>
         <div class="tl-job-skills"><span>RH</span></div>
@@ -780,12 +764,12 @@ gtag('consent', 'default', {
           <span class="tl-chip">Intermédiaire</span>
         </div>
         <h3>Spécialiste marketing</h3>
-        <dl class="tl-job-facts-mini">
-          <div><dt>Lieu</dt><dd>Montréal</dd></div>
-          <div><dt>Rémunération</dt><dd>55 000 à 75 000 $</dd></div>
-          <div><dt>Horaire</dt><dd>Temps plein</dd></div>
-          <div><dt>Quart</dt><dd>Quart de jour</dd></div>
-        </dl>
+        <ul class="tl-job-pills">
+          <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Montréal</span></li>
+          <li class="is-pay"><i class="fa-solid fa-coins" aria-hidden="true"></i><span>55 000 à 75 000 $</span></li>
+          <li><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Temps plein</span></li>
+          <li><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>Quart de jour</span></li>
+        </ul>
         <p class="tl-job-excerpt-label">Profil recherché</p>
         <p class="tl-job-excerpt">Marketing digital, communication, gestion de campagnes.</p>
         <div class="tl-job-skills"><span>marketing</span></div>
@@ -874,7 +858,6 @@ gtag('consent', 'default', {
             <li><a href="tel:+12635585225">263 558 5225</a></li>
             <li><a href="mailto:info@talendus.ca">info@talendus.ca</a></li>
             <li><a href="https://wa.me/12635585225?text=Bonjour%20Talendus%2C%20je%20cherche%20un%20emploi." target="_blank" rel="noopener noreferrer">WhatsApp</a></li>
-            <li><a href="app.html">Installer l'appli</a></li>
             <li>Lun–Ven, 8 h à 17 h</li>
             <li><a href="contact.html">Montréal · sur rendez-vous</a></li>
             <li><a href="recrutement-industriel-montreal.html">Montréal</a></li>
