@@ -119,6 +119,7 @@
     forgotSent: "If an account exists, we sent a reset email.",
     invoices: "Invoices",
     emptyInvoices: "No invoice yet.",
+    noBilling: "Billing is not available for this access.",
     downloadPdf: "Download PDF",
     contracts: "Mandates",
     emptyContracts: "No mandate to sign.",
@@ -379,6 +380,7 @@
     forgotSent: "Si un compte existe, un courriel de réinitialisation part.",
     invoices: "Factures",
     emptyInvoices: "Aucune facture pour le moment.",
+    noBilling: "La facturation n’est pas disponible pour cet accès.",
     downloadPdf: "Télécharger le PDF",
     contracts: "Mandats",
     emptyContracts: "Aucun mandat à signer.",
@@ -592,6 +594,7 @@
     prefs: null,
     company: null,
     application: null,
+    appsReady: false,
     docs: [],
     query: "",
     jobCity: "",
@@ -664,8 +667,10 @@
       call: "call", appel: "call"
     };
     name = aliases[name] || name;
+    if (isCandidate() && name === "jobs" && id) name = "job";
     if (isEmployer()) {
-      if (name === "jobs" || name === "job" || name === "job-edit") name = "hiring";
+      if (name === "hiring" && id) name = "need";
+      if (name === "jobs" || name === "job" || name === "job-edit") name = id ? "need" : "hiring";
       if (name === "apps" || name === "app") name = "inbox";
       if (name === "profile" || name === "cv") name = "company";
     }
@@ -1561,10 +1566,15 @@
       : "";
     var saved = !!(job.saved || (state.saved || []).some(function (row) { return (row.id || (row.job && row.job.id)) === job.id; }));
     var existing = existingAppForJob(job);
-    var applyBlock = existing
-      ? '<p class="tn-lead">' + esc(t.alreadyApplied) + '</p><a class="tn-btn" href="#/app/' + encodeURIComponent(existing.id) + '">' + esc(t.viewApp) + "</a>"
-      : '<form class="tn-form" data-apply-form data-job="' + esc(job.id) + '"><label for="tn-cover">' + esc(t.cover) + '</label><textarea id="tn-cover" name="cover_note" maxlength="4000"></textarea>' +
+    var applyBlock;
+    if (!state.appsReady) {
+      applyBlock = '<p class="tn-lead">' + esc(t.loading) + "</p>";
+    } else if (existing) {
+      applyBlock = '<p class="tn-lead">' + esc(t.alreadyApplied) + '</p><a class="tn-btn" href="#/app/' + encodeURIComponent(existing.id) + '">' + esc(t.viewApp) + "</a>";
+    } else {
+      applyBlock = '<form class="tn-form" data-apply-form data-job="' + esc(job.id) + '"><label for="tn-cover">' + esc(t.cover) + '</label><textarea id="tn-cover" name="cover_note" maxlength="4000"></textarea>' +
         '<button class="tn-btn" type="submit">' + esc(t.apply) + "</button></form>";
+    }
     return '<a class="tn-back" href="#/jobs">' + esc(t.back) + "</a><h1 class=\"tn-title\">" + esc(job.title) + "</h1>" +
       jobFacts(job) +
       (body ? '<div class="tn-card"><p>' + esc(body) + "</p>" + more + "</div>" : "") +
@@ -1671,9 +1681,10 @@
       var job = row.job || row;
       var id = job.id || job.slug || "";
       var existing = existingAppForJob(job);
-      var cta = existing
-        ? '<a class="tn-btn" href="#/app/' + encodeURIComponent(existing.id) + '">' + esc(t.viewApp) + "</a>"
-        : '<button type="button" class="tn-btn" data-apply="' + esc(id) + '">' + esc(t.apply) + "</button>";
+      var cta;
+      if (!state.appsReady) cta = '<span class="tn-meta">' + esc(t.loading) + "</span>";
+      else if (existing) cta = '<a class="tn-btn" href="#/app/' + encodeURIComponent(existing.id) + '">' + esc(t.viewApp) + "</a>";
+      else cta = '<button type="button" class="tn-btn" data-apply="' + esc(id) + '">' + esc(t.apply) + "</button>";
       return '<div class="tn-saved">' + jobCard(job) +
         '<div class="tn-row-actions">' + cta + "</div></div>";
     }), "#/me");
@@ -1795,6 +1806,10 @@
       '<button class="tn-btn" type="submit">' + esc(t.save) + "</button></form>";
   }
   function invoicesView() {
+    if (state.company && state.company.can_read_invoices === false) {
+      return backTo("#/me") + "<h1 class=\"tn-title\">" + esc(t.invoices) + "</h1>" +
+        '<div class="tn-empty">' + esc(t.noBilling) + "</div>";
+    }
     return listBlock(t.invoices, t.emptyInvoices, (state.invoices || []).map(function (inv) {
       var payable = inv.status === "SENT" || inv.status === "PENDING" || inv.status === "OVERDUE";
       return '<div class="tn-job"><h3>' + esc(inv.number || t.invoices) + "</h3><p class=\"tn-meta\">" +
@@ -1924,7 +1939,11 @@
       var stats = (state.dash && state.dash.stats) || {};
       html += '<p class="tn-meta">' + esc((state.dash && state.dash.company_name) || "") + "</p>" +
         menuGroup(t.groupHire, [["#/need", t.addNeed], ["#/hiring", t.myNeeds, (state.hiring || []).length || ""], ["#/inbox", t.presented, stats.applications || ""], ["#/pipeline", t.pipeline], ["#/interviews", t.interviews]]) +
-        menuGroup(t.groupCompany, [["#/company", t.companyProfile], ["#/contracts", t.contracts], ["#/invoices", t.invoices]]) +
+        menuGroup(t.groupCompany, (function () {
+          var items = [["#/company", t.companyProfile], ["#/contracts", t.contracts]];
+          if (!state.company || state.company.can_read_invoices !== false) items.push(["#/invoices", t.invoices]);
+          return items;
+        })()) +
         menuGroup(t.groupAccount, [["#/settings", t.settings], ["#/help", t.helpTitle]]);
     }
     html += '<p class="tn-note">' + esc(t.switchPrompt) + ' <a href="#/welcome">' + esc(t.changeChoice) + "</a></p>";
@@ -1992,13 +2011,18 @@
     keys.forEach(function (k) { delete fetchedAt[k]; });
   }
   function pull(key, runner, field, asList) {
-    if (isFresh(key) && state[field] != null) return Promise.resolve();
+    if (isFresh(key) && state[field] != null) {
+      if (field === "apps") state.appsReady = true;
+      return Promise.resolve();
+    }
     return runner().then(function (json) {
       var value = dataOf(json);
       state[field] = asList ? (value || []) : value;
+      if (field === "apps") state.appsReady = true;
       stamp(key);
     }).catch(function () {
       if (state[field] == null) state[field] = asList ? [] : null;
+      if (field === "apps") state.appsReady = true;
     });
   }
 
@@ -2125,7 +2149,7 @@
       }
       if (name === "invoices") need("invoices", function () { return api.request("/invoices"); }, "invoices", true);
       if (name === "contracts") need("contracts", function () { return api.request("/contracts"); }, "contracts", true);
-      if (name === "company") need("company", function () { return api.request("/companies/me"); }, "company", false);
+      if (name === "company" || name === "me" || name === "invoices") need("company", function () { return api.request("/companies/me"); }, "company", false);
       if (name === "interviews" || name === "home" || name === "call") {
         need("interviews", function () { return api.request("/interviews"); }, "interviews", true);
       }

@@ -191,6 +191,30 @@ def test_employer_guest_auth_points_to_employer_space():
     assert "emptyDirectory" in account
     assert "pageTitleFor" in account
     assert "can_read_invoices === false" in account
+    assert "alreadyApplied" in account
+    assert "viewApp" in account
+    assert "noBilling" in account
+    assert "ensureMyApps" in account
+    assert "function applyCta" in account
+    assert 'route.id === "security"' in account
+    assert "data-int-status" in account
+    assert 'id="acc-withdraw"' in account
+    assert ".catch(function (err) { window.alert((err && err.message) || t.err); });" in account
+    mobile = (ROOT / "assets" / "js" / "mobile-app.js").read_text(encoding="utf-8")
+    assert "isCandidate() && name === \"jobs\" && id" in mobile
+    assert 'name = id ? "need" : "hiring"' in mobile
+    assert "appsReady" in mobile
+    assert "noBilling" in mobile
+    assert "can_read_invoices !== false" in mobile
+    main_js = (ROOT / "assets" / "js" / "main.js").read_text(encoding="utf-8")
+    assert "if (progressPath)" in main_js
+    talendus = (ROOT / "assets" / "js" / "talendus.js").read_text(encoding="utf-8")
+    assert 'senior: isEn ? "Senior" : "Expérimenté"' in talendus
+    auth = (ROOT / "assets" / "js" / "auth-gate.js").read_text(encoding="utf-8")
+    assert "function wireAuthLabels" in auth
+    jobs = (ROOT / "emplois.html").read_text(encoding="utf-8")
+    assert 'value="metallurgie"' in jobs
+    assert 'value="manufacturier"' in jobs
     offline = (ROOT / "offline.html").read_text(encoding="utf-8")
     assert "tel:+12635585225" in offline
     assert "mailto:info@talendus.ca" not in offline
@@ -243,7 +267,7 @@ def test_generated_contact_copy_and_redirects():
     assert "cherche%20un%20emploi" in jobs
     mpage = (ROOT / "m.html").read_text(encoding="utf-8")
     assert "maximum-scale" not in mpage
-    assert "mobile-app.css?v=30" in mpage
+    assert "mobile-app.css?v=31" in mpage
 
 
 def test_csp_header_is_present(client):

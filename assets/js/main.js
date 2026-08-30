@@ -53,6 +53,7 @@ $(document).ready(function(){
 
 //========== PAGE PROGRESS STARTS ============= //
   var progressPath = document.querySelector(".progress-wrap path");
+  if (progressPath) {
   var pathLength = progressPath.getTotalLength();
   progressPath.style.transition = progressPath.style.WebkitTransition = "none";
   progressPath.style.strokeDasharray = pathLength + " " + pathLength;
@@ -80,6 +81,7 @@ $(document).ready(function(){
     $("html, body").animate({ scrollTop: 0 }, 550);
     return false;
   });
+  }
 
 //========== PAGE PROGRESS STARTS ============= // 
 

@@ -129,7 +129,10 @@
       roleHintHr: "Follows presented files and hiring needs.",
       roleHintRecruiter: "Follows presented files for the mandates you work on.",
       roleHintBilling: "Sees invoices. Hiring files stay with HR and administrators.",
-      roleHintMember: "Limited access to the company workspace."
+      roleHintMember: "Limited access to the company workspace.",
+      alreadyApplied: "Talendus already has this request.",
+      viewApp: "Follow this application",
+      noBilling: "Billing is not available for this access."
     } : {
       login: "Connexion", register: "Créer un compte", email: "Courriel", password: "Mot de passe",
       first: "Prénom", last: "Nom", submitLogin: "Me connecter", submitRegister: "Créer mon compte",
@@ -243,7 +246,10 @@
       roleHintHr: "Suit les dossiers présentés et les besoins de recrutement.",
       roleHintRecruiter: "Suit les dossiers présentés sur les mandats suivis.",
       roleHintBilling: "Voit les factures. Les dossiers de recrutement restent aux RH et administrateurs.",
-      roleHintMember: "Accès limité à l’espace entreprise."
+      roleHintMember: "Accès limité à l’espace entreprise.",
+      alreadyApplied: "Talendus a déjà cette demande.",
+      viewApp: "Suivre cette candidature",
+      noBilling: "La facturation n’est pas disponible pour cet accès."
     };
 
     function esc(v) {
@@ -580,6 +586,13 @@
       if (route.name === "job") return t.jobDetail;
       if (route.name === "application") return t.appDetail;
       if (route.name === "candidate") return t.candidates;
+      if (route.name === "settings") {
+        if (route.id === "security") return t.security;
+        if (route.id === "notifications") return t.settingsNotifs;
+        if (route.id === "privacy") return t.privacy;
+        if (route.id === "team") return t.settingsTeam;
+        if (route.id === "account") return t.settingsAccount;
+      }
       var key = navKey(route.name);
       return (navItems(0, 0).filter(function (it) { return it[0] === key; })[0] || [0, t.dashboard])[1];
     }
@@ -638,7 +651,7 @@
           api.request("/applications", {
             method: "POST",
             body: { job_id: btn.getAttribute("data-quick-apply") || null, job_slug: btn.getAttribute("data-slug") || null }
-          }).then(function () { go("apps"); }).catch(function (err) { window.alert((err && err.message) || t.err); });
+          }).then(function () { state.appsReady = false; go("apps"); }).catch(function (err) { window.alert((err && err.message) || t.err); });
         };
       });
     }
@@ -678,6 +691,26 @@
         "</div>";
     }
 
+    function existingAppForJob(job) {
+      if (!job) return null;
+      return (state.myApps || []).find(function (a) {
+        if (!a || a.status === "WITHDRAWN") return false;
+        var j = a.job || {};
+        return j.id === job.id || j.slug === job.slug || a.job_id === job.id;
+      }) || null;
+    }
+    function applyCta(job, opts) {
+      opts = opts || {};
+      if (!job || job.available === false) return "";
+      var existing = existingAppForJob(job);
+      if (existing) {
+        return '<button type="button" class="tl-btn" data-nav="application" data-id="' + esc(existing.id) + '">' + esc(t.viewApp) + "</button> ";
+      }
+      if (opts.detail) {
+        return '<button type="button" class="tl-btn" id="acc-apply">' + esc(t.apply) + "</button> ";
+      }
+      return '<button type="button" class="tl-btn" data-quick-apply="' + esc(job.id || "") + '" data-slug="' + esc(job.slug || "") + '">' + esc(t.apply) + "</button> ";
+    }
     function jobCard(job, extra) {
       job = job || {};
       var href = (isEn ? "/en/job-" : "/emploi-") + (job.slug || "") + ".html";
@@ -685,9 +718,7 @@
       var detailBtn = available
         ? '<button type="button" class="tl-btn tl-btn-ghost" data-nav="job" data-id="' + esc(job.slug || job.id) + '">' + esc(t.jobDetail) + "</button>"
         : '<span class="tl-save-hint">' + esc(t.jobUnavailable) + "</span>";
-      var applyBtn = available
-        ? '<button type="button" class="tl-btn" data-quick-apply="' + esc(job.id || "") + '" data-slug="' + esc(job.slug || "") + '">' + esc(t.apply) + "</button> "
-        : "";
+      var applyBtn = applyCta(job);
       return '<article class="tl-list-card"><span class="tl-chip orange">' + esc(statusLabel(job.status || "PUBLISHED")) + "</span>" +
         (job.saved ? '<span class="tl-match-score">' + esc(t.unbookmark) + "</span>" : "") +
         "<h3>" + esc(job.title || "") + "</h3><p class=\"tl-meta\">" + esc(job.company_name || "") + " · " + esc(job.location || "") +
@@ -934,7 +965,7 @@
             api.request("/applications", {
               method: "POST",
               body: { job_id: btn.getAttribute("data-quick-apply") || null, job_slug: btn.getAttribute("data-slug") || null }
-            }).then(function () { go("apps"); }).catch(function (err) { window.alert((err && err.message) || t.err); });
+            }).then(function () { state.appsReady = false; go("apps"); }).catch(function (err) { window.alert((err && err.message) || t.err); });
           };
         });
       }).catch(function (err) {
@@ -954,8 +985,10 @@
         (job.skills ? "<h4>" + esc(t.skills) + "</h4><p>" + esc(job.skills) + "</p>" : "") +
         (job.experience_level ? "<p>" + esc(t.experience) + " : " + esc(job.experience_level) + "</p>" : "") +
         "<p>" + esc(t.updated) + " : " + esc(fmtDate(job.published_at)) + (job.expires_at ? " · " + esc(t.deadline) + " " + esc(fmtDate(job.expires_at)) : "") + "</p>" +
-        "<label>" + esc(t.cover) + '</label><textarea id="acc-cover" maxlength="4000" rows="4"></textarea>' +
-        '<p><button type="button" class="tl-btn" id="acc-apply">' + esc(t.apply) + "</button> " +
+        (existingAppForJob(job)
+          ? '<p class="tl-lead">' + esc(t.alreadyApplied) + "</p><p>" + applyCta(job)
+          : "<label>" + esc(t.cover) + '</label><textarea id="acc-cover" maxlength="4000" rows="4"></textarea>' +
+            "<p>" + applyCta(job, { detail: true })) +
         '<button type="button" class="tl-btn tl-btn-ghost" id="acc-save-job">' + esc(job.saved ? t.unbookmark : t.bookmark) + "</button></p>" +
         '<div class="tl-success" id="acc-job-msg"></div>';
     }
@@ -1519,7 +1552,30 @@
       return settingsCard(t.settingsTeam, canManage ? t.teamHint : t.teamReadOnly, table + invite);
     }
 
-    var state = { user: null, unreadN: 0, unreadM: 0, jobFilters: {} };
+    var state = { user: null, unreadN: 0, unreadM: 0, jobFilters: {}, myApps: [], appsReady: false };
+    function ensureMyApps() {
+      if (state.appsReady) return Promise.resolve(state.myApps);
+      return unwrap(api.myApplications()).then(function (rows) {
+        state.myApps = rows || [];
+        state.appsReady = true;
+        return state.myApps;
+      }).catch(function () {
+        state.myApps = state.myApps || [];
+        state.appsReady = true;
+        return state.myApps;
+      });
+    }
+    function ensureCompany() {
+      if (!isEmployerSpace()) return Promise.resolve(state.company);
+      if (state.company && typeof state.company.can_read_invoices === "boolean") return Promise.resolve(state.company);
+      return unwrap(api.request("/companies/me")).then(function (c) {
+        state.company = c || {};
+        return state.company;
+      }).catch(function () {
+        state.company = state.company || {};
+        return state.company;
+      });
+    }
 
     function bindCommon() {
       var mark = document.getElementById("acc-readall");
@@ -1616,7 +1672,9 @@
       });
       root.querySelectorAll("[data-int-status]").forEach(function (btn) {
         btn.onclick = function () {
-          api.request("/interviews/" + btn.getAttribute("data-int-id") + "/status", { method: "POST", body: { status: btn.getAttribute("data-int-status") } }).then(function () { go("interviews"); });
+          api.request("/interviews/" + btn.getAttribute("data-int-id") + "/status", { method: "POST", body: { status: btn.getAttribute("data-int-status") } })
+            .then(function () { go("interviews"); })
+            .catch(function (err) { window.alert((err && err.message) || t.err); });
         };
       });
       root.querySelectorAll("[data-join-call]").forEach(function (btn) {
@@ -1635,7 +1693,7 @@
         var body = { job_id: state.job.id, job_slug: state.job.slug };
         if (cover) body.cover_note = cover;
         api.request("/applications", { method: "POST", body: body })
-          .then(function () { go("apps"); })
+          .then(function () { state.appsReady = false; go("apps"); })
           .catch(function (err) { flash(document.getElementById("acc-job-msg"), (err && err.message) || t.err, false); });
       };
       var saveBtn = document.getElementById("acc-save-job");
@@ -1647,7 +1705,9 @@
       };
       var withdraw = document.getElementById("acc-withdraw");
       if (withdraw && state.application) withdraw.onclick = function () {
-        api.request("/applications/" + state.application.id + "/withdraw", { method: "POST" }).then(function () { go("apps"); });
+        api.request("/applications/" + state.application.id + "/withdraw", { method: "POST" })
+          .then(function () { state.appsReady = false; go("apps"); })
+          .catch(function (err) { window.alert((err && err.message) || t.err); });
       };
       var company = document.getElementById("acc-company");
       if (company && state.company) company.addEventListener("submit", function (e) {
@@ -1737,6 +1797,8 @@
       var user = state.user;
       var route = currentRoute();
       countsThen(function () {
+        var needApps = !isEmployerSpace() && ["dashboard", "jobs", "job", "saved"].indexOf(route.name) >= 0;
+        Promise.all([ensureCompany(), needApps ? ensureMyApps() : Promise.resolve()]).then(function () {
         shell(user, skeleton(), state.unreadN, state.unreadM);
         loadJobOptions().then(function () {
         var p;
@@ -1754,7 +1816,18 @@
           });
           else if (route.name === "inbox" || route.name === "candidates") p = unwrap(api.request("/applications")).then(renderInbox);
           else if (route.name === "pipeline") p = unwrap(api.request("/applications")).then(renderPipeline);
-          else if (route.name === "invoices") p = Promise.all([unwrap(api.request("/invoices")), servicesReady]).then(function (r) { return renderInvoices(r[0]); });
+          else if (route.name === "invoices") {
+            if (state.company && state.company.can_read_invoices === false) {
+              p = Promise.resolve(empty(t.noBilling));
+            } else {
+              p = Promise.all([unwrap(api.request("/invoices")), servicesReady]).then(function (r) {
+                return renderInvoices(r[0]);
+              }).catch(function (err) {
+                if (err && (err.status === 403 || err.code === "FORBIDDEN")) return empty(t.noBilling);
+                throw err;
+              });
+            }
+          }
           else if (route.name === "contracts") p = unwrap(api.request("/contracts")).then(renderContracts);
           else if (route.name === "candidate") p = unwrap(api.request("/candidates/" + route.id)).then(function (c) {
             return mediateNote() + "<h3>" + esc((c.first_name || "") + " " + (c.last_name || "")) + "</h3><p>" + esc(c.title || "") + " · " + esc(c.city || "") +
@@ -1784,7 +1857,11 @@
           else if (route.name === "profile") p = unwrap(api.request("/candidates/me")).then(function (pr) { return profileForm(user, pr); });
           else if (route.name === "jobs") p = (state.jobs ? Promise.resolve(state.jobs) : api.request("/jobs")).then(renderJobsSearch);
           else if (route.name === "job") p = unwrap(api.request("/jobs/" + route.id)).then(function (j) { state.job = j; return renderJobDetail(j); });
-          else if (route.name === "apps") p = unwrap(api.myApplications()).then(renderApps);
+          else if (route.name === "apps") p = unwrap(api.myApplications()).then(function (rows) {
+            state.myApps = rows || [];
+            state.appsReady = true;
+            return renderApps(rows);
+          });
           else if (route.name === "saved") p = unwrap(api.request("/jobs/saved")).then(renderSavedJobs);
           else if (route.name === "alerts") p = unwrap(api.request("/alerts")).then(renderAlerts);
           else if (route.name === "application") p = unwrap(api.request("/applications/" + route.id)).then(function (a) { state.application = a; return renderAppDetail(a); });
@@ -1808,6 +1885,7 @@
           shell(user, errBox((err && err.message) || t.err), state.unreadN, state.unreadM);
           var retry = root.querySelector("[data-retry]");
           if (retry) retry.onclick = renderAuthed;
+        });
         });
         });
       });
