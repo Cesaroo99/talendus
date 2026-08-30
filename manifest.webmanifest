@@ -48,8 +48,8 @@
   ],
   "shortcuts": [
     {
-      "name": "Offres",
-      "short_name": "Offres",
+      "name": "Offres · Jobs",
+      "short_name": "Jobs",
       "url": "/m.html#/jobs",
       "icons": [{ "src": "/assets/img/logo/icon-192.png", "sizes": "192x192" }]
     },

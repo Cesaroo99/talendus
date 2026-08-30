@@ -430,13 +430,22 @@ write("entreprises.html", wrap(
     "entreprises.html",
     EMPLOYERS_BODY,
 ))
-write("employeurs.html", wrap(
-    "Employeurs | Recrutement pour toutes les entreprises | Talendus",
-    "Redirection vers l’espace entreprises Talendus.",
-    "employeurs.html",
-    '<section class="tl-section"><div class="container"><p>Cette page a été déplacée. <a href="entreprises.html">Continuer vers Entreprises</a></p><script>location.replace("entreprises.html");</script></div></section>',
-    robots="noindex,nofollow",
-))
+write("employeurs.html", """<!DOCTYPE html>
+<html lang="fr-CA">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta http-equiv="refresh" content="0;url=entreprises.html">
+  <link rel="canonical" href="https://talendus.ca/entreprises.html">
+  <title>Employeurs | Talendus</title>
+</head>
+<body>
+  <p>Cette page a été déplacée. <a href="entreprises.html">Continuer vers Entreprises</a>.</p>
+  <script>location.replace("entreprises.html");</script>
+</body>
+</html>
+""")
 
 # Candidats
 write("candidats.html", wrap(

@@ -1217,6 +1217,17 @@ def job_search_filters(lang="fr"):
           </select>
         </label>
         <label class="tl-filter">
+          <span>Salary</span>
+          <select id="job-sal">
+            <option value="">Any salary</option>
+            <option value="18">$18/hr+</option>
+            <option value="22">$22/hr+</option>
+            <option value="25">$25/hr+</option>
+            <option value="30">$30/hr+</option>
+            <option value="40000">$40,000/yr+</option>
+          </select>
+        </label>
+        <label class="tl-filter">
           <span>Category</span>
           <select id="job-cat">
             <option value="">All categories</option>
@@ -1314,6 +1325,17 @@ def job_search_filters(lang="fr"):
             <option>Sur place</option>
             <option>Hybride</option>
             <option>Télétravail</option>
+          </select>
+        </label>
+        <label class="tl-filter">
+          <span>Salaire</span>
+          <select id="job-sal">
+            <option value="">Tout salaire</option>
+            <option value="18">18 $/h et +</option>
+            <option value="22">22 $/h et +</option>
+            <option value="25">25 $/h et +</option>
+            <option value="30">30 $/h et +</option>
+            <option value="40000">40 000 $/an et +</option>
           </select>
         </label>
         <label class="tl-filter">
@@ -1452,7 +1474,7 @@ def ai_coming_soon(lang="fr"):
 
 
 JOB_EXP_LABEL = {
-    "fr": {"debutant": "Débutant", "intermediaire": "Intermédiaire", "senior": "Senior"},
+    "fr": {"debutant": "Débutant", "intermediaire": "Intermédiaire", "senior": "Expérimenté"},
     "en": {"debutant": "Entry-level", "intermediaire": "Mid-level", "senior": "Senior"},
 }
 
