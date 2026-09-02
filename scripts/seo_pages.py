@@ -117,19 +117,30 @@ def write_fr(write, wrap, page_hero, cta):
         ),
         (
             "chasse-de-tetes.html",
-            "Chasse de têtes industrielle au Québec | Talendus",
-            "Chasse de têtes pour métiers rares et cadres d'usine au Québec. Approche discrète de candidats passifs, mandats souvent confidentiels.",
+            "Chasse de têtes au Québec | Talendus",
+            "Approche discrète des gens déjà en poste : métiers rares, supervision et direction de site. Honoraires au succès. Mandats souvent confidentiels.",
             "Chasse de têtes",
-            "Chasse de têtes : aller chercher qui n'est pas en recherche.",
-            "CNC, électromécanique, direction d'usine : les meilleurs profils sont souvent déjà en poste. Nous les approchons sans bruit.",
+            "Aller chercher qui ne répond pas aux annonces.",
+            "Un bon électromécanicien ou un directeur d'usine est souvent déjà en poste. On les joint sans bruit. Vous rencontrez seulement ceux qui écoutent vraiment.",
             "Ouvrir un mandat de chasse",
             """
             <section class="tl-section"><div class="container">
-              <h2 class="tl-h2">Approche directe, confidentielle si besoin</h2>
-              <p>Remplacement de cadre, réorganisation, poste sensible : pas d'annonce publique tant que vous ne l'avez pas décidé. Un interlocuteur unique jusqu'à la prise de poste.</p>
-              <h3>Cadres et métiers rares</h3>
-              <p>La chasse de têtes complète le <a href="recrutement-cadres.html">recrutement de cadres</a> et le <a href="recrutement-technique.html">recrutement technique</a>. Ce n'est pas un portail d'emplois déguisé.</p>
-              <p><a href="article-superviseur-production.html">Le profil superviseur</a> · <a href="contact.html">Consultation</a></p>
+              <div class="tl-prose" style="max-width:720px;margin:0 auto 36px">
+                <div class="tl-kicker">Ce que ça change</div>
+                <h2 class="tl-h2">Attendre les candidatures ne suffit plus sur les métiers serrés.</h2>
+                <p>Publier une offre reste utile sur certains postes. Sur d'autres, les gens compétents ne regardent pas les babillards. La chasse, c'est les joindre, comprendre ce qui les ferait bouger, et ne vous présenter que ceux qui tiennent.</p>
+              </div>
+              <div class="tl-takeover-list">
+                <article class="tl-takeover-item"><span>01</span><h3>Cibler</h3><p>On dresse la carte du bassin : sites comparables, titres réels, fourchettes. Pas une liste achetée au hasard.</p></article>
+                <article class="tl-takeover-item"><span>02</span><h3>Approcher</h3><p>Message discret, hors de l'entreprise actuelle. Personne n'est exposé tant que la personne n'a pas accepté d'avancer.</p></article>
+                <article class="tl-takeover-item"><span>03</span><h3>Qualifier</h3><p>Un conseiller parle avant vous : quart, salaire, mobilité, ce qui bloque. Vous ne les recevez pas pour « voir ».</p></article>
+                <article class="tl-takeover-item"><span>04</span><h3>Présenter</h3><p>Quelques dossiers défendus. Vous décidez. On reste jusqu'à l'entrée en poste.</p></article>
+              </div>
+            </div></section>
+            <section class="tl-section tl-ice"><div class="container">
+              <h2 class="tl-h2">Pas seulement les titres de direction</h2>
+              <p>La chasse sert un cadre, oui. Elle sert aussi un machiniste CNC, un superviseur de quart, un responsable maintenance. Si le bassin est mince, attendre l'annonce coûte plus cher que d'aller chercher.</p>
+              <p>Complète le <a href="recrutement-cadres.html">recrutement de cadres</a> et le <a href="recrutement-technique.html">recrutement technique</a>. Une offre peut tout de même paraître sur <a href="emplois.html">talendus.ca</a> si vous le voulez.</p>
             </div></section>
             """,
         ),
@@ -333,17 +344,31 @@ def write_en(write, wrap, page_hero, cta):
         ),
         (
             "en/executive-search.html",
-            "Industrial executive search in Quebec | Talendus",
-            "Executive search for scarce trades and plant leaders in Quebec. Discreet approach of passive candidates, often confidential mandates.",
+            "Search mandates in Quebec | Talendus",
+            "Discreet outreach to people already in a job: scarce trades, supervision and site leadership. Fees on success. Often confidential.",
             "Search",
-            "Executive search: go after people who are not looking.",
-            "CNC, electromechanics, plant leadership: the best profiles are often already in post.",
+            "Go after people who do not answer ads.",
+            "A strong electromechanical tech or a plant manager is often already in post. We reach them quietly. You meet only those who are actually listening.",
             "Open a search mandate",
             "",
             """
             <section class="tl-section"><div class="container">
-              <h2 class="tl-h2">Direct, confidential when needed</h2>
-              <p>Complements <a href="leadership-recruiting.html">leadership recruiting</a> and <a href="technical-recruiting.html">technical recruiting</a>.</p>
+              <div class="tl-prose" style="max-width:720px;margin:0 auto 36px">
+                <div class="tl-kicker">What changes</div>
+                <h2 class="tl-h2">Waiting for applications is not enough on tight trades.</h2>
+                <p>Posting still helps on some seats. On others, skilled people do not watch job boards. Search means reaching them, understanding what would make them move, and presenting only those who hold.</p>
+              </div>
+              <div class="tl-takeover-list">
+                <article class="tl-takeover-item"><span>01</span><h3>Map</h3><p>We chart the pool: comparable sites, real titles, pay ranges. Not a rented list.</p></article>
+                <article class="tl-takeover-item"><span>02</span><h3>Approach</h3><p>A discreet message, outside their current employer. Nobody is exposed until they agree to move forward.</p></article>
+                <article class="tl-takeover-item"><span>03</span><h3>Qualify</h3><p>A consultant talks before you do: shift, pay, mobility, what blocks. You do not interview to “see”.</p></article>
+                <article class="tl-takeover-item"><span>04</span><h3>Present</h3><p>A few defended files. You decide. We stay through start date.</p></article>
+              </div>
+            </div></section>
+            <section class="tl-section tl-ice"><div class="container">
+              <h2 class="tl-h2">Not only executive titles</h2>
+              <p>Search serves a manager, yes. It also serves a CNC machinist, a shift supervisor, a maintenance lead. If the pool is thin, waiting on an ad costs more than going after people.</p>
+              <p>Complements <a href="leadership-recruiting.html">leadership recruiting</a> and <a href="technical-recruiting.html">technical recruiting</a>. A posting can still appear on <a href="jobs.html">talendus.ca</a> if you want it.</p>
             </div></section>
             """,
         ),

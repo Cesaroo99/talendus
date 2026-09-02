@@ -808,8 +808,96 @@ a.tl-card:hover, .tl-job-card:hover, .tl-case:hover {
 
 /* ----- Process ----- */
 .tl-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.tl-steps-4,
 .tl-steps-7,
 .tl-steps-8 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+/* ----- Page employeur : prise en charge, piliers, métiers ----- */
+.tl-takeover-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+.tl-takeover-item {
+  background: #fff;
+  border: 1px solid var(--tl-line);
+  border-radius: var(--tl-radius);
+  padding: 28px 24px;
+  height: 100%;
+}
+.tl-takeover-item span {
+  display: block;
+  color: var(--tl-orange);
+  font-weight: 800;
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+.tl-takeover-item h3 { font-size: 20px; margin-bottom: 8px; }
+.tl-takeover-item p { color: var(--tl-steel); margin: 0; }
+.tl-takeover-close {
+  margin-top: 28px;
+  padding: 28px 32px;
+  background: var(--tl-navy);
+  color: #fff;
+  border-radius: var(--tl-radius);
+  text-align: center;
+}
+.tl-takeover-close h3 { color: #fff; margin-bottom: 8px; }
+.tl-takeover-close p { color: rgba(255,255,255,.78); margin: 0; }
+.tl-pillars {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+.tl-pillar {
+  background: #fff;
+  border-top: 4px solid var(--tl-orange);
+  border-radius: var(--tl-radius);
+  padding: 28px 24px;
+  box-shadow: var(--tl-shadow-sm);
+  height: 100%;
+}
+.tl-pillar h3 { font-size: 20px; margin-bottom: 8px; }
+.tl-pillar p { color: var(--tl-steel); margin: 0; }
+.tl-hire-sectors {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.tl-hire-sector {
+  background: #fff;
+  border: 1px solid var(--tl-line);
+  border-radius: var(--tl-radius);
+  padding: 22px 20px;
+  height: 100%;
+}
+.tl-hire-sector h3 { font-size: 18px; margin-bottom: 6px; }
+.tl-hire-sector ul {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.tl-hire-sector li {
+  color: var(--tl-steel);
+  padding: 6px 0;
+  border-bottom: 1px solid var(--tl-line);
+  font-size: 15px;
+}
+.tl-hire-sector li:last-child { border-bottom: 0; }
+.tl-risk-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.tl-risk-item {
+  background: #fff;
+  border-radius: var(--tl-radius);
+  padding: 22px 20px;
+  height: 100%;
+  box-shadow: var(--tl-shadow-sm);
+}
+.tl-risk-item h3 { font-size: 18px; margin-bottom: 8px; }
+.tl-risk-item p { color: var(--tl-steel); margin: 0; }
 .tl-step {
   background: var(--tl-navy);
   color: #fff;
@@ -1470,8 +1558,13 @@ a.tl-card:hover, .tl-job-card:hover, .tl-case:hover {
   }
   .tl-grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .tl-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .tl-steps-4,
   .tl-steps-7,
-  .tl-steps-8 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .tl-steps-8 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tl-takeover-list,
+  .tl-hire-sectors { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tl-pillars,
+  .tl-risk-list { grid-template-columns: 1fr; }
   .vl-footer2-section-area .footer-widget-area.foot-padding1,
   .vl-footer2-section-area .footer-widget-area.foot-padding2 {
     padding-left: 0;
@@ -1559,11 +1652,17 @@ a.tl-card:hover, .tl-job-card:hover, .tl-case:hover {
     font-size: clamp(26px, 8vw, 34px) !important;
   }
   .tl-faq summary { min-height: 44px; }
+  .tl-takeover-list,
+  .tl-hire-sectors,
+  .tl-pillars,
+  .tl-risk-list,
+  .tl-steps-4 { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 479px) {
   .tl-stats, .tl-grid-3, .tl-grid-4, .tl-steps, .tl-split,
-  .tl-info-grid, .tl-speed-inner, .tl-contact-grid {
+  .tl-info-grid, .tl-speed-inner, .tl-contact-grid,
+  .tl-takeover-list, .tl-hire-sectors, .tl-pillars, .tl-risk-list {
     grid-template-columns: 1fr;
   }
   .tl-hero-badges .tl-badge { font-size: 11px; }

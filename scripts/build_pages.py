@@ -19,7 +19,8 @@ from positioning import (
     candidate_journey_section, for_companies_section, for_candidates_section,
     placement_process_services_section, technology_section, ai_screening_section,
     competitive_advantage_section, augmented_recruiting_section, hiring_need_form_section,
-    bad_hire_calculator_section,
+    bad_hire_calculator_section, employer_landing_sections, employer_faq_block,
+    employer_takeover_section, employer_pillars_section,
     job_card_html, jobs_listing_header, jobs_empty_state, job_detail_html, related_job_cards,
 )
 from en_pages import build_en
@@ -308,9 +309,9 @@ services_cards = "".join(
 )
 simple_page(
     "Services de recrutement | Agence de placement Talendus",
-    "Recherche de talents, présélection, qualification, shortlist et placement. Talendus utilise déjà l'IA en interne pour accélérer l'analyse. L'entreprise décide. Tous secteurs.",
-    "services.html", "Services", "Du besoin à la shortlist : un seul interlocuteur.",
-    "Permanent, temporaire, chasse de têtes, cadres et métiers. Vous confiez le mandat. Nous faisons la recherche. Vous gardez le choix final.",
+    "Recherche, premier échange, shortlist et placement. Honoraires au succès. Vous gardez l'embauche. Tous secteurs.",
+    "services.html", "Services", "Un mandat. Quatre morceaux de travail.",
+    "Permanent, temporaire, chasse de têtes, cadres et métiers. Vous décrivez le poste. On cherche. Vous retenez.",
     f'''
     <section class="tl-section"><div class="container">
       <div class="tl-grid-4">{services_cards}</div>
@@ -319,11 +320,11 @@ simple_page(
       <div class="row align-items-center g-4">
         <div class="col-lg-6">
           <h2 class="tl-h2">Pourquoi les entreprises nous mandatent</h2>
-          <p class="tl-lead">Parce qu'un dossier de trop, c'est du temps perdu. Nous présentons peu de candidats. Chacun a déjà passé le filtre Talendus.</p>
+          <p class="tl-lead">Parce qu'un dossier de trop, c'est une matinée perdue. On présente peu de gens. Chacun a déjà parlé à un conseiller.</p>
           <ul>
-            <li>Une shortlist qualifiée, pas un portail d'emplois déguisé.</li>
-            <li>Un délai annoncé dès le brief, selon la rareté réelle du profil.</li>
-            <li>Un conseiller qui comprend le poste, l'IA est déjà utilisée par Talendus, elle ne vous est pas remise comme un moteur de recherche.</li>
+            <li>Une shortlist courte, pas un babillard déguisé.</li>
+            <li>Un délai dit dès le brief, selon la rareté réelle.</li>
+            <li>Un conseiller qui comprend le poste, jusqu'à l'entrée en poste.</li>
           </ul>
         </div>
         <div class="col-lg-6">
@@ -333,7 +334,7 @@ simple_page(
         </div>
       </div>
     </div></section>
-    ''' + placement_process_services_section("fr") + technology_section("fr") + ai_coming_soon("fr") + competitive_advantage_section("fr"),
+    ''' + placement_process_services_section("fr") + employer_pillars_section("fr"),
     actions='<a class="tl-btn" href="contact.html">Confier mon recrutement</a>'
 )
 
@@ -341,93 +342,18 @@ simple_page(
 EMPLOYERS_BODY = (
     page_hero(
         "Entreprises",
-        "Vous recrutez ? Confiez-nous votre besoin.",
-        "Talendus recherche, évalue et présélectionne les talents les plus pertinents. Nous utilisons déjà l'intelligence artificielle dans nos outils internes pour accélérer la recherche, l'analyse et la présélection. Vous étudiez une shortlist qualifiée et vous prenez la décision finale.",
-        actions='<a class="tl-btn" href="contact.html">Confier mon recrutement</a><a class="tl-btn tl-btn-ghost" href="besoin-de-recrutement.html">Décrire mon besoin</a>',
-        badges='<span class="tl-badge tl-badge-light">Agence de placement</span> <span class="tl-badge tl-badge-light">Tous secteurs</span>'
+        "Le poste est vacant. On s'en occupe.",
+        "Vous décrivez le besoin. Un conseiller cherche, parle aux gens et vous amène seulement ceux qui valent une rencontre. Vous retenez. Honoraires au succès.",
+        actions='<a class="tl-btn" href="contact.html">Confier un mandat</a><a class="tl-btn tl-btn-ghost" href="besoin-de-recrutement.html">Décrire le poste</a>',
+        badges='<span class="tl-badge tl-badge-light">Agence de placement</span> <span class="tl-badge tl-badge-light">Québec</span>'
     )
-    + problems_section("fr")
-    + """
-    <section class="tl-section"><div class="container">
-      <div class="tl-prose">
-        <div class="tl-kicker">La solution Talendus</div>
-        <h2 class="tl-h2">Nous faisons le travail de recherche pour vous.</h2>
-        <p>Vous avez un poste à pourvoir. Au lieu de publier une annonce et de trier des dizaines (parfois des centaines) de candidatures, vous transmettez le besoin à Talendus. Nous comprenons le poste, nous recherchons les profils, nous analysons les parcours, nous présélectionnons, nous échangeons avec les candidats lorsque c'est nécessaire, nous évaluons, puis nous vous présentons une sélection qualifiée.</p>
-        <p>Vous n'accédez pas à une base de CV. Vous ne « cherchez pas des talents » sur Talendus comme sur un logiciel ATS. Vous mandattez une agence. Talendus utilise déjà l'intelligence artificielle dans ses outils internes pour accélérer la recherche, l'analyse et la présélection des talents. Vous bénéficiez de cette puissance sans avoir à l'utiliser vous-même. La décision d'embauche reste la vôtre.</p>
-      </div>
-    </div></section>
-    """
-    + process_section("fr")
-    + """
-    <section class="tl-section"><div class="container">
-      <div class="row g-4">
-        <div class="col-lg-6">
-          <h2 class="tl-h2">Recherche des talents</h2>
-          <p>Nous mobilisons le réseau Talendus, les profils déjà connus, les candidatures reçues et, lorsque c'est utile, une offre cadrée. Les personnes déjà en poste peuvent être approchées discrètement. L'objectif n'est pas d'afficher le plus grand nombre d'annonces : c'est d'identifier les profils qui présentent le meilleur potentiel de correspondance avec votre besoin.</p>
-        </div>
-        <div class="col-lg-6">
-          <h2 class="tl-h2">Présélection</h2>
-          <p>Chaque profil identifié est analysé : compétences, expérience, qualifications, cohérence avec le poste et critères convenus avec vous. Ce qui ne tient pas n'arrive pas sur votre bureau. Vous ne devenez pas le premier filtre d'une pile de CV.</p>
-        </div>
-        <div class="col-lg-6">
-          <h2 class="tl-h2">Entretiens</h2>
-          <p>Lorsque c'est nécessaire, Talendus échange avec les candidats avant de vous les présenter : validation du parcours, motivations, adéquation. Vos entretiens, ensuite, portent sur des personnes déjà qualifiées. Vous organisez votre processus ; nous restons l'intermédiaire.</p>
-        </div>
-        <div class="col-lg-6">
-          <h2 class="tl-h2">Shortlist</h2>
-          <p>Nous ne transmettons pas une liste massive. Nous présentons une sélection de profils pertinents, chacun que nous sommes prêts à défendre. La pertinence est ce que nous vendons. Le volume, non.</p>
-        </div>
-      </div>
-    </div></section>
-    """
-    + ai_engine_section("fr")
-    + ai_screening_section("fr")
-    + competitive_advantage_section("fr")
-    + human_section("fr")
-    + why_talendus_section("fr")
-    + company_types_section("fr")
-    + bad_hire_calculator_section("fr")
-    + """
-    <section class="tl-section tl-ice" id="temoignages"><div class="container">
-      <div class="tl-center" style="max-width:720px;margin:0 auto 36px">
-        <div class="tl-kicker">Témoignages entreprises</div>
-        <h2 class="tl-h2">Ce que disent les employeurs</h2>
-      </div>
-      <div class="tl-grid-3 tl-quotes">
-        <blockquote class="tl-quote">
-          <div class="tl-quote-mark" aria-hidden="true">“</div>
-          <p>Ils ont compris le poste dès le premier appel. Les dossiers présentés correspondaient vraiment à ce qu'on cherchait.</p>
-          <footer><strong>M.L.</strong><span>Directrice des opérations · Rive-Sud</span></footer>
-        </blockquote>
-        <blockquote class="tl-quote">
-          <div class="tl-quote-mark" aria-hidden="true">“</div>
-          <p>Pas une agence qui envoie 40 CV. Trois dossiers solides, un suivi après l'embauche.</p>
-          <footer><strong>J.R.</strong><span>Directeur · Mauricie</span></footer>
-        </blockquote>
-        <blockquote class="tl-quote">
-          <div class="tl-quote-mark" aria-hidden="true">“</div>
-          <p>Mandat confidentiel mené sans bruit interne. Prise de poste calée sur notre calendrier.</p>
-          <footer><strong>S.B.</strong><span>VP · Montérégie</span></footer>
-        </blockquote>
-      </div>
-    </div></section>
-    <section class="tl-section"><div class="container">
-      <div class="tl-center" style="max-width:720px;margin:0 auto 28px">
-        <div class="tl-kicker" id="faq">FAQ entreprises</div>
-        <h2 class="tl-h2">Ce que demandent les RH et les gestionnaires</h2>
-      </div>
-      """ + faq_html(FAQ_EMPLOYEURS) + """
-      <div class="tl-center" style="margin-top:32px">
-        <a class="tl-btn tl-btn-lg" href="contact.html">Confier mon recrutement</a>
-      </div>
-    </div></section>
-    """
-    + sectors_cloud("fr")
+    + employer_landing_sections("fr")
+    + employer_faq_block("fr", FAQ_EMPLOYEURS, faq_html)
     + proof_stats("fr")
 )
 write("entreprises.html", wrap(
     "Entreprises | Agence de placement | Talendus",
-    "Confiez un recrutement à Talendus. Nous utilisons déjà l'IA en interne pour accélérer la recherche, l'analyse et la présélection. Vous recevez une shortlist qualifiée et gardez la décision finale.",
+    "Confiez un poste à Talendus. Recherche, premier échange et shortlist. Vous retenez. Honoraires à l'embauche. Québec.",
     "entreprises.html",
     EMPLOYERS_BODY,
 ))
@@ -857,23 +783,14 @@ simple_page(
 )
 
 simple_page(
-    "Vous recrutez ? Confiez-nous votre besoin | Talendus",
-    "Agence de placement : décrivez votre besoin de recrutement. Talendus analyse, définit le profil, recherche, présélectionne et vous présente les meilleurs candidats. Vous prenez la décision finale.",
+    "Vous recrutez ? Confiez-nous le brief | Talendus",
+    "Décrivez le poste. Un conseiller Talendus cherche, parle aux gens et vous amène une shortlist. Vous retenez. Honoraires à l'embauche.",
     "besoin-de-recrutement.html",
     "Entreprises",
-    "Vous recrutez ? Confiez-nous votre besoin.",
-    "Décrivez-nous le profil que vous recherchez. Notre équipe analyse votre besoin, définit les critères de recherche et prend en charge le processus de recrutement afin de vous présenter les candidats les plus pertinents.",
+    "Dites-nous le poste. On ouvre la recherche.",
+    "Titre, site, horaire, indispensables, fourchette salariale. Un conseiller reprend le brief. Une offre publique n'est pas obligatoire.",
     process_section("fr")
-    + """
-    <section class="tl-section"><div class="container">
-      <div class="tl-prose">
-        <h2 class="tl-h2">Un service de recrutement, pas une publication d'offre</h2>
-        <p>Avec Talendus, vous ne vous contentez pas de publier une offre et d'attendre des candidatures. Vous nous confiez votre besoin et nous prenons en charge la recherche et la présélection des talents.</p>
-        <p>Vous n'avez pas besoin de passer des heures à publier, trier et analyser des centaines de candidatures. Talendus prend en charge le processus pour vous. Grâce à nos équipes, nos méthodes et nos outils technologiques intégrant l'intelligence artificielle, nous accélérons la recherche et la qualification des talents.</p>
-        <p>Vous nous confiez la recherche. Nous nous chargeons du travail de sourcing, de présélection et de qualification afin que vous puissiez vous concentrer sur votre décision finale. Nous ne vous transmettons pas simplement des candidatures. Nous vous présentons une sélection de profils que nous avons déjà recherchés et qualifiés en fonction de votre besoin.</p>
-      </div>
-    </div></section>
-    """
+    + employer_takeover_section("fr")
     + hiring_need_form_section("fr")
     + human_hire_band("fr"),
     actions='<a class="tl-btn" href="#besoin">Décrire mon besoin</a><a class="tl-btn tl-btn-ghost" href="espace-employeur.html" data-auth-open="register">Ouvrir un espace entreprise</a>',
@@ -881,17 +798,17 @@ simple_page(
 
 simple_page(
     "Solutions RH | Accompagnement recrutement Talendus",
-    "Structurer le recrutement : descriptifs, grilles salariales, entrevues conjointes et intégration 30/60/90. Tous secteurs.",
+    "Autour d'un mandat : descriptif réel, fourchette salariale tenable, entrevues conjointes et suivi 30/60/90.",
     "solutions-rh.html",
     "Entreprises",
-    "Structurer le recrutement, pas seulement combler un trou.",
-    "Descriptions de poste, grilles salariales, entrevues conjointes et suivi d'intégration, pour les entreprises qui veulent arrêter d'improviser.",
+    "Autour du mandat, pas un catalogue RH.",
+    "On écrit le poste comme il se vit, on aligne le salaire sur ce que le marché accepte, on reste après l'entrée en poste.",
     """
     <section class="tl-section"><div class="container">
       <div class="tl-grid-3">
-        <div class="tl-card"><div class="body"><h3>Descriptifs de poste</h3><p>Un poste écrit comme il se vit : responsabilités, compétences, type de contrat.</p></div></div>
-        <div class="tl-card"><div class="body"><h3>Grilles salariales</h3><p>Aligner l'offre sur le marché, sans sous-payer un métier rare.</p></div></div>
-        <div class="tl-card"><div class="body"><h3>Intégration 30/60/90</h3><p>Suivi après la prise de poste. Garantie de remplacement sur les mandats permanents.</p></div></div>
+        <div class="tl-card"><div class="body"><h3>Descriptif de poste</h3><p>Responsabilités, quart, tickets, ce qui fait vraiment tenir quelqu'un. Pas une liste de vœux.</p></div></div>
+        <div class="tl-card"><div class="body"><h3>Fourchette salariale</h3><p>On dit si l'offre est trop basse avant de perdre trois semaines. Un métier rare se paie au marché.</p></div></div>
+        <div class="tl-card"><div class="body"><h3>Après le jour un</h3><p>Suivi 30/60/90. Remplacement écrit sur les permanents si ça ne tient pas.</p></div></div>
       </div>
     </div></section>
     """,

@@ -10,7 +10,8 @@ from positioning import (
     candidate_journey_section, for_candidates_section,
     placement_process_services_section, technology_section, ai_screening_section,
     competitive_advantage_section, hiring_need_form_section,
-    bad_hire_calculator_section,
+    bad_hire_calculator_section, employer_landing_sections, employer_faq_block,
+    employer_takeover_section, employer_pillars_section,
     job_card_html, jobs_listing_header, jobs_empty_state, job_detail_html, related_job_cards,
 )
 
@@ -194,12 +195,12 @@ def build_en(write, wrap, page_hero):
     )
     write("en/services.html", wrap(
         "Recruiting services | Talendus",
-        "Talent search, screening, qualification, shortlist and placement. Talendus already uses AI internally to speed up analysis. The company decides. Every industry.",
+        "Search, first conversation, shortlist and placement. Fees on success. You keep the hire. Every industry.",
         "en/services.html",
         page_hero(
             "Services",
-            "From the first need to the hire: one contact.",
-            "Permanent, temporary, search, leadership and skilled roles. For every company, not for one industry.",
+            "One mandate. Four pieces of work.",
+            "Permanent, temporary, search, leadership and trades. You describe the seat. We search. You retain.",
             actions='<a class="tl-btn" href="contact.html">Talk to Talendus</a>',
         )
         + f'''
@@ -208,89 +209,24 @@ def build_en(write, wrap, page_hero):
     </div></section>
     '''
         + placement_process_services_section("en")
-        + technology_section("en")
-        + ai_coming_soon("en")
-        + competitive_advantage_section("en"),
+        + employer_pillars_section("en"),
         lang="en",
         alt="services.html",
     ))
 
     write("en/employers.html", wrap(
         "Employers | Placement agency | Talendus",
-        "Hand a hire to Talendus. We already use AI internally to speed up search, analysis and screening. You receive a qualified shortlist and keep the final decision.",
+        "Hand a seat to Talendus. Search, first conversation and a shortlist. You retain. Fees at the hire. Quebec.",
         "en/employers.html",
         page_hero(
             "Employers",
-            "Hiring? Hand us the need.",
-            "Talendus searches, evaluates and shortlists the most relevant talent. We already use artificial intelligence in our internal tools to speed up search, analysis and screening. You review a qualified selection and make the final decision.",
-            actions='<a class="tl-btn" href="contact.html">Hand us the search</a><a class="tl-btn tl-btn-ghost" href="hiring-need.html">Describe my need</a>',
-            badges='<span class="tl-badge tl-badge-light">Placement agency</span> <span class="tl-badge tl-badge-light">Every industry</span>',
+            "The seat is empty. We take it on.",
+            "You describe the need. A consultant searches, talks to people and brings you only those worth a meeting. You retain. Fees on success.",
+            actions='<a class="tl-btn" href="contact.html">Hand us a mandate</a><a class="tl-btn tl-btn-ghost" href="hiring-need.html">Describe the role</a>',
+            badges='<span class="tl-badge tl-badge-light">Placement agency</span> <span class="tl-badge tl-badge-light">Quebec</span>',
         )
-        + problems_section("en")
-        + """
-    <section class="tl-section"><div class="container">
-      <div class="tl-prose">
-        <div class="tl-kicker">The Talendus solution</div>
-        <h2 class="tl-h2">We do the search for you.</h2>
-        <p>You have a role to fill. Instead of posting an ad and sorting dozens (sometimes hundreds) of applications, you hand the need to Talendus. We understand the role, search for profiles, analyse careers, screen, speak with candidates when needed, evaluate, then present a qualified selection.</p>
-        <p>You do not access a resume database. You do not “find talent” on Talendus as if it were ATS software. You mandate an agency. Talendus already uses artificial intelligence in its internal tools to speed up search, analysis and screening. You benefit from that power without using it yourself. The hiring decision stays yours.</p>
-      </div>
-    </div></section>
-    """
-        + process_section("en")
-        + """
-    <section class="tl-section"><div class="container">
-      <div class="row g-4">
-        <div class="col-lg-6"><h2 class="tl-h2">Searching for talent</h2><p>We draw on the Talendus network, known profiles, applications received and, when useful, a framed posting. People already in a job can be approached discreetly. The aim is not to publish the most ads: it is to identify the profiles with the strongest potential fit.</p></div>
-        <div class="col-lg-6"><h2 class="tl-h2">Screening</h2><p>Each identified profile is reviewed: skills, experience, qualifications, fit with the role and the criteria we agreed with you. What does not hold never reaches your desk.</p></div>
-        <div class="col-lg-6"><h2 class="tl-h2">Interviews</h2><p>When needed, Talendus speaks with candidates before presenting them: path, motivations, fit. Your interviews then involve people already qualified. You run your process; we stay the intermediary.</p></div>
-        <div class="col-lg-6"><h2 class="tl-h2">Shortlist</h2><p>We do not send a massive list. We present a selection of relevant profiles, each one we are prepared to stand behind. Relevance is what we sell. Volume is not.</p></div>
-      </div>
-    </div></section>
-    """
-        + ai_engine_section("en")
-        + ai_screening_section("en")
-        + competitive_advantage_section("en")
-        + human_section("en")
-        + why_talendus_section("en")
-        + company_types_section("en")
-        + bad_hire_calculator_section("en")
-        + f"""
-    <section class="tl-section tl-ice" id="temoignages"><div class="container">
-      <div class="tl-center" style="max-width:720px;margin:0 auto 36px">
-        <div class="tl-kicker">Employer testimonials</div>
-        <h2 class="tl-h2">What employers say</h2>
-      </div>
-      <div class="tl-grid-3 tl-quotes">
-        <blockquote class="tl-quote">
-          <div class="tl-quote-mark" aria-hidden="true">“</div>
-          <p>They understood the role on the first call. The files they presented actually matched what we needed.</p>
-          <footer><strong>M.L.</strong><span>Director of operations · South Shore</span></footer>
-        </blockquote>
-        <blockquote class="tl-quote">
-          <div class="tl-quote-mark" aria-hidden="true">“</div>
-          <p>Not an agency that sends 40 resumes. Three solid files, and follow-up after the hire.</p>
-          <footer><strong>J.R.</strong><span>Director · Mauricie</span></footer>
-        </blockquote>
-        <blockquote class="tl-quote">
-          <div class="tl-quote-mark" aria-hidden="true">“</div>
-          <p>A confidential mandate run without internal noise. Start date aligned with our calendar.</p>
-          <footer><strong>S.B.</strong><span>VP · Montérégie</span></footer>
-        </blockquote>
-      </div>
-    </div></section>
-    <section class="tl-section"><div class="container">
-      <div class="tl-center" style="max-width:720px;margin:0 auto 28px">
-        <div class="tl-kicker" id="faq">Employer FAQ</div>
-        <h2 class="tl-h2">What HR and managers ask</h2>
-      </div>
-      {faq_html(FAQ_EMPLOYERS_EN)}
-      <div class="tl-center" style="margin-top:32px">
-        <a class="tl-btn tl-btn-lg" href="contact.html">Hand us the search</a>
-      </div>
-    </div></section>
-    """
-        + sectors_cloud("en")
+        + employer_landing_sections("en")
+        + employer_faq_block("en", FAQ_EMPLOYERS_EN, faq_html)
         + proof_stats("en"),
         lang="en",
         alt="entreprises.html",
@@ -725,26 +661,17 @@ def build_en(write, wrap, page_hero):
         alt="comment-ca-fonctionne.html",
     ))
     write("en/hiring-need.html", wrap(
-        "Hiring? Hand us the need | Talendus",
-        "Placement agency: describe your hiring need. Talendus analyses, defines the profile, searches, screens and presents the best candidates. You make the final decision.",
+        "Hiring? Hand us the brief | Talendus",
+        "Describe the seat. A Talendus consultant searches, talks to people and brings a shortlist. You retain. Fees at the hire.",
         "en/hiring-need.html",
         page_hero(
             "Employers",
-            "Hiring? Hand us the need.",
-            "Describe the profile you are looking for. Our team analyses your need, defines the search criteria and takes on the recruiting process so we can present the most relevant candidates.",
-            actions='<a class="tl-btn" href="#besoin">Describe my need</a><a class="tl-btn tl-btn-ghost" href="account-employer.html" data-auth-open="register">Open a company workspace</a>',
+            "Tell us the role. We open the search.",
+            "Title, site, hours, must-haves, pay range. A consultant picks up the brief. A public posting is not required.",
+            actions='<a class="tl-btn" href="#besoin">Describe the role</a><a class="tl-btn tl-btn-ghost" href="account-employer.html" data-auth-open="register">Open a company workspace</a>',
         )
         + process_section("en")
-        + """
-    <section class="tl-section"><div class="container">
-      <div class="tl-prose">
-        <h2 class="tl-h2">A recruiting service, not a job posting</h2>
-        <p>With Talendus, you do not simply post a job and wait for applications. You hand us the need and we take on the search and screening of talent.</p>
-        <p>You do not need to spend hours posting, sorting and analysing hundreds of applications. Talendus takes the process on for you. With our teams, methods and technological tools that already include AI, we speed up search and qualification.</p>
-        <p>You hand us the search. We take on sourcing, screening and qualification so you can focus on the final decision. We do not simply forward applications. We present a selection of profiles we have already searched and qualified against your need.</p>
-      </div>
-    </div></section>
-    """
+        + employer_takeover_section("en")
         + hiring_need_form_section("en")
         + human_hire_band("en"),
         lang="en",
@@ -765,16 +692,16 @@ def build_en(write, wrap, page_hero):
         "en/hr-solutions.html",
         page_hero(
             "Employers",
-            "Build a hiring process, not just plug a hole.",
-            "Job descriptions, pay grids, joint interviews and onboarding follow-up, for companies tired of winging it.",
+            "Around the mandate, not an HR catalogue.",
+            "We write the role as it is lived, we align pay with what the market accepts, we stay after day one.",
             actions='<a class="tl-btn" href="contact.html">Talk to Talendus</a>',
         )
         + """
     <section class="tl-section"><div class="container">
       <div class="tl-grid-3">
-        <div class="tl-card"><div class="body"><h3>Job descriptions</h3><p>A role written as it is lived: responsibilities, skills, contract type.</p></div></div>
-        <div class="tl-card"><div class="body"><h3>Salary grids</h3><p>Align the offer with the market, without underpaying a scarce role.</p></div></div>
-        <div class="tl-card"><div class="body"><h3>30/60/90 onboarding</h3><p>Follow-up after start date. Replacement guarantee on permanent mandates.</p></div></div>
+        <div class="tl-card"><div class="body"><h3>Role write-up</h3><p>Responsibilities, shift, tickets, what actually makes someone stay. Not a wish list.</p></div></div>
+        <div class="tl-card"><div class="body"><h3>Pay range</h3><p>We say if the offer is too low before you lose three weeks. A scarce trade is paid at market.</p></div></div>
+        <div class="tl-card"><div class="body"><h3>After day one</h3><p>30/60/90 follow-up. Written replacement on permanent seats if it does not hold.</p></div></div>
       </div>
     </div></section>
     """,
