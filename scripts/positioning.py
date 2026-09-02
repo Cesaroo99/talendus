@@ -274,12 +274,12 @@ def for_companies_section(lang="fr"):
   <div class="container">
     <div class="tl-prose">
       <div class="tl-kicker">For employers</div>
-      <h2 class="tl-h2">A vacant seat costs every day. We take it on.</h2>
-      <p>Talendus is a placement agency. You describe the need. A consultant searches, talks to people and brings you only those worth a meeting. You retain. Fees are due at the hire.</p>
-      <p>This is not a board where you sort resumes, and not software to learn. It is a mandate: search, first conversation, shortlist, follow-through to start date. Many mandates stay confidential. Some openings are also posted on the site when that helps the search.</p>
+      <h2 class="tl-h2">The right candidate. Delivered fast.</h2>
+      <p>Talendus is a recruiting firm for companies that have no time to waste. The people we present have already passed our selection. Working with a headhunter means finding the right talent, quickly.</p>
+      <p>Search, first interview, terms: we take it on. You keep the hire. Fees when they start. Book a free consultation to open the mandate.</p>
       <div class="tl-actions" style="margin-top:28px">
-        <a class="tl-btn" href="contact.html">Hand us the search</a>
-        <a class="tl-btn tl-btn-ghost-dark" href="employers.html">See how it works</a>
+        <a class="tl-btn" href="contact.html">Book a free consultation</a>
+        <a class="tl-btn tl-btn-ghost-dark" href="employers.html">See the process</a>
       </div>
     </div>
   </div>
@@ -290,12 +290,12 @@ def for_companies_section(lang="fr"):
   <div class="container">
     <div class="tl-prose">
       <div class="tl-kicker">Pour les entreprises</div>
-      <h2 class="tl-h2">Un poste vacant coûte chaque jour. On le prend en charge.</h2>
-      <p>Talendus est une agence de placement. Vous décrivez le besoin. Un conseiller cherche, parle aux gens et vous amène seulement ceux qui valent une rencontre. Vous retenez. Les honoraires se règlent à l'embauche.</p>
-      <p>Ce n'est pas un babillard où vous triez des CV, ni un logiciel à apprendre. C'est un mandat : recherche, premier échange, shortlist, suivi jusqu'à l'entrée en poste. Beaucoup de mandats restent confidentiels. Certaines offres sont aussi publiées sur le site quand ça aide à trouver.</p>
+      <h2 class="tl-h2">Le bon candidat. Rapidement.</h2>
+      <p>Talendus est un cabinet de recrutement pour les entreprises qui n'ont pas de temps à perdre. Les candidats qu'on présente ont déjà passé notre processus de sélection. Faire affaire avec un chasseur de têtes, c'est trouver les bons talents, vite.</p>
+      <p>Recherche, première entrevue, conditions : on prend en charge. Vous gardez l'embauche. Honoraires à l'entrée en poste. Réservez une consultation gratuite pour ouvrir le mandat.</p>
       <div class="tl-actions" style="margin-top:28px">
-        <a class="tl-btn" href="contact.html">Confier mon recrutement</a>
-        <a class="tl-btn tl-btn-ghost-dark" href="entreprises.html">Voir comment ça se passe</a>
+        <a class="tl-btn" href="contact.html">Réserver une consultation gratuite</a>
+        <a class="tl-btn tl-btn-ghost-dark" href="entreprises.html">Voir le processus</a>
       </div>
     </div>
   </div>
@@ -381,28 +381,32 @@ def approach_section(lang="fr"):
 def process_section(lang="fr"):
     if lang == "en":
         kicker, heading, lead = (
-            "How a mandate runs",
-            "Four steps. You stay on the decision.",
-            "No software to learn. You describe the seat; we come back with people worth meeting.",
+            "Recruiting process",
+            "Four steps to hire the right people, fast.",
+            "Built so you spend time only on candidates who already passed our screen.",
         )
         steps = [
-            ("01", "You tell us the role", "Title, site, hours, must-haves, pay range. A 20-minute call is usually enough."),
-            ("02", "We calibrate", "We compare the brief with what the market will actually accept. If the ask is off, we say so before we waste a week."),
-            ("03", "We search and speak", "Network, known profiles, discreet outreach to people already in a job. We talk to them before you do."),
-            ("04", "You meet and retain", "A short list, each file defended. You interview. You decide. We stay until the person starts."),
+            ("01", "Free consultation", "Talk to a headhunter. Twenty minutes is usually enough to see if we can take the seat."),
+            ("02", "Needs intake", "We hear the role you would post — and the one you would not. Then we say what the market will actually accept."),
+            ("03", "Active search", "We do not wait for ads. We map the pool and approach people already in a job, quietly."),
+            ("04", "Through the hire", "We run the first interview, the follow-up and the terms. You meet. You say yes. Fees when they start."),
         ]
+        cta = "Book a free consultation"
+        href = "contact.html"
     else:
         kicker, heading, lead = (
-            "Le déroulement",
-            "Quatre étapes. Vous gardez la décision.",
-            "Pas de logiciel à apprendre. Vous décrivez le poste ; on revient avec des gens qui valent une rencontre.",
+            "Processus de recrutement",
+            "Quatre étapes pour recruter les meilleurs, rapidement.",
+            "Conçu pour que vous ne passiez du temps que sur les candidats qui ont déjà passé notre sélection.",
         )
         steps = [
-            ("01", "Vous nous dites le poste", "Titre, site, horaire, indispensables, fourchette salariale. Un appel de 20 minutes suffit souvent."),
-            ("02", "On calibre", "On compare le brief à ce que le marché accepte vraiment. Si la demande est décalée, on le dit avant de perdre une semaine."),
-            ("03", "On cherche et on parle", "Réseau, profils déjà connus, approche discrète des gens en poste. On leur parle avant vous."),
-            ("04", "Vous rencontrez et vous retenez", "Une shortlist courte, chaque dossier défendu. Vous les recevez. Vous décidez. On reste jusqu'à l'entrée en poste."),
+            ("01", "Consultation gratuite", "Parlez à un chasseur de têtes. Vingt minutes suffisent souvent pour savoir si on peut prendre le poste."),
+            ("02", "Prise de besoins", "On écoute le poste que vous oseriez afficher — et celui que vous n'afficheriez pas. Puis on dit ce que le marché accepte vraiment."),
+            ("03", "Recrutement actif", "On n'attend pas les annonces. On cartographie le bassin et on approche les gens déjà en poste, sans bruit."),
+            ("04", "Jusqu'à l'embauche", "On mène la première entrevue, le suivi et les conditions. Vous rencontrez. Vous dites oui. Honoraires à l'entrée en poste."),
         ]
+        cta = "Réserver une consultation gratuite"
+        href = "contact.html"
     cards = "".join(
         f'<div class="tl-step"><span>{n}</span><h3>{t}</h3><p>{p}</p></div>'
         for n, t, p in steps
@@ -416,6 +420,9 @@ def process_section(lang="fr"):
       <p class="tl-lead">{lead}</p>
     </div>
     <div class="tl-steps tl-steps-4">{cards}</div>
+    <div class="tl-center" style="margin-top:32px">
+      <a class="tl-btn tl-btn-lg" href="{href}">{cta}</a>
+    </div>
   </div>
 </section>
 """
@@ -424,35 +431,33 @@ def process_section(lang="fr"):
 def employer_takeover_section(lang="fr"):
     if lang == "en":
         kicker, heading, lead = (
-            "What leaves your desk",
-            "For the open seat, Talendus runs the work.",
-            "You do not become a part-time recruiter. Here is what we take on.",
+            "Turnkey recruiting firm",
+            "For the seat you need to fill, we take it on.",
+            "You are not here to become a part-time recruiter. The candidates we present have already gone through our selection.",
         )
         items = [
-            ("01", "The search", "We do not stop at people who answered an ad. We use the network, known profiles, and — when the trade requires it — we approach people already in a job."),
-            ("02", "The first conversation", "A consultant talks to candidates before you do. Hours, pay, tickets, what would actually make them move. You do not lose a morning filtering."),
-            ("03", "The shortlist", "A few files we will stand behind, not a stack. Each name is someone we can explain."),
-            ("04", "Through start date", "Terms, notice period, onboarding. One contact until the person is on site."),
+            ("01", "The candidate search", "We do not stop at job boards. In a tight market we comb the pool: network, known profiles, and people already in a job."),
+            ("02", "The first interview", "You are not here to waste a morning. We run the first interview. You only meet people worth your time."),
+            ("03", "The employment contract", "Our recruiters stay through the terms: pay, notice, start date. You keep the hire."),
         ]
         close_h, close_p = (
-            "You retain the person. The rest is our job.",
-            "No resume database to browse. No tool to operate. You meet people who already passed our screen.",
+            "In short, all you have to do is say yes.",
+            "We handle the rest. No resume pile. No tool to operate.",
         )
     else:
         kicker, heading, lead = (
-            "Ce qui sort de votre bureau",
-            "Pour le poste à combler, Talendus mène le travail.",
-            "Vous n'avez pas à devenir recruteur à temps partiel. Voici ce qu'on prend en charge.",
+            "Cabinet de recrutement clé en main",
+            "Pour le poste à combler, on prend tout en charge.",
+            "Vous n'êtes pas là pour devenir recruteur à temps partiel. Les candidats qu'on présente ont déjà passé notre processus de sélection.",
         )
         items = [
-            ("01", "La recherche", "On ne s'arrête pas aux gens qui ont répondu à une annonce. On mobilise le réseau, les profils déjà connus, et — quand le métier l'exige — on approche ceux qui sont déjà en poste."),
-            ("02", "Le premier échange", "Un conseiller parle aux candidats avant vous. Horaire, salaire, tickets, ce qui les ferait vraiment bouger. Vous ne perdez pas une matinée à filtrer."),
-            ("03", "La shortlist", "Quelques dossiers que nous sommes prêts à défendre, pas une liasse. Chaque nom est quelqu'un qu'on peut expliquer."),
-            ("04", "Jusqu'à l'entrée en poste", "Conditions, préavis, intégration. Un seul interlocuteur jusqu'à ce que la personne soit sur le site."),
+            ("01", "La recherche de candidats", "On ne se contente pas des sites d'emploi. Sur un marché serré, on fouille le bassin : réseau, profils déjà connus, et les gens déjà en poste."),
+            ("02", "La première entrevue", "Vous n'êtes pas là pour perdre une matinée. On mène la première entrevue. Vous ne rencontrez que ceux qui valent votre temps."),
+            ("03", "Le contrat de travail", "Nos recruteurs restent jusqu'aux conditions : salaire, préavis, date d'entrée. Vous gardez l'embauche."),
         ]
         close_h, close_p = (
-            "Vous retenez la personne. Le reste, c'est notre métier.",
-            "Pas de base de CV à fouiller. Pas d'outil à opérer. Vous rencontrez des gens qui ont déjà passé notre filtre.",
+            "Bref, tout ce que vous avez à faire, c'est dire oui.",
+            "Le reste, on s'en occupe. Pas de pile de CV. Pas d'outil à opérer.",
         )
     cards = "".join(
         f'<article class="tl-takeover-item"><span>{n}</span><h3>{t}</h3><p>{p}</p></article>'
@@ -466,7 +471,7 @@ def employer_takeover_section(lang="fr"):
       <h2 class="tl-h2">{heading}</h2>
       <p class="tl-lead">{lead}</p>
     </div>
-    <div class="tl-takeover-list">{cards}</div>
+    <div class="tl-takeover-list tl-takeover-list-3">{cards}</div>
     <div class="tl-takeover-close">
       <h3>{close_h}</h3>
       <p>{close_p}</p>
@@ -478,18 +483,26 @@ def employer_takeover_section(lang="fr"):
 
 def employer_pillars_section(lang="fr"):
     if lang == "en":
-        kicker, heading = "How it is billed", "You move forward without putting money down first."
+        kicker, heading, lead = (
+            "Do not pay until you hire",
+            "The search costs you nothing while we work.",
+            "We find, we approach, we qualify. You only meet people worth your time.",
+        )
         items = [
-            ("On success", "Fees are due when someone starts. The first call is free. If the mandate does not close, you do not pay, per the agreement."),
-            ("Useful files, quickly", "On an operations role we aim for the first profiles within a week. A scarce manager takes longer — we say so at the brief, not after."),
-            ("Without noise", "Replacement, reorganization, sensitive seat: we approach without posting until you decide the company should know."),
+            ("Results", "You pay when someone starts. The recruiting process itself is free. Permanent seats include a written replacement window."),
+            ("Speed", "On a typical operations role we aim for the first qualified files within a week. A scarce seat takes longer — we say so at the consultation."),
+            ("Discretion", "Our headhunters work quietly. If you want, nobody inside the company knows you are looking."),
         ]
     else:
-        kicker, heading = "Comment ça se paie", "Vous avancez sans vous exposer d'abord."
+        kicker, heading, lead = (
+            "Ne payez pas tant que vous n'engagez pas",
+            "La recherche ne vous coûte rien pendant qu'on travaille.",
+            "On trouve, on approche, on qualifie. Vous ne rencontrez que les candidats qui valent votre temps.",
+        )
         items = [
-            ("Au succès", "Les honoraires se règlent quand quelqu'un entre. L'appel de départ est gratuit. Si le mandat n'aboutit pas, vous ne payez pas, selon l'entente."),
-            ("Des dossiers utiles, vite", "Sur un métier d'opérations, on vise les premiers profils en une semaine. Un cadre rare prend plus longtemps : on le dit au brief, pas après."),
-            ("Sans bruit", "Remplacement, réorganisation, poste sensible : on approche sans afficher tant que vous n'avez pas décidé que l'interne doit le savoir."),
+            ("Résultats", "Vous payez à l'embauche. Le processus de recrutement lui-même est gratuit. Sur les permanents : une fenêtre de remplacement écrite."),
+            ("Rapidité", "Sur un métier d'opérations typique, on vise les premiers dossiers qualifiés en une semaine. Un poste rare prend plus longtemps : on le dit à la consultation."),
+            ("Discrétion", "Nos chasseurs de têtes agissent sans bruit. Si vous le souhaitez, personne dans l'entreprise ne saura que vous cherchez."),
         ]
     cards = "".join(
         f'<article class="tl-pillar"><h3>{t}</h3><p>{p}</p></article>'
@@ -501,6 +514,7 @@ def employer_pillars_section(lang="fr"):
     <div class="tl-center" style="max-width:720px;margin:0 auto 36px">
       <div class="tl-kicker">{kicker}</div>
       <h2 class="tl-h2">{heading}</h2>
+      <p class="tl-lead">{lead}</p>
     </div>
     <div class="tl-pillars">{cards}</div>
   </div>
@@ -511,9 +525,9 @@ def employer_pillars_section(lang="fr"):
 def employer_sectors_grid(lang="fr"):
     if lang == "en":
         kicker, heading, lead = (
-            "Where we hire",
-            "Floor roles as much as office roles.",
-            "These are examples. If the seat is not listed, describe it — we open the search.",
+            "Sectors our headhunters know",
+            "Every trade has its own rules. We work in them every day.",
+            "Examples, not a fence. If the seat is missing, describe it at the consultation — we open the search.",
         )
         groups = [
             ("Plant and production", ["Production operator", "Welder", "CNC machinist", "Shift supervisor"]),
@@ -525,9 +539,9 @@ def employer_sectors_grid(lang="fr"):
         ]
     else:
         kicker, heading, lead = (
-            "Où on recrute",
-            "Des métiers de plancher autant que de bureau.",
-            "Ce sont des exemples. Si le poste n'est pas listé, décrivez-le : on ouvre la recherche.",
+            "Les secteurs que nos chasseurs de têtes maîtrisent",
+            "Chaque métier a ses règles. Nos recruteurs y travaillent tous les jours.",
+            "Des exemples, pas une clôture. Si le poste n'est pas listé, décrivez-le à la consultation : on ouvre la recherche.",
         )
         groups = [
             ("Usine et production", ["Opérateur de production", "Soudeur", "Machiniste CNC", "Superviseur de quart"]),
@@ -561,19 +575,29 @@ def employer_sectors_grid(lang="fr"):
 
 def employer_risk_section(lang="fr"):
     if lang == "en":
-        kicker, heading = "What you commit to", "You pay for a hire that happens, not for a search that drags."
+        kicker, heading, lead = (
+            "Hire the best people without the risk",
+            "For us, only the hire counts.",
+            "In short, you have nothing to lose by booking the first conversation.",
+        )
         items = [
-            ("Fees on the start date", "Billed against the annual salary of the person placed, when they start."),
-            ("Replacement on permanent seats", "If the hire does not hold through the written window, we reopen the search."),
-            ("Non-exclusive by default", "You can keep looking. We still treat the mandate as ours until you say otherwise."),
+            ("Pay only if there is a result", "Fees against the annual salary of the person placed, due on their first day. No hire, no fee, per the agreement."),
+            ("Placement guarantee", "On permanent seats, if the person leaves or is not kept in the written window, we reopen the full search at no extra fee."),
+            ("Non-exclusive headhunting", "You can keep looking. We still treat the mandate as ours until you say otherwise."),
         ]
+        cta, href = "Book a free consultation", "contact.html"
     else:
-        kicker, heading = "À quoi vous vous engagez", "Vous payez une embauche qui a lieu, pas une recherche qui traîne."
+        kicker, heading, lead = (
+            "Recrutez les meilleurs candidats sans risque",
+            "Pour nous, seuls les résultats comptent.",
+            "Bref, vous n'avez rien à perdre en réservant le premier échange.",
+        )
         items = [
-            ("Honoraires à l'entrée en poste", "Calculés sur le salaire annuel de la personne placée, quand elle commence."),
-            ("Remplacement sur les permanents", "Si l'embauche ne tient pas dans la fenêtre écrite, on relance la recherche."),
-            ("Non exclusif par défaut", "Vous pouvez continuer à chercher. On traite quand même le mandat comme le nôtre jusqu'à ce que vous disiez le contraire."),
+            ("Payable uniquement s'il y a un résultat", "Honoraires sur le salaire annuel de la personne placée, dus le premier jour de travail. Pas d'embauche, pas de frais, selon l'entente."),
+            ("Garantie de placement", "Sur les permanents, si la personne part ou n'est pas maintenue dans la fenêtre écrite, on relance la recherche complète sans frais de plus."),
+            ("Chasse de têtes non exclusive", "Vous pouvez continuer à chercher. On traite quand même le mandat comme le nôtre jusqu'à ce que vous disiez le contraire."),
         ]
+        cta, href = "Réserver une consultation gratuite", "contact.html"
     cards = "".join(
         f'<article class="tl-risk-item"><h3>{t}</h3><p>{p}</p></article>'
         for t, p in items
@@ -584,8 +608,12 @@ def employer_risk_section(lang="fr"):
     <div class="tl-center" style="max-width:720px;margin:0 auto 36px">
       <div class="tl-kicker">{kicker}</div>
       <h2 class="tl-h2">{heading}</h2>
+      <p class="tl-lead">{lead}</p>
     </div>
     <div class="tl-risk-list">{cards}</div>
+    <div class="tl-center" style="margin-top:32px">
+      <a class="tl-btn tl-btn-lg" href="{href}">{cta}</a>
+    </div>
   </div>
 </section>
 """
@@ -593,14 +621,14 @@ def employer_risk_section(lang="fr"):
 
 def employer_quotes_section(lang="fr"):
     if lang == "en":
-        kicker, heading = "Employers", "What managers tell us after a hire"
+        kicker, heading = "They trusted the firm", "What hiring managers tell us after a placement"
         quotes = [
             ("They understood the role on the first call. The files they brought actually matched the floor, not a generic title.", "M.L.", "Director of operations · South Shore"),
             ("Not an agency that dumps 40 resumes. Three solid people, and they stayed on the file after day one.", "J.R.", "Director · Mauricie"),
             ("A confidential replacement, no internal noise. Start date lined up with our shutdown calendar.", "S.B.", "VP · Montérégie"),
         ]
     else:
-        kicker, heading = "Employeurs", "Ce que les gestionnaires nous disent après une embauche"
+        kicker, heading = "Ils ont fait confiance au cabinet", "Ce que les gestionnaires nous disent après un placement"
         quotes = [
             ("Ils ont compris le poste dès le premier appel. Les dossiers correspondaient au plancher, pas à un titre générique.", "M.L.", "Directrice des opérations · Rive-Sud"),
             ("Pas une agence qui envoie 40 CV. Trois personnes solides, et ils sont restés sur le dossier après le jour un.", "J.R.", "Directeur · Mauricie"),
@@ -629,11 +657,11 @@ def employer_quotes_section(lang="fr"):
 
 def employer_faq_block(lang, items, faq_html):
     if lang == "en":
-        kicker, heading = "Questions employers ask", "Straight answers before you book a call"
-        cta = "Hand us the search"
+        kicker, heading = "Questions employers ask", "Straight answers before you book a free consultation"
+        cta = "Book a free consultation"
     else:
-        kicker, heading = "Questions des employeurs", "Des réponses nettes avant de réserver un appel"
-        cta = "Confier mon recrutement"
+        kicker, heading = "Questions fréquentes", "Des réponses nettes avant de réserver une consultation gratuite"
+        cta = "Réserver une consultation gratuite"
     return f"""
 <section class="tl-section" id="faq">
   <div class="container">
@@ -650,17 +678,55 @@ def employer_faq_block(lang, items, faq_html):
 """
 
 
+def employer_book_section(lang="fr"):
+    if lang == "en":
+        kicker, heading, lead = (
+            "Free consultation",
+            "Book twenty minutes with a headhunter.",
+            "No fee to start. We hear the seat, we say if we can take it, we tell you the real delay. Then we search.",
+        )
+        primary, secondary = "Book a free consultation", "Describe the role in writing"
+        href_p, href_s = "contact.html", "hiring-need.html"
+        phone_note = "Prefer to call? 263 558 5225 — weekdays, by appointment."
+    else:
+        kicker, heading, lead = (
+            "Consultation gratuite",
+            "Réservez vingt minutes avec un chasseur de têtes.",
+            "Aucun frais pour démarrer. On écoute le poste, on dit si on peut le prendre, on annonce le délai réel. Ensuite, on cherche.",
+        )
+        primary, secondary = "Réserver une consultation gratuite", "Décrire le poste par écrit"
+        href_p, href_s = "contact.html", "besoin-de-recrutement.html"
+        phone_note = "Vous préférez appeler ? 263 558 5225 — en semaine, sur rendez-vous."
+    return f"""
+<section class="tl-section tl-book-band" id="consultation">
+  <div class="container">
+    <div class="tl-book-inner">
+      <div>
+        <div class="tl-kicker">{kicker}</div>
+        <h2 class="tl-h2">{heading}</h2>
+        <p class="tl-lead">{lead}</p>
+        <p class="tl-book-phone">{phone_note}</p>
+      </div>
+      <div class="tl-actions tl-book-actions">
+        <a class="tl-btn tl-btn-lg" href="{href_p}">{primary}</a>
+        <a class="tl-btn tl-btn-ghost" href="{href_s}">{secondary}</a>
+      </div>
+    </div>
+  </div>
+</section>
+"""
+
+
 def employer_landing_sections(lang="fr"):
     """Page Entreprises / Employers : hero fourni par l'appelant."""
     return (
         employer_takeover_section(lang)
         + employer_pillars_section(lang)
         + process_section(lang)
+        + employer_book_section(lang)
         + employer_sectors_grid(lang)
-        + company_types_section(lang)
         + employer_quotes_section(lang)
         + employer_risk_section(lang)
-        + bad_hire_calculator_section(lang)
     )
 
 
@@ -687,7 +753,7 @@ def why_talendus_section(lang="fr"):
             ("Une sélection humaine", "Les profils ne sont pas transmis automatiquement. Les conseillers étudient, échangent si besoin, et qualifient ce que nous présentons. L'adéquation dépasse les mots-clés d'un CV."),
             ("Un interlocuteur unique", "Vous confiez votre besoin à Talendus et travaillez avec un conseiller jusqu'à la décision. Appelez-nous, décrivez le poste, on cherche et on revient avec des dossiers que vous pouvez vraiment étudier."),
         ]
-        cta = "Confier mon recrutement"
+        cta = "Réserver une consultation gratuite"
         href = "contact.html"
     cards = "".join(
         f'<div class="tl-card"><div class="body"><h3>{title}</h3><p>{text}</p></div></div>'
@@ -1209,9 +1275,9 @@ def hiring_need_form_section(lang="fr"):
 <section class="tl-section" id="besoin">
   <div class="container">
     <div class="tl-prose" style="max-width:720px;margin:0 auto 28px">
-      <div class="tl-kicker">Hiring request</div>
-      <h2 class="tl-h2">Describe your hiring need</h2>
-      <p>Not a job-ad form. A brief so a consultant can call you back and open the search.</p>
+      <div class="tl-kicker">Consultation / brief</div>
+      <h2 class="tl-h2">Describe the seat. A headhunter calls you back.</h2>
+      <p>Not a job-ad form. A brief to open the search. The first consultation is free.</p>
     </div>
     <form class="tl-form" action="#" method="post" data-form="hiring-need" style="max-width:720px;margin:0 auto">
       {HONEYPOT_INPUT}
@@ -1225,7 +1291,7 @@ def hiring_need_form_section(lang="fr"):
       {fields}
       <label>Experience level</label><input name="experience" placeholder="e.g. 3–5 years, junior, leadership">
       <label>Key skills</label><input name="competences" placeholder="Must-have skills, languages, qualifications">
-      <button class="tl-btn tl-btn-lg" type="submit">Hand us the search</button>
+      <button class="tl-btn tl-btn-lg" type="submit">Send the brief</button>
       <div class="tl-success"></div>
     </form>
   </div>
@@ -1235,9 +1301,9 @@ def hiring_need_form_section(lang="fr"):
 <section class="tl-section" id="besoin">
   <div class="container">
     <div class="tl-prose" style="max-width:720px;margin:0 auto 28px">
-      <div class="tl-kicker">Demande de recrutement</div>
-      <h2 class="tl-h2">Décrivez votre besoin de recrutement</h2>
-      <p>Pas un formulaire d'annonce. Un brief pour qu'un conseiller vous rappelle et ouvre la recherche.</p>
+      <div class="tl-kicker">Consultation / brief</div>
+      <h2 class="tl-h2">Décrivez le poste. Un chasseur vous rappelle.</h2>
+      <p>Pas un formulaire d'annonce. Un brief pour ouvrir la recherche. La consultation de départ est gratuite.</p>
     </div>
     <form class="tl-form" action="#" method="post" data-form="hiring-need" style="max-width:720px;margin:0 auto">
       {HONEYPOT_INPUT}
@@ -1251,7 +1317,7 @@ def hiring_need_form_section(lang="fr"):
       {fields}
       <label>Niveau d'expérience</label><input name="experience" placeholder="ex. 3 à 5 ans, junior, cadre">
       <label>Compétences et qualifications</label><input name="competences" placeholder="Compétences indispensables, langues, diplômes">
-      <button class="tl-btn tl-btn-lg" type="submit">Confier mon recrutement</button>
+      <button class="tl-btn tl-btn-lg" type="submit">Envoyer le brief</button>
       <div class="tl-success"></div>
     </form>
   </div>
@@ -1264,12 +1330,12 @@ def human_hire_band(lang="fr"):
         return """
 <section class="tl-cta-band" id="mandat">
   <div class="container">
-    <span class="tl-badge tl-badge-light">Hand us the search</span>
-    <h2 class="tl-h2">A seat to fill? Hand us the brief.</h2>
-    <p>A consultant takes the search. You meet people worth your time. Fees when someone starts.</p>
+    <span class="tl-badge tl-badge-light">Free consultation</span>
+    <h2 class="tl-h2">A seat to fill? Book twenty minutes with a headhunter.</h2>
+    <p>We take the search and the first interview. You meet people worth your time. Fees when someone starts.</p>
     <div class="tl-actions">
-      <a class="tl-btn tl-btn-lg" href="contact.html">Hand us the search</a>
-      <a class="tl-btn tl-btn-ghost" href="hiring-need.html">Describe my need</a>
+      <a class="tl-btn tl-btn-lg" href="contact.html">Book a free consultation</a>
+      <a class="tl-btn tl-btn-ghost" href="hiring-need.html">Describe the role</a>
     </div>
   </div>
 </section>
@@ -1277,12 +1343,12 @@ def human_hire_band(lang="fr"):
     return """
 <section class="tl-cta-band" id="mandat">
   <div class="container">
-    <span class="tl-badge tl-badge-light">Confier mon recrutement</span>
-    <h2 class="tl-h2">Un poste à combler ? Confiez-nous le brief.</h2>
-    <p>Un conseiller prend la recherche. Vous rencontrez des gens qui valent votre temps. Honoraires à l'embauche.</p>
+    <span class="tl-badge tl-badge-light">Consultation gratuite</span>
+    <h2 class="tl-h2">Un poste à combler ? Réservez vingt minutes avec un chasseur de têtes.</h2>
+    <p>On prend la recherche et la première entrevue. Vous rencontrez des gens qui valent votre temps. Honoraires à l'embauche.</p>
     <div class="tl-actions">
-      <a class="tl-btn tl-btn-lg" href="contact.html">Confier mon recrutement</a>
-      <a class="tl-btn tl-btn-ghost" href="besoin-de-recrutement.html">Décrire mon besoin</a>
+      <a class="tl-btn tl-btn-lg" href="contact.html">Réserver une consultation gratuite</a>
+      <a class="tl-btn tl-btn-ghost" href="besoin-de-recrutement.html">Décrire le poste</a>
     </div>
   </div>
 </section>

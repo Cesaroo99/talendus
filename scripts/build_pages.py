@@ -298,7 +298,7 @@ services_cards = "".join(
     f'<a class="tl-card" href="{href}"><div class="body"><span class="tl-chip orange">{chip}</span><h3>{t}</h3><p>{p}</p></div></a>'
     for href, chip, t, p in [
         ("recrutement-permanent.html", "Permanent", "Recrutement permanent", "Postes stables dans tous les secteurs. Honoraires au succès, garantie de remplacement. Talendus mène la recherche ; vous choisissez."),
-        ("chasse-de-tetes.html", "Passif", "Chasse de têtes", "Nous approchons des personnes déjà en poste pour les profils rares. Vous ne parcourez pas une base : nous identifions et présentons."),
+        ("chasse-de-tetes.html", "Chasse", "Chasse de têtes", "Les meilleurs ne répondent pas aux annonces. Un chasseur les approche, les qualifie, et vous ne rencontrez que ceux qui tiennent."),
         ("recrutement-cadres.html", "Direction", "Recrutement de cadres", "Gestionnaires et dirigeants. Souvent confidentiel. Shortlist qualifiée, décision chez vous."),
         ("recrutement-industriel.html", "Exemple", "Recrutement industriel", "Un exemple parmi d'autres : production, maintenance, logistique. Talendus n'est pas limité à l'industrie."),
         ("recrutement-technique.html", "Métiers", "Métiers spécialisés", "Techniciens, soudeurs, développeurs, infirmiers, comptables, une grande variété de profils, tous secteurs."),
@@ -309,9 +309,9 @@ services_cards = "".join(
 )
 simple_page(
     "Services de recrutement | Agence de placement Talendus",
-    "Recherche, premier échange, shortlist et placement. Honoraires au succès. Vous gardez l'embauche. Tous secteurs.",
-    "services.html", "Services", "Un mandat. Quatre morceaux de travail.",
-    "Permanent, temporaire, chasse de têtes, cadres et métiers. Vous décrivez le poste. On cherche. Vous retenez.",
+    "Cabinet de recrutement : chasse de têtes, première entrevue, shortlist et placement. Consultation gratuite. Honoraires au succès.",
+    "services.html", "Services", "Un cabinet. Un processus. Vous dites oui.",
+    "Permanent, urgent, chasse de têtes, cadres et métiers. Consultation gratuite. On cherche. Vous retenez.",
     f'''
     <section class="tl-section"><div class="container">
       <div class="tl-grid-4">{services_cards}</div>
@@ -319,12 +319,12 @@ simple_page(
     <section class="tl-section tl-ice"><div class="container">
       <div class="row align-items-center g-4">
         <div class="col-lg-6">
-          <h2 class="tl-h2">Pourquoi les entreprises nous mandatent</h2>
-          <p class="tl-lead">Parce qu'un dossier de trop, c'est une matinée perdue. On présente peu de gens. Chacun a déjà parlé à un conseiller.</p>
+          <h2 class="tl-h2">Pourquoi les entreprises mandatent un chasseur de têtes</h2>
+          <p class="tl-lead">Parce que les meilleurs sont déjà en poste, et qu'une matinée d'entrevues vides coûte plus cher qu'une consultation.</p>
           <ul>
-            <li>Une shortlist courte, pas un babillard déguisé.</li>
-            <li>Un délai dit dès le brief, selon la rareté réelle.</li>
-            <li>Un conseiller qui comprend le poste, jusqu'à l'entrée en poste.</li>
+            <li>Recherche active : on n'attend pas les annonces.</li>
+            <li>Première entrevue menée par Talendus. Vous ne voyez que ceux qui tiennent.</li>
+            <li>Honoraires à l'embauche. Consultation de départ gratuite.</li>
           </ul>
         </div>
         <div class="col-lg-6">
@@ -335,25 +335,24 @@ simple_page(
       </div>
     </div></section>
     ''' + placement_process_services_section("fr") + employer_pillars_section("fr"),
-    actions='<a class="tl-btn" href="contact.html">Confier mon recrutement</a>'
+    actions='<a class="tl-btn" href="contact.html">Réserver une consultation gratuite</a>'
 )
 
 # Entreprises (URL canonique) + redirection Employeurs
 EMPLOYERS_BODY = (
     page_hero(
-        "Entreprises",
-        "Le poste est vacant. On s'en occupe.",
-        "Vous décrivez le besoin. Un conseiller cherche, parle aux gens et vous amène seulement ceux qui valent une rencontre. Vous retenez. Honoraires au succès.",
-        actions='<a class="tl-btn" href="contact.html">Confier un mandat</a><a class="tl-btn tl-btn-ghost" href="besoin-de-recrutement.html">Décrire le poste</a>',
-        badges='<span class="tl-badge tl-badge-light">Agence de placement</span> <span class="tl-badge tl-badge-light">Québec</span>'
+        "Cabinet de recrutement",
+        "Le bon candidat. Rapidement.",
+        "Notre firme recrute pour les entreprises du Québec qui n'ont pas de temps à perdre. Les candidats présentés ont déjà passé notre processus de sélection. Faire affaire avec un chasseur de têtes, c'est trouver les meilleurs talents, vite.",
+        actions='<a class="tl-btn" href="contact.html">Réserver une consultation gratuite</a><a class="tl-btn tl-btn-ghost" href="besoin-de-recrutement.html">Décrire le poste</a>',
+        badges='<span class="tl-badge tl-badge-light">Chasse de têtes</span> <span class="tl-badge tl-badge-light">Québec</span>'
     )
     + employer_landing_sections("fr")
     + employer_faq_block("fr", FAQ_EMPLOYEURS, faq_html)
-    + proof_stats("fr")
 )
 write("entreprises.html", wrap(
     "Entreprises | Agence de placement | Talendus",
-    "Confiez un poste à Talendus. Recherche, premier échange et shortlist. Vous retenez. Honoraires à l'embauche. Québec.",
+    "Cabinet de recrutement au Québec. Chasse de têtes, première entrevue et shortlist. Consultation gratuite. Honoraires à l'embauche.",
     "entreprises.html",
     EMPLOYERS_BODY,
 ))
@@ -523,7 +522,7 @@ write("contact.html", wrap(
           <a class="tl-persona-door" href="#formulaire" data-set-persona="entreprise">
             <span class="tl-kicker">Entreprises</span>
             <h2>Je recrute</h2>
-            <p>Ouvrez un mandat : décrivez le poste, nous faisons la recherche.</p>
+            <p>Réservez une consultation gratuite. Un chasseur de têtes reprend le poste.</p>
             <span class="tl-split-cta">Continuer →</span>
           </a>
         </div>
@@ -554,8 +553,8 @@ write("contact.html", wrap(
         </div>
         <div data-persona-only="entreprise">
           <div class="tl-kicker">Entreprises</div>
-          <h2 class="tl-h2">Décrire mon besoin de recrutement</h2>
-          <p class="tl-lead">Vous transmettez le poste. Talendus recherche et présélectionne. Appel gratuit, sur rendez-vous.</p>
+          <h2 class="tl-h2">Réserver une consultation gratuite</h2>
+          <p class="tl-lead">Vingt minutes avec un chasseur de têtes. On dit si on peut prendre le poste. Aucun frais pour démarrer.</p>
           <form class="tl-form" action="#" method="post" data-form="hiring-need">
             <input class="tl-hp" name="website_url" tabindex="-1" autocomplete="off" aria-hidden="true">
             <input type="hidden" name="profil" value="Employeur, je recrute">
@@ -565,12 +564,12 @@ write("contact.html", wrap(
             <label>Téléphone</label><input name="tel">
             <label>Objet</label>
             <select name="objet">
-              <option>Confier mon recrutement</option>
-              <option>Décrire mon besoin</option>
-              <option>Parler à Talendus</option>
+              <option>Réserver une consultation gratuite</option>
+              <option>Décrire un poste à pourvoir</option>
+              <option>Parler à un chasseur de têtes</option>
             </select>
             """ + employer_need_fields("fr") + """
-            <button class="tl-btn tl-btn-lg" type="submit">Confier mon recrutement</button>
+            <button class="tl-btn tl-btn-lg" type="submit">Réserver la consultation</button>
             <div class="tl-success"></div>
           </form>
         </div>
@@ -783,26 +782,26 @@ simple_page(
 )
 
 simple_page(
-    "Vous recrutez ? Confiez-nous le brief | Talendus",
-    "Décrivez le poste. Un conseiller Talendus cherche, parle aux gens et vous amène une shortlist. Vous retenez. Honoraires à l'embauche.",
+    "Consultation gratuite | Brief de recrutement | Talendus",
+    "Réservez une consultation ou décrivez le poste. Un chasseur de têtes reprend le brief. Honoraires à l'embauche.",
     "besoin-de-recrutement.html",
-    "Entreprises",
-    "Dites-nous le poste. On ouvre la recherche.",
-    "Titre, site, horaire, indispensables, fourchette salariale. Un conseiller reprend le brief. Une offre publique n'est pas obligatoire.",
+    "Consultation",
+    "Réservez une consultation. Ou décrivez le poste tout de suite.",
+    "Titre, site, horaire, indispensables, fourchette. Un chasseur reprend le brief. Aucun frais pour démarrer. Une offre publique n'est pas obligatoire.",
     process_section("fr")
     + employer_takeover_section("fr")
     + hiring_need_form_section("fr")
     + human_hire_band("fr"),
-    actions='<a class="tl-btn" href="#besoin">Décrire mon besoin</a><a class="tl-btn tl-btn-ghost" href="espace-employeur.html" data-auth-open="register">Ouvrir un espace entreprise</a>',
+    actions='<a class="tl-btn" href="contact.html">Réserver une consultation gratuite</a><a class="tl-btn tl-btn-ghost" href="#besoin">Décrire le poste</a>',
 )
 
 simple_page(
-    "Solutions RH | Accompagnement recrutement Talendus",
-    "Autour d'un mandat : descriptif réel, fourchette salariale tenable, entrevues conjointes et suivi 30/60/90.",
+    "Solutions RH | Cabinet de recrutement Talendus",
+    "Autour d'un mandat de chasse : descriptif réel, fourchette tenable, première entrevue et suivi 30/60/90.",
     "solutions-rh.html",
-    "Entreprises",
-    "Autour du mandat, pas un catalogue RH.",
-    "On écrit le poste comme il se vit, on aligne le salaire sur ce que le marché accepte, on reste après l'entrée en poste.",
+    "Cabinet",
+    "Autour du mandat de chasse, pas un catalogue RH.",
+    "On écrit le poste comme il se vit, on aligne le salaire sur le marché, on mène la première entrevue, on reste après l'entrée en poste.",
     """
     <section class="tl-section"><div class="container">
       <div class="tl-grid-3">
@@ -812,7 +811,7 @@ simple_page(
       </div>
     </div></section>
     """,
-    actions='<a class="tl-btn" href="contact.html">Confier mon recrutement</a>',
+    actions='<a class="tl-btn" href="contact.html">Réserver une consultation gratuite</a>',
 )
 
 for old, new in [("about.html", "a-propos.html"), ("service.html", "services.html"), ("blog-single.html", "blog.html"), ("publier-une-offre.html", "besoin-de-recrutement.html")]:

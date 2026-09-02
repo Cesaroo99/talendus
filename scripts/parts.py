@@ -73,11 +73,11 @@ COPY = {
         "cta_talent_profile": "Créer mon profil",
         "cta_talent_apply": "Postuler",
         "cta_talent_jobs": "Découvrir les offres",
-        "cta_hire_primary": "Confier mon recrutement",
-        "cta_hire_secondary": "Décrire mon besoin",
-        "cta_hire_demo": "Parler à Talendus",
-        "cta_hire_find": "Confier mon recrutement",
-        "cta_hire_need": "Décrire mon besoin",
+        "cta_hire_primary": "Réserver une consultation gratuite",
+        "cta_hire_secondary": "Décrire le poste",
+        "cta_hire_demo": "Réserver une consultation",
+        "cta_hire_find": "Réserver une consultation gratuite",
+        "cta_hire_need": "Décrire le poste",
         "cta_gateway_talent": "Je cherche un emploi",
         "cta_gateway_hire": "Je recrute",
         "cta_gateway_kicker": "Emploi ou recrutement",
@@ -100,7 +100,7 @@ COPY = {
         "menu_close": "Fermer le menu",
         "offcanvas_note": "En semaine, on répond en général en moins de 30 minutes.",
         "offcanvas_place": "Montréal, Québec · sur rendez-vous",
-        "consult": "Réserver un appel",
+        "consult": "Réserver une consultation gratuite",
         "footer_blurb": "Agence de placement intelligente : vous confiez un besoin, Talendus recherche, présélectionne et présente les profils les plus pertinents. Tous secteurs.",
         "footer_rdv": "Les appels se font sur rendez-vous.",
         "footer_cabinet": "Agence",
@@ -111,7 +111,7 @@ COPY = {
         "footer_copy": "© 2026 Talendus. Tous droits réservés. talendus.ca",
         "privacy": "Confidentialité",
         "terms": "Conditions",
-        "sticky_consult": "Réserver un appel",
+        "sticky_consult": "Consultation gratuite",
         "wa_label": "Écrire à Talendus sur WhatsApp",
         "call_label": "Appeler Talendus",
         "app_install": "Installer l'appli",
@@ -165,11 +165,11 @@ COPY = {
         "cta_talent_profile": "Create my profile",
         "cta_talent_apply": "Apply",
         "cta_talent_jobs": "Browse jobs",
-        "cta_hire_primary": "Hand us the search",
-        "cta_hire_secondary": "Describe my need",
-        "cta_hire_demo": "Talk to Talendus",
-        "cta_hire_find": "Hand us the search",
-        "cta_hire_need": "Describe my need",
+        "cta_hire_primary": "Book a free consultation",
+        "cta_hire_secondary": "Describe the role",
+        "cta_hire_demo": "Book a consultation",
+        "cta_hire_find": "Book a free consultation",
+        "cta_hire_need": "Describe the role",
         "cta_gateway_talent": "I'm looking for a job",
         "cta_gateway_hire": "I'm hiring",
         "cta_gateway_kicker": "Job search or hiring",
@@ -192,7 +192,7 @@ COPY = {
         "menu_close": "Close menu",
         "offcanvas_note": "On weekdays we usually reply within 30 minutes.",
         "offcanvas_place": "Montreal, Quebec · by appointment",
-        "consult": "Book a call",
+        "consult": "Book a free consultation",
         "footer_blurb": "An intelligent placement agency: you hand us a hiring need, Talendus searches, screens and presents the most relevant profiles. Every industry.",
         "footer_rdv": "Calls are by appointment.",
         "footer_cabinet": "Agency",
@@ -203,7 +203,7 @@ COPY = {
         "footer_copy": "© 2026 Talendus. All rights reserved. talendus.ca",
         "privacy": "Privacy",
         "terms": "Terms",
-        "sticky_consult": "Book a call",
+        "sticky_consult": "Free consultation",
         "wa_label": "Message Talendus on WhatsApp",
         "call_label": "Call Talendus",
         "app_install": "Install the app",
@@ -650,14 +650,14 @@ def header(solid=True, lang="fr", alt_url="", persona="gateway", current="."):
 
 def proof_stats(lang="fr"):
     if lang == "en":
-        kicker, heading = "In practice", "What that looks like"
+        kicker, heading = "The firm", "What the mandate looks like"
         items = (
             ("7 d", "Target to put the first files in front of you, on a typical operations role."),
             ("92 %", "Still in the job three months later, on our permanent placements."),
             ("100 %", "One consultant on your file, from the first call through start date."),
         )
     else:
-        kicker, heading = "Concrètement", "Ce que ça donne"
+        kicker, heading = "Le cabinet", "Le mandat, en chiffres"
         items = (
             ("7 j", "Délai visé pour vous présenter les premiers dossiers, sur un mandat d'opérations typique."),
             ("92 %", "Des gens encore en poste trois mois après l'embauche, sur nos placements permanents."),
@@ -862,34 +862,26 @@ FAQ_HOME = [
 ]
 
 FAQ_EMPLOYEURS = [
-    ("À quoi sert une agence de placement ?",
-     "Elle prend la recherche à votre place. Au lieu de publier une offre et de trier ce qui arrive, vous décrivez le poste. Un conseiller cherche, parle aux gens — y compris ceux déjà en poste — et vous amène seulement ceux qui valent une rencontre. Vous retenez. C'est fait pour les entreprises qui n'ont pas une semaine à passer dans les CV."),
-    ("Comment on démarre un mandat ?",
-     "Un appel, le formulaire ou l'espace entreprise. Poste, site, horaire, indispensables, fourchette salariale. Un conseiller reprend le brief. Une offre publique n'est pas obligatoire : beaucoup de mandats restent confidentiels."),
-    ("Combien de temps avant les premiers dossiers ?",
-     "Sur un métier d'opérations, on vise une semaine. Un cadre rare ou un métier très serré : souvent trois à huit semaines. On l'annonce à l'ouverture, pas en cours de route."),
-    ("Ça convient à une PME sans équipe RH ?",
-     "C'est même là que ça sert le plus. Dans une grande organisation, quelqu'un est déjà payé pour recruter. Dans une PME, le dossier tombe sur le proprio ou le directeur d'ops. Chaque heure passée à éplucher des candidatures est une heure de moins sur le plancher."),
-    ("Vous approchez aussi les gens déjà en poste ?",
-     "Oui, quand le métier l'exige. Beaucoup de bons profils ne répondent pas aux annonces. On les joint discrètement. Ça n'est pas réservé aux titres de direction : un électromécanicien ou un superviseur de quart se chasse aussi."),
-    ("Comment sont calculés les honoraires ?",
-     "Au succès, sur le salaire annuel de la personne placée. L'appel de départ est gratuit. Le pourcentage et la fenêtre de remplacement sont écrits à l'ouverture du mandat."),
-    ("Et si personne n'est embauché ?",
-     "Pas d'honoraires si le mandat n'aboutit pas, selon l'entente. Vous ne payez pas une recherche qui n'a rien donné."),
+    ("C'est quoi une agence de recrutement, et pourquoi mon entreprise en aurait besoin ?",
+     "Une agence de recrutement prend la recherche, l'approche et la sélection à votre place. Contrairement à un affichage, on n'attend pas que les gens postulent : on les contacte, même s'ils sont déjà en poste. C'est ça, la chasse de têtes. Pour une entreprise qui n'a pas une semaine à passer dans les CV ou les entrevues vides, c'est du temps rendu aux opérations."),
+    ("Est-ce qu'un cabinet de recrutement convient aux PME québécoises ?",
+     "Encore plus qu'aux grandes organisations. Une grande entreprise a souvent une équipe RH dédiée. Une PME confie le dossier au proprio ou au directeur d'ops, qui a déjà mieux à faire. Chaque heure à éplucher des candidatures est une heure de moins sur le plancher. Le cabinet vous donne un processus complet, sans bâtir cette expertise à l'interne."),
+    ("Combien coûte un chasseur de têtes ?",
+     "Les honoraires se calculent sur le salaire annuel de la personne embauchée. Ils ne sont dus qu'à l'entrée en poste : sans résultat, vous ne payez pas, selon l'entente. Le pourcentage et la fenêtre de remplacement sont écrits à l'ouverture du mandat. La consultation de départ est gratuite."),
+    ("La chasse de têtes, c'est seulement pour les postes de direction ?",
+     "Non. Elle s'applique à tous les niveaux. Un mauvais directeur coûte cher. Un mauvais employé sur le plancher aussi. Un poste vacant qui traîne coûte chaque jour. On chasse un électromécanicien ou un superviseur de quart comme on chasse un cadre."),
+    ("On paie seulement si on engage : comment ça marche ?",
+     "On prend l'analyse du besoin, la prospection, les premières entrevues et la présélection. Vous ne rencontrez que les profils qui valent votre temps. Jusque-là, rien à débourser. Le montant est dû le premier jour de travail. Si ça ne tient pas dans la fenêtre écrite, on relance la recherche sans frais de plus."),
+    ("Comment réserver une consultation gratuite ?",
+     "Par le formulaire Contact, le brief écrit, ou un appel au 263 558 5225. Vingt minutes suffisent souvent. On dit si on peut prendre le poste et quel délai viser. Aucun frais pour cet échange."),
+    ("À partir de quand recevons-nous les premiers candidats ?",
+     "Sur un métier d'opérations typique, on vise les premiers dossiers qualifiés en une semaine. Un cadre rare ou un métier très serré : souvent trois à huit semaines. On l'annonce à la consultation, pas en cours de route."),
     ("Quelle garantie après l'entrée en poste ?",
-     "Remplacement inclus sur les permanents, pour la durée écrite au départ. Suivi 30/60/90 jours. Si ça ne tient pas dans la fenêtre, on relance la recherche."),
-    ("Est-ce que je dois afficher le poste ?",
-     "Non. Beaucoup de mandats restent sans annonce. Quand une offre publique aide à trouver, on la rédige et on la publie aussi sur talendus.ca. Vous décidez."),
+     "Remplacement inclus sur les permanents, pour la durée écrite au départ. Suivi 30/60/90 jours. Si la personne part ou n'est pas maintenue dans la fenêtre, on reprend le processus complet."),
     ("Qui décide de l'embauche ?",
-     "Vous. On présente une shortlist. Vous rencontrez. Vous retenez. On ne choisit pas à votre place."),
-    ("Vous parlez aux candidats avant moi ?",
-     "Oui, quand c'est utile. Horaire, salaire, tickets, ce qui les ferait vraiment bouger. Vous n'êtes pas le premier filtre d'une pile de dossiers."),
+     "Vous. On présente une shortlist déjà passée par notre sélection. Vous rencontrez. Vous retenez. On ne choisit pas à votre place."),
     ("Le mandat peut rester confidentiel ?",
-     "Oui. Remplacement, réorganisation, poste sensible : on approche sans bruit interne jusqu'à ce que vous choisissiez le moment de communiquer."),
-    ("Quels métiers couvrez-vous ?",
-     "Plancher et bureau : production, entrepôt, maintenance, construction, admin, direction de site, et d'autres. La liste sur le site est illustrative. Décrivez le poste, on ouvre la recherche."),
-    ("Dois-je me brancher à un outil d'IA ?",
-     "Non. Vous n'opérez rien. Les outils internes aident nos équipes à trier plus vite. Un conseiller qualifie. Vous recevez des dossiers, pas un logiciel."),
+     "Oui. Remplacement, réorganisation, poste sensible : on approche sans bruit interne jusqu'à ce que vous choisissiez le moment de communiquer. Une offre publique n'est jamais obligatoire."),
 ]
 
 FAQ_CANDIDATS = [
@@ -935,30 +927,26 @@ FAQ_HOME_EN = [
 ]
 
 FAQ_EMPLOYERS_EN = [
-    ("What is a placement agency for?",
-     "It takes the search off your desk. Instead of posting a job and sorting what comes in, you describe the seat. A consultant searches, talks to people — including those already in a job — and brings you only those worth a meeting. You retain. It is built for companies that cannot spend a week in resumes."),
-    ("How do we start a mandate?",
-     "A call, the form or the employer workspace. Role, site, hours, must-haves, pay range. A consultant picks up the brief. A public posting is not required: many mandates stay confidential."),
-    ("How long before the first files?",
-     "On an operations role we aim for a week. A scarce manager or a tight trade: often three to eight weeks. We say so at kickoff, not midway."),
-    ("Does this fit an SME without HR?",
-     "That is where it helps most. A larger organization already pays someone to recruit. In an SME the file lands on the owner or the ops lead. Every hour spent sorting applications is an hour off the floor."),
-    ("Do you approach people already in a job?",
-     "Yes, when the trade requires it. A lot of strong profiles never answer ads. We reach them quietly. It is not reserved for executive titles: an electromechanical tech or a shift supervisor is hunted the same way."),
-    ("How are fees calculated?",
-     "On success, against the annual salary of the person placed. The first call is free. The percentage and the replacement window are written when the mandate opens."),
-    ("What if nobody is hired?",
-     "No fee if the mandate does not close, per the agreement. You do not pay for a search that produced nothing."),
+    ("What is a recruiting agency, and why would my company need one?",
+     "A recruiting agency takes search, outreach and selection off your desk. Unlike a job ad, we do not wait for people to apply: we contact them, even if they already have a job. That is headhunting. For a company that cannot spend a week in resumes or empty interviews, it is time given back to operations."),
+    ("Does a recruiting firm fit Quebec SMEs?",
+     "Even more than large organizations. A large company often has a dedicated HR team. An SME hands the file to the owner or the ops lead, who already has better things to do. Every hour spent sorting applications is an hour off the floor. The firm gives you a full process without building that expertise in-house."),
+    ("How much does a headhunter cost?",
+     "Fees are calculated on the hired person's annual salary. They are due only on the start date: no result, no fee, per the agreement. The percentage and the replacement window are written when the mandate opens. The first consultation is free."),
+    ("Is headhunting only for senior leadership?",
+     "No. It applies at every level. A bad director is costly. So is a bad employee on the floor. A vacant seat that lingers costs money every day. We hunt an electromechanical tech or a shift supervisor the same way we hunt a manager."),
+    ("You only pay if you hire: how does that work?",
+     "We take needs analysis, prospecting, first interviews and screening. You only meet profiles worth your time. Until then, you pay nothing. The amount is due on the employee's first day. If it does not hold in the written window, we reopen the search at no extra fee."),
+    ("How do I book a free consultation?",
+     "Through the Contact form, the written brief, or a call to 263 558 5225. Twenty minutes is usually enough. We say if we can take the seat and which delay to aim for. No fee for that conversation."),
+    ("When do we see the first candidates?",
+     "On a typical operations role we aim for the first qualified files within a week. A scarce manager or a tight trade: often three to eight weeks. We say so at the consultation, not midway."),
     ("What guarantee after start date?",
-     "Replacement included on permanent seats, for the window written at kickoff. 30/60/90 follow-up. If it does not hold, we reopen the search."),
-    ("Do I have to post the job?",
-     "No. Many mandates stay unlisted. When a public opening helps the search, we write it and publish it on talendus.ca as well. You decide."),
+     "Replacement included on permanent seats, for the window written at kickoff. 30/60/90 follow-up. If the person leaves or is not kept, we restart the full process."),
     ("Who decides the hire?",
-     "You. We present a shortlist. You meet. You retain. We do not choose in your place."),
-    ("Do you talk to candidates before I do?",
-     "Yes, when it helps. Hours, pay, tickets, what would actually make them move. You are not the first filter on a pile of files."),
+     "You. We present a shortlist that already passed our selection. You meet. You retain. We do not choose in your place."),
     ("Can the mandate stay confidential?",
-     "Yes. Replacement, reorganization, sensitive seat: we approach without internal noise until you choose when to communicate."),
+     "Yes. Replacement, reorganization, sensitive seat: we approach without internal noise until you choose when to communicate. A public posting is never required."),
     ("Which roles do you cover?",
      "Floor and office: production, warehouse, maintenance, construction, admin, site leadership, and others. The list on the site is illustrative. Describe the seat, we open the search."),
     ("Do I have to log into an AI tool?",
@@ -973,11 +961,11 @@ def homepage_faq(lang="fr"):
             ("I'm looking for a job, what should I do?",
              "Create a profile and submit your resume. Talendus studies your path and contacts you when an opportunity fits. It is free. Call us or write — a consultant takes it from there."),
             ("I'm hiring, what should I do?",
-             "Hand us the need: role, criteria, conditions. Talendus searches, screens and presents a qualified shortlist. You do not browse a resume database. You keep the final decision."),
+             "Book a free consultation. Hand us the need: role, criteria, conditions. Talendus searches, screens and presents a qualified shortlist. You do not browse a resume database. You keep the final decision."),
             FAQ_HOME_EN[1],
         ]
         talent = FAQ_CANDIDATES_EN[:6]
-        hire = [FAQ_EMPLOYERS_EN[i] for i in (0, 1, 5, 9, 7)]
+        hire = [FAQ_EMPLOYERS_EN[i] for i in (0, 1, 2, 4, 5)]
         titles = ("What people ask first", "Questions from talent", "Questions from employers")
     else:
         gateway = [
@@ -985,11 +973,11 @@ def homepage_faq(lang="fr"):
             ("Je cherche un emploi : que dois-je faire ?",
              "Créez un profil et déposez votre CV. Talendus étudie votre parcours et vous contacte lorsqu'une opportunité correspond. C'est gratuit. Appelez-nous ou écrivez-nous : un conseiller s'en occupe."),
             ("Je recrute : que dois-je faire ?",
-             "Confiez-nous le besoin : poste, critères, conditions. Talendus recherche, présélectionne et présente une shortlist qualifiée. Vous ne parcourez pas une base de CV. Vous gardez la décision finale."),
+             "Réservez une consultation gratuite. Confiez-nous le besoin : poste, critères, conditions. Talendus recherche, présélectionne et présente une shortlist qualifiée. Vous ne parcourez pas une base de CV. Vous gardez la décision finale."),
             FAQ_HOME[1],
         ]
         talent = FAQ_CANDIDATS[:6]
-        hire = [FAQ_EMPLOYEURS[i] for i in (0, 1, 5, 9, 7)]
+        hire = [FAQ_EMPLOYEURS[i] for i in (0, 1, 2, 4, 5)]
         titles = ("Ce qu'on nous demande d'abord", "Questions des candidats", "Questions des entreprises")
 
     def block(persona, title, items):

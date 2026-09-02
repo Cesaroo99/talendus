@@ -818,6 +818,22 @@ a.tl-card:hover, .tl-job-card:hover, .tl-case:hover {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
 }
+.tl-takeover-list-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.tl-book-band {
+  background: var(--tl-navy);
+  color: #fff;
+}
+.tl-book-band .tl-kicker { color: var(--tl-orange); }
+.tl-book-band .tl-h2 { color: #fff; }
+.tl-book-band .tl-lead { color: rgba(255,255,255,.82); }
+.tl-book-inner {
+  display: grid;
+  grid-template-columns: 1.2fr .8fr;
+  gap: 32px;
+  align-items: center;
+}
+.tl-book-phone { color: rgba(255,255,255,.7); margin: 12px 0 0; }
+.tl-book-actions { justify-content: flex-end; flex-wrap: wrap; }
 .tl-takeover-item {
   background: #fff;
   border: 1px solid var(--tl-line);
@@ -1562,7 +1578,9 @@ a.tl-card:hover, .tl-job-card:hover, .tl-case:hover {
   .tl-steps-7,
   .tl-steps-8 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .tl-takeover-list,
+  .tl-takeover-list-3,
   .tl-hire-sectors { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tl-book-inner { grid-template-columns: 1fr; }
   .tl-pillars,
   .tl-risk-list { grid-template-columns: 1fr; }
   .vl-footer2-section-area .footer-widget-area.foot-padding1,
@@ -1653,6 +1671,7 @@ a.tl-card:hover, .tl-job-card:hover, .tl-case:hover {
   }
   .tl-faq summary { min-height: 44px; }
   .tl-takeover-list,
+  .tl-takeover-list-3,
   .tl-hire-sectors,
   .tl-pillars,
   .tl-risk-list,
@@ -1662,9 +1681,11 @@ a.tl-card:hover, .tl-job-card:hover, .tl-case:hover {
 @media (max-width: 479px) {
   .tl-stats, .tl-grid-3, .tl-grid-4, .tl-steps, .tl-split,
   .tl-info-grid, .tl-speed-inner, .tl-contact-grid,
-  .tl-takeover-list, .tl-hire-sectors, .tl-pillars, .tl-risk-list {
+  .tl-takeover-list, .tl-takeover-list-3, .tl-hire-sectors, .tl-pillars, .tl-risk-list {
     grid-template-columns: 1fr;
   }
+  .tl-book-inner { grid-template-columns: 1fr; }
+  .tl-book-actions { justify-content: flex-start; }
   .tl-hero-badges .tl-badge { font-size: 11px; }
   .tl-header-bar { min-height: 52px; }
   .homepage2-body .vl-transparent-header .vl-logo img {
