@@ -65,6 +65,26 @@ def test_site_and_app_invite_contact_instead_of_no_contact():
     assert "hand us a hiring need" in joined
 
 
+def test_employer_pages_sound_like_a_recruiting_firm():
+    page = (ROOT / "entreprises.html").read_text(encoding="utf-8")
+    assert "Concrètement" not in page
+    assert "Ce que ça donne" not in page
+    assert "consultation gratuite" in page.lower()
+    assert "chasse" in page.lower()
+    assert "première entrevue" in page.lower() or "premiere entrevue" in page.lower()
+    assert "Processus de recrutement" in page
+    assert "Prise de besoins" in page
+    assert "Recrutement actif" in page
+    chasse = (ROOT / "chasse-de-tetes.html").read_text(encoding="utf-8")
+    assert "consultation gratuite" in chasse.lower()
+    assert "Recrutement actif" in chasse
+    en = (ROOT / "en" / "employers.html").read_text(encoding="utf-8")
+    assert "In practice" not in en
+    assert "What that looks like" not in en
+    assert "free consultation" in en.lower()
+    assert "headhunt" in en.lower()
+
+
 def test_generated_pages_drop_no_contact_copy():
     for path in ROOT.rglob("*"):
         if not path.is_file() or path.suffix.lower() not in {".html", ".js", ".py", ".md"}:

@@ -118,29 +118,32 @@ def write_fr(write, wrap, page_hero, cta):
         (
             "chasse-de-tetes.html",
             "Chasse de têtes au Québec | Talendus",
-            "Approche discrète des gens déjà en poste : métiers rares, supervision et direction de site. Honoraires au succès. Mandats souvent confidentiels.",
+            "Chasseurs de têtes : recherche active, première entrevue, shortlist. Consultation gratuite. Honoraires à l'embauche. Québec.",
             "Chasse de têtes",
-            "Aller chercher qui ne répond pas aux annonces.",
-            "Un bon électromécanicien ou un directeur d'usine est souvent déjà en poste. On les joint sans bruit. Vous rencontrez seulement ceux qui écoutent vraiment.",
-            "Ouvrir un mandat de chasse",
+            "Les meilleurs candidats ne sont pas en recherche d'emploi.",
+            "On ne se contente pas d'une annonce. Un chasseur fouille le marché, approche les gens déjà en poste, mène la première entrevue. Vous dites oui.",
+            "Réserver une consultation gratuite",
             """
             <section class="tl-section"><div class="container">
               <div class="tl-prose" style="max-width:720px;margin:0 auto 36px">
-                <div class="tl-kicker">Ce que ça change</div>
-                <h2 class="tl-h2">Attendre les candidatures ne suffit plus sur les métiers serrés.</h2>
-                <p>Publier une offre reste utile sur certains postes. Sur d'autres, les gens compétents ne regardent pas les babillards. La chasse, c'est les joindre, comprendre ce qui les ferait bouger, et ne vous présenter que ceux qui tiennent.</p>
+                <div class="tl-kicker">Processus de chasse</div>
+                <h2 class="tl-h2">Un processus simple, conçu pour combler le poste vite.</h2>
+                <p>Nous contacter. Prise de besoins. Recrutement actif. Accompagnement jusqu'à l'embauche. C'est seulement à ce moment que vous payez.</p>
               </div>
-              <div class="tl-takeover-list">
-                <article class="tl-takeover-item"><span>01</span><h3>Cibler</h3><p>On dresse la carte du bassin : sites comparables, titres réels, fourchettes. Pas une liste achetée au hasard.</p></article>
-                <article class="tl-takeover-item"><span>02</span><h3>Approcher</h3><p>Message discret, hors de l'entreprise actuelle. Personne n'est exposé tant que la personne n'a pas accepté d'avancer.</p></article>
-                <article class="tl-takeover-item"><span>03</span><h3>Qualifier</h3><p>Un conseiller parle avant vous : quart, salaire, mobilité, ce qui bloque. Vous ne les recevez pas pour « voir ».</p></article>
-                <article class="tl-takeover-item"><span>04</span><h3>Présenter</h3><p>Quelques dossiers défendus. Vous décidez. On reste jusqu'à l'entrée en poste.</p></article>
+              <div class="tl-takeover-list tl-takeover-list-3">
+                <article class="tl-takeover-item"><span>01</span><h3>Nous contacter</h3><p>Parlez à un chasseur de têtes. Consultation gratuite, vingt minutes. On dit si on peut prendre le poste.</p></article>
+                <article class="tl-takeover-item"><span>02</span><h3>Prise de besoins</h3><p>On écoute le poste affiché et celui que vous n'oseriez pas afficher. Puis on ajuste la stratégie au marché réel.</p></article>
+                <article class="tl-takeover-item"><span>03</span><h3>Recrutement actif</h3><p>Les meilleurs ne regardent pas les babillards. Le chasseur fait le tour du bassin et approche le talent déjà en poste.</p></article>
+                <article class="tl-takeover-item"><span>04</span><h3>Accompagnement</h3><p>Première entrevue, suivi, conditions. Vous rencontrez. Vous retenez. On reste jusqu'à l'entrée en poste.</p></article>
               </div>
             </div></section>
             <section class="tl-section tl-ice"><div class="container">
               <h2 class="tl-h2">Pas seulement les titres de direction</h2>
-              <p>La chasse sert un cadre, oui. Elle sert aussi un machiniste CNC, un superviseur de quart, un responsable maintenance. Si le bassin est mince, attendre l'annonce coûte plus cher que d'aller chercher.</p>
-              <p>Complète le <a href="recrutement-cadres.html">recrutement de cadres</a> et le <a href="recrutement-technique.html">recrutement technique</a>. Une offre peut tout de même paraître sur <a href="emplois.html">talendus.ca</a> si vous le voulez.</p>
+              <p>La chasse sert un cadre, oui. Elle sert aussi un machiniste CNC, un superviseur de quart, un responsable maintenance. Un poste vacant qui traîne coûte chaque jour.</p>
+              <p>Complète le <a href="recrutement-cadres.html">recrutement de cadres</a> et le <a href="recrutement-technique.html">recrutement technique</a>. Une offre peut paraître sur <a href="emplois.html">talendus.ca</a> si vous le voulez — ce n'est jamais obligatoire.</p>
+              <div class="tl-actions" style="margin-top:28px">
+                <a class="tl-btn" href="contact.html">Réserver une consultation gratuite</a>
+              </div>
             </div></section>
             """,
         ),
@@ -344,31 +347,34 @@ def write_en(write, wrap, page_hero, cta):
         ),
         (
             "en/executive-search.html",
-            "Search mandates in Quebec | Talendus",
-            "Discreet outreach to people already in a job: scarce trades, supervision and site leadership. Fees on success. Often confidential.",
-            "Search",
-            "Go after people who do not answer ads.",
-            "A strong electromechanical tech or a plant manager is often already in post. We reach them quietly. You meet only those who are actually listening.",
-            "Open a search mandate",
+            "Headhunting in Quebec | Talendus",
+            "Headhunters: active search, first interview, shortlist. Free consultation. Fees at the hire. Quebec.",
+            "Headhunting",
+            "The best candidates are not looking for a job.",
+            "We do not stop at an ad. A headhunter maps the market, approaches people already in a job, runs the first interview. You say yes.",
+            "Book a free consultation",
             "",
             """
             <section class="tl-section"><div class="container">
               <div class="tl-prose" style="max-width:720px;margin:0 auto 36px">
-                <div class="tl-kicker">What changes</div>
-                <h2 class="tl-h2">Waiting for applications is not enough on tight trades.</h2>
-                <p>Posting still helps on some seats. On others, skilled people do not watch job boards. Search means reaching them, understanding what would make them move, and presenting only those who hold.</p>
+                <div class="tl-kicker">Search process</div>
+                <h2 class="tl-h2">A simple process, built to fill the seat fast.</h2>
+                <p>Contact us. Needs intake. Active search. Support through the hire. That is when you pay.</p>
               </div>
-              <div class="tl-takeover-list">
-                <article class="tl-takeover-item"><span>01</span><h3>Map</h3><p>We chart the pool: comparable sites, real titles, pay ranges. Not a rented list.</p></article>
-                <article class="tl-takeover-item"><span>02</span><h3>Approach</h3><p>A discreet message, outside their current employer. Nobody is exposed until they agree to move forward.</p></article>
-                <article class="tl-takeover-item"><span>03</span><h3>Qualify</h3><p>A consultant talks before you do: shift, pay, mobility, what blocks. You do not interview to “see”.</p></article>
-                <article class="tl-takeover-item"><span>04</span><h3>Present</h3><p>A few defended files. You decide. We stay through start date.</p></article>
+              <div class="tl-takeover-list tl-takeover-list-3">
+                <article class="tl-takeover-item"><span>01</span><h3>Contact us</h3><p>Talk to a headhunter. Free consultation, twenty minutes. We say if we can take the seat.</p></article>
+                <article class="tl-takeover-item"><span>02</span><h3>Needs intake</h3><p>We hear the role you would post and the one you would not. Then we adjust the strategy to the real market.</p></article>
+                <article class="tl-takeover-item"><span>03</span><h3>Active search</h3><p>The best people do not watch job boards. The headhunter maps the pool and approaches talent already in a job.</p></article>
+                <article class="tl-takeover-item"><span>04</span><h3>Support</h3><p>First interview, follow-up, terms. You meet. You retain. We stay through start date.</p></article>
               </div>
             </div></section>
             <section class="tl-section tl-ice"><div class="container">
               <h2 class="tl-h2">Not only executive titles</h2>
-              <p>Search serves a manager, yes. It also serves a CNC machinist, a shift supervisor, a maintenance lead. If the pool is thin, waiting on an ad costs more than going after people.</p>
-              <p>Complements <a href="leadership-recruiting.html">leadership recruiting</a> and <a href="technical-recruiting.html">technical recruiting</a>. A posting can still appear on <a href="jobs.html">talendus.ca</a> if you want it.</p>
+              <p>Search serves a manager, yes. It also serves a CNC machinist, a shift supervisor, a maintenance lead. A vacant seat that lingers costs every day.</p>
+              <p>Complements <a href="leadership-recruiting.html">leadership recruiting</a> and <a href="technical-recruiting.html">technical recruiting</a>. A posting can still appear on <a href="jobs.html">talendus.ca</a> if you want — it is never required.</p>
+              <div class="tl-actions" style="margin-top:28px">
+                <a class="tl-btn" href="contact.html">Book a free consultation</a>
+              </div>
             </div></section>
             """,
         ),

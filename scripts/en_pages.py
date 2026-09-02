@@ -199,9 +199,9 @@ def build_en(write, wrap, page_hero):
         "en/services.html",
         page_hero(
             "Services",
-            "One mandate. Four pieces of work.",
-            "Permanent, temporary, search, leadership and trades. You describe the seat. We search. You retain.",
-            actions='<a class="tl-btn" href="contact.html">Talk to Talendus</a>',
+            "A firm. A process. You say yes.",
+            "Permanent, urgent, headhunting, leadership and trades. Free consultation. We search. You retain.",
+            actions='<a class="tl-btn" href="contact.html">Book a free consultation</a>',
         )
         + f'''
     <section class="tl-section"><div class="container">
@@ -215,19 +215,18 @@ def build_en(write, wrap, page_hero):
     ))
 
     write("en/employers.html", wrap(
-        "Employers | Placement agency | Talendus",
-        "Hand a seat to Talendus. Search, first conversation and a shortlist. You retain. Fees at the hire. Quebec.",
+        "Employers | Recruiting firm | Talendus",
+        "Recruiting firm in Quebec. Headhunting, first interview and a shortlist. Free consultation. Fees at the hire.",
         "en/employers.html",
         page_hero(
-            "Employers",
-            "The seat is empty. We take it on.",
-            "You describe the need. A consultant searches, talks to people and brings you only those worth a meeting. You retain. Fees on success.",
-            actions='<a class="tl-btn" href="contact.html">Hand us a mandate</a><a class="tl-btn tl-btn-ghost" href="hiring-need.html">Describe the role</a>',
-            badges='<span class="tl-badge tl-badge-light">Placement agency</span> <span class="tl-badge tl-badge-light">Quebec</span>',
+            "Recruiting firm",
+            "The right candidate. Fast.",
+            "Our firm recruits for Quebec companies that have no time to waste. The people we present have already passed our selection. Working with a headhunter means finding the best talent, quickly.",
+            actions='<a class="tl-btn" href="contact.html">Book a free consultation</a><a class="tl-btn tl-btn-ghost" href="hiring-need.html">Describe the role</a>',
+            badges='<span class="tl-badge tl-badge-light">Headhunting</span> <span class="tl-badge tl-badge-light">Quebec</span>',
         )
         + employer_landing_sections("en")
-        + employer_faq_block("en", FAQ_EMPLOYERS_EN, faq_html)
-        + proof_stats("en"),
+        + employer_faq_block("en", FAQ_EMPLOYERS_EN, faq_html),
         lang="en",
         alt="entreprises.html",
     ))
@@ -665,10 +664,10 @@ def build_en(write, wrap, page_hero):
         "Describe the seat. A Talendus consultant searches, talks to people and brings a shortlist. You retain. Fees at the hire.",
         "en/hiring-need.html",
         page_hero(
-            "Employers",
-            "Tell us the role. We open the search.",
-            "Title, site, hours, must-haves, pay range. A consultant picks up the brief. A public posting is not required.",
-            actions='<a class="tl-btn" href="#besoin">Describe the role</a><a class="tl-btn tl-btn-ghost" href="account-employer.html" data-auth-open="register">Open a company workspace</a>',
+            "Consultation",
+            "Book a consultation. Or describe the seat now.",
+            "Title, site, hours, must-haves, pay range. A headhunter picks up the brief. No fee to start. A public posting is not required.",
+            actions='<a class="tl-btn" href="contact.html">Book a free consultation</a><a class="tl-btn tl-btn-ghost" href="#besoin">Describe the role</a>',
         )
         + process_section("en")
         + employer_takeover_section("en")
