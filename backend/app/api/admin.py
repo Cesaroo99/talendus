@@ -14,12 +14,20 @@ from app.models import (
     Company,
     JobOffer,
     Permission,
+    Recruiter,
     Role,
     User,
 )
 from app.models.enums import UserRole
 from app.rbac import PERMISSIONS
-from app.schemas import AdminCandidateIn, AdminCandidatePatchIn, SiteContentIn, SystemSettingIn, UserUpdateIn
+from app.schemas import (
+    AdminCandidateIn,
+    AdminCandidatePatchIn,
+    SiteContentIn,
+    StaffUserIn,
+    StaffUserPatchIn,
+    SystemSettingIn,
+)
 from app.services import admin_export, candidates as cand_svc
 from app.services.settings import (
     CMS_KEYS,
@@ -159,29 +167,87 @@ def stats(db: Session = Depends(get_db), _: User = Depends(_admin_user)):
     )
 
 
+@router.get("/analytics")
+def analytics(
+    period: str = Query(default="mois"),
+    db: Session = Depends(get_db),
+    _: User = Depends(_staff),
+):
+    from app.services.tracking import analytics_snapshot
+
+    return ok(analytics_snapshot(db, period))
+
+
+STAFF_CREATE_ROLES = {UserRole.RECRUITER, UserRole.FINANCE, UserRole.EDITOR, UserRole.ADMIN}
+
+
+def _serialize_staff(u: User) -> dict:
+    return {
+        "id": u.id,
+        "email": u.email,
+        "first_name": u.first_name,
+        "last_name": u.last_name,
+        "role": u.role.value,
+        "title": u.title,
+        "phone": u.phone,
+        "is_active": u.is_active,
+        "created_at": u.created_at.isoformat() if u.created_at else None,
+    }
+
+
+def _assert_can_assign_role(admin: User, role: UserRole) -> None:
+    if role not in STAFF_CREATE_ROLES and role != UserRole.SUPER_ADMIN:
+        raise AppError(400, "Ce rôle n’est pas un accès interne.", "INVALID_ROLE")
+    if role == UserRole.SUPER_ADMIN and admin.role != UserRole.SUPER_ADMIN:
+        raise AppError(403, "Seul un super-admin peut attribuer ce niveau.", "FORBIDDEN")
+
+
 @router.get("/users")
 def list_users(db: Session = Depends(get_db), _: User = Depends(_admin_user)):
     users = db.scalars(select(User).order_by(User.created_at.desc())).all()
-    return ok(
-        [
-            {
-                "id": u.id,
-                "email": u.email,
-                "first_name": u.first_name,
-                "last_name": u.last_name,
-                "role": u.role.value,
-                "is_active": u.is_active,
-                "created_at": u.created_at.isoformat() if u.created_at else None,
-            }
-            for u in users
-        ]
+    return ok([_serialize_staff(u) for u in users])
+
+
+@router.post("/users")
+def create_staff(
+    payload: StaffUserIn,
+    db: Session = Depends(get_db),
+    admin: User = Depends(_admin_user),
+):
+    from app.security import hash_password
+    from app.services.audit import audit
+    from app.services.settings import ensure_preferences
+
+    _assert_can_assign_role(admin, payload.role)
+    email = str(payload.email).lower()
+    existing = db.scalar(select(User).where(User.email == email))
+    if existing:
+        raise AppError(409, "Un compte existe déjà avec ce courriel.", "EMAIL_TAKEN")
+    user = User(
+        email=email,
+        password_hash=hash_password(payload.password),
+        first_name=payload.first_name.strip(),
+        last_name=payload.last_name.strip(),
+        phone=payload.phone,
+        role=payload.role,
+        title=payload.title,
+        is_email_verified=True,
     )
+    db.add(user)
+    db.flush()
+    ensure_preferences(db, user)
+    if user.role == UserRole.RECRUITER:
+        db.add(Recruiter(user_id=user.id))
+    audit(db, "admin.user_create", admin, "user", user.id, metadata={"role": user.role.value})
+    db.commit()
+    db.refresh(user)
+    return ok(_serialize_staff(user), message="Accès créé.")
 
 
 @router.patch("/users/{user_id}")
 def update_user(
     user_id: str,
-    payload: UserUpdateIn,
+    payload: StaffUserPatchIn,
     db: Session = Depends(get_db),
     admin: User = Depends(_admin_user),
 ):
@@ -190,11 +256,21 @@ def update_user(
     target = db.get(User, user_id)
     if not target:
         raise AppError(404, "Utilisateur introuvable.", "USER_NOT_FOUND")
-    for key, value in payload.model_dump(exclude_unset=True).items():
+    data = payload.model_dump(exclude_unset=True)
+    if "role" in data and data["role"] is not None:
+        _assert_can_assign_role(admin, data["role"])
+        if target.id == admin.id and data["role"] != admin.role:
+            raise AppError(400, "Vous ne pouvez pas modifier votre propre niveau d’accès.", "FORBIDDEN")
+    if data.get("is_active") is False and target.id == admin.id:
+        raise AppError(400, "Vous ne pouvez pas désactiver votre propre accès.", "FORBIDDEN")
+    for key, value in data.items():
         setattr(target, key, value)
+    if target.role == UserRole.RECRUITER and not target.recruiter:
+        db.add(Recruiter(user_id=target.id))
     audit(db, "admin.user_update", admin, "user", target.id)
     db.commit()
-    return ok({"id": target.id, "email": target.email, "role": target.role.value})
+    db.refresh(target)
+    return ok(_serialize_staff(target))
 
 
 @router.post("/users/{user_id}/role")
@@ -209,6 +285,9 @@ def set_role(
     target = db.get(User, user_id)
     if not target:
         raise AppError(404, "Utilisateur introuvable.", "USER_NOT_FOUND")
+    _assert_can_assign_role(admin, payload.role)
+    if target.id == admin.id and payload.role != admin.role:
+        raise AppError(400, "Vous ne pouvez pas modifier votre propre niveau d’accès.", "FORBIDDEN")
     target.role = payload.role
     audit(db, "admin.role_change", admin, "user", target.id, metadata={"role": payload.role.value})
     db.commit()

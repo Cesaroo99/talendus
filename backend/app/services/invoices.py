@@ -1,6 +1,7 @@
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, joinedload, selectinload
 
+from app.config import get_settings
 from app.errors import AppError
 from app.models import Company, Invoice, InvoiceLine, Payment, RecruitmentMission, User
 from app.models.enums import InvoiceStatus, PaymentMethod, UserRole, utcnow
@@ -8,6 +9,7 @@ from app.rbac import ADMINS
 from app.schemas import InvoiceIn, PaymentIn
 from app.services.access import company_ids_for_employer
 from app.services.audit import audit
+from app.services.pdf_docs import qc_tax_split, tax_from_bp
 
 ADMIN_STATUS = {
     InvoiceStatus.DRAFT: "brouillon",
@@ -41,6 +43,8 @@ def next_number(db: Session) -> str:
 def serialize_invoice(row: Invoice) -> dict:
     paid = sum(p.amount for p in (row.payments or []))
     total = row.amount_total if row.amount_total is not None else row.amount
+    ht = row.amount_ht if row.amount_ht is not None else row.amount
+    gst, qst = qc_tax_split(int(ht or 0), int(row.tax_amount or 0))
     return {
         "id": row.id,
         "number": row.number,
@@ -48,8 +52,10 @@ def serialize_invoice(row: Invoice) -> dict:
         "mission_id": row.mission_id,
         "client_user_id": row.client_user_id,
         "amount": total,
-        "amount_ht": row.amount_ht,
+        "amount_ht": ht,
         "tax_amount": row.tax_amount,
+        "gst_amount": gst,
+        "qst_amount": qst,
         "amount_total": total,
         "tax_rate_bp": row.tax_rate_bp,
         "currency": row.currency,
@@ -65,7 +71,7 @@ def serialize_invoice(row: Invoice) -> dict:
         "company_name": row.company.name if row.company else None,
         "mission_title": row.mission.title if row.mission else None,
         "pdf_path": f"/api/invoices/{row.id}/pdf",
-        "pay_hint": "Virement ou chèque à l’ordre de Talendus. L’encaissement est enregistré par notre équipe.",
+        "pay_hint": "Virement ou chèque à l’ordre de Talendus (CAD). TPS 5 % et TVQ 9,975 % selon le Québec.",
         "lines": [serialize_line(line) for line in (row.lines or [])],
         "payments": [serialize_payment(p) for p in (row.payments or [])],
     }
@@ -153,11 +159,17 @@ def create_invoice(db: Session, user: User, data: InvoiceIn, ip: str | None) -> 
             raise AppError(400, "Mission invalide pour cette entreprise.", "INVALID_MISSION")
     today = utcnow().date().isoformat()
     ht = data.amount_ht if data.amount_ht is not None else data.amount
-    tax_bp = data.tax_rate_bp if data.tax_rate_bp is not None else 0
+    if data.tax_rate_bp is not None:
+        tax_bp = data.tax_rate_bp
+    else:
+        tax_bp = get_settings().default_tax_rate_bp
     lines_data = data.lines or []
     if lines_data:
         ht = sum(max(1, line.quantity) * line.unit_price for line in lines_data)
-    tax_amount = round(ht * tax_bp / 10000) if tax_bp else (data.tax_amount or 0)
+    if data.tax_amount is not None and data.tax_rate_bp == 0:
+        tax_amount = data.tax_amount
+    else:
+        tax_amount = tax_from_bp(ht, tax_bp) if tax_bp else (data.tax_amount or 0)
     total = ht + tax_amount
     row = Invoice(
         number=next_number(db),

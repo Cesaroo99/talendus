@@ -164,7 +164,8 @@ def create_interview(db: Session, user: User, data: InterviewIn, ip: str | None)
         duration_minutes=data.duration_minutes or 30,
         location=data.location or "Visio",
         meeting_url=data.meeting_url,
-        meeting_provider=data.meeting_provider,
+        meeting_provider=data.meeting_provider
+        or ("talendus" if (data.type or InterviewType.TALENDUS) in CALL_TYPES else None),
         type=data.type or InterviewType.TALENDUS,
         notes=data.notes,
         status=InterviewStatus.SCHEDULED,

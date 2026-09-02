@@ -28,6 +28,7 @@ from app.models.integrations import ExternalJob, IntegrationCall, WebhookEvent
 from app.models.portal import JobAlert, LoginEvent, PortalDocument, SavedJob
 from app.models.push import PushSubscription
 from app.models.calls import CallPeer, CallSignal
+from app.models.analytics import SiteEvent
 
 __all__ = [
     "User",
@@ -71,4 +72,5 @@ __all__ = [
     "PushSubscription",
     "CallPeer",
     "CallSignal",
+    "SiteEvent",
 ]

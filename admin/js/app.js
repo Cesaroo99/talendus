@@ -123,6 +123,7 @@
       ["clients", "Clients", "fa-solid fa-industry"],
       ["jobs", "Offres d’emploi", "fa-solid fa-briefcase"],
       ["missions", "Missions", "fa-solid fa-diagram-project"],
+      ["interviews", "Entretiens", "fa-solid fa-video"],
       ["messages", "Messages", "fa-solid fa-comments"]
     ]],
     ["Pilotage", [
@@ -161,19 +162,20 @@
   function renderLogin() {
     var production = TLStore.apiEnv === "production";
     var emailPrefill = "";
+    document.body.classList.add("login-open");
     app.innerHTML = `
       <div class="login">
         <section class="login-brand">
           <div>
             <img src="../assets/img/logo/logo1.png" alt="Talendus">
-            <div style="margin-top:28px"><span class="login-kicker">ATS / CRM interne</span></div>
-            <h1>Le centre opérationnel de Talendus.</h1>
-            <p>Candidats, clients, missions, offres, besoins et messages — une seule plateforme, liée au site et aux espaces.</p>
+            <div style="margin-top:28px"><span class="login-kicker">Back-office</span></div>
+            <h1>Talendus — équipe interne.</h1>
+            <p>Dossiers, mandats, entretiens, factures et messages. Connexion réservée au personnel.</p>
           </div>
           <div class="login-meta">
-            <div><b>1 200+</b>Talents en réseau</div>
-            <div><b>7 j</b>Shortlist type</div>
-            <div><b>92 %</b>Rétention post-essai</div>
+            <div><b>QC</b>Placement au Québec</div>
+            <div><b>ATS</b>Candidats &amp; clients</div>
+            <div><b>CAD</b>Facturation TPS/TVQ</div>
           </div>
         </section>
         <section class="login-panel">
@@ -211,6 +213,7 @@
   }
 
   function shell(inner) {
+    document.body.classList.remove("login-open");
     var me = TLStore.me();
     var r = route();
     var nav = allowedNav().map(function (g) {
@@ -260,6 +263,7 @@
                   <a class="n-item" href="#" data-create="client">Nouveau client</a>
                   <a class="n-item" href="#" data-create="job">Nouvelle offre</a>
                   <a class="n-item" href="#" data-create="mission">Nouvelle mission</a>
+                  <a class="n-item" href="#" data-create="interview">Nouvel entretien</a>
                   <a class="n-item" href="#" data-create="invoice">Nouvelle facture</a>
                 </div>
               </div>
@@ -408,7 +412,7 @@
     }).length;
 
     return `
-      <div class="page-head"><div><h1>Tableau de bord</h1><p>${live() ? "Données live — les mêmes que le site et les espaces candidat / entreprise." : "Vue démo locale."} — ${U.dateFr(today)}</p></div>
+      <div class="page-head"><div><h1>Tableau de bord</h1><p>${live() ? "Données du jour." : "Vue locale."} ${U.dateFr(today)}</p></div>
         <div class="actions"><button class="btn btn-ghost btn-sm" data-export-dash>Exporter CSV</button></div></div>
       <div class="grid grid-6" style="margin-bottom:16px">
         ${kpi("Candidats", st.candidates.length, "+ " + newbie + " ce mois")}
@@ -581,7 +585,7 @@
         return "<p><b>" + U.esc(i.type) + "</b> — " + U.esc(i.at) + " · " + U.esc(i.location) + callButtons(i) + "</p>";
       }).join("") || "<p>Aucun entretien.</p>") + '<button class="btn btn-orange" data-add-int="' + id + '">Planifier</button></div>';
     } else if (detailTab === "notes") {
-      body = '<div class="card card-pad"><h3>Notes internes (invisibles pour le candidat)</h3>' + notes.map(function (n) {
+      body = '<div class="card card-pad"><h3>Notes internes</h3>' + notes.map(function (n) {
         return '<div class="note"><div class="meta">' + U.esc(TLStore.name(n.authorId)) + " · " + U.esc(n.at) + "</div>" + U.esc(n.text) + "</div>";
       }).join("") + '<form id="note-form">' + U.field("Nouvelle note", "text", "", "textarea", "full") + '<button class="btn btn-orange" type="submit">Enregistrer la note</button></form></div>';
     } else {
@@ -770,7 +774,7 @@
       return `<tr data-go="#/missions/${m.id}"><td><b>${U.esc(m.title)}</b></td><td>${U.esc(cl ? cl.name : "—")}</td><td>${U.esc(job ? job.title : "—")}</td><td>${m.seats}</td><td>${U.esc(TLStore.name(m.recruiterId))}</td><td>${U.dateFr(m.start)}</td><td>${U.dateFr(m.due)}</td><td>${U.badge(m.status)}</td><td>${n}</td><td><div style="background:#eef2f6;border-radius:99px;height:8px;width:80px"><div style="width:${m.progress}%;background:var(--orange);height:8px;border-radius:99px"></div></div> ${m.progress}%</td><td>${U.money(m.value)}</td><td>${U.money(m.commission)}</td></tr>`;
     }).join("");
     return `
-      <div class="page-head"><div><h1>Missions</h1><p>Mandats et pipeline — les statuts kanban s’enregistrent dans l’API et se voient dans les espaces.</p></div>
+      <div class="page-head"><div><h1>Missions</h1><p>Mandats en cours, kanban et commissions.</p></div>
         <div class="actions"><button class="btn btn-orange" data-create="mission">Nouvelle mission</button></div></div>
       <div class="card"><div class="table-wrap"><table class="data"><thead><tr><th>Mission</th><th>Client</th><th>Poste</th><th>Postes</th><th>Recruteur</th><th>Début</th><th>Échéance</th><th>Statut</th><th>Candidats</th><th>Progression</th><th>Valeur</th><th>Commission</th></tr></thead><tbody>${rows || '<tr><td colspan="12">' + U.empty("Aucune mission", "Créez un mandat ou convertissez un besoin d’entreprise.") + "</td></tr>"}</tbody></table></div></div>`;
   }
@@ -800,7 +804,7 @@
       <div class="page-head"><div><h1>${U.esc(m.title)}</h1><p>${U.esc((TLStore.client(m.clientId) || {}).name || "—")} · ${m.seats} poste(s) · échéance ${U.dateFr(m.due)} · ${U.badge(m.status)}</p></div>
         <div class="actions"><span class="badge orange">Valeur ${U.money(m.value)}</span><span class="badge info">Commission ${U.money(m.commission)}</span></div></div>
       <div class="kanban" data-mission="${m.id}">${cols}</div>
-      <p style="color:var(--steel);margin-top:12px">Glissez-déposez les candidats d’une étape à l’autre. Le statut est enregistré dans l’API et se reflète dans les espaces.</p>`;
+      <p style="color:var(--steel);margin-top:12px">Glissez les candidats d’une colonne à l’autre. Le statut est enregistré tout de suite.</p>`;
   }
 
   function hiringList() {
@@ -830,7 +834,7 @@
       return `<tr data-go="#/hiring/${h.id}"><td><b>${U.esc(h.title)}</b></td><td>${U.esc(h.company_name || (TLStore.client(h.company_id) || {}).name || "—")}</td><td>${U.esc(h.location || "")}</td><td>${h.seats || 1}</td><td>${U.badge(h.status)}</td><td>${job ? '<a href="#/jobs/' + job.id + '">' + U.esc(job.title) + "</a> " + U.badge(job.status) : "Pas encore d’offre"}</td></tr>`;
     }).join("");
     return `
-      <div class="page-head"><div><h1>Besoins de recrutement</h1><p>Ce que les entreprises transmettent dans leur espace — Talendus convertit, publie, puis présente les profils.</p></div></div>
+      <div class="page-head"><div><h1>Besoins de recrutement</h1><p>Demandes reçues des entreprises, à convertir en offre.</p></div></div>
       <div class="card"><div class="table-wrap"><table class="data"><thead><tr><th>Besoin</th><th>Entreprise</th><th>Lieu</th><th>Postes</th><th>Statut</th><th>Offre Talendus</th></tr></thead><tbody>${rows || '<tr><td colspan="6">' + U.empty("Aucun besoin", "Les demandes envoyées depuis l’espace entreprise apparaissent ici.") + "</td></tr>"}</tbody></table></div></div>`;
   }
 
@@ -870,8 +874,19 @@
 
   function viewMessages() {
     return `
-      <div class="page-head"><div><h1>Messages</h1><p>Fils avec les candidats et les entreprises — jamais d’échange direct entre eux.</p></div></div>
-      <div class="grid grid-2" id="msg-root"><div class="card card-pad"><p class="sub">Chargement des conversations…</p></div></div>`;
+      <div class="page-head"><div><h1>Messages</h1><p>Conversations avec les candidats et les entreprises.</p></div></div>
+      <div id="msg-root" class="inbox"><div class="inbox-empty"><p>Chargement…</p></div></div>`;
+  }
+
+  function personaLabel(role) {
+    var r = String(role || "").toUpperCase();
+    if (r === "CANDIDATE") return "Candidat";
+    if (r === "EMPLOYER") return "Entreprise";
+    if (r === "FINANCE") return "Finance";
+    if (r === "EDITOR") return "Éditeur";
+    if (r === "RECRUITER") return "Recruteur";
+    if (r === "ADMIN" || r === "SUPER_ADMIN") return "Admin";
+    return role || "";
   }
 
   async function hydrateMessages() {
@@ -882,44 +897,79 @@
       var directory = await window.TalendusAPI.request("/messages/directory");
       var list = threads.data || [];
       var people = directory.data || [];
-      var opts = people.map(function (p) {
-        return '<option value="' + U.esc(p.id) + '">' + U.esc((p.first_name || "") + " " + (p.last_name || "") + " · " + (p.role || "")) + "</option>";
-      }).join("");
-      var items = list.map(function (th) {
-        return '<button type="button" class="n-item ' + (th.unread ? "unread" : "") + '" data-open-thread="' + U.esc(th.user_id) + '"><b>' +
-          U.esc((th.first_name || "") + " " + (th.last_name || "")) + "</b><div style='color:var(--steel);font-size:12px'>" + U.esc(th.last_message || "") + "</div></button>";
-      }).join("") || "<p class='sub'>Aucun message pour le moment.</p>";
+      var activeId = root.getAttribute("data-active") || (list[0] && list[0].user_id) || (people[0] && people[0].id) || "";
+      function person(id) {
+        return people.find(function (p) { return p.id === id; }) || list.find(function (t) { return t.user_id === id; }) || {};
+      }
+      function threadItem(th) {
+        var on = th.user_id === activeId ? " is-on" : "";
+        var unread = th.unread ? " is-unread" : "";
+        var name = ((th.first_name || "") + " " + (th.last_name || "")).trim() || "Sans nom";
+        return '<button type="button" class="inbox-thread' + on + unread + '" data-open-thread="' + U.esc(th.user_id) + '">' +
+          U.avatar({ firstName: th.first_name || "?", lastName: th.last_name || "" }, "sm") +
+          '<div class="who"><b>' + U.esc(name) + "</b><span>" + U.esc(th.last_message || personaLabel(th.role)) + "</span></div></button>";
+      }
+      var threadHtml = list.map(threadItem).join("");
+      if (!threadHtml) {
+        threadHtml = people.slice(0, 12).map(function (p) {
+          return threadItem({ user_id: p.id, first_name: p.first_name, last_name: p.last_name, last_message: personaLabel(p.role), unread: false, role: p.role });
+        }).join("") || '<p class="sub" style="padding:16px">L’annuaire est vide pour l’instant.</p>';
+      }
+      var current = person(activeId);
+      var title = ((current.first_name || "") + " " + (current.last_name || "")).trim() || "Conversation";
+      root.setAttribute("data-active", activeId);
       root.innerHTML =
-        '<div class="card card-pad"><div class="card-head"><h3>Conversations</h3></div>' + items + "</div>" +
-        '<div class="card card-pad"><form id="msg-form" class="form-grid" style="grid-template-columns:1fr">' +
-        U.field("Destinataire", "recipient_id", { options: people.map(function (p) { return { v: p.id, l: (p.first_name || "") + " " + (p.last_name || "") + " · " + (p.role || "") }; }), selected: people[0] && people[0].id }, "select") +
-        U.field("Message", "body", "", "textarea", "full") +
-        '<button class="btn btn-orange" type="submit">Envoyer</button></form><div id="msg-thread"></div></div>';
+        '<div class="inbox-list"><header><h3>Boîte de réception</h3><p class="sub" style="margin:0">' + list.length + " fil(s)</p></header>" +
+        '<div class="inbox-threads">' + threadHtml + "</div></div>" +
+        '<div class="inbox-pane"><header><div><h3>' + U.esc(title) + "</h3><span class='badge'>" + U.esc(personaLabel(current.role)) + "</span></div></header>" +
+        '<div class="inbox-log" id="msg-thread"><div class="inbox-empty"><p>Ouvrez un fil pour lire les messages.</p></div></div>' +
+        '<form class="inbox-compose" id="msg-form">' +
+        '<input type="hidden" name="recipient_id" value="' + U.esc(activeId) + '">' +
+        '<textarea name="body" required placeholder="Écrire un message…" rows="2"></textarea>' +
+        '<button class="btn btn-orange" type="submit">Envoyer</button></form></div>';
+      function loadThread(id) {
+        var hidden = root.querySelector("[name=recipient_id]");
+        if (hidden) hidden.value = id;
+        root.setAttribute("data-active", id);
+        root.querySelectorAll("[data-open-thread]").forEach(function (btn) {
+          btn.classList.toggle("is-on", btn.getAttribute("data-open-thread") === id);
+        });
+        var head = root.querySelector(".inbox-pane header h3");
+        var p = person(id);
+        if (head) head.textContent = ((p.first_name || "") + " " + (p.last_name || "")).trim() || "Conversation";
+        window.TalendusAPI.request("/messages/" + id).then(function (json) {
+          var me = TLStore.me();
+          var log = document.getElementById("msg-thread");
+          var rows = json.data || [];
+          if (!log) return;
+          if (!rows.length) {
+            log.innerHTML = '<div class="inbox-empty"><h3>Aucun message</h3><p>Écrivez le premier ci-dessous.</p></div>';
+            return;
+          }
+          log.innerHTML = rows.map(function (m) {
+            var mine = me && m.sender_id === me.id;
+            return '<div class="bubble ' + (mine ? "is-mine" : "is-theirs") + '"><div class="meta">' +
+              U.esc(m.sender_name || (mine ? "Vous" : "")) + "</div>" + U.esc(m.body) + "</div>";
+          }).join("");
+          log.scrollTop = log.scrollHeight;
+        });
+      }
       var form = document.getElementById("msg-form");
       if (form) form.onsubmit = function (e) {
         e.preventDefault();
         var d = U.formData(form);
+        if (!d.recipient_id || !d.body) return;
         window.TalendusAPI.request("/messages", { method: "POST", body: { recipient_id: d.recipient_id, body: d.body } }).then(function () {
-          U.toast("Message envoyé.", "ok");
+          U.toast("Envoyé.", "ok");
           hydrateMessages();
         }).catch(function (err) { U.toast((err && err.message) || "Envoi impossible.", "err"); });
       };
       root.querySelectorAll("[data-open-thread]").forEach(function (btn) {
-        btn.onclick = function () {
-          var id = btn.getAttribute("data-open-thread");
-          var select = form && form.querySelector("[name=recipient_id]");
-          if (select) select.value = id;
-          window.TalendusAPI.request("/messages/" + id).then(function (json) {
-            var me = TLStore.me();
-            document.getElementById("msg-thread").innerHTML = (json.data || []).map(function (m) {
-              var mine = me && m.sender_id === me.id;
-              return '<div class="note ' + (mine ? "is-mine" : "") + '"><div class="meta">' + U.esc(m.sender_name || "") + "</div>" + U.esc(m.body) + "</div>";
-            }).join("");
-          });
-        };
+        btn.onclick = function () { loadThread(btn.getAttribute("data-open-thread")); };
       });
+      if (activeId) loadThread(activeId);
     } catch (err) {
-      root.innerHTML = "<div class='card card-pad'><p>Impossible de charger les messages. Vérifiez la connexion API.</p></div>";
+      root.innerHTML = "<div class='inbox-empty'><p>Impossible de charger les messages.</p></div>";
     }
   }
 
@@ -1006,7 +1056,7 @@
       body = `<div class="card"><div class="table-wrap"><table class="data"><thead><tr><th>Mission</th><th>Client</th><th>Recruteur</th><th>Commission prévue</th><th>Commission reçue</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
     }
     return `
-      <div class="page-head"><div><h1>Finance</h1><p>Factures, paiements et commissions</p></div>
+      <div class="page-head"><div><h1>Finance</h1><p>Factures CAD, TPS/TVQ, paiements et commissions.</p></div>
         <div class="actions"><button class="btn btn-orange" data-create="invoice">Nouvelle facture</button><button class="btn btn-ghost" data-export-fin>Exporter</button></div></div>
       <div class="grid grid-4" style="margin-bottom:16px">
         ${kpi("Payées", byStatus("payee").length)}
@@ -1016,6 +1066,45 @@
       </div>
       <div class="tabs">${Object.keys(tabs).map(function (k) { return '<button class="tab' + (financeTab === k ? " is-on" : "") + '" data-ftab="' + k + '">' + tabs[k] + "</button>"; }).join("")}</div>
       ${body}`;
+  }
+
+  function interviewTypeLabel(i) {
+    return i.type || i.typeKey || "Talendus";
+  }
+
+  function interviewStatusKey(i) {
+    return (i.status || "SCHEDULED").toUpperCase();
+  }
+
+  function viewInterviews() {
+    var list = S().interviews || [];
+    var cols = [
+      ["SCHEDULED", "Planifiés"],
+      ["CONFIRMED", "Confirmés"],
+      ["COMPLETED", "Terminés"],
+      ["CANCELLED", "Annulés / absents"]
+    ];
+    var board = cols.map(function (col) {
+      var items = list.filter(function (i) {
+        var st = interviewStatusKey(i);
+        if (col[0] === "CANCELLED") return st === "CANCELLED" || st === "NO_SHOW";
+        return st === col[0];
+      });
+      var cards = items.map(function (i) {
+        var c = TLStore.candidate(i.candidateId);
+        var name = i.candidateName || (c ? (c.firstName + " " + c.lastName) : "Candidat");
+        var when = i.at || "";
+        var join = callButtons(i);
+        var meet = i.meetingUrl ? ' <a class="btn btn-ghost btn-sm" href="' + U.esc(i.meetingUrl) + '" target="_blank" rel="noopener">Lien visio</a>' : "";
+        return '<div class="int-card"><b>' + U.esc(name) + "</b><span>" + U.esc(interviewTypeLabel(i)) + " · " + U.esc(when) + "</span><span>" + U.esc(i.location || "") + "</span>" +
+          '<div class="int-actions">' + join + meet + "</div></div>";
+      }).join("") || '<p style="color:var(--steel);font-size:12px">Aucun entretien.</p>';
+      return '<div class="int-col"><h4>' + col[1] + ' <span class="badge">' + items.length + "</span></h4>" + cards + "</div>";
+    }).join("");
+    return `
+      <div class="page-head"><div><h1>Entretiens</h1><p>Audio, visio Talendus ou sur place — rejoignez l’appel depuis la carte.</p></div>
+        <div class="actions"><button class="btn btn-orange" data-create="interview">Planifier</button></div></div>
+      <div class="int-board">${board}</div>`;
   }
 
   /* ---------- Analytics ---------- */
@@ -1030,32 +1119,37 @@
     var interviews = st.interviews.length;
     var apps = st.jobs.reduce(function (s, j) { return s + j.applications; }, 0);
     var revenue = st.invoices.filter(function (i) { return i.status === "payee"; }).reduce(function (s, i) { return s + i.amount; }, 0);
-    var avg = placed ? Math.round(revenue / placed) : 0;
     return `
-      <div class="page-head"><div><h1>Statistiques</h1><p>Reporting Talendus · période ${period}</p></div>
-        <div class="actions"><button class="btn btn-ghost" data-export-an>Exporter Excel/CSV</button></div></div>
+      <div class="page-head"><div><h1>Statistiques</h1><p>Visites du site, interactions et activité interne.</p></div>
+        <div class="actions"><button class="btn btn-ghost" data-export-an>Exporter CSV</button></div></div>
       <div class="filters">
         ${["jour","semaine","mois","trimestre","annee"].map(function (p) { return '<button class="btn btn-sm ' + (period === p ? "btn-orange" : "btn-ghost") + '" data-period="' + p + '">' + p + "</button>"; }).join("")}
         <select id="an-rec"><option value="">Recruteur</option>${st.users.filter(function (u) { return u.role !== "editor"; }).map(function (u) { return "<option value=\"" + u.id + "\"" + (analyticsRecruiter === u.id ? " selected" : "") + ">" + u.firstName + " " + u.lastName + "</option>"; }).join("")}</select>
         <select id="an-sec"><option value="">Secteur</option>${unique(st.candidates, "sector").map(function (s) { return "<option" + (analyticsSector === s ? " selected" : "") + ">" + s + "</option>"; }).join("")}</select>
       </div>
+      <div class="grid grid-4" id="an-traffic" style="margin-bottom:16px">
+        ${kpi("Visites", "…")}
+        ${kpi("Interactions", "…")}
+        ${kpi("Candidatures site", "…")}
+        ${kpi("Messages", "…")}
+      </div>
       <div class="grid grid-4" style="margin-bottom:16px">
-        ${kpi("Candidats", cands.length, "+" + cands.filter(function (c) { return c.createdAt >= "2026-08-01"; }).length + " nouveaux")}
-        ${kpi("Clients", st.clients.length, "dont 1 prospect")}
+        ${kpi("Candidats", cands.length)}
+        ${kpi("Clients", st.clients.length)}
         ${kpi("Offres", st.jobs.length, apps + " candidatures")}
         ${kpi("Entretiens", interviews, placed + " placements")}
       </div>
       <div class="grid grid-4" style="margin-bottom:16px">
         ${kpi("Taux de placement", Math.round(placed / Math.max(1, cands.length) * 100) + " %")}
-        ${kpi("Délai moyen", "18 j")}
-        ${kpi("Revenus", U.money(revenue))}
-        ${kpi("Valeur moyenne", U.money(avg))}
+        ${kpi("Revenus encaissés", U.money(revenue))}
+        ${kpi("Contacts (site)", "…", "formulaire / appel")}
+        ${kpi("Recherches", "…")}
       </div>
       <div class="grid grid-2">
-        <div class="card card-pad"><h3>Revenus</h3>${U.barChart(st.monthly.months, st.monthly.revenue, "#ff6b00")}</div>
-        <div class="card card-pad"><h3>Candidatures vs placements</h3>${U.lineChart(st.monthly.applications, "#1e6bff")}${U.lineChart(st.monthly.placements, "#ff6b00")}</div>
+        <div class="card card-pad"><h3>Revenus (interne)</h3>${U.barChart(st.monthly.months, st.monthly.revenue, "#ff6b00")}</div>
+        <div class="card card-pad" id="an-pages"><h3>Pages les plus vues</h3><p class="sub">Chargement…</p></div>
       </div>
-      <div class="card card-pad" style="margin-top:16px"><h3>Revenus par recruteur</h3>
+      <div class="card card-pad" style="margin-top:16px"><h3>Placements par recruteur</h3>
         <table class="data"><thead><tr><th>Recruteur</th><th>Placements</th><th>Commission reçue</th></tr></thead><tbody>
         ${st.users.filter(function (u) { return u.role === "recruiter" || u.role === "admin"; }).map(function (u) {
           var n = st.candidates.filter(function (c) { return c.recruiterId === u.id && c.status === "place"; }).length;
@@ -1068,9 +1162,104 @@
       </div>`;
   }
 
+  async function hydrateAnalytics() {
+    var box = document.getElementById("an-traffic");
+    if (!box || !live()) return;
+    try {
+      var json = await api().request("/admin/analytics?period=" + encodeURIComponent(period));
+      var d = json.data || {};
+      var kpis = box.parentElement ? box : box;
+      box.innerHTML = kpi("Visites", d.visits || 0, "période " + period) +
+        kpi("Interactions", d.interactions || 0) +
+        kpi("Candidatures", d.applies || 0, (d.new_applications || 0) + " dossiers") +
+        kpi("Messages", d.messages || 0);
+      var extras = document.querySelectorAll(".grid.grid-4")[2];
+      if (extras) {
+        var cells = extras.querySelectorAll(".kpi");
+        if (cells[2]) cells[2].outerHTML = kpi("Contacts (site)", d.contacts || 0);
+        if (cells[3]) cells[3].outerHTML = kpi("Recherches", d.searches || 0);
+      }
+      var pages = document.getElementById("an-pages");
+      if (pages) {
+        var rows = (d.top_pages || []).map(function (p) {
+          return "<tr><td>" + U.esc(p.path) + "</td><td>" + p.views + "</td></tr>";
+        }).join("") || "<tr><td colspan='2'>Pas encore de visites enregistrées.</td></tr>";
+        pages.innerHTML = "<h3>Pages les plus vues</h3><table class='data'><thead><tr><th>Page</th><th>Vues</th></tr></thead><tbody>" + rows + "</tbody></table>";
+      }
+    } catch (err) {
+      box.innerHTML = kpi("Visites", "—") + kpi("Interactions", "—") + kpi("Candidatures", "—") + kpi("Messages", "—");
+    }
+  }
+
+  function staffRoleLabel(role) {
+    return ({ RECRUITER: "Recruteur", FINANCE: "Finance", EDITOR: "Éditeur", ADMIN: "Admin", SUPER_ADMIN: "Super-admin" })[role] || role;
+  }
+
+  async function hydrateTeam() {
+    var list = document.getElementById("adm-team-list");
+    var form = document.getElementById("adm-team-form");
+    if (form && api()) {
+      form.onsubmit = function (e) {
+        e.preventDefault();
+        var d = U.formData(form);
+        api().request("/admin/users", {
+          method: "POST",
+          body: {
+            email: d.email,
+            first_name: d.first_name,
+            last_name: d.last_name,
+            password: d.password,
+            role: d.role,
+            title: d.title || null
+          }
+        }).then(function () {
+          U.toast("Accès créé.", "ok");
+          form.reset();
+          hydrateTeam();
+        }).catch(function (err) { U.toast((err && err.message) || "Création impossible.", "err"); });
+      };
+    }
+    if (!list || !api()) return;
+    try {
+      var json = await api().request("/admin/users");
+      var rows = json.data || [];
+      var staff = rows.filter(function (u) {
+        return ["RECRUITER", "FINANCE", "EDITOR", "ADMIN", "SUPER_ADMIN"].indexOf(u.role) !== -1;
+      });
+      list.innerHTML = '<div class="card-head"><h3>Comptes internes</h3></div>' + staff.map(function (u) {
+        return '<div class="team-row"><div><b>' + U.esc((u.first_name || "") + " " + (u.last_name || "")) + "</b><div class='sub'>" +
+          U.esc(u.email) + " · " + U.esc(staffRoleLabel(u.role)) + (u.is_active ? "" : " · désactivé") +
+          '</div></div><div><select data-team-role="' + U.esc(u.id) + '">' +
+          [["RECRUITER", "Recruteur"], ["FINANCE", "Finance"], ["EDITOR", "Éditeur"], ["ADMIN", "Admin"]].map(function (opt) {
+            return "<option value=\"" + opt[0] + "\"" + (u.role === opt[0] ? " selected" : "") + ">" + opt[1] + "</option>";
+          }).join("") + "</select> " +
+          '<button type="button" class="btn btn-ghost btn-sm" data-team-active="' + U.esc(u.id) + '" data-on="' + (u.is_active ? "0" : "1") + '">' +
+          (u.is_active ? "Désactiver" : "Activer") + "</button></div></div>";
+      }).join("") || "<p class='sub'>Aucun compte interne.</p>";
+      list.querySelectorAll("[data-team-role]").forEach(function (sel) {
+        sel.onchange = function () {
+          api().request("/admin/users/" + sel.getAttribute("data-team-role") + "/role", { method: "POST", body: { role: sel.value } })
+            .then(function () { U.toast("Niveau mis à jour.", "ok"); hydrateTeam(); })
+            .catch(function (err) { U.toast((err && err.message) || "Changement impossible.", "err"); hydrateTeam(); });
+        };
+      });
+      list.querySelectorAll("[data-team-active]").forEach(function (btn) {
+        btn.onclick = function () {
+          api().request("/admin/users/" + btn.getAttribute("data-team-active"), {
+            method: "PATCH",
+            body: { is_active: btn.getAttribute("data-on") === "1" }
+          }).then(function () { U.toast("Compte mis à jour.", "ok"); hydrateTeam(); })
+            .catch(function (err) { U.toast((err && err.message) || "Mise à jour impossible.", "err"); });
+        };
+      });
+    } catch (err) {
+      list.innerHTML = "<p class='sub'>Impossible de charger l’équipe.</p>";
+    }
+  }
+
   function viewServices() {
     return `
-      <div class="page-head"><div><h1>Services</h1><p>Ce qui fonctionne aujourd’hui, ce qui attend une clé dans Render, et ce qu’il n’est pas nécessaire d’acheter.</p></div></div>
+      <div class="page-head"><div><h1>Services</h1><p>État des branchements : courriel, paiement, Google, etc.</p></div></div>
       <div id="svc-todos"></div>
       <div id="svc-grid" class="svc-grid"><p class="sub">Chargement…</p></div>`;
   }
@@ -1093,7 +1282,7 @@
       if (todos) {
         todos.innerHTML = (data.todos || []).map(function (item) {
           return '<article class="svc-todo"><h3>' + U.esc(item.title) + "</h3><p>" + U.esc(item.detail) + "</p></article>";
-        }).join("") || '<article class="svc-todo is-ok"><h3>Rien d’urgent</h3><p>Les services essentiels de l’agence tournent. Le reste est facultatif.</p></article>';
+        }).join("") || '<article class="svc-todo is-ok"><h3>Rien d’urgent</h3><p>Les services essentiels tournent.</p></article>';
       }
       grid.innerHTML = (data.providers || []).map(function (row) {
         return '<article class="svc-card is-' + U.esc(row.state) + '">' +
@@ -1133,24 +1322,24 @@
       }).join("");
     };
     var personaLead = {
-      admin: "Vous voyez tout le centre opérationnel, y compris la configuration de la plateforme.",
-      recruiter: "Vous suivez les mandats, les candidats et les clients. La finance et le contenu du site restent hors de cet accès.",
-      finance: "Vous suivez la facturation et les statistiques. Les dossiers candidats restent à l’équipe de recrutement.",
-      editor: "Vous gérez le contenu public. Les mandats et la finance restent à l’équipe de recrutement."
+      admin: "Configuration, équipe et accès.",
+      recruiter: "Mandats, candidats et clients.",
+      finance: "Facturation et statistiques.",
+      editor: "Contenu public du site."
     };
     return `
       <div class="page-head"><div><h1>Paramètres</h1><p>${U.esc(personaLead[me.role] || personaLead.recruiter)}</p></div></div>
       <div class="settings-tabs" role="tablist">
         <button type="button" class="settings-tab is-active" data-stab="account">Compte</button>
         <button type="button" class="settings-tab" data-stab="security">Sécurité</button>
-        <button type="button" class="settings-tab" data-stab="access">Accès selon le rôle</button>
+        <button type="button" class="settings-tab" data-stab="access">Niveaux d’accès</button>
+        ${admin ? '<button type="button" class="settings-tab" data-stab="team">Équipe</button>' : ""}
         ${admin ? '<button type="button" class="settings-tab" data-stab="platform">Plateforme</button>' : ""}
       </div>
       <div class="settings-panel" data-spanel="account">
         <div class="card card-pad">
-          <div class="card-head"><h3>Votre compte Talendus</h3></div>
+          <div class="card-head"><h3>Votre compte</h3></div>
           <p class="sub">${U.esc(me.email)} · ${roleLabel(me.role)}</p>
-          <p>Les entreprises et les candidats ne voient jamais cet espace. C’est l’outil interne de l’agence.</p>
           <form id="adm-prefs" class="form-grid" style="grid-template-columns:1fr">
             <label class="check"><input type="checkbox" name="notify_email" checked> Courriel</label>
             <label class="check"><input type="checkbox" name="notify_in_app" checked> Dans l’application</label>
@@ -1174,16 +1363,36 @@
       </div>
       <div class="settings-panel" data-spanel="access" hidden>
         <div class="card">
-          <div class="card-pad"><p>Chaque rôle du back-office ne voit que ce dont il a besoin. Les espaces candidat et entreprise restent séparés de cet outil.</p></div>
+          <div class="card-pad"><p>Chaque rôle n’ouvre que les menus nécessaires.</p></div>
           <div class="table-wrap"><table class="data"><thead><tr><th>Zone</th><th>Recruteur</th><th>Finance</th><th>Éditeur</th><th>Admin</th></tr></thead><tbody>
           ${access.map(function (row) { return "<tr><td>" + U.esc(row[0]) + "</td>" + marks(row) + "</tr>"; }).join("")}
           </tbody></table></div>
         </div>
       </div>
+      ${admin ? `<div class="settings-panel" data-spanel="team" hidden>
+        <div class="card card-pad">
+          <div class="card-head"><h3>Créer un accès</h3></div>
+          <form id="adm-team-form" class="form-grid">
+            ${U.field("Prénom", "first_name")}
+            ${U.field("Nom", "last_name")}
+            ${U.field("Courriel", "email", "", "email")}
+            ${U.field("Mot de passe initial", "password", "", "password")}
+            ${U.field("Niveau", "role", { options: [
+              { v: "RECRUITER", l: "Recruteur" },
+              { v: "FINANCE", l: "Finance" },
+              { v: "EDITOR", l: "Éditeur" },
+              { v: "ADMIN", l: "Admin" }
+            ], selected: "RECRUITER" }, "select")}
+            ${U.field("Titre", "title", "Recruteur")}
+            <button class="btn btn-orange" type="submit">Créer l’accès</button>
+          </form>
+        </div>
+        <div class="card card-pad" id="adm-team-list" style="margin-top:16px"><p class="sub">Chargement de l’équipe…</p></div>
+      </div>` : ""}
       ${admin ? `<div class="settings-panel" data-spanel="platform" hidden>
         <div class="card card-pad">
           <div class="card-head"><h3>Plateforme</h3></div>
-          <p class="sub">Réglages internes de l’agence — pas visibles sur le site public.</p>
+          <p class="sub">Raison sociale, NEQ, n° TPS/TVQ et autres réglages de facturation.</p>
           <div id="adm-platform"><p class="sub">Chargement…</p></div>
           ${TLStore.isLive() ? "" : '<p style="margin-top:16px"><button class="btn btn-danger" id="reset-demo">Réinitialiser les données démo</button></p>'}
         </div>
@@ -1221,6 +1430,7 @@
     if (type === "job" && !TLStore.can("jobs")) return deny();
     if (type === "mission" && !TLStore.can("missions")) return deny();
     if (type === "invoice" && !TLStore.can("finance")) return deny();
+    if (type === "interview" && !TLStore.can("interviews") && !TLStore.can("candidates")) return deny();
 
     var body = "";
     if (type === "candidate") {
@@ -1233,9 +1443,24 @@
     } else if (type === "mission") {
       if (!S().clients.length) { U.toast("Créez d’abord une entreprise cliente.", "err"); return; }
       body = '<form id="cf" class="form-grid">' + U.field("Titre", "title") + U.field("Client", "clientId", { options: S().clients.map(function (c) { return { v: c.id, l: c.name }; }), selected: firstId(S().clients) }, "select") + U.field("Offre", "jobId", { options: [{ v: "", l: "Sans offre liée" }].concat(S().jobs.map(function (j) { return { v: j.id, l: j.title }; })), selected: firstId(S().jobs) }, "select") + U.field("Nombre de postes", "seats", "1", "number") + "</form>";
+    } else if (type === "interview") {
+      if (!S().candidates.length) { U.toast("Aucun candidat à convier.", "err"); return; }
+      var now = new Date();
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+      body = '<form id="cf" class="form-grid">' +
+        U.field("Candidat", "candidate_id", { options: S().candidates.map(function (c) { return { v: c.id, l: c.firstName + " " + c.lastName }; }), selected: firstId(S().candidates) }, "select") +
+        U.field("Date et heure", "scheduled_at", now.toISOString().slice(0, 16), "datetime-local") +
+        U.field("Type", "type", { options: [{ v: "TALENDUS", l: "Visio Talendus" }, { v: "VIDEO", l: "Visio" }, { v: "PHONE", l: "Téléphone" }, { v: "CLIENT", l: "Chez le client" }, { v: "ONSITE", l: "Sur place" }], selected: "TALENDUS" }, "select") +
+        U.field("Lieu / précisions", "location", "Visio Talendus") +
+        "</form>";
     } else {
       if (!S().clients.length) { U.toast("Créez d’abord une entreprise cliente.", "err"); return; }
-      body = '<form id="cf" class="form-grid">' + U.field("Client", "clientId", { options: S().clients.map(function (c) { return { v: c.id, l: c.name }; }), selected: firstId(S().clients) }, "select") + U.field("Mission", "missionId", { options: [{ v: "", l: "Sans mission" }].concat(S().missions.map(function (m) { return { v: m.id, l: m.title }; })), selected: "" }, "select") + U.field("Montant", "amount", "5000", "number") + "</form>";
+      body = '<form id="cf" class="form-grid">' +
+        U.field("Client", "clientId", { options: S().clients.map(function (c) { return { v: c.id, l: c.name }; }), selected: firstId(S().clients) }, "select") +
+        U.field("Mission", "missionId", { options: [{ v: "", l: "Sans mission" }].concat(S().missions.map(function (m) { return { v: m.id, l: m.title }; })), selected: "" }, "select") +
+        U.field("Montant avant taxes (CAD)", "amount", "5000", "number") +
+        U.field("Taxes", "tax_rate_bp", { options: [{ v: "14975", l: "TPS 5 % + TVQ 9,975 % (Québec)" }, { v: "0", l: "Sans taxes" }], selected: "14975" }, "select") +
+        "</form>";
     }
 
     U.modal({
@@ -1305,15 +1530,29 @@
               render();
               return;
             }
+            if (type === "interview" && window.TalendusAPI) {
+              await window.TalendusAPI.createInterview({
+                candidate_id: d.candidate_id,
+                scheduled_at: d.scheduled_at,
+                location: d.location,
+                type: d.type
+              });
+              await TLStore.hydrateFromApi();
+              close();
+              U.toast("Entretien planifié.", "ok");
+              render();
+              return;
+            }
             if (type === "invoice" && window.TalendusAPI) {
               await window.TalendusAPI.createInvoice({
                 company_id: d.clientId,
                 mission_id: d.missionId || null,
-                amount: Number(d.amount) || 0
+                amount: Number(d.amount) || 0,
+                tax_rate_bp: Number(d.tax_rate_bp)
               });
               await TLStore.hydrateFromApi();
               close();
-              U.toast("Facture créée dans l’API.", "ok");
+              U.toast("Facture créée (TPS/TVQ selon le choix).", "ok");
               render();
               return;
             }
@@ -1815,9 +2054,9 @@
         U.modal({
           title: "Planifier un entretien",
           body: '<form id="int-form" class="form-grid">' +
-            U.field("Date et heure", "scheduled_at", "2026-08-20T10:00", "datetime-local") +
-            U.field("Lieu", "location", "Visio") +
-            U.field("Type", "type", { options: [{ v: "TALENDUS", l: "Talendus" }, { v: "CLIENT", l: "Client" }, { v: "VIDEO", l: "Visio" }, { v: "PHONE", l: "Téléphone" }, { v: "ONSITE", l: "Sur place" }], selected: "TALENDUS" }, "select") +
+            U.field("Date et heure", "scheduled_at", new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16), "datetime-local") +
+            U.field("Lieu", "location", "Visio Talendus") +
+            U.field("Type", "type", { options: [{ v: "TALENDUS", l: "Visio Talendus" }, { v: "VIDEO", l: "Visio" }, { v: "PHONE", l: "Téléphone" }, { v: "CLIENT", l: "Chez le client" }, { v: "ONSITE", l: "Sur place" }], selected: "TALENDUS" }, "select") +
             "</form>",
           footer: '<button class="btn btn-ghost" data-close>Annuler</button><button class="btn btn-orange" id="save">Planifier</button>',
           onMount: function (box, close) {
@@ -1991,7 +2230,7 @@
         if (live()) {
           await window.TalendusAPI.request("/recruiters/notes", { method: "POST", body: { entity_type: "candidate", entity_id: id, text: text } });
           await refreshLive();
-          U.toast("Note interne enregistrée (invisible pour le candidat).", "ok");
+          U.toast("Note interne enregistrée.", "ok");
           render();
           return;
         }
@@ -2186,6 +2425,7 @@
         else if (r.name === "missions") inner = viewMissions();
         else if (r.name === "hiring" && r.id) inner = viewHiringDetail(r.id);
         else if (r.name === "hiring") inner = viewHiring();
+        else if (r.name === "interviews") inner = viewInterviews();
         else if (r.name === "messages") inner = viewMessages();
         else if (r.name === "content") inner = viewContent();
         else if (r.name === "finance") inner = viewFinance();
@@ -2204,6 +2444,8 @@
       if (r.name === "content") hydrateBlogCms();
       if (r.name === "messages") hydrateMessages();
       if (r.name === "services") hydrateServices();
+      if (r.name === "analytics") hydrateAnalytics();
+      if (r.name === "settings") hydrateTeam();
     }, 180);
   }
 

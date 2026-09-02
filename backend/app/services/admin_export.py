@@ -411,6 +411,9 @@ def _interview(i: Interview) -> dict:
         "recruiterId": i.recruiter_id or "",
         "status": i.status.value if i.status else "SCHEDULED",
         "jobId": i.job_id or "",
+        "meetingUrl": i.meeting_url or "",
+        "typeKey": i.type.value if i.type else "TALENDUS",
+        "candidateName": (i.candidate.user.full_name if i.candidate and i.candidate.user else ""),
         "in_app_call": i.type in CALL_TYPES and i.status in LIVE_CALL_STATUSES,
         "call_video": i.type != InterviewType.PHONE,
     }

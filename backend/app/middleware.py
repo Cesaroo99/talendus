@@ -97,8 +97,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             "/api/docs",
             "/api/redoc",
             "/api/openapi.json",
-            "/api/tracking/config",
-            "/api/services",
+    "/api/tracking/config",
+    "/api/tracking/hit",
+    "/api/services",
         }:
             return await call_next(request)
         if request.url.path.startswith("/api/webhooks/"):

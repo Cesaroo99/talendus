@@ -12,8 +12,8 @@
   ];
 
   const PERMS = {
-    admin: ["dashboard", "candidates", "clients", "jobs", "hiring", "missions", "messages", "content", "finance", "analytics", "services", "notifications", "settings", "profile"],
-    recruiter: ["dashboard", "candidates", "clients", "jobs", "hiring", "missions", "messages", "notifications", "settings", "profile"],
+    admin: ["dashboard", "candidates", "clients", "jobs", "hiring", "missions", "interviews", "messages", "content", "finance", "analytics", "services", "notifications", "settings", "profile"],
+    recruiter: ["dashboard", "candidates", "clients", "jobs", "hiring", "missions", "interviews", "messages", "notifications", "settings", "profile"],
     finance: ["dashboard", "finance", "analytics", "services", "messages", "notifications", "settings", "profile"],
     editor: ["content", "notifications", "settings", "profile"]
   };
