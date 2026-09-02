@@ -182,6 +182,7 @@
           <div class="login-card">
             <h2>Connexion</h2>
             <p class="sub">${production ? "Serveur de production — compte staff uniquement (ADMIN_EMAIL sur Render)." : "Espace privé — accès réservé à l’équipe Talendus."}</p>
+            <p class="sub" style="margin-top:8px">Après connexion : entretiens, messages, factures QC, statistiques et onglet Équipe.</p>
             <form id="login-form" class="form-grid" style="grid-template-columns:1fr">
               ${U.field("Courriel", "email", emailPrefill, "email")}
               ${U.field("Mot de passe", "password", "", "password")}

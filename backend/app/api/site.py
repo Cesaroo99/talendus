@@ -162,6 +162,13 @@ def employer_portal_en(rest: str = ""):
     return _portal_page("en/account-employer.html")
 
 
+@router.get("/admin", include_in_schema=False)
+@router.get("/admin/", include_in_schema=False)
+@router.get("/admin/index.html", include_in_schema=False)
+def admin_shell():
+    return _portal_page("admin/index.html")
+
+
 @router.get("/m.html", include_in_schema=False)
 def mobile_app_fr():
     return _portal_page("m.html")
