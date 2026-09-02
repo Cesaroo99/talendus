@@ -274,13 +274,12 @@ def for_companies_section(lang="fr"):
   <div class="container">
     <div class="tl-prose">
       <div class="tl-kicker">For employers</div>
-      <h2 class="tl-h2">You have a role to fill? Don't spend your weeks sorting applications.</h2>
-      <p>Hand the need to Talendus. We are not a job board where you browse candidates yourself, and not a software tool that leaves the search on your desk. We are a placement agency: you describe the role, we take on the work of finding, screening and qualifying people.</p>
-      <p>Our team studies the mandate, searches across our network and the profiles we already know, analyses resumes, speaks with candidates when needed, and presents a qualified shortlist. You keep the final decision. We do the work you should not have to do alone: understand the need, identify talent, compare skills, run first conversations, and put only relevant files in front of you.</p>
-      <p>Talendus already uses artificial intelligence in its internal tools to speed up search, analysis and screening. You benefit from that power without using the tools yourself: we mobilize them to find and qualify the most relevant profiles for your need. Consultants remain essential to confirm fit, motivations and context.</p>
+      <h2 class="tl-h2">A vacant seat costs every day. We take it on.</h2>
+      <p>Talendus is a placement agency. You describe the need. A consultant searches, talks to people and brings you only those worth a meeting. You retain. Fees are due at the hire.</p>
+      <p>This is not a board where you sort resumes, and not software to learn. It is a mandate: search, first conversation, shortlist, follow-through to start date. Many mandates stay confidential. Some openings are also posted on the site when that helps the search.</p>
       <div class="tl-actions" style="margin-top:28px">
         <a class="tl-btn" href="contact.html">Hand us the search</a>
-        <a class="tl-btn tl-btn-ghost-dark" href="employers.html">How we work with companies</a>
+        <a class="tl-btn tl-btn-ghost-dark" href="employers.html">See how it works</a>
       </div>
     </div>
   </div>
@@ -291,13 +290,12 @@ def for_companies_section(lang="fr"):
   <div class="container">
     <div class="tl-prose">
       <div class="tl-kicker">Pour les entreprises</div>
-      <h2 class="tl-h2">Vous avez un poste à pourvoir ? Ne perdez pas votre temps à parcourir des candidatures.</h2>
-      <p>Confiez votre besoin à Talendus. Nous ne sommes pas un site d'emplois où vous cherchez vous-même les candidats, ni un logiciel qui vous laisse gérer le recrutement seul. Nous sommes une agence de placement : vous décrivez le poste, nous prenons en charge la recherche, l'analyse et la présélection.</p>
-      <p>L'équipe étudie le mandat, recherche dans son réseau et parmi les profils déjà connus, analyse les parcours, échange avec les candidats lorsque c'est nécessaire, puis vous présente une sélection qualifiée. Vous gardez la décision finale. Talendus fait le travail que vous ne souhaitez pas ou ne pouvez pas mener seul : comprendre le besoin, identifier les talents, comparer les compétences, mener les premiers échanges et ne mettre devant vous que des dossiers pertinents.</p>
-      <p>Talendus utilise déjà l'intelligence artificielle dans ses outils internes pour accélérer la recherche, l'analyse et la présélection des talents. Vous bénéficiez de cette puissance sans avoir à utiliser les outils vous-même : nous les mobilisons pour rechercher et qualifier les profils les plus pertinents pour votre besoin. Les conseillers restent essentiels pour confirmer la pertinence, les motivations et le contexte.</p>
+      <h2 class="tl-h2">Un poste vacant coûte chaque jour. On le prend en charge.</h2>
+      <p>Talendus est une agence de placement. Vous décrivez le besoin. Un conseiller cherche, parle aux gens et vous amène seulement ceux qui valent une rencontre. Vous retenez. Les honoraires se règlent à l'embauche.</p>
+      <p>Ce n'est pas un babillard où vous triez des CV, ni un logiciel à apprendre. C'est un mandat : recherche, premier échange, shortlist, suivi jusqu'à l'entrée en poste. Beaucoup de mandats restent confidentiels. Certaines offres sont aussi publiées sur le site quand ça aide à trouver.</p>
       <div class="tl-actions" style="margin-top:28px">
         <a class="tl-btn" href="contact.html">Confier mon recrutement</a>
-        <a class="tl-btn tl-btn-ghost-dark" href="entreprises.html">Comment nous accompagnons les entreprises</a>
+        <a class="tl-btn tl-btn-ghost-dark" href="entreprises.html">Voir comment ça se passe</a>
       </div>
     </div>
   </div>
@@ -382,28 +380,28 @@ def approach_section(lang="fr"):
 
 def process_section(lang="fr"):
     if lang == "en":
-        kicker, heading = "How our recruiting works", "You hand us the need. We do the search."
+        kicker, heading, lead = (
+            "How a mandate runs",
+            "Four steps. You stay on the decision.",
+            "No software to learn. You describe the seat; we come back with people worth meeting.",
+        )
         steps = [
-            ("01", "You hand us the need", "Describe the role and the profile you are looking for."),
-            ("02", "We talk with you", "Our team goes deeper so we understand the context, constraints and the kind of person you actually need."),
-            ("03", "We define the profile", "We set the search criteria: must-haves, nice-to-haves, experience, location and conditions."),
-            ("04", "We start the search", "Our teams use their methods, network, technology and internal AI tools. You do not hunt candidates yourself."),
-            ("05", "We screen", "We analyse and qualify the people we identified. You do not receive a pile of resumes."),
-            ("06", "We meet candidates", "We run the evaluation steps required for the mandate: conversations, checks, availability."),
-            ("07", "We present the best profiles", "You receive a selection of relevant candidates we are prepared to stand behind."),
-            ("08", "You choose", "You review, meet people according to your process, and make the final decision. Talendus does not hire in your place."),
+            ("01", "You tell us the role", "Title, site, hours, must-haves, pay range. A 20-minute call is usually enough."),
+            ("02", "We calibrate", "We compare the brief with what the market will actually accept. If the ask is off, we say so before we waste a week."),
+            ("03", "We search and speak", "Network, known profiles, discreet outreach to people already in a job. We talk to them before you do."),
+            ("04", "You meet and retain", "A short list, each file defended. You interview. You decide. We stay until the person starts."),
         ]
     else:
-        kicker, heading = "Comment fonctionne notre recrutement ?", "Vous nous confiez votre besoin. Nous faisons la recherche."
+        kicker, heading, lead = (
+            "Le déroulement",
+            "Quatre étapes. Vous gardez la décision.",
+            "Pas de logiciel à apprendre. Vous décrivez le poste ; on revient avec des gens qui valent une rencontre.",
+        )
         steps = [
-            ("01", "Vous nous confiez votre besoin", "Décrivez-nous le poste et le profil recherché."),
-            ("02", "Nous échangeons avec vous", "Nos équipes approfondissent votre besoin afin de comprendre précisément vos attentes."),
-            ("03", "Nous définissons le profil", "Nous établissons les critères nécessaires à la recherche."),
-            ("04", "Nous lançons la recherche", "Nos équipes utilisent leurs méthodes, leurs ressources, leur technologie et leurs outils IA."),
-            ("05", "Nous présélectionnons", "Nous analysons et qualifions les profils identifiés."),
-            ("06", "Nous rencontrons les candidats", "Nous réalisons les étapes d'évaluation nécessaires."),
-            ("07", "Nous vous présentons les meilleurs profils", "Vous recevez une sélection de candidats pertinents."),
-            ("08", "Vous choisissez", "Vous prenez la décision finale."),
+            ("01", "Vous nous dites le poste", "Titre, site, horaire, indispensables, fourchette salariale. Un appel de 20 minutes suffit souvent."),
+            ("02", "On calibre", "On compare le brief à ce que le marché accepte vraiment. Si la demande est décalée, on le dit avant de perdre une semaine."),
+            ("03", "On cherche et on parle", "Réseau, profils déjà connus, approche discrète des gens en poste. On leur parle avant vous."),
+            ("04", "Vous rencontrez et vous retenez", "Une shortlist courte, chaque dossier défendu. Vous les recevez. Vous décidez. On reste jusqu'à l'entrée en poste."),
         ]
     cards = "".join(
         f'<div class="tl-step"><span>{n}</span><h3>{t}</h3><p>{p}</p></div>'
@@ -415,11 +413,255 @@ def process_section(lang="fr"):
     <div class="tl-center" style="max-width:720px;margin:0 auto 36px">
       <div class="tl-kicker">{kicker}</div>
       <h2 class="tl-h2">{heading}</h2>
+      <p class="tl-lead">{lead}</p>
     </div>
-    <div class="tl-steps tl-steps-8">{cards}</div>
+    <div class="tl-steps tl-steps-4">{cards}</div>
   </div>
 </section>
 """
+
+
+def employer_takeover_section(lang="fr"):
+    if lang == "en":
+        kicker, heading, lead = (
+            "What leaves your desk",
+            "For the open seat, Talendus runs the work.",
+            "You do not become a part-time recruiter. Here is what we take on.",
+        )
+        items = [
+            ("01", "The search", "We do not stop at people who answered an ad. We use the network, known profiles, and — when the trade requires it — we approach people already in a job."),
+            ("02", "The first conversation", "A consultant talks to candidates before you do. Hours, pay, tickets, what would actually make them move. You do not lose a morning filtering."),
+            ("03", "The shortlist", "A few files we will stand behind, not a stack. Each name is someone we can explain."),
+            ("04", "Through start date", "Terms, notice period, onboarding. One contact until the person is on site."),
+        ]
+        close_h, close_p = (
+            "You retain the person. The rest is our job.",
+            "No resume database to browse. No tool to operate. You meet people who already passed our screen.",
+        )
+    else:
+        kicker, heading, lead = (
+            "Ce qui sort de votre bureau",
+            "Pour le poste à combler, Talendus mène le travail.",
+            "Vous n'avez pas à devenir recruteur à temps partiel. Voici ce qu'on prend en charge.",
+        )
+        items = [
+            ("01", "La recherche", "On ne s'arrête pas aux gens qui ont répondu à une annonce. On mobilise le réseau, les profils déjà connus, et — quand le métier l'exige — on approche ceux qui sont déjà en poste."),
+            ("02", "Le premier échange", "Un conseiller parle aux candidats avant vous. Horaire, salaire, tickets, ce qui les ferait vraiment bouger. Vous ne perdez pas une matinée à filtrer."),
+            ("03", "La shortlist", "Quelques dossiers que nous sommes prêts à défendre, pas une liasse. Chaque nom est quelqu'un qu'on peut expliquer."),
+            ("04", "Jusqu'à l'entrée en poste", "Conditions, préavis, intégration. Un seul interlocuteur jusqu'à ce que la personne soit sur le site."),
+        ]
+        close_h, close_p = (
+            "Vous retenez la personne. Le reste, c'est notre métier.",
+            "Pas de base de CV à fouiller. Pas d'outil à opérer. Vous rencontrez des gens qui ont déjà passé notre filtre.",
+        )
+    cards = "".join(
+        f'<article class="tl-takeover-item"><span>{n}</span><h3>{t}</h3><p>{p}</p></article>'
+        for n, t, p in items
+    )
+    return f"""
+<section class="tl-section" id="prise-en-charge">
+  <div class="container">
+    <div class="tl-center" style="max-width:720px;margin:0 auto 36px">
+      <div class="tl-kicker">{kicker}</div>
+      <h2 class="tl-h2">{heading}</h2>
+      <p class="tl-lead">{lead}</p>
+    </div>
+    <div class="tl-takeover-list">{cards}</div>
+    <div class="tl-takeover-close">
+      <h3>{close_h}</h3>
+      <p>{close_p}</p>
+    </div>
+  </div>
+</section>
+"""
+
+
+def employer_pillars_section(lang="fr"):
+    if lang == "en":
+        kicker, heading = "How it is billed", "You move forward without putting money down first."
+        items = [
+            ("On success", "Fees are due when someone starts. The first call is free. If the mandate does not close, you do not pay, per the agreement."),
+            ("Useful files, quickly", "On an operations role we aim for the first profiles within a week. A scarce manager takes longer — we say so at the brief, not after."),
+            ("Without noise", "Replacement, reorganization, sensitive seat: we approach without posting until you decide the company should know."),
+        ]
+    else:
+        kicker, heading = "Comment ça se paie", "Vous avancez sans vous exposer d'abord."
+        items = [
+            ("Au succès", "Les honoraires se règlent quand quelqu'un entre. L'appel de départ est gratuit. Si le mandat n'aboutit pas, vous ne payez pas, selon l'entente."),
+            ("Des dossiers utiles, vite", "Sur un métier d'opérations, on vise les premiers profils en une semaine. Un cadre rare prend plus longtemps : on le dit au brief, pas après."),
+            ("Sans bruit", "Remplacement, réorganisation, poste sensible : on approche sans afficher tant que vous n'avez pas décidé que l'interne doit le savoir."),
+        ]
+    cards = "".join(
+        f'<article class="tl-pillar"><h3>{t}</h3><p>{p}</p></article>'
+        for t, p in items
+    )
+    return f"""
+<section class="tl-section tl-ice" id="conditions">
+  <div class="container">
+    <div class="tl-center" style="max-width:720px;margin:0 auto 36px">
+      <div class="tl-kicker">{kicker}</div>
+      <h2 class="tl-h2">{heading}</h2>
+    </div>
+    <div class="tl-pillars">{cards}</div>
+  </div>
+</section>
+"""
+
+
+def employer_sectors_grid(lang="fr"):
+    if lang == "en":
+        kicker, heading, lead = (
+            "Where we hire",
+            "Floor roles as much as office roles.",
+            "These are examples. If the seat is not listed, describe it — we open the search.",
+        )
+        groups = [
+            ("Plant and production", ["Production operator", "Welder", "CNC machinist", "Shift supervisor"]),
+            ("Warehouse and transport", ["Forklift operator", "Shipping clerk", "Driver", "Logistics coordinator"]),
+            ("Maintenance", ["Electromechanical tech", "Industrial mechanic", "Maintenance technician"]),
+            ("Construction", ["Site foreman", "Project coordinator", "Skilled trades on site"]),
+            ("Office and admin", ["Administrative assistant", "Accounting clerk", "Customer service"]),
+            ("Site leadership", ["Plant manager", "Production lead", "Site HR"]),
+        ]
+    else:
+        kicker, heading, lead = (
+            "Où on recrute",
+            "Des métiers de plancher autant que de bureau.",
+            "Ce sont des exemples. Si le poste n'est pas listé, décrivez-le : on ouvre la recherche.",
+        )
+        groups = [
+            ("Usine et production", ["Opérateur de production", "Soudeur", "Machiniste CNC", "Superviseur de quart"]),
+            ("Entrepôt et transport", ["Cariste", "Commis d'expédition", "Chauffeur", "Coordonnateur logistique"]),
+            ("Maintenance", ["Électromécanicien", "Mécanicien industriel", "Technicien de maintenance"]),
+            ("Construction", ["Contremaître", "Coordonnateur de chantier", "Métiers spécialisés sur site"]),
+            ("Bureau et admin", ["Adjoint administratif", "Commis comptable", "Service à la clientèle"]),
+            ("Direction de site", ["Directeur d'usine", "Responsable production", "RH de site"]),
+        ]
+    cards = "".join(
+        '<article class="tl-hire-sector"><h3>'
+        + t
+        + "</h3><ul>"
+        + "".join(f"<li>{role}</li>" for role in roles)
+        + "</ul></article>"
+        for t, roles in groups
+    )
+    return f"""
+<section class="tl-section" id="metiers-employeur">
+  <div class="container">
+    <div class="tl-center" style="max-width:720px;margin:0 auto 36px">
+      <div class="tl-kicker">{kicker}</div>
+      <h2 class="tl-h2">{heading}</h2>
+      <p class="tl-lead">{lead}</p>
+    </div>
+    <div class="tl-hire-sectors">{cards}</div>
+  </div>
+</section>
+"""
+
+
+def employer_risk_section(lang="fr"):
+    if lang == "en":
+        kicker, heading = "What you commit to", "You pay for a hire that happens, not for a search that drags."
+        items = [
+            ("Fees on the start date", "Billed against the annual salary of the person placed, when they start."),
+            ("Replacement on permanent seats", "If the hire does not hold through the written window, we reopen the search."),
+            ("Non-exclusive by default", "You can keep looking. We still treat the mandate as ours until you say otherwise."),
+        ]
+    else:
+        kicker, heading = "À quoi vous vous engagez", "Vous payez une embauche qui a lieu, pas une recherche qui traîne."
+        items = [
+            ("Honoraires à l'entrée en poste", "Calculés sur le salaire annuel de la personne placée, quand elle commence."),
+            ("Remplacement sur les permanents", "Si l'embauche ne tient pas dans la fenêtre écrite, on relance la recherche."),
+            ("Non exclusif par défaut", "Vous pouvez continuer à chercher. On traite quand même le mandat comme le nôtre jusqu'à ce que vous disiez le contraire."),
+        ]
+    cards = "".join(
+        f'<article class="tl-risk-item"><h3>{t}</h3><p>{p}</p></article>'
+        for t, p in items
+    )
+    return f"""
+<section class="tl-section tl-ice" id="sans-risque">
+  <div class="container">
+    <div class="tl-center" style="max-width:720px;margin:0 auto 36px">
+      <div class="tl-kicker">{kicker}</div>
+      <h2 class="tl-h2">{heading}</h2>
+    </div>
+    <div class="tl-risk-list">{cards}</div>
+  </div>
+</section>
+"""
+
+
+def employer_quotes_section(lang="fr"):
+    if lang == "en":
+        kicker, heading = "Employers", "What managers tell us after a hire"
+        quotes = [
+            ("They understood the role on the first call. The files they brought actually matched the floor, not a generic title.", "M.L.", "Director of operations · South Shore"),
+            ("Not an agency that dumps 40 resumes. Three solid people, and they stayed on the file after day one.", "J.R.", "Director · Mauricie"),
+            ("A confidential replacement, no internal noise. Start date lined up with our shutdown calendar.", "S.B.", "VP · Montérégie"),
+        ]
+    else:
+        kicker, heading = "Employeurs", "Ce que les gestionnaires nous disent après une embauche"
+        quotes = [
+            ("Ils ont compris le poste dès le premier appel. Les dossiers correspondaient au plancher, pas à un titre générique.", "M.L.", "Directrice des opérations · Rive-Sud"),
+            ("Pas une agence qui envoie 40 CV. Trois personnes solides, et ils sont restés sur le dossier après le jour un.", "J.R.", "Directeur · Mauricie"),
+            ("Un remplacement confidentiel, sans bruit interne. Date d'entrée calée sur notre arrêt d'usine.", "S.B.", "VP · Montérégie"),
+        ]
+    cards = "".join(
+        f"""<blockquote class="tl-quote">
+          <div class="tl-quote-mark" aria-hidden="true">“</div>
+          <p>{q}</p>
+          <footer><strong>{name}</strong><span>{role}</span></footer>
+        </blockquote>"""
+        for q, name, role in quotes
+    )
+    return f"""
+<section class="tl-section" id="temoignages">
+  <div class="container">
+    <div class="tl-center" style="max-width:720px;margin:0 auto 36px">
+      <div class="tl-kicker">{kicker}</div>
+      <h2 class="tl-h2">{heading}</h2>
+    </div>
+    <div class="tl-grid-3 tl-quotes">{cards}</div>
+  </div>
+</section>
+"""
+
+
+def employer_faq_block(lang, items, faq_html):
+    if lang == "en":
+        kicker, heading = "Questions employers ask", "Straight answers before you book a call"
+        cta = "Hand us the search"
+    else:
+        kicker, heading = "Questions des employeurs", "Des réponses nettes avant de réserver un appel"
+        cta = "Confier mon recrutement"
+    return f"""
+<section class="tl-section" id="faq">
+  <div class="container">
+    <div class="tl-center" style="max-width:720px;margin:0 auto 28px">
+      <div class="tl-kicker">{kicker}</div>
+      <h2 class="tl-h2">{heading}</h2>
+    </div>
+    {faq_html(items)}
+    <div class="tl-center" style="margin-top:32px">
+      <a class="tl-btn tl-btn-lg" href="contact.html">{cta}</a>
+    </div>
+  </div>
+</section>
+"""
+
+
+def employer_landing_sections(lang="fr"):
+    """Page Entreprises / Employers : hero fourni par l'appelant."""
+    return (
+        employer_takeover_section(lang)
+        + employer_pillars_section(lang)
+        + process_section(lang)
+        + employer_sectors_grid(lang)
+        + company_types_section(lang)
+        + employer_quotes_section(lang)
+        + employer_risk_section(lang)
+        + bad_hire_calculator_section(lang)
+    )
 
 
 def why_talendus_section(lang="fr"):
@@ -496,11 +738,11 @@ def gateway_orientation_section(lang="fr"):
       <article class="tl-gateway-lane is-hire">
         <span class="tl-kicker">On the employer side</span>
         <h3>We hire for you</h3>
-        <p>You do not browse a resume database. You describe the role. We search, screen and bring a qualified shortlist. You keep the final decision. A consultant calls you back.</p>
+        <p>You describe the role. We search, talk to people, bring a shortlist. You retain. Fees at the hire.</p>
         <ul class="tl-gateway-points">
-          <li>One need to hand over — not an account to learn on your own.</li>
-          <li>A shortlist of people we have already qualified, not a pile of CVs.</li>
-          <li>One consultant for your hire: call us, we open the search.</li>
+          <li>A brief to hand over — not a tool to learn.</li>
+          <li>People already qualified, not a pile of CVs.</li>
+          <li>One consultant through start date.</li>
         </ul>
         <a class="tl-btn" href="employers.html" data-set-persona="entreprise">See how it works for you</a>
       </article>
@@ -531,11 +773,11 @@ def gateway_orientation_section(lang="fr"):
       <article class="tl-gateway-lane is-hire">
         <span class="tl-kicker">Du côté entreprises</span>
         <h3>On recrute pour vous</h3>
-        <p>Vous ne fouillez pas une base de CV. Vous décrivez le poste. Nous recherchons, présélectionnons et apportons une shortlist qualifiée. Vous gardez la décision finale. Un conseiller vous rappelle.</p>
+        <p>Vous décrivez le poste. On cherche, on parle aux gens, on vous amène une shortlist. Vous retenez. Honoraires à l'embauche.</p>
         <ul class="tl-gateway-points">
-          <li>Un besoin à nous confier — pas un logiciel à apprendre tout seul.</li>
-          <li>Une shortlist de personnes déjà qualifiées, pas une pile de CV.</li>
-          <li>Un conseiller pour votre recrutement : appelez-nous, on ouvre la recherche.</li>
+          <li>Un brief à nous passer — pas un outil à apprendre.</li>
+          <li>Des gens déjà qualifiés, pas une pile de CV.</li>
+          <li>Un conseiller jusqu'à l'entrée en poste.</li>
         </ul>
         <a class="tl-btn" href="entreprises.html" data-set-persona="entreprise">Voir comment ça se passe</a>
       </article>
@@ -811,33 +1053,27 @@ def competitive_advantage_section(lang="fr"):
 def placement_process_services_section(lang="fr"):
     if lang == "en":
         services = [
-            ("Talent search", "Talendus looks for people who match the company's need, not a public dump of every resume we hold. We draw on our network, known profiles, applications received and, when useful, a framed posting. People already in a role can be approached discreetly, without internal noise. Internal tools, including artificial intelligence, help our teams cover more ground, treat large volumes of information and spot correspondences worth a human look. You do not browse a candidate database and you do not operate a search engine. You describe the role; we open the search on your behalf, then we come back with profiles that actually relate to the mandate."),
-            ("Screening", "Identified profiles are analysed and filtered against skills, experience, qualifications, location and the criteria we agreed with you. AI can help with a first pass, with structuring information and with prioritizing files for review. A Talendus consultant then verifies what holds and drops what does not. What fails that filter never reaches your desk. Screening is a professional step, not an automatic reject and not a pile of unread resumes left for you to sort. The aim is to reduce noise so your time goes to people worth meeting."),
-            ("Qualification", "Talendus does not merely forward resumes. We structure qualification around the path, consistency with the role, skills, experience, motivations, availability, expectations and other criteria defined with you. AI can help process and analyse information faster, including synthesizing what a file actually shows. Final qualification stays human: a consultant weighs what a CV cannot say, speaks with the person when needed, and decides whether a file is ready to present. You receive a reasoned file, not a raw document dumped into your inbox."),
-            ("Interviews", "When needed, Talendus talks with candidates before a file reaches you: path, motivations, fit with the role and the conditions of the mandate. Your interviews then involve people already qualified, not a first filter of dozens of unvetted applications. You run your own process; a consultant coordinates the exchanges, keeps context, and stays available so you can focus on the people worth meeting."),
-            ("Shortlist", "We present a qualified selection of relevant profiles, not a massive list. Each file is one we are prepared to stand behind after search, analysis and human review. Relevance is the product; volume is not. You study those files, meet people according to your process, and choose. Talendus does not hire in your place. We make the final choice possible (and faster) by doing the search and screening first, with internal tools and AI accelerating some of that work without transferring it onto you."),
-            ("Placement", "Talendus supports the introduction through to the planned hiring steps: presentation of the file, follow-up with both sides, coordination of exchanges and, on permanent mandates, onboarding follow-up at 30, 60 and 90 days. A consultant stays with you until the hire. Fees are success-based, per the agreement, with a replacement guarantee on permanent mandates. Placement is the close of a recruiting process we ran for you, not access to software you would have to operate yourself."),
-            ("AI-accelerated search", "Talendus already uses its artificial-intelligence tools to accelerate certain search and analysis steps: resume reading, skills extraction, relating a profile to a role, synthesis and internal prioritization. These tools sit inside our process; they are not a product you log into. You benefit from that power through the quality and speed of the Talendus service. Consultants remain essential to qualify, contact, interview and present. The company keeps the final decision. AI helps us work better, faster and more intelligently, it does not replace the agency."),
+            ("Search", "We look for people who match the seat: network, known profiles, applications, and a posting when it helps. People already in a job can be approached quietly."),
+            ("First conversation", "A consultant talks to candidates before you do. Path, hours, pay, what would make them move. You are not the first filter."),
+            ("Shortlist", "A few files we will stand behind. You meet. You decide. Volume is not the product."),
+            ("Placement", "We stay through start date. On permanent seats: 30/60/90 follow-up and a written replacement window. Fees on success."),
         ]
         kicker, heading, lead = (
-            "From need to placement",
-            "A complete recruiting process, not a software catalogue.",
-            "Each service is a step Talendus runs for you. Technology and AI strengthen the work. They do not replace the agency.",
+            "From need to start date",
+            "One mandate. Four pieces of work.",
+            "You describe the role. We run the search. You keep the hire.",
         )
     else:
         services = [
-            ("Recherche de talents", "Talendus recherche les profils correspondant au besoin de l'entreprise, pas un dépôt public de tous les CV que nous détenons. Nous mobilisons le réseau, les profils déjà connus, les candidatures reçues et, lorsque c'est utile, une offre cadrée. Les personnes déjà en poste peuvent être approchées discrètement, sans bruit interne. Les outils internes, dont l'intelligence artificielle, aident nos équipes à couvrir davantage de terrain, à traiter de grands volumes d'informations et à faire ressortir des correspondances qui méritent une revue humaine. Vous ne parcourez pas une base de candidats et vous n'opérez pas un moteur de recherche. Vous décrivez le poste ; nous ouvrons la recherche pour votre compte, puis nous revenons avec des profils réellement liés au mandat."),
-            ("Présélection", "Les profils identifiés sont analysés et filtrés : compétences, expérience, qualifications, localisation et critères convenus avec vous. L'IA peut aider à un premier passage, à structurer l'information et à prioriser les dossiers à examiner. Un conseiller Talendus vérifie ensuite ce qui tient et écarte ce qui ne correspond pas. Ce qui échoue ce filtre n'arrive pas sur votre bureau. La présélection est une étape professionnelle, pas un rejet automatique et pas une pile de CV non lus à trier vous-même. L'objectif est de réduire le bruit pour que votre temps aille aux personnes à rencontrer."),
-            ("Qualification", "Talendus ne se contente pas d'envoyer des CV. Nous structurons la qualification autour du parcours, de la cohérence avec le poste, des compétences, de l'expérience, des motivations, de la disponibilité, des attentes et des autres critères définis avec vous. L'IA peut contribuer au traitement et à l'analyse de l'information, y compris en synthétisant ce qu'un dossier montre vraiment. La qualification finale reste humaine : un conseiller pèse ce qu'un CV ne dit pas, échange avec la personne lorsque c'est nécessaire, et décide si un dossier est prêt à être présenté. Vous recevez un dossier raisonné, pas un document brut déposé dans votre boîte."),
-            ("Entretiens", "Lorsque c'est nécessaire, Talendus échange avec les candidats avant qu'un dossier vous parvienne : parcours, motivations, adéquation avec le poste et conditions du mandat. Vos entretiens portent ensuite sur des personnes déjà qualifiées, pas sur un premier filtre de dizaines de candidatures non vérifiées. Vous organisez votre processus ; un conseiller coordonne les échanges, conserve le contexte et reste disponible pour que vous puissiez vous concentrer sur les personnes à rencontrer."),
-            ("Shortlist", "Nous présentons une sélection de profils qualifiés et pertinents, pas une liste massive. Chaque dossier est un profil que nous sommes prêts à défendre après recherche, analyse et revue humaine. La pertinence est le produit ; le volume ne l'est pas. Vous étudiez ces dossiers, rencontrez les personnes selon votre processus, et choisissez. Talendus n'embauche pas à votre place. Nous rendons le choix final possible (et plus rapide) en menant d'abord la recherche et la présélection, avec des outils internes et l'IA qui accélèrent une partie de ce travail sans le transférer vers vous."),
-            ("Placement", "Talendus accompagne la mise en relation jusqu'aux étapes prévues du recrutement : présentation du dossier, suivi auprès des deux parties, coordination des échanges et, sur les mandats permanents, suivi d'intégration à 30, 60 et 90 jours. Un conseiller reste avec vous jusqu'à l'embauche. Les honoraires sont au succès, selon l'entente, avec une garantie de remplacement sur les mandats permanents. Le placement clôt un processus de recrutement que nous avons mené pour vous, ce n'est pas l'accès à un logiciel que vous auriez à opérer vous-même."),
-            ("Recherche accélérée par l'IA", "Talendus utilise déjà ses outils d'intelligence artificielle pour accélérer certaines étapes de la recherche et de l'analyse : lecture des CV, extraction des compétences, rapprochement d'un profil et d'un poste, synthèse et priorisation interne. Ces outils restent dans notre processus ; ce n'est pas un produit auquel vous vous connectez. Vous bénéficiez de cette puissance à travers la qualité et la rapidité du service Talendus. Les conseillers restent essentiels pour qualifier, contacter, interviewer et présenter. L'entreprise garde la décision finale. L'IA nous aide à travailler mieux, plus vite et plus intelligemment, elle ne remplace pas l'agence."),
+            ("Recherche", "On cherche qui correspond au poste : réseau, profils déjà connus, candidatures, et une offre publiée quand ça aide. Les gens déjà en poste peuvent être approchés sans bruit."),
+            ("Premier échange", "Un conseiller parle aux candidats avant vous. Parcours, horaire, salaire, ce qui les ferait bouger. Vous n'êtes pas le premier filtre."),
+            ("Shortlist", "Quelques dossiers que nous sommes prêts à défendre. Vous rencontrez. Vous décidez. Le volume n'est pas le produit."),
+            ("Placement", "On reste jusqu'à l'entrée en poste. Sur les permanents : suivi 30/60/90 et une fenêtre de remplacement écrite. Honoraires au succès."),
         ]
         kicker, heading, lead = (
-            "Du besoin au placement",
-            "Un processus de recrutement complet, pas un catalogue de logiciels.",
-            "Chaque service est une étape que Talendus mène pour vous. La technologie et l'IA renforcent le travail. Elles ne remplacent pas l'agence.",
+            "Du besoin à l'entrée en poste",
+            "Un mandat. Quatre morceaux de travail.",
+            "Vous décrivez le poste. On mène la recherche. Vous gardez l'embauche.",
         )
     cards = "".join(
         f'<article class="tl-card"><div class="body"><h3>{t}</h3><p>{p}</p></div></article>'
@@ -851,7 +1087,7 @@ def placement_process_services_section(lang="fr"):
       <h2 class="tl-h2">{heading}</h2>
       <p class="tl-lead">{lead}</p>
     </div>
-    <div class="tl-grid-2 tl-services-process">{cards}</div>
+    <div class="tl-grid-4 tl-services-process">{cards}</div>
   </div>
 </section>
 """
@@ -888,20 +1124,20 @@ def human_section(lang="fr"):
 def company_types_section(lang="fr"):
     if lang == "en":
         items = [
-            ("First hire", "A company recruiting its first employee still needs a serious search. We take the mandate with the same care as a larger file."),
-            ("Growing SME", "Several seats, mixed roles, limited HR time: we absorb the search so growth does not stall on vacant posts."),
-            ("Startup", "A specialized or hybrid profile, often urgent. We clarify the real need before we search, titles in startups drift."),
-            ("Larger organization", "Volume, confidentiality, several stakeholders. One Talendus contact, a qualified shortlist, you keep the decision."),
+            ("SME without a dedicated HR team", "Hiring lands on the owner or the ops lead. We take the mandate so the site keeps running."),
+            ("A plant that is growing", "Several seats at once, little time to sort. We absorb the search."),
+            ("First employee", "The same care as a larger file. The first hire sets the tone."),
+            ("A larger organization", "Volume, confidentiality, several stakeholders. One consultant, a shortlist, you decide."),
         ]
-        kicker, heading = "Who we work with", "From the first employee to specialized roles."
+        kicker, heading = "Who it is for", "Especially companies that cannot park someone on recruiting all week."
     else:
         items = [
-            ("Premier employé", "Une entreprise qui recrute sa première personne a tout autant besoin d'une recherche sérieuse. Nous prenons le mandat avec le même soin qu'un dossier plus large."),
-            ("PME en croissance", "Plusieurs postes, métiers mixtes, peu de temps RH : nous absorbons la recherche pour que la croissance ne bloque pas sur des sièges vides."),
-            ("Startup", "Un profil spécialisé ou hybride, souvent urgent. Nous clarifions le besoin réel avant de chercher, les titres bougent vite en startup."),
-            ("Grande organisation", "Volume, confidentialité, plusieurs interlocuteurs. Un contact Talendus, une shortlist qualifiée, vous gardez la décision."),
+            ("PME sans RH dédié", "Le recrutement tombe sur le proprio ou le directeur d'ops. On reprend le mandat pour que le site continue de tourner."),
+            ("Un site qui grossit", "Plusieurs postes en même temps, peu de temps pour trier. On absorbe la recherche."),
+            ("Premier employé", "Le même soin qu'un dossier plus large. Le premier recrutement pose le ton."),
+            ("Organisation plus grande", "Volume, confidentialité, plusieurs interlocuteurs. Un conseiller, une shortlist, vous décidez."),
         ]
-        kicker, heading = "Pour qui", "Du premier employé aux profils très spécialisés."
+        kicker, heading = "Pour qui", "Surtout les entreprises qui ne peuvent pas stationner quelqu'un sur le recrutement toute la semaine."
     cards = "".join(
         f'<div class="tl-card"><div class="body"><h3>{t}</h3><p>{p}</p></div></div>'
         for t, p in items
@@ -975,7 +1211,7 @@ def hiring_need_form_section(lang="fr"):
     <div class="tl-prose" style="max-width:720px;margin:0 auto 28px">
       <div class="tl-kicker">Hiring request</div>
       <h2 class="tl-h2">Describe your hiring need</h2>
-      <p>This is not a job-posting form. It helps Talendus understand the mandate so we can contact you, define the profile and take on the search.</p>
+      <p>Not a job-ad form. A brief so a consultant can call you back and open the search.</p>
     </div>
     <form class="tl-form" action="#" method="post" data-form="hiring-need" style="max-width:720px;margin:0 auto">
       {HONEYPOT_INPUT}
@@ -1001,7 +1237,7 @@ def hiring_need_form_section(lang="fr"):
     <div class="tl-prose" style="max-width:720px;margin:0 auto 28px">
       <div class="tl-kicker">Demande de recrutement</div>
       <h2 class="tl-h2">Décrivez votre besoin de recrutement</h2>
-      <p>Ce n'est pas un formulaire de publication. Il permet à Talendus de comprendre le mandat, de vous recontacter et de définir le profil recherché avant de lancer la recherche.</p>
+      <p>Pas un formulaire d'annonce. Un brief pour qu'un conseiller vous rappelle et ouvre la recherche.</p>
     </div>
     <form class="tl-form" action="#" method="post" data-form="hiring-need" style="max-width:720px;margin:0 auto">
       {HONEYPOT_INPUT}
@@ -1029,8 +1265,8 @@ def human_hire_band(lang="fr"):
 <section class="tl-cta-band" id="mandat">
   <div class="container">
     <span class="tl-badge tl-badge-light">Hand us the search</span>
-    <h2 class="tl-h2">Hiring? Tell Talendus about the role.</h2>
-    <p>Whatever your industry, describe the need. We search, screen and present a qualified shortlist. You keep the final decision.</p>
+    <h2 class="tl-h2">A seat to fill? Hand us the brief.</h2>
+    <p>A consultant takes the search. You meet people worth your time. Fees when someone starts.</p>
     <div class="tl-actions">
       <a class="tl-btn tl-btn-lg" href="contact.html">Hand us the search</a>
       <a class="tl-btn tl-btn-ghost" href="hiring-need.html">Describe my need</a>
@@ -1042,8 +1278,8 @@ def human_hire_band(lang="fr"):
 <section class="tl-cta-band" id="mandat">
   <div class="container">
     <span class="tl-badge tl-badge-light">Confier mon recrutement</span>
-    <h2 class="tl-h2">Vous recrutez ? Confiez-nous votre besoin.</h2>
-    <p>Quel que soit votre secteur, décrivez le poste. Nous recherchons, présélectionnons et vous présentons une shortlist qualifiée. Vous gardez la décision finale.</p>
+    <h2 class="tl-h2">Un poste à combler ? Confiez-nous le brief.</h2>
+    <p>Un conseiller prend la recherche. Vous rencontrez des gens qui valent votre temps. Honoraires à l'embauche.</p>
     <div class="tl-actions">
       <a class="tl-btn tl-btn-lg" href="contact.html">Confier mon recrutement</a>
       <a class="tl-btn tl-btn-ghost" href="besoin-de-recrutement.html">Décrire mon besoin</a>
