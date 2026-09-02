@@ -115,6 +115,7 @@ def test_tracking_hit_and_admin_analytics(client):
 def test_admin_ui_covers_ops_gaps():
     css = (ROOT / "admin" / "css" / "admin.css").read_text(encoding="utf-8")
     assert "min-height: 0" in css
+    assert "#app { height: 100%;" in css or "#app{height:100%" in css.replace(" ", "")
     assert ".inbox" in css
     assert "Source Sans 3" in css
     html = (ROOT / "admin" / "index.html").read_text(encoding="utf-8")
