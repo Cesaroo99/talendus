@@ -1227,14 +1227,17 @@
         return ["RECRUITER", "FINANCE", "EDITOR", "ADMIN", "SUPER_ADMIN"].indexOf(u.role) !== -1;
       });
       list.innerHTML = '<div class="card-head"><h3>Comptes internes</h3></div>' + staff.map(function (u) {
+        var roleCtl = u.role === "SUPER_ADMIN"
+          ? '<span class="badge">Super-admin</span>'
+          : '<select data-team-role="' + U.esc(u.id) + '">' +
+            [["RECRUITER", "Recruteur"], ["FINANCE", "Finance"], ["EDITOR", "Éditeur"], ["ADMIN", "Admin"]].map(function (opt) {
+              return "<option value=\"" + opt[0] + "\"" + (u.role === opt[0] ? " selected" : "") + ">" + opt[1] + "</option>";
+            }).join("") + "</select>";
         return '<div class="team-row"><div><b>' + U.esc((u.first_name || "") + " " + (u.last_name || "")) + "</b><div class='sub'>" +
           U.esc(u.email) + " · " + U.esc(staffRoleLabel(u.role)) + (u.is_active ? "" : " · désactivé") +
-          '</div></div><div><select data-team-role="' + U.esc(u.id) + '">' +
-          [["RECRUITER", "Recruteur"], ["FINANCE", "Finance"], ["EDITOR", "Éditeur"], ["ADMIN", "Admin"]].map(function (opt) {
-            return "<option value=\"" + opt[0] + "\"" + (u.role === opt[0] ? " selected" : "") + ">" + opt[1] + "</option>";
-          }).join("") + "</select> " +
-          '<button type="button" class="btn btn-ghost btn-sm" data-team-active="' + U.esc(u.id) + '" data-on="' + (u.is_active ? "0" : "1") + '">' +
-          (u.is_active ? "Désactiver" : "Activer") + "</button></div></div>";
+          "</div></div><div>" + roleCtl + " " +
+          (u.role === "SUPER_ADMIN" ? "" : '<button type="button" class="btn btn-ghost btn-sm" data-team-active="' + U.esc(u.id) + '" data-on="' + (u.is_active ? "0" : "1") + '">' +
+          (u.is_active ? "Désactiver" : "Activer") + "</button>") + "</div></div>";
       }).join("") || "<p class='sub'>Aucun compte interne.</p>";
       list.querySelectorAll("[data-team-role]").forEach(function (sel) {
         sel.onchange = function () {
