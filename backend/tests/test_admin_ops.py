@@ -112,6 +112,17 @@ def test_tracking_hit_and_admin_analytics(client):
     assert any(p["path"] == "/emplois.html" for p in data["top_pages"])
 
 
+def test_admin_shell_is_served_without_cache(client):
+    for path in ("/admin", "/admin/", "/admin/index.html"):
+        res = client.get(path)
+        assert res.status_code == 200, path
+        assert "no-store" in (res.headers.get("cache-control") or "")
+        assert "Talendus Admin" in res.text
+        assert "css/admin.css?v=" in res.text
+        assert "js/app.js?v=" in res.text
+        assert "talendus-admin-rev" in res.text
+
+
 def test_admin_ui_covers_ops_gaps():
     css = (ROOT / "admin" / "css" / "admin.css").read_text(encoding="utf-8")
     assert "min-height: 0" in css
@@ -120,6 +131,10 @@ def test_admin_ui_covers_ops_gaps():
     assert "Source Sans 3" in css
     html = (ROOT / "admin" / "index.html").read_text(encoding="utf-8")
     assert "fonts.googleapis.com" in html
+    assert "talendus-admin-rev" in html
+    assert "css/admin.css?v=" in html
+    assert "js/app.js?v=" in html
+    assert "js/store.js?v=" in html
     js = (ROOT / "admin" / "js" / "app.js").read_text(encoding="utf-8")
     assert "viewInterviews" in js
     assert "hydrateTeam" in js

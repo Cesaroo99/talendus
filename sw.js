@@ -1,4 +1,4 @@
-const CACHE = "talendus-app-v31";
+const CACHE = "talendus-app-v32";
 const PRECACHE = [
   "/offline.html",
   "/en/offline.html",
@@ -43,6 +43,7 @@ self.addEventListener("fetch", function (event) {
   var url = new URL(req.url);
   if (url.origin !== location.origin) return;
   if (url.pathname.indexOf("/api/") === 0) return;
+  if (url.pathname.indexOf("/admin") === 0) return;
   if (url.pathname.indexOf("/download/") === 0) return;
   if (url.pathname.indexOf("/assets/app/") === 0) return;
   event.respondWith(

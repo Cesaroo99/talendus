@@ -64,6 +64,8 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         path = request.url.path
         if path.startswith("/api/"):
             response.headers.setdefault("Cache-Control", "no-store")
+        if path.startswith("/admin"):
+            response.headers["Cache-Control"] = "no-store"
         if get_settings().app_env == "production":
             response.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
         private = (
