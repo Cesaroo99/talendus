@@ -546,6 +546,9 @@ gtag('consent', 'default', {
     <link rel="apple-touch-icon" sizes="180x180" href="{a}assets/img/logo/apple-touch-icon.png">
     <link rel="icon" sizes="192x192" href="{a}assets/img/logo/icon-192.png" type="image/png">
     <link rel="shortcut icon" href="{a}assets/img/logo/icon-192.png" type="image/png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{a}assets/css/plugins/bootstrap.min.css">
     <link rel="stylesheet" href="{a}assets/css/plugins/aos.css">
     <link rel="stylesheet" href="{a}assets/css/plugins/fontawesome.css">
@@ -724,77 +727,70 @@ def cta_band(lang="fr", persona="gateway"):
 
 def footer(lang="fr", persona="gateway"):
     t, h, a = COPY[lang], HREFS[lang], pfx(lang)
+    city_mtl = "Montréal" if lang == "fr" else "Montreal"
+    city_qc = "Québec" if lang == "fr" else "Quebec"
+    search_label = "Chasse de têtes" if lang == "fr" else "Search mandates"
     return f"""
 {call_fab(lang)}
 {whatsapp_fab(lang, persona)}
-<div class="vl-footer2-section-area">
+<footer class="vl-footer2-section-area tl-site-footer" role="contentinfo">
   <div class="container">
-    <div class="row">
-      <div class="col-lg-3 col-md-6">
-        <div class="footer-logo-area">
-          <img src="{a}assets/img/logo/logo1.png" alt="Talendus">
-          <div class="space16"></div>
-          <p class="tl-footer-tagline">{t['tagline']}</p>
-          <p>{t['footer_blurb']}</p>
-          <p class="tl-muted" style="margin-top:12px">{t['footer_rdv']}</p>
-        </div>
+    <div class="tl-footer-grid">
+      <div class="tl-footer-brand footer-logo-area">
+        <img src="{a}assets/img/logo/logo1.png" alt="Talendus">
+        <p class="tl-footer-tagline">{t['tagline']}</p>
+        <p class="tl-footer-blurb">{t['footer_blurb']}</p>
+        <p class="tl-footer-rdv">{t['footer_rdv']}</p>
       </div>
-      <div class="col-lg col-md-6">
-        <div class="footer-widget-area foot-padding1">
-          <h3>{t['footer_cabinet']}</h3>
-          <ul>
-            <li><a href="{h['about']}">{t['nav_about']}</a></li>
-            <li><a href="{h['services']}">{t['nav_services_top']}</a></li>
-            <li><a href="{h['sectors']}">{t['nav_sectors']}</a></li>
-            <li><a href="{h['svc_industrial']}">{t['nav_svc_industrial']}</a></li>
-            <li><a href="{h['blog']}">{t['nav_blog']}</a></li>
-            <li><a href="{h['contact']}">{t['nav_contact']}</a></li>
-          </ul>
-        </div>
-      </div>
-      <div class="col-lg col-md-6">
-        <div class="footer-widget-area foot-padding2">
-          <h3>{t['footer_recruit']}</h3>
-          <ul>
-            <li><a href="{h['employers']}">{t['nav_employers']}</a></li>
-            <li><a href="{h['candidates']}">{t['nav_candidates']}</a></li>
-            <li><a href="{h['jobs']}">{t['nav_jobs']}</a></li>
-            <li><a href="{h['svc_perm']}">{t['nav_svc_perm']}</a></li>
-            <li><a href="{h['svc_search']}">{'Chasse de têtes' if lang == 'fr' else 'Search mandates'}</a></li>
-            <li><a href="{h['svc_lead']}">{t['nav_svc_lead']}</a></li>
-          </ul>
-        </div>
-      </div>
-      <div class="col-lg col-md-6">
-        <div class="footer-widget-area">
-          <h3>{t['footer_contact']}</h3>
-          <ul>
-            <li><a href="{PHONE_TEL}">{PHONE_DISPLAY}</a></li>
-            <li><a href="mailto:info@talendus.ca">info@talendus.ca</a></li>
-            <li><a href="{wa_link(lang, persona)}" target="_blank" rel="noopener noreferrer">WhatsApp</a></li>
-            <li>{t['footer_hours']}</li>
-            <li><a href="{h['contact']}">{t['footer_place']}</a></li>
-            <li><a href="{h['geo_mtl']}">{'Montréal' if lang == 'fr' else 'Montreal'}</a></li>
-            <li><a href="{h['geo_laval']}">Laval</a></li>
-            <li><a href="{h['geo_long']}">Longueuil</a></li>
-            <li><a href="{h['geo_qc']}">{'Québec' if lang == 'fr' else 'Quebec'}</a></li>
-          </ul>
-        </div>
-      </div>
-    </div>
-    <div class="space48"></div>
-    <div class="col-lg-12">
-      <div class="copyright-area">
-        <a href="{h['home']}">{t['footer_copy']}</a>
+      <nav class="footer-widget-area tl-footer-col" aria-label="{t['footer_cabinet']}">
+        <h3>{t['footer_cabinet']}</h3>
         <ul>
-          <li><a href="{h['privacy']}">{t['privacy']}</a><span> | </span></li>
-          <li><a href="{h['terms']}">{t['terms']}</a><span> | </span></li>
-          <li><a href="#" data-consent-open>{'Cookies' if lang == 'fr' else 'Cookies'}</a></li>
+          <li><a href="{h['about']}">{t['nav_about']}</a></li>
+          <li><a href="{h['services']}">{t['nav_services_top']}</a></li>
+          <li><a href="{h['sectors']}">{t['nav_sectors']}</a></li>
+          <li><a href="{h['svc_industrial']}">{t['nav_svc_industrial']}</a></li>
+          <li><a href="{h['blog']}">{t['nav_blog']}</a></li>
+          <li><a href="{h['contact']}">{t['nav_contact']}</a></li>
+        </ul>
+      </nav>
+      <nav class="footer-widget-area tl-footer-col" aria-label="{t['footer_recruit']}">
+        <h3>{t['footer_recruit']}</h3>
+        <ul>
+          <li><a href="{h['employers']}">{t['nav_employers']}</a></li>
+          <li><a href="{h['candidates']}">{t['nav_candidates']}</a></li>
+          <li><a href="{h['jobs']}">{t['nav_jobs']}</a></li>
+          <li><a href="{h['svc_perm']}">{t['nav_svc_perm']}</a></li>
+          <li><a href="{h['svc_search']}">{search_label}</a></li>
+          <li><a href="{h['svc_lead']}">{t['nav_svc_lead']}</a></li>
+        </ul>
+      </nav>
+      <div class="footer-widget-area tl-footer-col tl-footer-contact">
+        <h3>{t['footer_contact']}</h3>
+        <ul class="tl-footer-coords">
+          <li><a href="{PHONE_TEL}">{PHONE_DISPLAY}</a></li>
+          <li><a href="mailto:info@talendus.ca">info@talendus.ca</a></li>
+          <li><a href="{wa_link(lang, persona)}" target="_blank" rel="noopener noreferrer">WhatsApp</a></li>
+          <li>{t['footer_hours']}</li>
+          <li><a href="{h['contact']}">{t['footer_place']}</a></li>
+        </ul>
+        <ul class="tl-footer-cities">
+          <li><a href="{h['geo_mtl']}">{city_mtl}</a></li>
+          <li><a href="{h['geo_laval']}">Laval</a></li>
+          <li><a href="{h['geo_long']}">Longueuil</a></li>
+          <li><a href="{h['geo_qc']}">{city_qc}</a></li>
         </ul>
       </div>
     </div>
+    <div class="copyright-area tl-footer-legal">
+      <a href="{h['home']}">{t['footer_copy']}</a>
+      <ul>
+        <li><a href="{h['privacy']}">{t['privacy']}</a></li>
+        <li><a href="{h['terms']}">{t['terms']}</a></li>
+        <li><a href="#" data-consent-open>Cookies</a></li>
+      </ul>
+    </div>
   </div>
-</div>
+</footer>
 <script src="{a}assets/js/plugins/jquery-3-7-1.min.js"></script>
 <script src="{a}assets/js/plugins/bootstrap.min.js" defer></script>
 <script src="{a}assets/js/plugins/fontawesome.js" defer></script>

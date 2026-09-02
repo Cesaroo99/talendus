@@ -144,8 +144,8 @@ def render_job_html(job: JobOffer, lang: str = "fr") -> str:
           <h2>{apply_title}</h2>
           <p>{apply_lead}</p>
           <form class="tl-form" data-form="apply" data-job-slug="{esc(slug)}" enctype="multipart/form-data">
-            <label>{'Name' if is_en else 'Nom'}</label><input name="nom" required autocomplete="name">
-            <label>{'Email' if is_en else 'Courriel'}</label><input type="email" name="courriel" required autocomplete="email">
+            <div class="tl-row-2"><div><label>{'Name' if is_en else 'Nom'}</label><input name="nom" required autocomplete="name"></div>
+            <div><label>{'Email' if is_en else 'Courriel'}</label><input type="email" name="courriel" required autocomplete="email"></div></div>
             <label>{'Phone' if is_en else 'Téléphone'}</label><input name="tel" autocomplete="tel">
             <label class="tl-file">
               <span>{'Your résumé' if is_en else 'Votre CV'}</span>

@@ -85,6 +85,18 @@ def test_employer_pages_sound_like_a_recruiting_firm():
     assert "headhunt" in en.lower()
 
 
+def test_public_pages_use_source_sans_and_distinct_footer():
+    page = (ROOT / "contact.html").read_text(encoding="utf-8")
+    assert "Source+Sans+3" in page
+    assert "Source+Serif+4" in page
+    assert "tl-site-footer" in page
+    assert 'role="contentinfo"' in page
+    css = (ROOT / "assets/css/talendus.css").read_text(encoding="utf-8")
+    assert "--tl-font" in css
+    assert "--tl-display" in css
+    assert ".tl-site-footer" in css
+
+
 def test_generated_pages_drop_no_contact_copy():
     for path in ROOT.rglob("*"):
         if not path.is_file() or path.suffix.lower() not in {".html", ".js", ".py", ".md"}:

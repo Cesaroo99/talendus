@@ -1392,20 +1392,20 @@ def employer_need_fields(lang="fr"):
         shifts = _plain_options("Select", SHIFT_CHOICES["en"])
         hours = _plain_options("Select", SCHEDULE_CHOICES["en"])
         return f"""
-            <label>Industry</label>
-            <select name="secteur">{sectors}</select>
-            <label>Role to fill</label>
-            <input name="poste" placeholder="e.g. accountant, developer, nurse, welder">
-            <label>Number of hires</label>
-            <input name="volume" type="number" min="1" value="1">
-            <label>Location</label>
-            <input name="localisation" placeholder="City, region or country">
-            <label>Contract type</label>
+            <div class="tl-row-2"><div><label>Industry</label>
+            <select name="secteur">{sectors}</select></div>
+            <div><label>Role to fill</label>
+            <input name="poste" placeholder="e.g. accountant, developer, nurse, welder"></div></div>
+            <div class="tl-row-2"><div><label>Number of hires</label>
+            <input name="volume" type="number" min="1" value="1"></div>
+            <div><label>Location</label>
+            <input name="localisation" placeholder="City, region or country"></div></div>
+            <div class="tl-row-2"><div><label>Contract type</label>
             {_hint("Permanent, temporary, seasonal… — not weekly hours.")}
-            <select name="contrat">{contracts}</select>
-            <label>Shift</label>
+            <select name="contrat">{contracts}</select></div>
+            <div><label>Shift</label>
             {_hint("Time of day or week.")}
-            <select name="quart">{shifts}</select>
+            <select name="quart">{shifts}</select></div></div>
             <label>Hours</label>
             {_hint("Weekly workload: full-time, part-time, on call.")}
             <select name="horaire">{hours}</select>
@@ -1418,20 +1418,20 @@ def employer_need_fields(lang="fr"):
     shifts = _plain_options("Choisir", SHIFT_CHOICES["fr"])
     hours = _plain_options("Choisir", SCHEDULE_CHOICES["fr"])
     return f"""
-            <label>Secteur</label>
-            <select name="secteur">{sectors}</select>
-            <label>Poste recherché</label>
-            <input name="poste" placeholder="ex. comptable, développeur, infirmier, soudeur">
-            <label>Nombre de personnes à recruter</label>
-            <input name="volume" type="number" min="1" value="1">
-            <label>Localisation</label>
-            <input name="localisation" placeholder="Ville, région ou pays">
-            <label>Type de contrat</label>
+            <div class="tl-row-2"><div><label>Secteur</label>
+            <select name="secteur">{sectors}</select></div>
+            <div><label>Poste recherché</label>
+            <input name="poste" placeholder="ex. comptable, développeur, infirmier, soudeur"></div></div>
+            <div class="tl-row-2"><div><label>Nombre de personnes à recruter</label>
+            <input name="volume" type="number" min="1" value="1"></div>
+            <div><label>Localisation</label>
+            <input name="localisation" placeholder="Ville, région ou pays"></div></div>
+            <div class="tl-row-2"><div><label>Type de contrat</label>
             {_hint("Permanent, temporaire, saisonnier… — pas le temps plein ou partiel.")}
-            <select name="contrat">{contracts}</select>
-            <label>Quart</label>
+            <select name="contrat">{contracts}</select></div>
+            <div><label>Quart</label>
             {_hint("Moment de la journée ou de la semaine.")}
-            <select name="quart">{shifts}</select>
+            <select name="quart">{shifts}</select></div></div>
             <label>Horaire</label>
             {_hint("Charge dans la semaine : temps plein, partiel, sur appel.")}
             <select name="horaire">{hours}</select>
@@ -1930,9 +1930,9 @@ def _apply_form_html(slug, lang="fr"):
         return f"""
           <form class="tl-form" data-form="apply" data-job-slug="{slug}" enctype="multipart/form-data">
             {HONEYPOT_INPUT}
-            <label>Name <input name="name" required autocomplete="name"></label>
-            <label>Email <input type="email" name="email" required autocomplete="email"></label>
-            <label>Phone <input name="phone" autocomplete="tel"></label>
+            <div class="tl-row-2"><div><label>Name</label><input name="name" required autocomplete="name"></div>
+            <div><label>Email</label><input type="email" name="email" required autocomplete="email"></div></div>
+            <label>Phone</label><input name="phone" autocomplete="tel">
             <label class="tl-file">
               <span>Your resume</span>
               <input type="file" name="cvfile" accept="{accept}" required>
@@ -1947,9 +1947,9 @@ def _apply_form_html(slug, lang="fr"):
     return f"""
           <form class="tl-form" data-form="apply" data-job-slug="{slug}" enctype="multipart/form-data">
             {HONEYPOT_INPUT}
-            <label>Nom <input name="nom" required autocomplete="name"></label>
-            <label>Courriel <input type="email" name="courriel" required autocomplete="email"></label>
-            <label>Téléphone <input name="tel" autocomplete="tel"></label>
+            <div class="tl-row-2"><div><label>Nom</label><input name="nom" required autocomplete="name"></div>
+            <div><label>Courriel</label><input type="email" name="courriel" required autocomplete="email"></div></div>
+            <label>Téléphone</label><input name="tel" autocomplete="tel">
             <label class="tl-file">
               <span>Votre CV</span>
               <input type="file" name="cvfile" accept="{accept}" required>

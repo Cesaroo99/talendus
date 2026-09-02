@@ -406,11 +406,11 @@ write("candidats.html", wrap(
         <div class="col-lg-6 offset-lg-1">
           <form class="tl-form" action="#" method="post" data-form="talent-cv" enctype="multipart/form-data">
             """ + HONEYPOT_INPUT + """
-            <label>Nom</label><input required name="nom" autocomplete="name">
-            <label>Courriel</label><input type="email" required name="courriel" autocomplete="email">
-            <label>Téléphone</label><input name="tel" autocomplete="tel">
-            <label>Métier visé</label>
-            <select name="metier">""" + talent_trade_options("fr") + """</select>
+            <div class="tl-row-2"><div><label>Nom</label><input required name="nom" autocomplete="name"></div>
+            <div><label>Courriel</label><input type="email" required name="courriel" autocomplete="email"></div></div>
+            <div class="tl-row-2"><div><label>Téléphone</label><input name="tel" autocomplete="tel"></div>
+            <div><label>Métier visé</label>
+            <select name="metier">""" + talent_trade_options("fr") + """</select></div></div>
             <label>Région</label><input name="region" placeholder="Laval, Montérégie, Québec…">
             """ + cv_file_field("fr", required=True) + """
             <label>Lien vers votre CV <span class="tl-optional">(facultatif)</span></label><input name="cv" placeholder="https://">
@@ -535,15 +535,15 @@ write("contact.html", wrap(
           <form class="tl-form" action="#" method="post" data-form="talent-cv" enctype="multipart/form-data">
             <input class="tl-hp" name="website_url" tabindex="-1" autocomplete="off" aria-hidden="true">
             <input type="hidden" name="profil" value="Candidat, je cherche un poste">
-            <label for="tl-c-nom">Nom</label><input required name="nom" autocomplete="name" id="tl-c-nom">
-            <label for="tl-c-email">Courriel</label><input type="email" required name="courriel" autocomplete="email" id="tl-c-email">
-            <label for="tl-c-tel">Téléphone</label><input name="tel" autocomplete="tel" id="tl-c-tel">
-            <label for="tl-c-objet">Objet</label>
+            <div class="tl-row-2"><div><label for="tl-c-nom">Nom</label><input required name="nom" autocomplete="name" id="tl-c-nom"></div>
+            <div><label for="tl-c-email">Courriel</label><input type="email" required name="courriel" autocomplete="email" id="tl-c-email"></div></div>
+            <div class="tl-row-2"><div><label for="tl-c-tel">Téléphone</label><input name="tel" autocomplete="tel" id="tl-c-tel"></div>
+            <div><label for="tl-c-objet">Objet</label>
             <select name="objet" id="tl-c-objet">
               <option>Déposer mon CV</option>
               <option>Être considéré pour des mandats</option>
               <option>Question sur une offre</option>
-            </select>
+            </select></div></div>
             """ + cv_file_field("fr", required=False) + """
             <label>Lien vers votre CV <span class="tl-optional">(facultatif)</span></label><input name="cv" placeholder="https://">
             <label>Message</label><textarea name="message" placeholder="Métier, compétences, ville, type d'emploi"></textarea>
@@ -558,10 +558,10 @@ write("contact.html", wrap(
           <form class="tl-form" action="#" method="post" data-form="hiring-need">
             <input class="tl-hp" name="website_url" tabindex="-1" autocomplete="off" aria-hidden="true">
             <input type="hidden" name="profil" value="Employeur, je recrute">
-            <label>Nom</label><input required name="nom">
-            <label>Entreprise</label><input required name="entreprise">
-            <label>Courriel</label><input type="email" required name="courriel">
-            <label>Téléphone</label><input name="tel">
+            <div class="tl-row-2"><div><label>Nom</label><input required name="nom"></div>
+            <div><label>Entreprise</label><input required name="entreprise"></div></div>
+            <div class="tl-row-2"><div><label>Courriel</label><input type="email" required name="courriel"></div>
+            <div><label>Téléphone</label><input name="tel"></div></div>
             <label>Objet</label>
             <select name="objet">
               <option>Réserver une consultation gratuite</option>

@@ -263,11 +263,11 @@ def build_en(write, wrap, page_hero):
         <div class="col-lg-6 offset-lg-1">
           <form class="tl-form" action="#" method="post" data-form="talent-cv" enctype="multipart/form-data">
             <input class="tl-hp" name="website_url" tabindex="-1" autocomplete="off" aria-hidden="true">
-            <label>Name</label><input required name="nom" autocomplete="name">
-            <label>Email</label><input type="email" required name="courriel" autocomplete="email">
-            <label>Phone</label><input name="tel" autocomplete="tel">
-            <label>Target role</label>
-            <select name="metier">""" + talent_trade_options("en") + """</select>
+            <div class="tl-row-2"><div><label>Name</label><input required name="nom" autocomplete="name"></div>
+            <div><label>Email</label><input type="email" required name="courriel" autocomplete="email"></div></div>
+            <div class="tl-row-2"><div><label>Phone</label><input name="tel" autocomplete="tel"></div>
+            <div><label>Target role</label>
+            <select name="metier">""" + talent_trade_options("en") + """</select></div></div>
             <label>Region</label><input name="region" placeholder="Laval, Montérégie, Quebec City…">
             """ + cv_file_field("en", required=True) + """
             <label>Link to your resume <span class="tl-optional">(optional)</span></label><input name="cv" placeholder="https://">
@@ -389,15 +389,15 @@ def build_en(write, wrap, page_hero):
           <form class="tl-form" action="#" method="post" data-form="talent-cv" enctype="multipart/form-data">
             <input class="tl-hp" name="website_url" tabindex="-1" autocomplete="off" aria-hidden="true">
             <input type="hidden" name="profil" value="Candidate, I am looking for a role">
-            <label for="tl-c-nom">Name</label><input required name="nom" autocomplete="name" id="tl-c-nom">
-            <label for="tl-c-email">Email</label><input type="email" required name="courriel" autocomplete="email" id="tl-c-email">
-            <label for="tl-c-tel">Phone</label><input name="tel" autocomplete="tel" id="tl-c-tel">
-            <label for="tl-c-objet">Subject</label>
+            <div class="tl-row-2"><div><label for="tl-c-nom">Name</label><input required name="nom" autocomplete="name" id="tl-c-nom"></div>
+            <div><label for="tl-c-email">Email</label><input type="email" required name="courriel" autocomplete="email" id="tl-c-email"></div></div>
+            <div class="tl-row-2"><div><label for="tl-c-tel">Phone</label><input name="tel" autocomplete="tel" id="tl-c-tel"></div>
+            <div><label for="tl-c-objet">Subject</label>
             <select name="objet" id="tl-c-objet">
               <option>Submit my resume</option>
               <option>Be considered for mandates</option>
               <option>Question about a job</option>
-            </select>
+            </select></div></div>
             {cv_file_field("en", required=False)}
             <label>Link to your resume <span class="tl-optional">(optional)</span></label><input name="cv" placeholder="https://">
             <label>Message</label><textarea name="message" placeholder="Role, skills, city, job type"></textarea>
@@ -412,10 +412,10 @@ def build_en(write, wrap, page_hero):
           <form class="tl-form" action="#" method="post" data-form="hiring-need">
             <input class="tl-hp" name="website_url" tabindex="-1" autocomplete="off" aria-hidden="true">
             <input type="hidden" name="profil" value="Employer, I am hiring">
-            <label>Name</label><input required name="nom">
-            <label>Company</label><input required name="entreprise">
-            <label>Email</label><input type="email" required name="courriel">
-            <label>Phone</label><input name="tel">
+            <div class="tl-row-2"><div><label>Name</label><input required name="nom"></div>
+            <div><label>Company</label><input required name="entreprise"></div></div>
+            <div class="tl-row-2"><div><label>Email</label><input type="email" required name="courriel"></div>
+            <div><label>Phone</label><input name="tel"></div></div>
             <label>Subject</label>
             <select name="objet">
               <option>Hand us the search</option>
