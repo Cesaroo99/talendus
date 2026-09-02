@@ -527,9 +527,10 @@ def test_interview_invoice_contract_and_email_body(client):
     assert invoice.status_code == 200
     inv_id = invoice.json()["data"]["id"]
     assert invoice.json()["data"]["number"].startswith("F-")
+    total = invoice.json()["data"]["amount"]
     sent = client.post(f"/api/invoices/{inv_id}/send", headers=admin_h)
     assert sent.json()["data"]["status"] == "SENT"
-    paid = client.post(f"/api/invoices/{inv_id}/payments", headers=admin_h, json={"amount": 5000, "method": "TRANSFER"})
+    paid = client.post(f"/api/invoices/{inv_id}/payments", headers=admin_h, json={"amount": total, "method": "TRANSFER"})
     assert paid.json()["data"]["status"] == "PAID"
 
     from app.database import SessionLocal

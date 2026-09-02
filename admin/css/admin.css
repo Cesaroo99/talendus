@@ -29,7 +29,7 @@
   --radius-sm: 10px;
   --shadow: 0 18px 50px rgba(11, 31, 58, .12);
   --shadow-sm: 0 10px 30px rgba(11, 31, 58, .06);
-  --font: Inter, "Segoe UI", "Liberation Sans", system-ui, sans-serif;
+  --font: "Source Sans 3", "Segoe UI", "Liberation Sans", system-ui, sans-serif;
 }
 *, *::before, *::after { box-sizing: border-box; }
 html, body { height: 100%; }
@@ -41,16 +41,23 @@ body {
   background: #f5f7fa;
   overflow: hidden;
 }
+body.login-open {
+  overflow: auto;
+  height: auto;
+  min-height: 100%;
+}
 a { color: var(--electric); text-decoration: none; }
 button, input, select, textarea { font-family: inherit; }
 img { max-width: 100%; }
 
 /* ----- Login ----- */
 .login {
-  min-height: 100vh;
+  min-height: 100%;
+  min-height: 100dvh;
   display: grid;
   grid-template-columns: 1.05fr .95fr;
   background: var(--white);
+  overflow: auto;
 }
 .login-brand {
   background: linear-gradient(160deg, var(--navy) 0%, #16365f 55%, #0b1f3a 100%);
@@ -60,7 +67,7 @@ img { max-width: 100%; }
   flex-direction: column;
   justify-content: space-between;
   position: relative;
-  overflow: hidden;
+  overflow: auto;
 }
 .login-brand::after {
   content: "";
@@ -112,7 +119,7 @@ img { max-width: 100%; }
 }
 
 /* ----- Shell ----- */
-.shell { display: grid; grid-template-columns: var(--sidebar) 1fr; height: 100vh; }
+.shell { display: grid; grid-template-columns: var(--sidebar) 1fr; height: 100%; min-height: 0; }
 .sidebar {
   background: var(--navy);
   color: #fff;
@@ -188,7 +195,7 @@ img { max-width: 100%; }
 }
 .logout-btn:hover { background: rgba(255,255,255,.06); color: #fff; }
 
-.main { display: flex; flex-direction: column; min-width: 0; }
+.main { display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; height: 100%; }
 .topbar {
   height: var(--topbar);
   background: #fff;
@@ -230,7 +237,11 @@ img { max-width: 100%; }
   border: 2px solid #fff;
 }
 .content {
-  flex: 1; overflow: auto; padding: 24px 28px 48px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 24px 28px 48px;
 }
 #view { animation: fade .22s ease; }
 
@@ -625,3 +636,124 @@ table.data .check { width: 36px; cursor: default; }
   font-weight: 700;
 }
 .offer-pills li.is-pay { background: rgba(255,107,0,.12); }
+
+/* ----- Messagerie ----- */
+.inbox {
+  display: grid;
+  grid-template-columns: minmax(260px, 320px) 1fr;
+  gap: 0;
+  min-height: calc(100dvh - var(--topbar) - 140px);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.inbox-list {
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: #f8fafc;
+}
+.inbox-list header {
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid var(--line);
+  background: #fff;
+}
+.inbox-list header h3 { margin: 0 0 4px; font-size: 16px; }
+.inbox-threads { flex: 1; overflow: auto; min-height: 0; }
+.inbox-thread {
+  display: flex; gap: 12px; align-items: flex-start;
+  width: 100%; text-align: left;
+  border: 0; background: transparent;
+  padding: 14px 16px; cursor: pointer;
+  border-bottom: 1px solid var(--line);
+  color: inherit;
+}
+.inbox-thread:hover { background: #eef3f8; }
+.inbox-thread.is-on { background: #fff; box-shadow: inset 3px 0 0 var(--orange); }
+.inbox-thread.is-unread b { color: var(--navy); }
+.inbox-thread .who { min-width: 0; flex: 1; }
+.inbox-thread .who b { display: block; font-size: 14px; letter-spacing: -.02em; }
+.inbox-thread .who span {
+  display: block; color: var(--steel); font-size: 12px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-top: 2px;
+}
+.inbox-pane {
+  display: flex; flex-direction: column; min-height: 0; min-width: 0;
+  background: linear-gradient(180deg, #f4f7fb 0%, #eef2f6 100%);
+}
+.inbox-pane header {
+  padding: 14px 18px;
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.inbox-pane header h3 { margin: 0; font-size: 16px; }
+.inbox-log {
+  flex: 1; overflow: auto; min-height: 0;
+  padding: 20px 18px 12px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.bubble {
+  max-width: min(72%, 520px);
+  padding: 10px 14px;
+  border-radius: 16px;
+  font-size: 14px; line-height: 1.45;
+  box-shadow: 0 8px 20px rgba(11, 31, 58, .06);
+}
+.bubble .meta { font-size: 11px; font-weight: 700; margin-bottom: 4px; opacity: .72; }
+.bubble.is-theirs {
+  align-self: flex-start;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-bottom-left-radius: 6px;
+}
+.bubble.is-mine {
+  align-self: flex-end;
+  background: var(--navy);
+  color: #fff;
+  border-bottom-right-radius: 6px;
+}
+.inbox-compose {
+  background: #fff;
+  border-top: 1px solid var(--line);
+  padding: 12px 14px 16px;
+  display: flex; gap: 10px; align-items: flex-end;
+}
+.inbox-compose textarea {
+  flex: 1; min-height: 52px; max-height: 140px; resize: vertical;
+  border: 1px solid var(--line); border-radius: 14px;
+  padding: 10px 12px; font: inherit;
+}
+.inbox-empty {
+  margin: auto; text-align: center; color: var(--steel); padding: 32px 16px;
+}
+.inbox-empty h3 { color: var(--navy); margin: 0 0 6px; }
+
+.int-board {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(180px, 1fr));
+  gap: 12px;
+}
+.int-col {
+  background: #f4f6f9; border: 1px solid var(--line);
+  border-radius: 14px; padding: 10px; min-height: 280px;
+}
+.int-col h4 { margin: 0 0 10px; font-size: 12px; display: flex; justify-content: space-between; }
+.int-card {
+  background: #fff; border: 1px solid var(--line); border-radius: 12px;
+  padding: 12px; margin-bottom: 8px;
+}
+.int-card b { display: block; font-size: 13px; }
+.int-card span { color: var(--steel); font-size: 12px; display: block; margin: 4px 0; }
+.int-card .int-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+
+.team-row { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
+
+@media (max-width: 900px) {
+  .inbox, .int-board { grid-template-columns: 1fr; }
+  .inbox { min-height: 70vh; }
+}

@@ -75,6 +75,7 @@ def test_staff_can_create_contract_and_manage_invoices(client):
     )
     assert invoice.status_code == 200, invoice.text
     invoice_id = invoice.json()["data"]["id"]
+    total = invoice.json()["data"]["amount"]
 
     sent = client.post(f"/api/invoices/{invoice_id}/send", headers=admin_h)
     assert sent.status_code == 200, sent.text
@@ -83,7 +84,7 @@ def test_staff_can_create_contract_and_manage_invoices(client):
     paid = client.post(
         f"/api/invoices/{invoice_id}/payments",
         headers=admin_h,
-        json={"amount": 5000, "method": "TRANSFER"},
+        json={"amount": total, "method": "TRANSFER"},
     )
     assert paid.status_code == 200, paid.text
     assert paid.json()["data"]["status"] == "PAID"

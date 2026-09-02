@@ -13,6 +13,8 @@ from app.services import blog as blog_svc
 from app.services.job_pages import render_job_html, static_job_path
 from app.services.jobs import get_public_job
 from app.services.seo import robots_txt, sitemap_xml, tracking_public_config
+from app.schemas import TrackingHitIn
+from app.services.tracking import record_hit
 
 router = APIRouter(tags=["site"])
 SITE_ROOT = Path(__file__).resolve().parents[3]
@@ -128,6 +130,12 @@ def google_site_verification(token: str):
 @router.get("/api/tracking/config")
 def tracking_config():
     return ok(tracking_public_config())
+
+
+@router.post("/api/tracking/hit")
+def tracking_hit(payload: TrackingHitIn, db: Session = Depends(get_db)):
+    record_hit(db, payload.kind or "page_view", payload.path or "/")
+    return ok({"recorded": True})
 
 
 @router.get("/candidate", include_in_schema=False)

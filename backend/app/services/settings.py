@@ -85,6 +85,11 @@ PLATFORM_DEFAULTS = (
     ("support_email", "ivan.p@example.net", "Courriel interne"),
     ("default_commission_percent", "16", "Commission type (%)"),
     ("invoice_payment_days", "30", "Délai de paiement (jours)"),
+    ("billing.legal_name", "Talendus", "Raison sociale (factures)"),
+    ("billing.address", "Montréal (Québec) Canada", "Adresse de facturation"),
+    ("billing.neq", "", "NEQ (Registraire des entreprises du Québec)"),
+    ("billing.gst", "", "N° de TPS (RT)"),
+    ("billing.qst", "", "N° de TVQ"),
 )
 
 CMS_KEYS = {"testimonials", "faq"}

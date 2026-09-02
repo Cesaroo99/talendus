@@ -111,6 +111,38 @@ class UserUpdateIn(BaseModel):
     title: str | None = None
 
 
+STAFF_ROLES = {UserRole.RECRUITER, UserRole.FINANCE, UserRole.EDITOR, UserRole.ADMIN, UserRole.SUPER_ADMIN}
+
+
+class StaffUserIn(BaseModel):
+    email: EmailStr
+    first_name: str = Field(min_length=1, max_length=80)
+    last_name: str = Field(min_length=1, max_length=80)
+    role: UserRole
+    password: str = Field(min_length=8, max_length=128)
+    title: str | None = Field(default=None, max_length=120)
+    phone: str | None = None
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def _staff_email(cls, value: Any) -> Any:
+        return _clean_email(value)
+
+
+class StaffUserPatchIn(BaseModel):
+    first_name: str | None = Field(default=None, max_length=80)
+    last_name: str | None = Field(default=None, max_length=80)
+    phone: str | None = None
+    title: str | None = None
+    is_active: bool | None = None
+    role: UserRole | None = None
+
+
+class TrackingHitIn(BaseModel):
+    kind: str | None = Field(default="page_view", max_length=40)
+    path: str | None = Field(default="/", max_length=180)
+
+
 class CandidateProfileIn(BaseModel):
     city: str | None = None
     address: str | None = None

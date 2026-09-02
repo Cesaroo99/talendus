@@ -84,8 +84,22 @@
     if (loaded.pixel && global.fbq) global.fbq("track", "PageView");
   }
 
+  function firstParty(kind, params) {
+    var path = (location.pathname || "/") + (location.search || "");
+    if (path.length > 180) path = path.slice(0, 180);
+    try {
+      fetch("/api/tracking/hit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ kind: kind || "page_view", path: path }),
+        keepalive: true
+      }).catch(function () {});
+    } catch (e) {}
+  }
+
   function track(name, params) {
     params = params || {};
+    firstParty(name === "page_view" ? "page_view" : name);
     if (loaded.ga && global.gtag && allowed("analytics")) {
       global.gtag("event", name, params);
     }
@@ -134,6 +148,9 @@
     viewContent: function (params) { track("view_content", params); }
   };
 
-  document.addEventListener("DOMContentLoaded", fetchConfig);
+  document.addEventListener("DOMContentLoaded", function () {
+    firstParty("page_view");
+    fetchConfig();
+  });
   global.addEventListener("talendus:consent", fetchConfig);
 })(window);

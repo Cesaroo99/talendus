@@ -66,6 +66,11 @@ class Settings(BaseSettings):
     public_phone_e164: str = "12635585225"
     public_phone_display: str = "263 558 5225"
     public_email: str = "info@talendus.ca"
+    billing_legal_name: str = "Talendus"
+    billing_address_line: str = "Montreal (Quebec) Canada"
+    billing_neq: str = ""
+    billing_gst: str = ""
+    billing_qst: str = ""
 
     integrations_timeout_seconds: int = 15
     integrations_max_retries: int = 2
