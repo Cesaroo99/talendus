@@ -239,34 +239,35 @@ def test_preview_and_save_follow_chosen_dates(client):
     assert blocked.status_code == 409
 
 
-def test_persist_retries_active_when_draft_is_rejected():
+def test_persist_retries_active_when_draft_is_rejected(monkeypatch):
     from sqlalchemy.exc import DataError
 
     from app.models.enums import ContractStatus
     from app.services import contracts as svc
 
-    class FakeDB:
-        def __init__(self):
-            self.flushes = 0
-            self.added = None
+    calls = []
 
-        def add(self, row):
-            self.added = row
+    class FakeDB:
+        def execute(self, _sql, params=None):
+            calls.append(dict(params or {}))
+            if params and params.get("status") == "DRAFT":
+                raise DataError("INSERT", {}, Exception("invalid input value for enum contractstatus: DRAFT"))
 
         def flush(self):
-            self.flushes += 1
-            if self.flushes == 1:
-                raise DataError("INSERT", {}, Exception("invalid input value for enum contractstatus: DRAFT"))
+            return None
 
         def rollback(self):
             return None
 
+        def get(self, _model, pk):
+            return type("Row", (), {"id": pk, "status": ContractStatus.ACTIVE, "company_id": "company-1"})()
+
         def get_bind(self):
             return None
 
-    db = FakeDB()
+    monkeypatch.setattr(svc, "_column_names", lambda _db: set())
     row = svc._persist_contract(
-        db,
+        FakeDB(),
         company_id="company-1",
         mandate_type="Mandat de recrutement au succès",
         start="2026-09-03",
@@ -279,8 +280,8 @@ def test_persist_retries_active_when_draft_is_rejected():
         company_name="Métalco",
         document_name=None,
     )
-    assert db.flushes == 2
-    assert row.status == ContractStatus.ACTIVE
+    assert any(item.get("status") == "DRAFT" for item in calls)
+    assert any(item.get("status") == "ACTIVE" and "created_at" in item for item in calls)
     assert row.company_id == "company-1"
 
 
@@ -299,6 +300,12 @@ def test_admin_ui_sends_mandate_for_signature():
     assert "Envoyer le mandat à signer" in js
     assert "Enregistrer le brouillon" in js
     assert "Modifier le brouillon" in js
+    assert "Échéance" in js
+    assert "Date de facture" in js
+    assert "Raison sociale" in js
+    assert "due_date" in js
+    assert "issued_at" in js
+    assert "legal_name" in js
     assert "start_date=" in js
     assert "data-edit-contract" in js
     assert "Reçu" in js

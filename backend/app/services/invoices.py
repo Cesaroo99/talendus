@@ -1,12 +1,14 @@
+from datetime import date, timedelta
+
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.config import get_settings
 from app.errors import AppError
-from app.models import Company, Invoice, InvoiceLine, Payment, RecruitmentMission, User
+from app.models import Company, Invoice, InvoiceLine, Payment, RecruitmentMission, SystemSetting, User
 from app.models.enums import InvoiceStatus, PaymentMethod, UserRole, utcnow
 from app.rbac import ADMINS
-from app.schemas import InvoiceIn, PaymentIn
+from app.schemas import InvoiceIn, InvoicePatchIn, PaymentIn
 from app.services.access import company_ids_for_employer
 from app.services.audit import audit
 from app.services.pdf_docs import qc_tax_split, tax_from_bp
@@ -25,6 +27,30 @@ ADMIN_STATUS = {
 def _finance(user: User) -> None:
     if user.role not in {UserRole.FINANCE} | ADMINS:
         raise AppError(403, "Accès finance requis.", "FORBIDDEN")
+
+
+def _parse_iso_date(value: str | None) -> date | None:
+    raw = (value or "").strip()
+    if not raw:
+        return None
+    try:
+        return date.fromisoformat(raw[:10])
+    except ValueError:
+        return None
+
+
+def payment_days(db: Session) -> int:
+    row = db.scalar(select(SystemSetting).where(SystemSetting.key == "invoice_payment_days"))
+    try:
+        days = int((row.value if row else None) or 30)
+    except (TypeError, ValueError):
+        days = 30
+    return max(1, min(days, 365))
+
+
+def default_due_date(db: Session, issued: str | None) -> str:
+    start = _parse_iso_date(issued) or utcnow().date()
+    return (start + timedelta(days=payment_days(db))).isoformat()
 
 
 def next_number(db: Session) -> str:
@@ -184,7 +210,7 @@ def create_invoice(db: Session, user: User, data: InvoiceIn, ip: str | None) -> 
         currency=data.currency or "CAD",
         status=InvoiceStatus.DRAFT,
         issued_at=data.issued_at or today,
-        due_date=data.due_date,
+        due_date=data.due_date or default_due_date(db, data.issued_at or today),
         notes=data.notes,
     )
     db.add(row)
@@ -221,6 +247,38 @@ def create_invoice(db: Session, user: User, data: InvoiceIn, ip: str | None) -> 
     return get_invoice(db, user, row.id)
 
 
+def update_invoice(db: Session, user: User, invoice_id: str, data: InvoicePatchIn) -> Invoice:
+    _finance(user)
+    row = get_invoice(db, user, invoice_id)
+    if row.status in {InvoiceStatus.PAID, InvoiceStatus.CANCELLED, InvoiceStatus.REFUNDED}:
+        raise AppError(409, "Cette facture ne peut plus être modifiée.", "INVOICE_LOCKED")
+    if data.issued_at is not None:
+        row.issued_at = data.issued_at[:16]
+    if data.due_date is not None:
+        row.due_date = data.due_date[:16] if data.due_date.strip() else default_due_date(db, row.issued_at)
+    elif not row.due_date:
+        row.due_date = default_due_date(db, row.issued_at)
+    if data.notes is not None:
+        row.notes = data.notes
+        if row.lines and len(row.lines) == 1 and (row.lines[0].description or "").startswith("Honoraires"):
+            row.lines[0].description = data.notes or row.lines[0].description
+    if data.amount is not None or data.tax_rate_bp is not None:
+        ht = data.amount if data.amount is not None else (row.amount_ht if row.amount_ht is not None else row.amount)
+        tax_bp = data.tax_rate_bp if data.tax_rate_bp is not None else row.tax_rate_bp
+        tax_amount = tax_from_bp(int(ht or 0), tax_bp) if tax_bp else int(row.tax_amount or 0)
+        row.amount_ht = ht
+        row.tax_rate_bp = tax_bp
+        row.tax_amount = tax_amount
+        row.amount_total = int(ht or 0) + tax_amount
+        row.amount = row.amount_total
+        if row.lines and len(row.lines) == 1:
+            row.lines[0].unit_price = int(ht or 0)
+            row.lines[0].amount = int(ht or 0)
+    audit(db, "invoice.update", user, "invoice", row.id)
+    db.commit()
+    return get_invoice(db, user, row.id)
+
+
 def send_invoice(db: Session, user: User, invoice_id: str) -> Invoice:
     from app.services.ops_notify import frontend, message_company, notify_company
 
@@ -231,6 +289,8 @@ def send_invoice(db: Session, user: User, invoice_id: str) -> Invoice:
     row.status = InvoiceStatus.SENT
     if not row.issued_at:
         row.issued_at = utcnow().date().isoformat()
+    if not row.due_date:
+        row.due_date = default_due_date(db, row.issued_at)
     audit(db, "invoice.send", user, "invoice", row.id)
     total = row.amount_total if row.amount_total is not None else row.amount
     company_name = row.company.name if row.company else "votre entreprise"

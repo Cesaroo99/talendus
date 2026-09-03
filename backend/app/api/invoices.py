@@ -7,7 +7,7 @@ from app.deps import client_ip, get_current_user, require_roles
 from app.errors import ok
 from app.models import User
 from app.models.enums import UserRole
-from app.schemas import InvoiceIn, PaymentIn, RefundIn
+from app.schemas import InvoiceIn, InvoicePatchIn, PaymentIn, RefundIn
 from app.services import invoices as invoices_service
 from app.services import pdf_docs
 from app.services import stripe_billing
@@ -38,6 +38,17 @@ def create_invoice(
 ):
     row = invoices_service.create_invoice(db, user, payload, client_ip(request))
     return ok(invoices_service.serialize_invoice(row), message="Facture créée.")
+
+
+@router.patch("/{invoice_id}")
+def patch_invoice(
+    invoice_id: str,
+    payload: InvoicePatchIn,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_roles(UserRole.ADMIN, UserRole.FINANCE)),
+):
+    row = invoices_service.update_invoice(db, user, invoice_id, payload)
+    return ok(invoices_service.serialize_invoice(row), message="Facture mise à jour.")
 
 
 @router.get("/{invoice_id}")

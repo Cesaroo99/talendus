@@ -254,6 +254,10 @@ def _company(c: Company) -> dict:
     return {
         "id": c.id,
         "name": c.name,
+        "legalName": c.legal_name or "",
+        "address": c.address or "",
+        "province": c.province or "Québec",
+        "country": c.country or "Canada",
         "sector": c.sector or "",
         "city": c.city or "",
         "contact": c.contact_name or "",
@@ -480,6 +484,7 @@ def _invoice(i: Invoice) -> dict:
         "amount": i.amount,
         "date": i.issued_at or "",
         "due": i.due_date or "",
+        "notes": i.notes or "",
         "status": INVOICE_STATUS.get(i.status, "brouillon"),
     }
 

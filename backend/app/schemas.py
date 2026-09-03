@@ -600,6 +600,14 @@ class InvoiceIn(BaseModel):
     lines: list[InvoiceLineIn] | None = None
 
 
+class InvoicePatchIn(BaseModel):
+    issued_at: str | None = None
+    due_date: str | None = None
+    notes: str | None = None
+    amount: int | None = Field(default=None, ge=1)
+    tax_rate_bp: int | None = Field(default=None, ge=0, le=100000)
+
+
 class InvoiceStatusIn(BaseModel):
     status: InvoiceStatus
 
