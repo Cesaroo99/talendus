@@ -7,7 +7,7 @@ from app.deps import client_ip, get_current_user, require_roles
 from app.errors import ok
 from app.models import User
 from app.models.enums import UserRole
-from app.schemas import ContractIn, ContractSignIn
+from app.schemas import ContractIn, ContractPatchIn, ContractSignIn
 from app.services import contracts as contracts_service
 from app.services import pdf_docs
 
@@ -30,10 +30,16 @@ def preview_contract(
     template: str | None = None,
     commission_percent: int | None = None,
     role: str | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
     db: Session = Depends(get_db),
     user: User = Depends(require_roles(UserRole.RECRUITER, UserRole.ADMIN, UserRole.FINANCE)),
 ):
-    return ok(contracts_service.preview_contract(db, user, company_id, template, commission_percent, role))
+    return ok(
+        contracts_service.preview_contract(
+            db, user, company_id, template, commission_percent, role, start_date, end_date
+        )
+    )
 
 
 @router.post("")
@@ -44,6 +50,17 @@ def create_contract(
 ):
     row = contracts_service.create_contract(db, user, payload)
     return ok(contracts_service.serialize_contract(row), message="Mandat préparé. Signez pour Talendus, puis envoyez-le au client.")
+
+
+@router.patch("/{contract_id}")
+def update_contract(
+    contract_id: str,
+    payload: ContractPatchIn,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_roles(UserRole.RECRUITER, UserRole.ADMIN, UserRole.FINANCE)),
+):
+    row = contracts_service.update_contract(db, user, contract_id, payload)
+    return ok(contracts_service.serialize_contract(row), message="Brouillon mis à jour.")
 
 
 @router.get("/{contract_id}")

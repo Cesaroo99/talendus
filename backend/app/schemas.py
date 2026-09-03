@@ -635,6 +635,15 @@ class ContractIn(BaseModel):
     role: str | None = Field(default=None, max_length=180)
 
 
+class ContractPatchIn(BaseModel):
+    type: str | None = Field(default=None, min_length=2, max_length=80)
+    start_date: str | None = None
+    end_date: str | None = None
+    commission_percent: int | None = Field(default=None, ge=0, le=100)
+    template: str | None = Field(default=None, max_length=40)
+    role: str | None = Field(default=None, max_length=180)
+
+
 class SiteContentIn(BaseModel):
     items: list[dict] = Field(default_factory=list)
 

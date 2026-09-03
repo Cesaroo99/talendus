@@ -242,6 +242,7 @@
     signContract: function (id, body) { return request("/contracts/" + id + "/sign", { method: "POST", body: body }); },
     signTalendus: function (id, body) { return request("/contracts/" + id + "/sign-talendus", { method: "POST", body: body }); },
     createContract: function (body) { return request("/contracts", { method: "POST", body: body }); },
+    updateContract: function (id, body) { return request("/contracts/" + id, { method: "PATCH", body: body }); },
     previewContract: function (query) { return request("/contracts/preview" + (query || "")); },
     sendContract: function (id) { return request("/contracts/" + id + "/send", { method: "POST" }); },
     openContract: function (id) { return request("/contracts/" + id + "/open", { method: "POST" }); },

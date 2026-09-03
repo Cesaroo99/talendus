@@ -690,9 +690,165 @@
     } else if (ct.sentAt) {
       trace += "<p style='color:var(--steel);font-size:12px'>Reçu le " + U.esc(ct.sentAt) + (ct.reminderCount ? " · relancé " + ct.reminderCount + " fois" : "") + "</p>";
     }
+    if ((ct.canEdit !== false) && !ct.talendusSigned && !ct.sentAt && !ct.clientSigned) {
+      actions += ' <button class="btn btn-ghost btn-sm" data-edit-contract="' + ct.id + '">Modifier</button>';
+    }
+    if (ct.talendusSigned && ct.clientSigned) {
+      client += " " + U.badge("Complet");
+    }
+    var duration = ct.durationDays ? (" · " + ct.durationDays + " jours") : "";
     return "<div class='mandate-card'><p><b>" + U.esc(ct.type) + "</b> · " + agency + " " + client +
-      "<br>Commission " + ct.commission + " % · " + U.dateFr(ct.start) + " → " + U.dateFr(ct.end) +
+      "<br>Commission " + ct.commission + " % · " + U.dateFr(ct.start) + " → " + U.dateFr(ct.end) + duration +
       "</p>" + trace + actions + "</div>";
+  }
+
+  function mandatePayload(d) {
+    var percent = parseInt(d.commission_percent, 10);
+    if (!(percent >= 0 && percent <= 100)) percent = 16;
+    return {
+      template: d.template || "succes",
+      type: (d.type || "").trim() || undefined,
+      role: (d.role || "").trim() || null,
+      start_date: d.start_date || null,
+      end_date: d.end_date || null,
+      commission_percent: percent
+    };
+  }
+
+  function openMandateModal(companyId, existing) {
+    existing = existing || {};
+    var isEdit = !!existing.id;
+    var today = new Date().toISOString().slice(0, 10);
+    U.modal({
+      wide: true,
+      title: isEdit ? "Modifier le brouillon" : "Préparer le mandat",
+      body: '<form id="ct-form" class="form-grid">' +
+        U.field("Modèle", "template", { options: [{ v: "succes", l: "Recrutement au succès" }, { v: "temporaire", l: "Placement temporaire" }], selected: existing.template || "succes" }, "select") +
+        U.field("Type", "type", existing.type || "Mandat de recrutement au succès") +
+        U.field("Poste visé", "role", existing.role || "") +
+        U.field("Début", "start_date", existing.start || today, "date") +
+        U.field("Fin", "end_date", existing.end || "", "date") +
+        U.field("Commission (%)", "commission_percent", existing.commission != null ? String(existing.commission) : "16", "number") +
+        '<p class="mandate-duration full" id="ct-duration">Durée : —</p>' +
+        '<div class="full"><label>Texte du mandat</label><article id="ct-read" class="mandate-read">Chargement du mandat…</article>' +
+        '<textarea name="terms" id="ct-terms" class="sr-only" hidden></textarea></div>' +
+        "</form>",
+      footer: '<button class="btn btn-ghost" data-close>Annuler</button><button class="btn btn-orange" id="save">Enregistrer le brouillon</button>',
+      onMount: function (box, close) {
+        var form = box.querySelector("#ct-form");
+        var reader = box.querySelector("#ct-read");
+        var durationEl = box.querySelector("#ct-duration");
+        var userTouchedEnd = !!(existing.end);
+        var previewTimer = null;
+        function setDuration(days, start, end) {
+          if (!durationEl) return;
+          var label = days ? (days + " jour" + (days > 1 ? "s" : "")) : "—";
+          durationEl.textContent = "Durée du mandat : " + label +
+            (start && end ? " (" + start + " → " + end + ")" : "");
+        }
+        async function fillPreview() {
+          if (!live()) {
+            var localStart = form.start_date.value;
+            var localEnd = form.end_date.value;
+            if (localStart && localEnd) {
+              var a = new Date(localStart);
+              var b = new Date(localEnd);
+              var days = Math.max(1, Math.round((b - a) / 86400000));
+              setDuration(days, localStart, localEnd);
+            }
+            return;
+          }
+          try {
+            var q = "?company_id=" + encodeURIComponent(companyId) +
+              "&template=" + encodeURIComponent(form.template.value || "succes") +
+              "&commission_percent=" + encodeURIComponent(form.commission_percent.value || "16") +
+              (form.role.value ? "&role=" + encodeURIComponent(form.role.value) : "") +
+              (form.start_date.value ? "&start_date=" + encodeURIComponent(form.start_date.value) : "") +
+              (form.end_date.value ? "&end_date=" + encodeURIComponent(form.end_date.value) : "");
+            var prev = await window.TalendusAPI.previewContract(q);
+            var data = (prev && prev.data) || prev || {};
+            if (data.type) form.type.value = data.type;
+            if (data.start_date && !form.start_date.value) form.start_date.value = data.start_date;
+            if (data.end_date && (!form.end_date.value || !userTouchedEnd)) form.end_date.value = data.end_date;
+            if (data.commission_percent != null && !form.commission_percent.value) form.commission_percent.value = data.commission_percent;
+            if (data.duration_days != null) setDuration(data.duration_days, data.start_date || form.start_date.value, data.end_date || form.end_date.value);
+            if (data.terms) {
+              form.terms.value = data.terms;
+              reader.textContent = data.terms;
+            }
+          } catch (err) {
+            reader.textContent = "Le mandat se remplit à l’enregistrement.";
+          }
+        }
+        function schedulePreview() {
+          if (previewTimer) clearTimeout(previewTimer);
+          previewTimer = setTimeout(fillPreview, 180);
+        }
+        fillPreview();
+        ["template", "commission_percent", "role", "start_date", "end_date"].forEach(function (name) {
+          form[name].addEventListener("change", function () {
+            if (name === "end_date") userTouchedEnd = !!form.end_date.value;
+            if (name === "template") {
+              userTouchedEnd = false;
+              form.end_date.value = "";
+            }
+            if (name === "start_date" && !userTouchedEnd) form.end_date.value = "";
+            schedulePreview();
+          });
+          form[name].addEventListener("input", function () {
+            if (name === "end_date") userTouchedEnd = !!form.end_date.value;
+            if (name === "start_date" && !userTouchedEnd) form.end_date.value = "";
+            schedulePreview();
+          });
+        });
+        box.querySelector("#save").onclick = async function () {
+          var d = U.formData(form);
+          var payload = mandatePayload(d);
+          try {
+            if (live()) {
+              if (isEdit) {
+                await api().updateContract(existing.id, payload);
+              } else {
+                payload.company_id = companyId;
+                await api().createContract(payload);
+              }
+              await refreshLive();
+            } else {
+              TLStore.update(function (st) {
+                var row = {
+                  id: existing.id || TLStore.nid("ct"),
+                  clientId: companyId,
+                  type: payload.type || "Mandat de recrutement au succès",
+                  start: payload.start_date,
+                  end: payload.end_date,
+                  commission: payload.commission_percent,
+                  terms: (form.terms && form.terms.value) || (reader && reader.textContent) || "",
+                  status: "Brouillon",
+                  document: "",
+                  talendusSigned: false,
+                  clientSigned: false,
+                  clientStatus: "not_sent",
+                  canEdit: true,
+                  durationDays: existing.durationDays || ""
+                };
+                if (isEdit) {
+                  var found = st.contracts.find(function (x) { return x.id === existing.id; });
+                  if (found) Object.assign(found, row, { id: existing.id });
+                  else st.contracts.push(row);
+                } else {
+                  st.contracts.push(row);
+                }
+              });
+            }
+            close();
+            U.toast(isEdit ? "Brouillon mis à jour." : "Brouillon enregistré. Lisez-le, signez pour Talendus, puis envoyez-le au client.", "ok");
+            render();
+          } catch (err) {
+            U.toast((err && err.message) || "Enregistrement impossible.", "err");
+          }
+        };
+      }
+    });
   }
 
   function viewClient(id) {
@@ -2246,75 +2402,14 @@
       }
       var addCt = t.closest("[data-add-contract]");
       if (addCt) {
-        var companyId = addCt.getAttribute("data-add-contract");
-        var roleHint = addCt.getAttribute("data-role") || "";
-        U.modal({
-          wide: true,
-          title: "Préparer le mandat",
-          body: '<form id="ct-form" class="form-grid">' +
-            U.field("Modèle", "template", { options: [{ v: "succes", l: "Recrutement au succès" }, { v: "temporaire", l: "Placement temporaire" }], selected: "succes" }, "select") +
-            U.field("Type", "type", "Mandat de recrutement au succès") +
-            U.field("Poste visé", "role", roleHint) +
-            U.field("Début", "start_date", new Date().toISOString().slice(0, 10), "date") +
-            U.field("Fin", "end_date", "", "date") +
-            U.field("Commission (%)", "commission_percent", "16", "number") +
-            '<div class="full"><label>Texte du mandat</label><article id="ct-read" class="mandate-read">Chargement du mandat…</article>' +
-            '<textarea name="terms" id="ct-terms" class="sr-only" hidden></textarea></div>' +
-            "</form>",
-          footer: '<button class="btn btn-ghost" data-close>Annuler</button><button class="btn btn-orange" id="save">Enregistrer le brouillon</button>',
-          onMount: function (box, close) {
-            var form = box.querySelector("#ct-form");
-            var reader = box.querySelector("#ct-read");
-            async function fillPreview() {
-              if (!live()) return;
-              try {
-                var q = "?company_id=" + encodeURIComponent(companyId) +
-                  "&template=" + encodeURIComponent(form.template.value || "succes") +
-                  "&commission_percent=" + encodeURIComponent(form.commission_percent.value || "16") +
-                  (form.role.value ? "&role=" + encodeURIComponent(form.role.value) : "");
-                var prev = await window.TalendusAPI.previewContract(q);
-                var data = (prev && prev.data) || prev || {};
-                if (data.type) form.type.value = data.type;
-                if (data.start_date) form.start_date.value = data.start_date;
-                if (data.end_date && !form.end_date.value) form.end_date.value = data.end_date;
-                if (data.commission_percent != null) form.commission_percent.value = data.commission_percent;
-                if (data.terms) {
-                  form.terms.value = data.terms;
-                  reader.textContent = data.terms;
-                }
-              } catch (err) {
-                reader.textContent = "Le mandat se remplit à l’enregistrement.";
-              }
-            }
-            fillPreview();
-            ["template", "commission_percent", "role"].forEach(function (name) {
-              form[name].addEventListener("change", fillPreview);
-            });
-            box.querySelector("#save").onclick = async function () {
-              var d = U.formData(form);
-              try {
-                if (live()) {
-                  await api().createContract({
-                    company_id: companyId,
-                    template: d.template || "succes",
-                    type: d.type,
-                    role: d.role || null,
-                    start_date: d.start_date,
-                    end_date: d.end_date || null,
-                    commission_percent: Number(d.commission_percent) || 16,
-                    terms: d.terms || (reader && reader.textContent) || ""
-                  });
-                  await refreshLive();
-                } else {
-                  TLStore.update(function (st) {
-                    st.contracts.push({ id: TLStore.nid("ct"), clientId: companyId, type: d.type || "Mandat de recrutement au succès", start: d.start_date, end: d.end_date, commission: Number(d.commission_percent) || 16, terms: d.terms, status: "Brouillon", document: "", talendusSigned: false, clientSigned: false, clientStatus: "not_sent" });
-                  });
-                }
-                close(); U.toast("Brouillon enregistré. Lisez-le, signez pour Talendus, puis envoyez-le au client.", "ok"); render();
-              } catch (err) { U.toast((err && err.message) || "Enregistrement impossible.", "err"); }
-            };
-          }
-        });
+        openMandateModal(addCt.getAttribute("data-add-contract"), { role: addCt.getAttribute("data-role") || "" });
+        return;
+      }
+      var editCt = t.closest("[data-edit-contract]");
+      if (editCt) {
+        var editId = editCt.getAttribute("data-edit-contract");
+        var foundCt = S().contracts.find(function (x) { return x.id === editId; });
+        if (foundCt) openMandateModal(foundCt.clientId, foundCt);
         return;
       }
       var editC = t.closest("[data-edit-cand]");

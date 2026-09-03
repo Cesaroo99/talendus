@@ -3,13 +3,14 @@ import re
 from datetime import date, timedelta
 
 from sqlalchemy import select
+from sqlalchemy.exc import DataError, IntegrityError, StatementError
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.errors import AppError
 from app.models import Company, Contract, ContractSignature, User
 from app.models.enums import ContractStatus, NotificationType, UserRole, utcnow
 from app.rbac import ADMINS
-from app.schemas import ContractIn, ContractSignIn
+from app.schemas import ContractIn, ContractPatchIn, ContractSignIn
 from app.services.access import company_ids_for_employer
 from app.services.audit import audit
 from app.services.pdf_docs import (
@@ -104,6 +105,37 @@ def lifecycle(row: Contract) -> str:
     return "draft"
 
 
+def _parse_iso_date(value: str | None) -> date | None:
+    raw = (value or "").strip()
+    if not raw:
+        return None
+    try:
+        return date.fromisoformat(raw[:10])
+    except ValueError:
+        return None
+
+
+def mandate_window(start: str | None, end: str | None, default_days: int | None = None) -> tuple[str, str, int]:
+    days = max(int(default_days or 90), 1)
+    start_d = _parse_iso_date(start) or date.today()
+    end_d = _parse_iso_date(end)
+    if end_d and end_d >= start_d:
+        days = max((end_d - start_d).days, 1)
+    else:
+        end_d = start_d + timedelta(days=days)
+    return start_d.isoformat(), end_d.isoformat(), days
+
+
+def _role_from_terms(terms: str | None) -> str | None:
+    match = re.search(r"Poste visé\s*:\s*(.+)", terms or "")
+    if not match:
+        return None
+    role = match.group(1).strip()
+    if not role or role.lower().startswith("le poste confié"):
+        return None
+    return role[:180]
+
+
 def filled_terms(company: Company | None, data: ContractIn | None = None, *, template: str | None = None) -> str:
     meta = _template_meta(template or (data.template if data else None))
     commission = None
@@ -118,6 +150,7 @@ def filled_terms(company: Company | None, data: ContractIn | None = None, *, tem
         role = data.role
         start = data.start_date
         end = data.end_date
+    start, end, days = mandate_window(start, end, meta.get("duration_days"))
     return mandate_terms(
         company_name=company.name if company else "le client",
         legal_name=company.legal_name if company else None,
@@ -130,13 +163,22 @@ def filled_terms(company: Company | None, data: ContractIn | None = None, *, tem
         start_date=start,
         end_date=end,
         template=meta["key"],
-        duration_days=meta.get("duration_days"),
+        duration_days=days,
         guarantee_days=meta.get("guarantee_days"),
         presented_months=meta.get("presented_months"),
     )
 
 
-def preview_contract(db: Session, user: User, company_id: str, template: str | None = None, commission: int | None = None, role: str | None = None) -> dict:
+def preview_contract(
+    db: Session,
+    user: User,
+    company_id: str,
+    template: str | None = None,
+    commission: int | None = None,
+    role: str | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
+) -> dict:
     if user.role not in STAFF:
         raise AppError(403, "Aperçu réservé à l'équipe Talendus.", "FORBIDDEN")
     company = db.get(Company, company_id)
@@ -144,8 +186,7 @@ def preview_contract(db: Session, user: User, company_id: str, template: str | N
         raise AppError(404, "Entreprise introuvable.", "COMPANY_NOT_FOUND")
     meta = _template_meta(template)
     percent = commission if commission is not None else meta["commission_percent"]
-    start = date.today().isoformat()
-    end = (date.today() + timedelta(days=int(meta.get("duration_days") or 90))).isoformat()
+    start, end, days = mandate_window(start_date, end_date, meta.get("duration_days"))
     draft = ContractIn(
         company_id=company.id,
         type=meta["type"],
@@ -164,7 +205,7 @@ def preview_contract(db: Session, user: User, company_id: str, template: str | N
         "start_date": start,
         "end_date": end,
         "commission_percent": percent,
-        "duration_days": meta.get("duration_days") or 90,
+        "duration_days": days,
         "guarantee_days": meta.get("guarantee_days"),
         "role": (role or "").strip() or None,
         "document_name": f"mandat-talendus-{_slug(company.name)}-{start}.pdf",
@@ -202,6 +243,8 @@ def serialize_contract(row: Contract) -> dict:
     client = by_party[PARTY_CLIENT]
     talendus = by_party[PARTY_TALENDUS]
     status = client_status(row)
+    _, _, days = mandate_window(row.start_date, row.end_date)
+    locked = bool(row.talendus_signed_at or talendus or row.sent_at or row.client_signed_at or client)
     return {
         "id": row.id,
         "company_id": row.company_id,
@@ -209,8 +252,11 @@ def serialize_contract(row: Contract) -> dict:
         "template": row.template_key,
         "start_date": row.start_date,
         "end_date": row.end_date,
+        "duration_days": days,
+        "role": _role_from_terms(row.terms),
         "commission_percent": row.commission_percent or DEFAULT_COMMISSION_PERCENT,
         "terms": row.terms,
+        "can_edit": not locked,
         "status": row.status.value if row.status else None,
         "document_name": row.document_name,
         "esign_envelope_id": row.esign_envelope_id,
@@ -288,16 +334,104 @@ def create_contract(db: Session, user: User, data: ContractIn) -> Contract:
         except ValueError:
             raise AppError(400, "Statut de contrat invalide.", "VALIDATION_ERROR")
     meta = _template_meta(data.template)
-    start = data.start_date or date.today().isoformat()
+    start, end, _days = mandate_window(data.start_date, data.end_date, meta.get("duration_days"))
     percent = data.commission_percent if data.commission_percent is not None else meta["commission_percent"]
     mandate_type = (data.type or "").strip() or meta["type"]
-    end = data.end_date
-    if not end:
-        try:
-            end = (date.fromisoformat(start) + timedelta(days=int(meta.get("duration_days") or 90))).isoformat()
-        except ValueError:
-            end = None
-    filled = filled_terms(
+    draft = ContractIn(
+        company_id=company.id,
+        type=mandate_type,
+        start_date=start,
+        end_date=end,
+        commission_percent=percent,
+        template=meta["key"],
+        role=data.role,
+    )
+    terms = filled_terms(company, draft, template=meta["key"])
+    company_id = company.id
+    company_name = company.name
+    row = _contract_row(company_id, mandate_type, start, end, percent, terms, status, user.id, meta["key"], company_name, data.document_name)
+    try:
+        db.add(row)
+        db.flush()
+    except (DataError, IntegrityError, StatementError):
+        db.rollback()
+        if status != ContractStatus.ACTIVE:
+            company = db.get(Company, company_id)
+            if not company:
+                raise AppError(404, "Entreprise introuvable.", "COMPANY_NOT_FOUND")
+            row = _contract_row(
+                company_id, mandate_type, start, end, percent, terms,
+                ContractStatus.ACTIVE, user.id, meta["key"], company_name, data.document_name,
+            )
+            try:
+                db.add(row)
+                db.flush()
+            except (DataError, IntegrityError, StatementError):
+                db.rollback()
+                raise AppError(400, "Le brouillon n’a pas pu être enregistré. Vérifiez les dates et l’entreprise, puis réessayez.", "CONTRACT_SAVE_FAILED")
+        else:
+            raise AppError(400, "Le brouillon n’a pas pu être enregistré. Vérifiez les dates et l’entreprise, puis réessayez.", "CONTRACT_SAVE_FAILED")
+    audit(db, "contract.create", user, "contract", row.id)
+    db.commit()
+    return get_contract(db, user, row.id)
+
+
+def _contract_row(
+    company_id: str,
+    mandate_type: str,
+    start: str,
+    end: str,
+    percent: int,
+    terms: str,
+    status: ContractStatus,
+    recruiter_id: str,
+    template_key: str,
+    company_name: str,
+    document_name: str | None,
+) -> Contract:
+    return Contract(
+        company_id=company_id,
+        type=mandate_type,
+        start_date=start,
+        end_date=end,
+        commission_percent=percent,
+        terms=terms,
+        document_name=document_name or f"mandat-talendus-{_slug(company_name)}-{start}.pdf",
+        status=status,
+        recruiter_id=recruiter_id,
+        template_key=template_key,
+        reminder_count=0,
+    )
+
+
+def update_contract(db: Session, user: User, contract_id: str, data: ContractPatchIn) -> Contract:
+    if user.role not in STAFF:
+        raise AppError(403, "Seule l’équipe Talendus peut modifier un mandat.", "FORBIDDEN")
+    row = get_contract(db, user, contract_id)
+    if row.client_signed_at or _party_signature(row, PARTY_CLIENT):
+        raise AppError(409, "Ce mandat est déjà signé par le client.", "ALREADY_SIGNED")
+    if row.talendus_signed_at or _party_signature(row, PARTY_TALENDUS):
+        raise AppError(409, "Talendus a déjà signé. Préparez un nouveau brouillon pour changer les dates.", "ALREADY_SIGNED")
+    if row.sent_at:
+        raise AppError(409, "Ce mandat a déjà été envoyé au client.", "ALREADY_SENT")
+    company = row.company or db.get(Company, row.company_id)
+    if not company:
+        raise AppError(404, "Entreprise introuvable.", "COMPANY_NOT_FOUND")
+    meta = _template_meta(data.template or row.template_key)
+    start, end, _days = mandate_window(
+        data.start_date if data.start_date is not None else row.start_date,
+        data.end_date if data.end_date is not None else row.end_date,
+        meta.get("duration_days"),
+    )
+    percent = data.commission_percent if data.commission_percent is not None else (row.commission_percent or meta["commission_percent"])
+    mandate_type = (data.type or "").strip() or row.type or meta["type"]
+    role = data.role if data.role is not None else _role_from_terms(row.terms)
+    row.type = mandate_type
+    row.start_date = start
+    row.end_date = end
+    row.commission_percent = percent
+    row.template_key = meta["key"]
+    row.terms = filled_terms(
         company,
         ContractIn(
             company_id=company.id,
@@ -306,27 +440,12 @@ def create_contract(db: Session, user: User, data: ContractIn) -> Contract:
             end_date=end,
             commission_percent=percent,
             template=meta["key"],
-            role=data.role,
+            role=role,
         ),
         template=meta["key"],
     )
-    terms = (data.terms or "").strip() or filled
-    row = Contract(
-        company_id=company.id,
-        type=mandate_type,
-        start_date=start,
-        end_date=end,
-        commission_percent=percent,
-        terms=terms,
-        document_name=data.document_name or f"mandat-talendus-{_slug(company.name)}-{start}.pdf",
-        status=status,
-        recruiter_id=user.id,
-        template_key=meta["key"],
-        reminder_count=0,
-    )
-    db.add(row)
-    db.flush()
-    audit(db, "contract.create", user, "contract", row.id)
+    row.document_name = f"mandat-talendus-{_slug(company.name)}-{start}.pdf"
+    audit(db, "contract.update", user, "contract", row.id)
     db.commit()
     return get_contract(db, user, row.id)
 
@@ -409,17 +528,26 @@ def sign_contract(db: Session, user: User, contract_id: str, data: ContractSignI
         },
         item_id=row.id,
     )
+    recipients = []
     if row.recruiter_id:
         recruiter = db.get(User, row.recruiter_id)
-        if recruiter:
-            notify(
-                db,
-                recruiter,
-                NotificationType.ADMIN,
-                "Mandat signé par le client",
-                f"{name} a signé le mandat de {company_name}. La recherche peut commencer.",
-                href=f"/admin/#/clients/{row.company_id}",
+        if recruiter and recruiter.is_active:
+            recipients.append(recruiter)
+    if not recipients:
+        recipients = list(
+            db.scalars(
+                select(User).where(User.role.in_(ADMINS), User.is_active.is_(True)).order_by(User.created_at.asc())
             )
+        )
+    for person in recipients:
+        notify(
+            db,
+            person,
+            NotificationType.ADMIN,
+            "Mandat signé par le client",
+            f"{name} a signé le mandat de {company_name}. La recherche peut commencer.",
+            href=f"/admin/#/clients/{row.company_id}",
+        )
     db.commit()
     db.expire_all()
     return get_contract(db, user, row.id)

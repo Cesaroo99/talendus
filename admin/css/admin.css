@@ -459,6 +459,12 @@ table.data .check { width: 36px; cursor: default; }
   border-radius: 12px;
   padding: 16px 18px;
 }
+.mandate-duration {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--navy);
+}
 .mandate-meta { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 12px; }
 .mandate-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .modal header, .modal footer {

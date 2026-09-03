@@ -398,7 +398,7 @@ def _dt(value) -> str:
 
 
 def _contract(c: Contract) -> dict:
-    from app.services.contracts import client_status, lifecycle
+    from app.services.contracts import _role_from_terms, client_status, lifecycle, mandate_window
     from app.services.pdf_docs import PARTY_CLIENT, PARTY_TALENDUS
 
     signatures = list(getattr(c, "signatures", None) or [])
@@ -411,6 +411,8 @@ def _contract(c: Contract) -> dict:
         elif party == PARTY_CLIENT:
             client = item
     status = client_status(c)
+    _, _, days = mandate_window(c.start_date, c.end_date)
+    role = _role_from_terms(c.terms) or ""
     status_label = {
         "signed": "Signé",
         "opened": "Ouvert",
@@ -421,8 +423,12 @@ def _contract(c: Contract) -> dict:
         "id": c.id,
         "clientId": c.company_id,
         "type": c.type,
+        "template": c.template_key or "succes",
         "start": c.start_date or "",
         "end": c.end_date or "",
+        "durationDays": days,
+        "role": role,
+        "canEdit": not bool(talendus or c.talendus_signed_at or c.sent_at or client or c.client_signed_at),
         "commission": c.commission_percent or 0,
         "terms": c.terms or "",
         "status": status_label,

@@ -159,6 +159,85 @@ def test_search_does_not_start_before_signed_mandate(client):
     assert opened.json()["data"]["status"] == "SOURCING"
 
 
+def test_preview_and_save_follow_chosen_dates(client):
+    emp = register(client, "dates-emp@example.com", "EMPLOYER")
+    company_id = company_id_for(client, emp)
+    admin = promote_admin(client, "dates-admin@example.com")
+    admin_h = auth_header(admin)
+
+    preview = client.get(
+        f"/api/contracts/preview?company_id={company_id}&template=succes"
+        "&start_date=2026-10-01&end_date=2026-12-30&role=Soudeur",
+        headers=admin_h,
+    )
+    assert preview.status_code == 200, preview.text
+    draft = preview.json()["data"]
+    assert draft["start_date"] == "2026-10-01"
+    assert draft["end_date"] == "2026-12-30"
+    assert draft["duration_days"] == 90
+    assert "Date d'ouverture du mandat : 2026-10-01" in draft["terms"]
+    assert "Date de fin prévue : 2026-12-30" in draft["terms"]
+    assert "pour 90 jours" in draft["terms"]
+
+    longer = client.get(
+        f"/api/contracts/preview?company_id={company_id}&template=succes"
+        "&start_date=2026-01-15&end_date=2026-07-14",
+        headers=admin_h,
+    )
+    assert longer.status_code == 200, longer.text
+    body = longer.json()["data"]
+    assert body["duration_days"] == 180
+    assert "pour 180 jours" in body["terms"]
+    assert "2026-01-15" in body["terms"]
+    assert "2026-07-14" in body["terms"]
+
+    created = client.post(
+        "/api/contracts",
+        headers=admin_h,
+        json={
+            "company_id": company_id,
+            "start_date": "2026-03-01",
+            "end_date": "2026-06-29",
+            "role": "Cariste",
+            "commission_percent": 16,
+        },
+    )
+    assert created.status_code == 200, created.text
+    saved = created.json()["data"]
+    assert saved["start_date"] == "2026-03-01"
+    assert saved["end_date"] == "2026-06-29"
+    assert saved["duration_days"] == 120
+    assert saved["can_edit"] is True
+    assert "pour 120 jours" in saved["terms"]
+    assert "2026-03-01" in saved["terms"]
+    cid = saved["id"]
+
+    patched = client.patch(
+        f"/api/contracts/{cid}",
+        headers=admin_h,
+        json={"start_date": "2026-04-01", "end_date": "2026-09-28"},
+    )
+    assert patched.status_code == 200, patched.text
+    updated = patched.json()["data"]
+    assert updated["start_date"] == "2026-04-01"
+    assert updated["end_date"] == "2026-09-28"
+    assert updated["duration_days"] == 180
+    assert "pour 180 jours" in updated["terms"]
+    assert "2026-04-01" in updated["terms"]
+
+    client.post(
+        f"/api/contracts/{cid}/sign-talendus",
+        headers=admin_h,
+        json={"signer_name": "Lea Super", "accepted": True},
+    )
+    blocked = client.patch(
+        f"/api/contracts/{cid}",
+        headers=admin_h,
+        json={"start_date": "2026-05-01"},
+    )
+    assert blocked.status_code == 409
+
+
 def test_admin_ui_sends_mandate_for_signature():
     from pathlib import Path
 
@@ -168,11 +247,17 @@ def test_admin_ui_sends_mandate_for_signature():
     assert "Signer pour Talendus" in js
     assert "Envoyer au client" in js
     assert "previewContract" in js
+    assert "updateContract" in js
     assert "sendContract" in js
     assert "signTalendus" in js
     assert "Envoyer le mandat à signer" in js
+    assert "Enregistrer le brouillon" in js
+    assert "Modifier le brouillon" in js
+    assert "start_date=" in js
+    assert "data-edit-contract" in js
     assert "Reçu" in js
     assert "Ouvert" in js
+    assert "Complet" in js
     account = (root / "assets" / "js" / "account.js").read_text(encoding="utf-8")
     assert "tl-mandate-read" in account
     assert "max-height:220px" not in account
