@@ -4283,13 +4283,13 @@ html.tl-native-app .tl-install-section {
     radial-gradient(900px 240px at 92% 0%, rgba(255, 107, 0, .12), transparent 55%),
     linear-gradient(180deg, var(--tl-footer-2) 0%, var(--tl-footer) 100%) !important;
   color: rgba(255, 255, 255, .78);
-  border-top: 0;
+  border-top: 10px solid var(--tl-ice);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06);
 }
 .vl-footer2-section-area.tl-site-footer::before {
   content: "";
   display: block;
-  height: 4px;
+  height: 6px;
   background: linear-gradient(90deg, var(--tl-orange) 0%, #ffb020 42%, var(--tl-electric) 100%);
 }
 .tl-site-footer .container {
@@ -4372,10 +4372,11 @@ html.tl-native-app .tl-install-section {
   transform: translateX(2px);
 }
 .tl-footer-contact {
-  background: rgba(255, 255, 255, .05);
-  border: 1px solid rgba(255, 255, 255, .1);
+  background: rgba(255, 255, 255, .1);
+  border: 1px solid rgba(255, 255, 255, .16);
   border-radius: 18px;
   padding: 20px 18px 16px !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08);
 }
 .tl-footer-contact h3 {
   border-bottom-color: rgba(255, 255, 255, .12) !important;
