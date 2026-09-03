@@ -633,6 +633,7 @@ def _seed(db: Session) -> None:
         ("platform.locale", "fr-CA", "Langue par défaut"),
         ("billing.currency", "CAD", "Devise de facturation"),
         ("billing.tax_rate_bp", "14975", "Taux de taxes (points de base)"),
+        ("billing.neq", "2282510496", "NEQ (Registraire des entreprises du Québec)"),
         ("jobs.auto_expire_days", "60", "Expiration automatique des offres (jours)"),
         ("storage.backend", "local", "Backend de stockage des fichiers"),
     ]

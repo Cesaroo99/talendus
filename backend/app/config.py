@@ -68,7 +68,7 @@ class Settings(BaseSettings):
     public_email: str = "info@talendus.ca"
     billing_legal_name: str = "Talendus"
     billing_address_line: str = "Montreal (Quebec) Canada"
-    billing_neq: str = ""
+    billing_neq: str = "2282510496"
     billing_gst: str = ""
     billing_qst: str = ""
 

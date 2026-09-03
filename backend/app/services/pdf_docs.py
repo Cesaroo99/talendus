@@ -300,6 +300,11 @@ def _text(x: float, y: float, size: int, content: str, *, bold: bool = False) ->
 def _header_footer(issuer: dict, *, page_no: int = 1, page_count: int = 1) -> list[str]:
     phone = issuer.get("phone") or "263 558 5225"
     email = issuer.get("email") or "info@talendus.ca"
+    neq = (issuer.get("neq") or "").strip()
+    foot = f"Talendus  ·  {email}  ·  {phone}"
+    if neq:
+        foot += f"  ·  NEQ {neq}"
+    foot += "  ·  Document officiel"
     return [
         _rgb(NAVY),
         "0 752 612 40 re f",
@@ -315,7 +320,7 @@ def _header_footer(issuer: dict, *, page_no: int = 1, page_count: int = 1) -> li
         _rgb(NAVY),
         "0 0 612 34 re f",
         "1 1 1 rg",
-        _text(48, 16, 8, f"Talendus  ·  {email}  ·  {phone}  ·  Document officiel"),
+        _text(48, 16, 8, foot),
         _text(520, 16, 8, f"{page_no} / {page_count}"),
     ]
 

@@ -34,6 +34,7 @@ def test_admin_prepares_filled_mandate_and_employer_signs(client):
     draft = preview.json()["data"]
     assert draft["company_name"]
     assert "Talendus" in draft["terms"]
+    assert "NEQ : 2282510496" in draft["terms"]
     assert "Soudeur" in draft["terms"]
     assert "16 %" in draft["terms"]
     assert "ARTICLE 1" in draft["terms"]
@@ -236,6 +237,51 @@ def test_preview_and_save_follow_chosen_dates(client):
         json={"start_date": "2026-05-01"},
     )
     assert blocked.status_code == 409
+
+
+def test_persist_retries_active_when_draft_is_rejected():
+    from sqlalchemy.exc import DataError
+
+    from app.models.enums import ContractStatus
+    from app.services import contracts as svc
+
+    class FakeDB:
+        def __init__(self):
+            self.flushes = 0
+            self.added = None
+
+        def add(self, row):
+            self.added = row
+
+        def flush(self):
+            self.flushes += 1
+            if self.flushes == 1:
+                raise DataError("INSERT", {}, Exception("invalid input value for enum contractstatus: DRAFT"))
+
+        def rollback(self):
+            return None
+
+        def get_bind(self):
+            return None
+
+    db = FakeDB()
+    row = svc._persist_contract(
+        db,
+        company_id="company-1",
+        mandate_type="Mandat de recrutement au succès",
+        start="2026-09-03",
+        end="2026-12-02",
+        percent=16,
+        terms="ok",
+        status=ContractStatus.DRAFT,
+        recruiter_id="user-1",
+        template_key="succes",
+        company_name="Métalco",
+        document_name=None,
+    )
+    assert db.flushes == 2
+    assert row.status == ContractStatus.ACTIVE
+    assert row.company_id == "company-1"
 
 
 def test_admin_ui_sends_mandate_for_signature():

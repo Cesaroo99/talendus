@@ -1,0 +1,53 @@
+"""Répare le schéma des mandats si Alembic n’a pas pu finir (têtes multiples, enum PG)."""
+
+from __future__ import annotations
+
+import logging
+
+from sqlalchemy import inspect, text
+from sqlalchemy.engine import Engine
+
+logger = logging.getLogger("talendus.schema")
+
+_DONE = False
+
+
+def _run(conn, sql: str) -> None:
+    try:
+        conn.execute(text(sql))
+    except Exception as exc:  # noqa: BLE001 — chaque correctif est optionnel
+        logger.info("schema skip: %s (%s)", sql.split("\n")[0][:80], exc)
+
+
+def ensure_contracts_schema(engine: Engine) -> None:
+    """Ajoute DRAFT, élargit le type, stocke le statut en texte. Idempotent."""
+    global _DONE
+    if _DONE:
+        return
+    if engine.dialect.name != "postgresql":
+        _DONE = True
+        return
+    try:
+        inspector = inspect(engine)
+        if "contracts" not in inspector.get_table_names():
+            _DONE = True
+            return
+        with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
+            has_enum = conn.execute(text("SELECT 1 FROM pg_type WHERE typname = 'contractstatus'")).scalar()
+            if has_enum:
+                _run(conn, "ALTER TYPE contractstatus ADD VALUE IF NOT EXISTS 'DRAFT'")
+            _run(conn, "ALTER TABLE contracts ALTER COLUMN status DROP DEFAULT")
+            _run(
+                conn,
+                "ALTER TABLE contracts ALTER COLUMN status TYPE VARCHAR(20) USING status::text",
+            )
+            _run(conn, "ALTER TABLE contracts ALTER COLUMN status SET DEFAULT 'ACTIVE'")
+            _run(conn, "ALTER TABLE contracts ALTER COLUMN type TYPE VARCHAR(120)")
+            existing = {col["name"] for col in inspect(engine).get_columns("contracts")}
+            if "template_key" not in existing:
+                _run(conn, "ALTER TABLE contracts ADD COLUMN template_key VARCHAR(40)")
+            if "reminder_count" not in existing:
+                _run(conn, "ALTER TABLE contracts ADD COLUMN reminder_count INTEGER NOT NULL DEFAULT 0")
+        _DONE = True
+    except Exception:
+        logger.exception("Réparation du schéma contrats incomplète")

@@ -87,7 +87,7 @@ PLATFORM_DEFAULTS = (
     ("invoice_payment_days", "30", "Délai de paiement (jours)"),
     ("billing.legal_name", "Talendus", "Raison sociale (factures)"),
     ("billing.address", "Montréal (Québec) Canada", "Adresse de facturation"),
-    ("billing.neq", "", "NEQ (Registraire des entreprises du Québec)"),
+    ("billing.neq", "2282510496", "NEQ (Registraire des entreprises du Québec)"),
     ("billing.gst", "", "N° de TPS (RT)"),
     ("billing.qst", "", "N° de TVQ"),
 )
@@ -101,10 +101,16 @@ def ensure_platform_defaults(db: Session, user: User | None = None) -> list[Syst
     existing = {row.key: row for row in list_settings(db)}
     changed = False
     for key, value, label in PLATFORM_DEFAULTS:
-        if key in existing:
+        row = existing.get(key)
+        if row is None:
+            db.add(SystemSetting(key=key, value=value, label=label, updated_by=user.id if user else None))
+            changed = True
             continue
-        db.add(SystemSetting(key=key, value=value, label=label, updated_by=user.id if user else None))
-        changed = True
+        if key == "billing.neq" and value and not (row.value or "").strip():
+            row.value = value
+            if not row.label:
+                row.label = label
+            changed = True
     if changed:
         db.commit()
     return list_settings(db)

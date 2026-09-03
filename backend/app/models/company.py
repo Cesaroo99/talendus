@@ -77,12 +77,20 @@ class Contract(Base):
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
     company_id: Mapped[str] = mapped_column(ForeignKey("companies.id"), index=True, nullable=False)
-    type: Mapped[str] = mapped_column(String(80), default="Succès")
+    type: Mapped[str] = mapped_column(String(120), default="Succès")
     start_date: Mapped[str | None] = mapped_column(String(16))
     end_date: Mapped[str | None] = mapped_column(String(16))
     commission_percent: Mapped[int | None] = mapped_column(Integer)
     terms: Mapped[str | None] = mapped_column(Text)
-    status: Mapped[ContractStatus] = mapped_column(Enum(ContractStatus), default=ContractStatus.ACTIVE)
+    status: Mapped[ContractStatus] = mapped_column(
+        Enum(
+            ContractStatus,
+            native_enum=False,
+            length=20,
+            values_callable=lambda items: [item.value for item in items],
+        ),
+        default=ContractStatus.DRAFT,
+    )
     document_name: Mapped[str | None] = mapped_column(String(255))
     document_path: Mapped[str | None] = mapped_column(String(255))
     esign_envelope_id: Mapped[str | None] = mapped_column(String(80))
