@@ -24,6 +24,9 @@ def test_invoice_applies_quebec_taxes_and_pdf_mentions(client):
     assert data["qst_amount"] == data["tax_amount"] - data["gst_amount"]
     assert data["amount_total"] == 10000 + data["tax_amount"]
     assert data["amount_total"] > 10000
+    assert data["issued_at"]
+    assert data["due_date"]
+    assert data["due_date"] > data["issued_at"]
 
     pdf = client.get(f"/api/invoices/{data['id']}/pdf", headers=admin_h)
     assert pdf.status_code == 200
@@ -34,6 +37,40 @@ def test_invoice_applies_quebec_taxes_and_pdf_mentions(client):
     assert b"TVQ" in body
     assert b"CAD" in body
     assert b"Quebec" in body
+
+
+def test_invoice_due_date_can_be_set_and_patched(client):
+    emp = register(client, "due-emp@example.com", "EMPLOYER")
+    company_id = company_id_for(client, emp)
+    admin = promote_admin(client, "due-fin@example.com")
+    admin_h = auth_header(admin)
+    created = client.post(
+        "/api/invoices",
+        headers=admin_h,
+        json={
+            "company_id": company_id,
+            "amount": 2500,
+            "issued_at": "2026-09-01",
+            "due_date": "2026-10-15",
+            "notes": "Honoraires Chef de chantier",
+        },
+    )
+    assert created.status_code == 200, created.text
+    data = created.json()["data"]
+    assert data["issued_at"] == "2026-09-01"
+    assert data["due_date"] == "2026-10-15"
+    assert data["notes"] == "Honoraires Chef de chantier"
+    pdf = client.get(f"/api/invoices/{data['id']}/pdf", headers=admin_h)
+    assert b"2026-10-15" in pdf.content
+    assert b"Honoraires Chef de chantier" in pdf.content
+    patched = client.patch(
+        f"/api/invoices/{data['id']}",
+        headers=admin_h,
+        json={"due_date": "2026-11-01", "notes": "Placement confirme"},
+    )
+    assert patched.status_code == 200, patched.text
+    assert patched.json()["data"]["due_date"] == "2026-11-01"
+    assert patched.json()["data"]["notes"] == "Placement confirme"
 
 
 def test_staff_invite_and_role_levels(client):

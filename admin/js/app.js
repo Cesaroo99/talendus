@@ -808,11 +808,23 @@
           var payload = mandatePayload(d);
           try {
             if (live()) {
+              if (!companyId) throw new Error("Choisissez une entreprise avant d’enregistrer le mandat.");
               if (isEdit) {
                 await api().updateContract(existing.id, payload);
               } else {
                 payload.company_id = companyId;
-                await api().createContract(payload);
+                try {
+                  await api().createContract(payload);
+                } catch (first) {
+                  await api().createContract({
+                    company_id: companyId,
+                    template: payload.template || "succes",
+                    start_date: payload.start_date || null,
+                    end_date: payload.end_date || null,
+                    commission_percent: payload.commission_percent,
+                    role: payload.role || null
+                  });
+                }
               }
               await refreshLive();
             } else {
@@ -1245,9 +1257,10 @@
         var cl = TLStore.client(i.clientId); var m = TLStore.mission(i.missionId);
         var iid = invoiceApiId(i);
         var send = (i.status === "brouillon") ? '<button class="btn btn-ghost btn-sm" data-inv-send="' + iid + '">Envoyer</button>' : "";
+        var editInv = (i.status === "brouillon" || i.status === "envoyee") ? '<button class="btn btn-ghost btn-sm" data-inv-edit="' + iid + '">Modifier</button>' : "";
         var payBtn = (i.status === "envoyee" || i.status === "en-attente" || i.status === "en-retard") ? '<button class="btn btn-orange btn-sm" data-inv-pay="' + iid + '" data-inv-amount="' + i.amount + '">Encaisser</button>' : "";
         var pdf = iid ? '<button class="btn btn-ghost btn-sm" data-dl-doc="/api/invoices/' + iid + '/pdf" data-dl-name="' + U.esc(i.id) + '.pdf">PDF</button>' : "";
-        return "<tr><td>" + U.esc(i.id) + "</td><td>" + U.esc(cl ? cl.name : "—") + "</td><td>" + U.esc(m ? m.title : "—") + "</td><td>" + U.money(i.amount) + "</td><td>" + U.dateFr(i.date) + "</td><td>" + U.dateFr(i.due) + "</td><td>" + U.badge(i.status) + "</td><td>" + pdf + send + payBtn + "</td></tr>";
+        return "<tr><td>" + U.esc(i.id) + "</td><td>" + U.esc(cl ? cl.name : "—") + "</td><td>" + U.esc(m ? m.title : "—") + "</td><td>" + U.money(i.amount) + "</td><td>" + U.dateFr(i.date) + "</td><td>" + U.dateFr(i.due) + "</td><td>" + U.badge(i.status) + "</td><td>" + pdf + editInv + send + payBtn + "</td></tr>";
       }).join("") || '<tr><td colspan="8">' + U.empty("Aucune facture", "Créez une facture depuis le bouton ci-dessus.") + "</td></tr>"}</tbody></table></div></div>`;
     } else if (financeTab === "paiements") {
       var pending = byStatus("en-attente").concat(byStatus("envoyee"));
@@ -1645,7 +1658,7 @@
     if (type === "candidate") {
       body = '<form id="cf" class="form-grid">' + U.field("Prénom", "firstName") + U.field("Nom", "lastName") + U.field("Courriel", "email", "", "email") + U.field("Téléphone", "phone") + U.field("Ville", "city") + U.field("Poste recherché", "title") + U.field("Secteur", "sector", { options: unique(S().candidates, "sector").concat(["Production", "Entrepôt", "Maintenance"]), selected: "" }, "select") + U.field("Statut", "status", { options: ["nouveau","a-contacter","qualifie"].map(function (s) { return { v: s, l: U.STATUS[s][0] }; }), selected: "nouveau" }, "select") + "</form>";
     } else if (type === "client") {
-      body = '<form id="cf" class="form-grid">' + U.field("Entreprise", "name") + U.field("Secteur", "sector") + U.field("Ville", "city") + U.field("Contact", "contact") + U.field("Courriel", "email") + U.field("Téléphone", "phone") + "</form>";
+      body = '<form id="cf" class="form-grid">' + U.field("Entreprise", "name") + U.field("Raison sociale", "legal_name") + U.field("Adresse", "address", "", "text", "full") + U.field("Ville", "city") + U.field("Province", "province", "Québec") + U.field("Secteur", "sector") + U.field("Contact", "contact") + U.field("Courriel", "email") + U.field("Téléphone", "phone") + "</form>";
     } else if (type === "job") {
       if (!S().clients.length) { U.toast("Créez d’abord une entreprise cliente.", "err"); return; }
       body = '<form id="cf" class="form-grid">' + U.field("Titre", "title") + U.field("Entreprise", "clientId", { options: S().clients.map(function (c) { return { v: c.id, l: c.name }; }), selected: firstId(S().clients) }, "select") + U.field("Ville", "city") + U.field("Salaire", "salary") + jobVocabFields() + U.field("Description", "description", "", "textarea", "full") + "</form>";
@@ -1664,11 +1677,17 @@
         "</form>";
     } else {
       if (!S().clients.length) { U.toast("Créez d’abord une entreprise cliente.", "err"); return; }
+      var today = new Date().toISOString().slice(0, 10);
+      var due = new Date();
+      due.setDate(due.getDate() + 30);
       body = '<form id="cf" class="form-grid">' +
         U.field("Client", "clientId", { options: S().clients.map(function (c) { return { v: c.id, l: c.name }; }), selected: firstId(S().clients) }, "select") +
         U.field("Mission", "missionId", { options: [{ v: "", l: "Sans mission" }].concat(S().missions.map(function (m) { return { v: m.id, l: m.title }; })), selected: "" }, "select") +
         U.field("Montant avant taxes (CAD)", "amount", "5000", "number") +
         U.field("Taxes", "tax_rate_bp", { options: [{ v: "14975", l: "TPS 5 % + TVQ 9,975 % (Québec)" }, { v: "0", l: "Sans taxes" }], selected: "14975" }, "select") +
+        U.field("Date de facture", "issued_at", today, "date") +
+        U.field("Échéance", "due_date", due.toISOString().slice(0, 10), "date") +
+        U.field("Intitulé / notes (sur la facture)", "notes", "Honoraires de recrutement", "textarea", "full") +
         "</form>";
     }
 
@@ -1720,7 +1739,7 @@
             if (type === "client" && window.TalendusAPI) {
               await window.TalendusAPI.request("/companies", {
                 method: "POST",
-                body: { name: d.name, sector: d.sector, city: d.city, contact_name: d.contact, email: d.email, phone: d.phone }
+                body: { name: d.name, legal_name: d.legal_name || d.name, address: d.address, city: d.city, province: d.province || "Québec", sector: d.sector, contact_name: d.contact, email: d.email, phone: d.phone }
               });
               await TLStore.hydrateFromApi();
               close();
@@ -1757,7 +1776,10 @@
                 company_id: d.clientId,
                 mission_id: d.missionId || null,
                 amount: Number(d.amount) || 0,
-                tax_rate_bp: Number(d.tax_rate_bp)
+                tax_rate_bp: Number(d.tax_rate_bp),
+                issued_at: d.issued_at || null,
+                due_date: d.due_date || null,
+                notes: (d.notes || "").trim() || null
               });
               await TLStore.hydrateFromApi();
               close();
@@ -2184,6 +2206,34 @@
         });
         return;
       }
+      var invEdit = t.closest("[data-inv-edit]");
+      if (invEdit) {
+        var editId = invEdit.getAttribute("data-inv-edit");
+        var invRow = S().invoices.find(function (x) { return invoiceApiId(x) === editId; });
+        if (!invRow) return;
+        U.modal({
+          title: "Modifier la facture " + (invRow.id || ""),
+          body: '<form id="inv-edit" class="form-grid">' +
+            U.field("Date de facture", "issued_at", invRow.date || "", "date") +
+            U.field("Échéance", "due_date", invRow.due || "", "date") +
+            U.field("Intitulé / notes (sur la facture)", "notes", invRow.notes || "", "textarea", "full") +
+            "</form>",
+          footer: '<button class="btn btn-ghost" data-close>Annuler</button><button class="btn btn-orange" id="save">Enregistrer</button>',
+          onMount: function (box, close) {
+            box.querySelector("#save").onclick = async function () {
+              var d = U.formData(box.querySelector("#inv-edit"));
+              try {
+                await api().request("/invoices/" + editId, { method: "PATCH", body: { issued_at: d.issued_at || null, due_date: d.due_date || null, notes: (d.notes || "").trim() || null } });
+                await refreshLive();
+                close();
+                U.toast("Facture mise à jour.", "ok");
+                render();
+              } catch (err) { U.toast((err && err.message) || "Mise à jour impossible.", "err"); }
+            };
+          }
+        });
+        return;
+      }
       var invSend = t.closest("[data-inv-send]");
       if (invSend) {
         (async function () {
@@ -2223,14 +2273,14 @@
         if (!cl) return;
         U.modal({
           title: "Modifier l’entreprise",
-          body: '<form id="cl-form" class="form-grid">' + U.field("Entreprise", "name", cl.name) + U.field("Secteur", "sector", cl.sector) + U.field("Ville", "city", cl.city) + U.field("Contact", "contact", cl.contact) + U.field("Courriel", "email", cl.email) + U.field("Téléphone", "phone", cl.phone) + U.field("Site", "website", cl.website || "") + "</form>",
+          body: '<form id="cl-form" class="form-grid">' + U.field("Entreprise", "name", cl.name) + U.field("Raison sociale", "legal_name", cl.legalName || cl.legal_name || "") + U.field("Adresse", "address", cl.address || "", "text", "full") + U.field("Ville", "city", cl.city) + U.field("Province", "province", cl.province || "Québec") + U.field("Secteur", "sector", cl.sector) + U.field("Contact", "contact", cl.contact) + U.field("Courriel", "email", cl.email) + U.field("Téléphone", "phone", cl.phone) + U.field("Site", "website", cl.website || "") + "</form>",
           footer: '<button class="btn btn-ghost" data-close>Annuler</button><button class="btn btn-orange" id="save">Enregistrer</button>',
           onMount: function (box, close) {
             box.querySelector("#save").onclick = async function () {
               var d = U.formData(box.querySelector("#cl-form"));
               try {
                 if (live()) {
-                  await api().request("/companies/" + cl.id, { method: "PATCH", body: { name: d.name, sector: d.sector, city: d.city, contact_name: d.contact, email: d.email || null, phone: d.phone, website: d.website } });
+                  await api().request("/companies/" + cl.id, { method: "PATCH", body: { name: d.name, legal_name: d.legal_name || d.name, address: d.address, city: d.city, province: d.province || "Québec", sector: d.sector, contact_name: d.contact, email: d.email || null, phone: d.phone, website: d.website } });
                   await refreshLive();
                 } else {
                   TLStore.update(function (st) { Object.assign(st.clients.find(function (x) { return x.id === cl.id; }), d); });
