@@ -380,8 +380,34 @@ def _mission(m: RecruitmentMission, applications: list[Application]) -> dict:
     }
 
 
+def _dt(value) -> str:
+    if not value:
+        return ""
+    if hasattr(value, "strftime"):
+        return value.strftime("%Y-%m-%d %H:%M")
+    return str(value)
+
+
 def _contract(c: Contract) -> dict:
-    latest = c.signatures[-1] if getattr(c, "signatures", None) else None
+    from app.services.contracts import client_status, lifecycle
+    from app.services.pdf_docs import PARTY_CLIENT, PARTY_TALENDUS
+
+    signatures = list(getattr(c, "signatures", None) or [])
+    client = None
+    talendus = None
+    for item in signatures:
+        party = (getattr(item, "party", None) or PARTY_CLIENT).upper()
+        if party == PARTY_TALENDUS:
+            talendus = item
+        elif party == PARTY_CLIENT:
+            client = item
+    status = client_status(c)
+    status_label = {
+        "signed": "Signé",
+        "opened": "Ouvert",
+        "received": "Reçu",
+        "not_sent": "Non envoyé",
+    }.get(status, CONTRACT_STATUS.get(c.status.value if c.status else "", c.status.value if c.status else ""))
     return {
         "id": c.id,
         "clientId": c.company_id,
@@ -390,12 +416,22 @@ def _contract(c: Contract) -> dict:
         "end": c.end_date or "",
         "commission": c.commission_percent or 0,
         "terms": c.terms or "",
-        "status": CONTRACT_STATUS.get(c.status.value if c.status else "", c.status.value if c.status else ""),
+        "status": status_label,
         "document": c.document_name or "",
-        "signed": bool(latest),
-        "signedAt": latest.signed_at.strftime("%Y-%m-%d %H:%M") if latest and latest.signed_at else "",
-        "signerName": latest.signer_name if latest else "",
-        "documentHash": latest.document_hash if latest else "",
+        "signed": bool(client or c.client_signed_at),
+        "talendusSigned": bool(talendus or c.talendus_signed_at),
+        "clientSigned": bool(client or c.client_signed_at),
+        "clientStatus": status,
+        "lifecycle": lifecycle(c),
+        "sentAt": _dt(c.sent_at),
+        "openedAt": _dt(c.opened_at),
+        "talendusSignedAt": _dt(c.talendus_signed_at),
+        "clientSignedAt": _dt(c.client_signed_at),
+        "signedAt": _dt(c.client_signed_at) or (client.signed_at.strftime("%Y-%m-%d %H:%M") if client and client.signed_at else ""),
+        "signerName": client.signer_name if client else "",
+        "documentHash": client.document_hash if client else "",
+        "talendusSigner": talendus.signer_name if talendus else "",
+        "reminderCount": int(getattr(c, "reminder_count", 0) or 0),
         "pdfPath": f"/api/contracts/{c.id}/pdf",
     }
 

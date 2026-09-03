@@ -173,5 +173,7 @@ class ContractSignature(Base):
     document_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     document_name: Mapped[str | None] = mapped_column(String(255))
     accepted: Mapped[bool] = mapped_column(Boolean, default=True)
+    party: Mapped[str] = mapped_column(String(20), default="CLIENT", nullable=False)
+    signer_role: Mapped[str | None] = mapped_column(String(20))
 
     contract = relationship("Contract", back_populates="signatures")

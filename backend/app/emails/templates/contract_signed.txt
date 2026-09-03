@@ -3,7 +3,7 @@ Subject: Mandat signé — {{company}}
 
 Le mandat de recrutement pour {{company}} a été signé par {{signer}}.
 
-Une copie PDF est disponible dans l'espace employeur :
+Une copie PDF, avec les signatures de Talendus et du client, est disponible dans l'espace employeur :
 {{link}}
 
-Talendus · info@talendus.ca
+Talendus · info@talendus.ca · 263 558 5225

@@ -43,25 +43,31 @@ def create_contract(
     user: User = Depends(require_roles(UserRole.RECRUITER, UserRole.ADMIN, UserRole.FINANCE)),
 ):
     row = contracts_service.create_contract(db, user, payload)
-    return ok(contracts_service.serialize_contract(row), message="Mandat envoyé pour signature.")
+    return ok(contracts_service.serialize_contract(row), message="Mandat préparé. Signez pour Talendus, puis envoyez-le au client.")
 
 
 @router.get("/{contract_id}")
 def get_contract(contract_id: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    return ok(contracts_service.serialize_contract(contracts_service.get_contract(db, user, contract_id)))
+    return ok(contracts_service.serialize_contract(contracts_service.get_contract(db, user, contract_id, mark_open=True)))
 
 
 @router.get("/{contract_id}/pdf")
-def contract_pdf(contract_id: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    row = contracts_service.get_contract(db, user, contract_id)
+def contract_pdf(
+    contract_id: str,
+    download: int = 0,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    row = contracts_service.get_contract(db, user, contract_id, mark_open=True)
     data = pdf_docs.contract_pdf(row)
     filename = row.document_name or "mandat-talendus.pdf"
     if not filename.lower().endswith(".pdf"):
         filename += ".pdf"
+    disposition = "attachment" if download else "inline"
     return Response(
         content=data,
         media_type="application/pdf",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        headers={"Content-Disposition": f'{disposition}; filename="{filename}"'},
     )
 
 
@@ -72,7 +78,33 @@ def send_contract(
     user: User = Depends(require_roles(UserRole.RECRUITER, UserRole.ADMIN, UserRole.FINANCE)),
 ):
     row = contracts_service.send_contract(db, user, contract_id)
-    return ok(contracts_service.serialize_contract(row), message="Mandat renvoyé pour signature.")
+    first = int(row.reminder_count or 0) == 0
+    message = "Mandat envoyé au client." if first and row.sent_at else "Mandat renvoyé au client."
+    if row.reminder_count:
+        message = "Mandat renvoyé au client."
+    return ok(contracts_service.serialize_contract(row), message=message)
+
+
+@router.post("/{contract_id}/open")
+def open_contract(
+    contract_id: str,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_roles(UserRole.EMPLOYER)),
+):
+    row = contracts_service.open_contract(db, user, contract_id)
+    return ok(contracts_service.serialize_contract(row), message="Mandat ouvert.")
+
+
+@router.post("/{contract_id}/sign-talendus")
+def sign_talendus(
+    contract_id: str,
+    payload: ContractSignIn,
+    request: Request,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_roles(UserRole.RECRUITER, UserRole.ADMIN, UserRole.FINANCE)),
+):
+    row = contracts_service.sign_talendus(db, user, contract_id, payload, client_ip(request))
+    return ok(contracts_service.serialize_contract(row), message="Mandat signé pour Talendus.")
 
 
 @router.post("/{contract_id}/sign")

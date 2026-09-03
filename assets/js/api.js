@@ -240,9 +240,28 @@
     createInvoice: function (body) { return request("/invoices", { method: "POST", body: body }); },
     createInterview: function (body) { return request("/interviews", { method: "POST", body: body }); },
     signContract: function (id, body) { return request("/contracts/" + id + "/sign", { method: "POST", body: body }); },
+    signTalendus: function (id, body) { return request("/contracts/" + id + "/sign-talendus", { method: "POST", body: body }); },
     createContract: function (body) { return request("/contracts", { method: "POST", body: body }); },
     previewContract: function (query) { return request("/contracts/preview" + (query || "")); },
     sendContract: function (id) { return request("/contracts/" + id + "/send", { method: "POST" }); },
+    openContract: function (id) { return request("/contracts/" + id + "/open", { method: "POST" }); },
+    openPdf: function (path) {
+      var token = getAccess();
+      var abs = apiRoot() + path;
+      if (abs.indexOf("http") !== 0) abs = (location.origin || "") + abs;
+      var headers = { "Accept": "application/pdf" };
+      if (token) headers.Authorization = "Bearer " + token;
+      return fetch(abs, { headers: headers, credentials: "same-origin" }).then(function (res) {
+        if (!res.ok) throw new Error(pageIsEn() ? "Unable to open the PDF." : "Impossible d’ouvrir le PDF.");
+        return res.blob().then(function (blob) {
+          var url = URL.createObjectURL(blob);
+          var opened = null;
+          try { opened = window.open(url, "_blank"); } catch (e) {}
+          if (!opened) location.assign(url);
+          setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+        });
+      });
+    },
     download: function (path, filename) {
       var token = getAccess();
       var abs = apiRoot() + path;

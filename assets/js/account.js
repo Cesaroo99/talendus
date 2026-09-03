@@ -91,7 +91,12 @@
       pay: "Record a card payment", payPal: "Pay with PayPal", pipeline: "Pipeline",
       contracts: "Contracts", emptyContracts: "No mandate yet.",
       sign: "Sign electronically", signed: "Signed", unsigned: "To sign",
-      acceptTerms: "I accept the terms of this mandate",
+      acceptTerms: "I have read this mandate in full and I accept its terms",
+      readMandate: "Read the mandate",
+      readPdf: "Open the PDF",
+      clientReceived: "Received", clientOpened: "Opened", clientSigned: "Signed",
+      talendusSigned: "Talendus has signed",
+      readThenSign: "Read the mandate, then sign below.",
       transferHint: "Pay by bank transfer or cheque to Talendus. No payment processor required.",
       downloadPdf: "Download PDF",
       mediate: "Write to your Talendus consultant. They coordinate interviews and follow-up with you.",
@@ -211,7 +216,12 @@
       pay: "Payer par carte", payPal: "Payer avec PayPal", pipeline: "Pipeline",
       contracts: "Contrats", emptyContracts: "Aucun mandat pour le moment.",
       sign: "Signer électroniquement", signed: "Signé", unsigned: "À signer",
-      acceptTerms: "J’accepte les conditions de ce mandat",
+      acceptTerms: "J’ai lu l’intégralité de ce mandat et j’en accepte les conditions",
+      readMandate: "Lire le mandat",
+      readPdf: "Ouvrir le PDF",
+      clientReceived: "Reçu", clientOpened: "Ouvert", clientSigned: "Signé",
+      talendusSigned: "Talendus a signé",
+      readThenSign: "Lisez le mandat, puis signez ci-dessous.",
       transferHint: "Réglez par virement ou chèque à l’ordre de Talendus. Aucun intermédiaire de paiement n’est requis.",
       downloadPdf: "Télécharger le PDF",
       mediate: "Écrivez à votre conseiller Talendus. Il coordonne les entretiens et le suivi avec vous.",
@@ -1501,19 +1511,39 @@
       }).join("") + "</tbody></table></div><div class=\"tl-success\" id=\"acc-inv-msg\"></div>";
     }
 
+    function clientMandateLabel(c) {
+      if (c.client_signed || c.client_status === "signed" || c.signed) return t.clientSigned;
+      if (c.opened_at || c.client_status === "opened") return t.clientOpened;
+      if (c.sent_at || c.client_status === "received") return t.clientReceived;
+      return t.unsigned;
+    }
+
     function renderContracts(rows) {
       if (!rows || !rows.length) return empty(t.emptyContracts);
+      (rows || []).forEach(function (c) {
+        if (c && c.id && c.sent_at && !c.opened_at && !c.client_signed && !c.signed) {
+          api.openContract(c.id).catch(function () {});
+        }
+      });
       return rows.map(function (c) {
-        var pdf = c.pdf_path ? '<button type="button" class="tl-btn tl-btn-ghost" data-dl="' + esc(c.pdf_path) + '" data-dl-name="' + esc(c.document_name || "mandat.pdf") + '">' + esc(t.downloadPdf) + "</button>" : "";
-        var sign = c.signed
+        var pdf = c.pdf_path
+          ? '<button type="button" class="tl-btn tl-btn-ghost" data-open-pdf="' + esc(c.pdf_path) + '">' + esc(t.readPdf) + "</button>" +
+            ' <button type="button" class="tl-btn tl-btn-ghost" data-dl="' + esc(c.pdf_path) + '" data-dl-name="' + esc(c.document_name || "mandat.pdf") + '">' + esc(t.downloadPdf) + "</button>"
+          : "";
+        var canSign = c.can_sign || (!c.signed && !c.client_signed);
+        var sign = (c.signed || c.client_signed)
           ? '<span class="tl-chip">' + esc(t.signed) + "</span>"
-          : '<form class="tl-form" data-sign-contract="' + esc(c.id) + '"><label class="tl-check"><input type="checkbox" name="accepted" required> ' + esc(t.acceptTerms) +
-            "</label><input name=\"signer_name\" required placeholder=\"" + esc(t.first) + "\"><button class=\"tl-btn\" type=\"submit\">" + esc(t.sign) + "</button></form>";
+          : (canSign
+            ? '<p class="tl-meta">' + esc(t.readThenSign) + '</p><form class="tl-form" data-sign-contract="' + esc(c.id) + '"><label class="tl-check"><input type="checkbox" name="accepted" required> ' + esc(t.acceptTerms) +
+              "</label><input name=\"signer_name\" required placeholder=\"" + esc(t.first) + "\"><button class=\"tl-btn\" type=\"submit\">" + esc(t.sign) + "</button></form>"
+            : "");
+        var agency = c.talendus_signed ? '<span class="tl-chip">' + esc(t.talendusSigned) + "</span> " : "";
         return '<article class="tl-card" style="margin-bottom:16px"><div class="body"><h3>' + esc(c.type || t.contracts) +
           " · " + esc(c.company_name || "") + "</h3><p class=\"tl-meta\">" + esc(c.start_date || "") + " → " + esc(c.end_date || "") +
           (c.commission_percent ? " · " + esc(String(c.commission_percent)) + " %" : "") + "</p>" +
-          '<pre class="tl-prose" style="white-space:pre-wrap;font-family:inherit;max-height:220px;overflow:auto">' + esc(c.terms || "") +
-          "</pre><p>" + pdf + "</p>" + sign + "</div></article>";
+          '<div class="tl-mandate-status">' + agency + '<span class="tl-chip">' + esc(clientMandateLabel(c)) + "</span></div>" +
+          '<article class="tl-mandate-read">' + esc(c.terms || "") +
+          "</article><p>" + pdf + "</p>" + sign + "</div></article>";
       }).join("") + '<div class="tl-success" id="acc-contract-msg"></div>';
     }
 
@@ -1678,6 +1708,14 @@
               signer_name: (form.querySelector("[name=signer_name]") || {}).value || ""
             }
           }).then(function () { go("contracts"); }).catch(function (err) {
+            flash(document.getElementById("acc-contract-msg"), (err && err.message) || t.err, false);
+          });
+        };
+      });
+      root.querySelectorAll("[data-open-pdf]").forEach(function (b) {
+        b.onclick = function () {
+          var path = b.getAttribute("data-open-pdf");
+          if (api.openPdf) api.openPdf(path).catch(function (err) {
             flash(document.getElementById("acc-contract-msg"), (err && err.message) || t.err, false);
           });
         };

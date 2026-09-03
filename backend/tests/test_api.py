@@ -533,16 +533,21 @@ def test_interview_invoice_contract_and_email_body(client):
     paid = client.post(f"/api/invoices/{inv_id}/payments", headers=admin_h, json={"amount": total, "method": "TRANSFER"})
     assert paid.json()["data"]["status"] == "PAID"
 
-    from app.database import SessionLocal
-    from app.models import Contract
-    from app.models.enums import ContractStatus
-
-    db = SessionLocal()
-    contract = Contract(company_id=company["id"], type="Succès", terms="16 % au succès.", status=ContractStatus.ACTIVE, document_name="mandat.pdf")
-    db.add(contract)
-    db.commit()
-    cid = contract.id
-    db.close()
+    created = client.post(
+        "/api/contracts",
+        headers=admin_h,
+        json={"company_id": company["id"], "type": "Succès", "commission_percent": 16},
+    )
+    assert created.status_code == 200, created.text
+    cid = created.json()["data"]["id"]
+    agency = client.post(
+        f"/api/contracts/{cid}/sign-talendus",
+        headers=admin_h,
+        json={"signer_name": "Lea Super", "accepted": True},
+    )
+    assert agency.status_code == 200, agency.text
+    mailed = client.post(f"/api/contracts/{cid}/send", headers=admin_h)
+    assert mailed.status_code == 200, mailed.text
     signed = client.post(
         f"/api/contracts/{cid}/sign",
         headers=emp_h,

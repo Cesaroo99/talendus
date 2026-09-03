@@ -3994,6 +3994,19 @@ a.tl-job-card:hover .tl-job-card-cta::after {
 .tl-prose {
   max-width: 760px;
 }
+.tl-mandate-read {
+  white-space: pre-wrap;
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1.65;
+  background: #f6f8fb;
+  border: 1px solid rgba(11, 31, 58, 0.1);
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin: 14px 0;
+  max-height: none;
+}
+.tl-mandate-status { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 12px; }
 .tl-prose p {
   margin-bottom: 1.05em;
   line-height: 1.7;

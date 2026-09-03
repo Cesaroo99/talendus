@@ -644,6 +644,49 @@
         <tbody>${rows || '<tr><td colspan="8">' + U.empty("Aucun client", "Créez une entreprise ou attendez qu’un employeur ouvre un espace.") + "</td></tr>"}</tbody></table></div></div>`;
   }
 
+  function clientStatusLabel(ct) {
+    if (ct.clientSigned || ct.clientStatus === "signed") return "Signé";
+    if (ct.openedAt || ct.clientStatus === "opened") return "Ouvert";
+    if (ct.sentAt || ct.clientStatus === "received") return "Reçu";
+    return "Non envoyé";
+  }
+
+  function contractCard(ct) {
+    var agency = ct.talendusSigned
+      ? U.badge("Signé Talendus")
+      : U.badge("À signer");
+    var client = U.badge(clientStatusLabel(ct));
+    var actions = '<div class="mandate-actions"><button class="btn btn-ghost btn-sm" data-read-contract="' + ct.id + '">Lire le mandat</button>';
+    if (ct.pdfPath) {
+      actions += ' <button class="btn btn-ghost btn-sm" data-open-pdf="' + ct.id + '">Lire le PDF</button>';
+    }
+    if (!ct.talendusSigned) {
+      actions += ' <button class="btn btn-orange btn-sm" data-sign-talendus="' + ct.id + '">Signer pour Talendus</button>';
+    }
+    if (ct.talendusSigned && !ct.sentAt && !ct.clientSigned) {
+      actions += ' <button class="btn btn-orange btn-sm" data-send-contract="' + ct.id + '">Envoyer au client</button>';
+    }
+    if (ct.sentAt && !ct.clientSigned) {
+      actions += ' <button class="btn btn-ghost btn-sm" data-send-contract="' + ct.id + '">Relancer le client</button>';
+      actions += ' <button class="btn btn-ghost btn-sm" data-sign-contract="' + ct.id + '">Enregistrer la signature du client</button>';
+    }
+    actions += "</div>";
+    var trace = "";
+    if (ct.talendusSigner || ct.talendusSignedAt) {
+      trace += "<p style='color:var(--steel);font-size:12px'>Talendus : " + U.esc(ct.talendusSigner || "signé") + (ct.talendusSignedAt ? " · " + U.esc(ct.talendusSignedAt) : "") + "</p>";
+    }
+    if (ct.clientSigned) {
+      trace += "<p style='color:var(--steel);font-size:12px'>Client : " + U.esc(ct.signerName || "") + (ct.signedAt ? " · " + U.esc(ct.signedAt) : "") + (ct.documentHash ? "<br>Hash " + U.esc(String(ct.documentHash).slice(0, 12)) + "…" : "") + "</p>";
+    } else if (ct.openedAt) {
+      trace += "<p style='color:var(--steel);font-size:12px'>Ouvert par le client le " + U.esc(ct.openedAt) + "</p>";
+    } else if (ct.sentAt) {
+      trace += "<p style='color:var(--steel);font-size:12px'>Reçu le " + U.esc(ct.sentAt) + (ct.reminderCount ? " · relancé " + ct.reminderCount + " fois" : "") + "</p>";
+    }
+    return "<div class='mandate-card'><p><b>" + U.esc(ct.type) + "</b> · " + agency + " " + client +
+      "<br>Commission " + ct.commission + " % · " + U.dateFr(ct.start) + " → " + U.dateFr(ct.end) +
+      "</p>" + trace + actions + "</div>";
+  }
+
   function viewClient(id) {
     var c = TLStore.client(id);
     if (!c) return U.empty("Introuvable", "Client introuvable.");
@@ -658,7 +701,7 @@
       <div class="page-head"><div><h1>${U.esc(c.name)}</h1><p>${U.esc(c.sector)} · ${U.esc(c.city)} · ${U.badge(c.status)}</p></div>
         <div class="actions">
           <button class="btn btn-ghost" data-edit-client="${id}">Modifier</button>
-          <button class="btn btn-orange" data-add-contract="${id}">Préparer et envoyer le mandat</button>
+          <button class="btn btn-orange" data-add-contract="${id}">Préparer le mandat</button>
         </div></div>
       <div class="grid grid-2">
         <div class="card card-pad"><h3>Informations générales</h3>
@@ -668,12 +711,7 @@
           <h3 style="margin-top:16px">Contacts</h3>
           <p><b>${U.esc(c.contact)}</b><br>${U.esc(c.email)}<br>${U.esc(c.phone)}</p>
         </div>
-        <div class="card card-pad"><h3>Contrats</h3>${contracts.map(function (ct) {
-          var signBtn = ct.signed
-            ? "<p style='color:var(--steel);font-size:12px'>Signé " + U.esc(ct.signedAt || "") + " · " + U.esc(ct.signerName || "") + (ct.documentHash ? "<br>Hash " + U.esc(ct.documentHash.slice(0, 12)) + "…" : "") + "</p>"
-            : '<button class="btn btn-ghost btn-sm" data-send-contract="' + ct.id + '">Renvoyer pour signature</button> <button class="btn btn-ghost btn-sm" data-sign-contract="' + ct.id + '">Enregistrer la signature</button>';
-          return "<p><b>" + U.esc(ct.type) + "</b> · " + U.badge(ct.status) + "<br>Commission " + ct.commission + " % · " + U.dateFr(ct.start) + " → " + U.dateFr(ct.end) + "<br><span style='color:var(--steel)'>" + U.esc((ct.terms || "").slice(0, 220)) + ((ct.terms || "").length > 220 ? "…" : "") + "</span></p>" + signBtn;
-        }).join("") || "<p>Aucun mandat. Préparez-le ici : les parties et les clauses se remplissent, puis l’admin l’envoie au client pour signature électronique.</p>"}</div>
+        <div class="card card-pad"><h3>Contrats</h3>${contracts.map(contractCard).join("") || "<p>Aucun mandat. Préparez-le, lisez-le, signez pour Talendus, puis envoyez-le au client. Vous suivrez ensuite reçu, ouvert et signé.</p>"}</div>
       </div>
       <div class="grid grid-2" style="margin-top:16px">
         <div class="card card-pad"><h3>Missions</h3>${missions.map(function (m) { return '<p><a href="#/missions/' + m.id + '">' + U.esc(m.title) + "</a> " + U.badge(m.status) + "</p>"; }).join("") || "<p>—</p>"}</div>
@@ -2096,13 +2134,74 @@
         });
         return;
       }
+      var signAgency = t.closest("[data-sign-talendus]");
+      if (signAgency) {
+        var agencyId = signAgency.getAttribute("data-sign-talendus");
+        U.modal({
+          title: "Signer pour Talendus",
+          body: '<form id="sg-form">' + U.field("Nom du signataire Talendus", "signer_name", TLStore.me().firstName + " " + TLStore.me().lastName) + "<p>Talendus signe en premier. Le client recevra ensuite le mandat pour le lire et le contresigner. Trace : nom, date, IP et empreinte SHA-256. Ce n’est pas DocuSign.</p></form>",
+          footer: '<button class="btn btn-ghost" data-close>Annuler</button><button class="btn btn-orange" id="save">Signer pour Talendus</button>',
+          onMount: function (box, close) {
+            box.querySelector("#save").onclick = async function () {
+              var d = U.formData(box.querySelector("#sg-form"));
+              try {
+                await window.TalendusAPI.signTalendus(agencyId, { signer_name: d.signer_name, accepted: true });
+                await TLStore.hydrateFromApi();
+                close();
+                U.toast("Mandat signé pour Talendus. Vous pouvez l’envoyer au client.", "ok");
+                render();
+              } catch (err) {
+                U.toast((err && err.message) || "Signature Talendus impossible.", "err");
+              }
+            };
+          }
+        });
+        return;
+      }
+      var readCt = t.closest("[data-read-contract]");
+      if (readCt) {
+        var readId = readCt.getAttribute("data-read-contract");
+        var found = S().contracts.find(function (x) { return x.id === readId; }) || {};
+        U.modal({
+          wide: true,
+          title: found.type || "Mandat de recrutement",
+          body: '<div class="mandate-meta">' + U.badge(found.talendusSigned ? "Signé Talendus" : "À signer") + " " + U.badge(clientStatusLabel(found)) +
+            "</div><article class=\"mandate-read\">" + U.esc(found.terms || "Le texte du mandat n’est pas disponible.") + "</article>",
+          footer: '<button class="btn btn-ghost" data-close>Fermer</button>' +
+            (found.pdfPath ? '<button class="btn btn-orange" id="open-pdf">Lire le PDF</button>' : ""),
+          onMount: function (box) {
+            var pdfBtn = box.querySelector("#open-pdf");
+            if (pdfBtn) {
+              pdfBtn.onclick = async function () {
+                try {
+                  await window.TalendusAPI.openPdf("/contracts/" + readId + "/pdf");
+                } catch (err) {
+                  U.toast((err && err.message) || "Lecture PDF impossible.", "err");
+                }
+              };
+            }
+          }
+        });
+        return;
+      }
+      var pdfCt = t.closest("[data-open-pdf]");
+      if (pdfCt) {
+        (async function () {
+          try {
+            await window.TalendusAPI.openPdf("/contracts/" + pdfCt.getAttribute("data-open-pdf") + "/pdf");
+          } catch (err) {
+            U.toast((err && err.message) || "Lecture PDF impossible.", "err");
+          }
+        })();
+        return;
+      }
       var signCt = t.closest("[data-sign-contract]");
       if (signCt) {
         var contractId = signCt.getAttribute("data-sign-contract");
         U.modal({
-          title: "Signature interne du mandat",
-          body: '<form id="sg-form">' + U.field("Nom du signataire", "signer_name", TLStore.me().firstName + " " + TLStore.me().lastName) + "<p>Trace interne : nom, date, IP et empreinte du document. Ce n’est pas une signature notariale ni DocuSign.</p></form>",
-          footer: '<button class="btn btn-ghost" data-close>Annuler</button><button class="btn btn-orange" id="save">Signer</button>',
+          title: "Enregistrer la signature du client",
+          body: '<form id="sg-form">' + U.field("Nom du signataire client", "signer_name", "") + "<p>À utiliser si le client a signé en votre présence. Sinon, envoyez le mandat : le client lit et signe dans son espace.</p></form>",
+          footer: '<button class="btn btn-ghost" data-close>Annuler</button><button class="btn btn-orange" id="save">Enregistrer la signature</button>',
           onMount: function (box, close) {
             box.querySelector("#save").onclick = async function () {
               var d = U.formData(box.querySelector("#sg-form"));
@@ -2110,7 +2209,7 @@
                 await window.TalendusAPI.signContract(contractId, { signer_name: d.signer_name, accepted: true });
                 await TLStore.hydrateFromApi();
                 close();
-                U.toast("Signature enregistrée.", "ok");
+                U.toast("Signature du client enregistrée.", "ok");
                 render();
               } catch (err) {
                 U.toast((err && err.message) || "Signature impossible.", "err");
@@ -2129,7 +2228,7 @@
               await window.TalendusAPI.sendContract(sendId);
               await refreshLive();
             }
-            U.toast("Mandat renvoyé dans l’espace employeur.", "ok");
+            U.toast("Mandat transmis dans l’espace employeur.", "ok");
             render();
           } catch (err) {
             U.toast((err && err.message) || "Envoi impossible.", "err");
@@ -2142,7 +2241,8 @@
         var companyId = addCt.getAttribute("data-add-contract");
         var roleHint = addCt.getAttribute("data-role") || "";
         U.modal({
-          title: "Préparer et envoyer le mandat",
+          wide: true,
+          title: "Préparer le mandat",
           body: '<form id="ct-form" class="form-grid">' +
             U.field("Modèle", "template", { options: [{ v: "succes", l: "Recrutement au succès" }, { v: "temporaire", l: "Placement temporaire" }], selected: "succes" }, "select") +
             U.field("Type", "type", "Mandat de recrutement au succès") +
@@ -2150,11 +2250,13 @@
             U.field("Début", "start_date", new Date().toISOString().slice(0, 10), "date") +
             U.field("Fin", "end_date", "", "date") +
             U.field("Commission (%)", "commission_percent", "16", "number") +
-            U.field("Conditions (préremplies)", "terms", "Chargement du modèle…", "textarea", "full") +
+            '<div class="full"><label>Texte du mandat</label><article id="ct-read" class="mandate-read">Chargement du mandat…</article>' +
+            '<textarea name="terms" id="ct-terms" class="sr-only" hidden></textarea></div>' +
             "</form>",
-          footer: '<button class="btn btn-ghost" data-close>Annuler</button><button class="btn btn-orange" id="save">Envoyer pour signature</button>',
+          footer: '<button class="btn btn-ghost" data-close>Annuler</button><button class="btn btn-orange" id="save">Enregistrer le brouillon</button>',
           onMount: function (box, close) {
             var form = box.querySelector("#ct-form");
+            var reader = box.querySelector("#ct-read");
             async function fillPreview() {
               if (!live()) return;
               try {
@@ -2166,10 +2268,14 @@
                 var data = (prev && prev.data) || prev || {};
                 if (data.type) form.type.value = data.type;
                 if (data.start_date) form.start_date.value = data.start_date;
+                if (data.end_date && !form.end_date.value) form.end_date.value = data.end_date;
                 if (data.commission_percent != null) form.commission_percent.value = data.commission_percent;
-                if (data.terms) form.terms.value = data.terms;
+                if (data.terms) {
+                  form.terms.value = data.terms;
+                  reader.textContent = data.terms;
+                }
               } catch (err) {
-                form.terms.value = "Parties, honoraires et garantie se remplissent à l’envoi.";
+                reader.textContent = "Le mandat se remplit à l’enregistrement.";
               }
             }
             fillPreview();
@@ -2188,16 +2294,16 @@
                     start_date: d.start_date,
                     end_date: d.end_date || null,
                     commission_percent: Number(d.commission_percent) || 16,
-                    terms: d.terms
+                    terms: d.terms || (reader && reader.textContent) || ""
                   });
                   await refreshLive();
                 } else {
                   TLStore.update(function (st) {
-                    st.contracts.push({ id: TLStore.nid("ct"), clientId: companyId, type: d.type || "Mandat de recrutement au succès", start: d.start_date, end: d.end_date, commission: Number(d.commission_percent) || 16, terms: d.terms, status: "À signer", document: "" });
+                    st.contracts.push({ id: TLStore.nid("ct"), clientId: companyId, type: d.type || "Mandat de recrutement au succès", start: d.start_date, end: d.end_date, commission: Number(d.commission_percent) || 16, terms: d.terms, status: "Brouillon", document: "", talendusSigned: false, clientSigned: false, clientStatus: "not_sent" });
                   });
                 }
-                close(); U.toast("Mandat envoyé pour signature électronique.", "ok"); render();
-              } catch (err) { U.toast((err && err.message) || "Envoi impossible.", "err"); }
+                close(); U.toast("Brouillon enregistré. Lisez-le, signez pour Talendus, puis envoyez-le au client.", "ok"); render();
+              } catch (err) { U.toast((err && err.message) || "Enregistrement impossible.", "err"); }
             };
           }
         });
