@@ -30,6 +30,7 @@
     "en-attente": ["En attente", "warn"],
     "en-retard": ["En retard", "danger"],
     Actif: ["Actif", "ok"],
+    "À signer": ["À signer", "warn"],
     Prospect: ["Prospect", "warn"],
     "Expire bientôt": ["Expire bientôt", "warn"],
     "besoin-transmis": ["Besoin transmis", "info"],

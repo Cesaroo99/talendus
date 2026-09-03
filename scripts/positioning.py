@@ -174,11 +174,6 @@ def _options(pairs, empty_label):
 
 def sectors_cloud(lang="fr"):
     more = "Et bien plus encore" if lang == "fr" else "And many more"
-    close = (
-        "Ces exemples n'enferment personne : un mandat ou un profil peut venir de n'importe quel secteur."
-        if lang == "fr"
-        else "These examples do not box anyone in: a mandate or a profile can come from any industry."
-    )
     kicker = "Tous les secteurs" if lang == "fr" else "Every industry"
     heading = (
         "Tous les secteurs. Tous les métiers."
@@ -204,7 +199,6 @@ def sectors_cloud(lang="fr"):
       <p class="tl-lead">{lead}</p>
     </div>
     <ul class="tl-sectors-cloud">{chips}</ul>
-    <p class="tl-center tl-muted" style="margin-top:22px;max-width:640px;margin-left:auto;margin-right:auto">{close}</p>
   </div>
 </section>
 """
@@ -382,28 +376,30 @@ def process_section(lang="fr"):
     if lang == "en":
         kicker, heading, lead = (
             "Recruiting process",
-            "Four steps to hire the right people, fast.",
-            "Built so you spend time only on candidates who already passed our screen.",
+            "Five steps to hire the right people, fast.",
+            "Built so you spend time only on candidates who already passed our screen. Search starts after you sign the mandate.",
         )
         steps = [
             ("01", "Free consultation", "Talk to a headhunter. Twenty minutes is usually enough to see if we can take the seat."),
             ("02", "Needs intake", "We hear the role you would post — and the one you would not. Then we say what the market will actually accept."),
-            ("03", "Active search", "We do not wait for ads. We map the pool and approach people already in a job, quietly."),
-            ("04", "Through the hire", "We run the first interview, the follow-up and the terms. You meet. You say yes. Fees when they start."),
+            ("03", "Mandate signature", "Talendus prepares the contract (parties, fees, guarantee) and sends it from the admin side. You sign electronically in your employer space. Search does not start before that."),
+            ("04", "Active search", "We do not wait for ads. We map the pool and approach people already in a job, quietly."),
+            ("05", "Through the hire", "We run the first interview, the follow-up and the terms. You meet. You say yes. Fees when they start."),
         ]
         cta = "Book a free consultation"
         href = "contact.html"
     else:
         kicker, heading, lead = (
             "Processus de recrutement",
-            "Quatre étapes pour recruter les meilleurs, rapidement.",
-            "Conçu pour que vous ne passiez du temps que sur les candidats qui ont déjà passé notre sélection.",
+            "Cinq étapes pour recruter les meilleurs, rapidement.",
+            "Conçu pour que vous ne passiez du temps que sur les candidats qui ont déjà passé notre sélection. La recherche commence après la signature du mandat.",
         )
         steps = [
             ("01", "Consultation gratuite", "Parlez à un chasseur de têtes. Vingt minutes suffisent souvent pour savoir si on peut prendre le poste."),
             ("02", "Prise de besoins", "On écoute le poste que vous oseriez afficher — et celui que vous n'afficheriez pas. Puis on dit ce que le marché accepte vraiment."),
-            ("03", "Recrutement actif", "On n'attend pas les annonces. On cartographie le bassin et on approche les gens déjà en poste, sans bruit."),
-            ("04", "Jusqu'à l'embauche", "On mène la première entrevue, le suivi et les conditions. Vous rencontrez. Vous dites oui. Honoraires à l'entrée en poste."),
+            ("03", "Signature du mandat", "Talendus prépare le contrat (parties, honoraires, garantie) et l'admin l'envoie. Vous signez électroniquement dans votre espace employeur. La recherche ne démarre pas avant."),
+            ("04", "Recrutement actif", "On n'attend pas les annonces. On cartographie le bassin et on approche les gens déjà en poste, sans bruit."),
+            ("05", "Jusqu'à l'embauche", "On mène la première entrevue, le suivi et les conditions. Vous rencontrez. Vous dites oui. Honoraires à l'entrée en poste."),
         ]
         cta = "Réserver une consultation gratuite"
         href = "contact.html"
@@ -419,7 +415,7 @@ def process_section(lang="fr"):
       <h2 class="tl-h2">{heading}</h2>
       <p class="tl-lead">{lead}</p>
     </div>
-    <div class="tl-steps tl-steps-4">{cards}</div>
+    <div class="tl-steps tl-steps-5">{cards}</div>
     <div class="tl-center" style="margin-top:32px">
       <a class="tl-btn tl-btn-lg" href="{href}">{cta}</a>
     </div>

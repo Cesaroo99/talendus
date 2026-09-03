@@ -727,8 +727,6 @@ def cta_band(lang="fr", persona="gateway"):
 
 def footer(lang="fr", persona="gateway"):
     t, h, a = COPY[lang], HREFS[lang], pfx(lang)
-    city_mtl = "Montréal" if lang == "fr" else "Montreal"
-    city_qc = "Québec" if lang == "fr" else "Quebec"
     search_label = "Chasse de têtes" if lang == "fr" else "Search mandates"
     return f"""
 {call_fab(lang)}
@@ -772,12 +770,6 @@ def footer(lang="fr", persona="gateway"):
           <li><a href="{wa_link(lang, persona)}" target="_blank" rel="noopener noreferrer">WhatsApp</a></li>
           <li>{t['footer_hours']}</li>
           <li><a href="{h['contact']}">{t['footer_place']}</a></li>
-        </ul>
-        <ul class="tl-footer-cities">
-          <li><a href="{h['geo_mtl']}">{city_mtl}</a></li>
-          <li><a href="{h['geo_laval']}">Laval</a></li>
-          <li><a href="{h['geo_long']}">Longueuil</a></li>
-          <li><a href="{h['geo_qc']}">{city_qc}</a></li>
         </ul>
       </div>
     </div>
@@ -864,6 +856,8 @@ FAQ_EMPLOYEURS = [
      "Encore plus qu'aux grandes organisations. Une grande entreprise a souvent une équipe RH dédiée. Une PME confie le dossier au proprio ou au directeur d'ops, qui a déjà mieux à faire. Chaque heure à éplucher des candidatures est une heure de moins sur le plancher. Le cabinet vous donne un processus complet, sans bâtir cette expertise à l'interne."),
     ("Combien coûte un chasseur de têtes ?",
      "Les honoraires se calculent sur le salaire annuel de la personne embauchée. Ils ne sont dus qu'à l'entrée en poste : sans résultat, vous ne payez pas, selon l'entente. Le pourcentage et la fenêtre de remplacement sont écrits à l'ouverture du mandat. La consultation de départ est gratuite."),
+    ("Faut-il signer un contrat avant que Talendus commence ?",
+     "Oui. Après la prise de besoins, Talendus prépare le mandat — parties, poste, honoraires, garantie — et l'admin l'envoie dans votre espace. Vous le signez électroniquement. La recherche active ne démarre pas avant cette signature."),
     ("La chasse de têtes, c'est seulement pour les postes de direction ?",
      "Non. Elle s'applique à tous les niveaux. Un mauvais directeur coûte cher. Un mauvais employé sur le plancher aussi. Un poste vacant qui traîne coûte chaque jour. On chasse un électromécanicien ou un superviseur de quart comme on chasse un cadre."),
     ("On paie seulement si on engage : comment ça marche ?",
@@ -929,6 +923,8 @@ FAQ_EMPLOYERS_EN = [
      "Even more than large organizations. A large company often has a dedicated HR team. An SME hands the file to the owner or the ops lead, who already has better things to do. Every hour spent sorting applications is an hour off the floor. The firm gives you a full process without building that expertise in-house."),
     ("How much does a headhunter cost?",
      "Fees are calculated on the hired person's annual salary. They are due only on the start date: no result, no fee, per the agreement. The percentage and the replacement window are written when the mandate opens. The first consultation is free."),
+    ("Do I have to sign a contract before Talendus starts?",
+     "Yes. After the needs intake, Talendus prepares the mandate — parties, role, fees, guarantee — and admin sends it to your space. You sign electronically. Active search does not start before that signature."),
     ("Is headhunting only for senior leadership?",
      "No. It applies at every level. A bad director is costly. So is a bad employee on the floor. A vacant seat that lingers costs money every day. We hunt an electromechanical tech or a shift supervisor the same way we hunt a manager."),
     ("You only pay if you hire: how does that work?",
@@ -955,25 +951,25 @@ def homepage_faq(lang="fr"):
         gateway = [
             FAQ_HOME_EN[0],
             ("I'm hiring, what should I do?",
-             "Book a free consultation. Hand us the need: role, criteria, terms. A headhunter takes the search, the first interview and the shortlist. You keep the hire. Fees when they start."),
+             "Book a free consultation. Hand us the need: role, criteria, terms. Talendus prepares the mandate and admin sends it: you sign electronically. Then a headhunter takes the search, the first interview and the shortlist. You keep the hire. Fees when they start."),
             ("I'm looking for a job, what should I do?",
              "Create a profile and submit your resume. Talendus studies your path and contacts you when an opportunity fits. It is free. Call us or write — a consultant takes it from there."),
             FAQ_HOME_EN[1],
         ]
         talent = FAQ_CANDIDATES_EN[:6]
-        hire = [FAQ_EMPLOYERS_EN[i] for i in (0, 1, 2, 4, 5)]
+        hire = [FAQ_EMPLOYERS_EN[i] for i in (0, 1, 2, 3, 5)]
         titles = ("What people ask first", "Questions from talent", "Questions from employers")
     else:
         gateway = [
             FAQ_HOME[0],
             ("Je recrute : que dois-je faire ?",
-             "Réservez une consultation gratuite. Confiez-nous le besoin : poste, critères, conditions. Un chasseur reprend la recherche, la première entrevue et la shortlist. Vous gardez l'embauche. Honoraires à l'entrée en poste."),
+             "Réservez une consultation gratuite. Confiez-nous le besoin : poste, critères, conditions. Talendus prépare le mandat et l'admin l'envoie : vous signez électroniquement. Ensuite un chasseur reprend la recherche, la première entrevue et la shortlist. Vous gardez l'embauche. Honoraires à l'entrée en poste."),
             ("Je cherche un emploi : que dois-je faire ?",
              "Créez un profil et déposez votre CV. Talendus étudie votre parcours et vous contacte lorsqu'une opportunité correspond. C'est gratuit. Appelez-nous ou écrivez-nous : un conseiller s'en occupe."),
             FAQ_HOME[1],
         ]
         talent = FAQ_CANDIDATS[:6]
-        hire = [FAQ_EMPLOYEURS[i] for i in (0, 1, 2, 4, 5)]
+        hire = [FAQ_EMPLOYEURS[i] for i in (0, 1, 2, 3, 5)]
         titles = ("Ce qu'on nous demande d'abord", "Questions des candidats", "Questions des entreprises")
 
     def block(persona, title, items):

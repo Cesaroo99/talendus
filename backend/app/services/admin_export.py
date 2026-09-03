@@ -94,7 +94,7 @@ ROLE = {
 
 CONTRACT_STATUS = {
     "ACTIVE": "Actif",
-    "DRAFT": "brouillon",
+    "DRAFT": "À signer",
     "EXPIRED": "Expire bientôt",
 }
 
@@ -396,6 +396,7 @@ def _contract(c: Contract) -> dict:
         "signedAt": latest.signed_at.strftime("%Y-%m-%d %H:%M") if latest and latest.signed_at else "",
         "signerName": latest.signer_name if latest else "",
         "documentHash": latest.document_hash if latest else "",
+        "pdfPath": f"/api/contracts/{c.id}/pdf",
     }
 
 

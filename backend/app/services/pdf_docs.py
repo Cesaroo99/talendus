@@ -9,21 +9,93 @@ GST_RATE = 0.05
 QST_RATE = 0.09975
 QC_TAX_BP = 14975
 
-DEFAULT_MANDATE_TERMS = """Objet
-Talendus agit comme agence de placement. L'entreprise confie un besoin de recrutement. Talendus recherche, présélectionne et présente les profils. Un conseiller coordonne les échanges. L'entreprise conserve la décision d'embauche.
+DEFAULT_COMMISSION_PERCENT = 16
+
+MANDATE_TEMPLATES = (
+    {
+        "key": "succes",
+        "type": "Mandat de recrutement au succès",
+        "commission_percent": DEFAULT_COMMISSION_PERCENT,
+    },
+    {
+        "key": "temporaire",
+        "type": "Mandat de placement temporaire",
+        "commission_percent": DEFAULT_COMMISSION_PERCENT,
+    },
+)
+
+
+def mandate_terms(
+    *,
+    company_name: str = "le client",
+    legal_name: str | None = None,
+    address: str | None = None,
+    city: str | None = None,
+    province: str | None = None,
+    commission: int | None = None,
+    mandate_type: str = "Mandat de recrutement au succès",
+    role: str | None = None,
+    start_date: str | None = None,
+    template: str = "succes",
+) -> str:
+    settings = get_settings()
+    percent = commission if commission is not None else DEFAULT_COMMISSION_PERCENT
+    client = (legal_name or "").strip()
+    trade = (company_name or "").strip() or "le client"
+    if client and trade and client.lower() != trade.lower():
+        party_client = f"{client} (faisant affaire sous {trade})"
+    else:
+        party_client = client or trade
+    loc = ", ".join(part for part in [address, city, province or "Québec"] if part)
+    email = settings.public_email
+    phone = settings.public_phone_display
+    if (template or "succes").lower() == "temporaire":
+        fees = (
+            f"Honoraires de placement temporaire : {percent} % de la rémunération brute "
+            "versée pendant la période de mission, facturés selon les périodes convenues."
+        )
+        guarantee = (
+            "Si la mission est interrompue dans les 10 premiers jours ouvrables pour un motif "
+            "qui n'est pas imputable à Talendus, une relance de recherche est offerte sans "
+            "honoraires supplémentaires pour le même poste."
+        )
+    else:
+        fees = (
+            f"Commission de {percent} % calculée sur la rémunération annuelle brute du candidat "
+            "placé, payable à l'entrée en poste."
+        )
+        guarantee = (
+            "En cas de départ du candidat dans les 90 jours suivant l'entrée en fonction, "
+            "Talendus relance la recherche sans honoraires supplémentaires, sauf congédiement "
+            "sans motif valable."
+        )
+    role_line = f"Poste visé : {role.strip()}.\n\n" if role and role.strip() else ""
+    date_line = f"Date d'ouverture : {start_date}.\n\n" if start_date else ""
+    return f"""Parties
+Talendus (« l'agence »), {email}, {phone}.
+Le client : {party_client}, {loc or 'Québec'}.
+
+{date_line}{role_line}Type de mandat
+{mandate_type}
+
+Objet
+Talendus agit comme agence de placement. Le client confie un besoin de recrutement. Talendus recherche, présélectionne et présente les profils. Un conseiller coordonne les échanges. Le client conserve la décision d'embauche. La recherche active ne commence qu'après signature électronique du présent mandat.
 
 Honoraires
-Commission calculée sur la rémunération annuelle brute du candidat placé, payable à l'embauche selon le pourcentage indiqué au présent mandat.
+{fees}
 
 Garantie
-En cas de départ du candidat dans les 90 jours suivant l'entrée en fonction, Talendus relance la recherche sans honoraires supplémentaires, sauf congédiement sans motif valable.
+{guarantee}
 
 Confidentialité
 Les dossiers présentés restent confidentiels. Les coordonnées des talents ne sont pas transmises en libre-service.
 
 Signature
-La signature électronique interne Talendus (empreinte SHA-256, horodatage, adresse IP) a la même valeur qu'une signature manuscrite entre les parties. Aucun prestataire d'e-signature externe n'est requis.
+Le client signe électroniquement dans son espace Talendus (empreinte SHA-256, horodatage, adresse IP). Cette signature a la même valeur qu'une signature manuscrite entre les parties.
 """
+
+
+DEFAULT_MANDATE_TERMS = mandate_terms()
 
 
 def _latin(text: str) -> str:

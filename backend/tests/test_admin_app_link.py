@@ -75,7 +75,21 @@ def test_admin_and_app_share_jobs_hiring_and_applications(client):
     assert inbox.status_code == 200
     assert any("Talendus a bien reçu" in (th.get("last_message") or "") for th in inbox.json()["data"])
 
-    client.post(f"/api/hiring-requests/{request_id}/status", headers=admin_h, json={"status": "JOB_PUBLISHED"})
+    mandate = client.post(
+        "/api/contracts",
+        headers=admin_h,
+        json={"company_id": company_id_for(client, emp), "role": "Soudeur-monteur"},
+    )
+    assert mandate.status_code == 200, mandate.text
+    signed = client.post(
+        f"/api/contracts/{mandate.json()['data']['id']}/sign",
+        headers=emp_h,
+        json={"signer_name": "Marie Rivest", "accepted": True},
+    )
+    assert signed.status_code == 200, signed.text
+
+    launched = client.post(f"/api/hiring-requests/{request_id}/status", headers=admin_h, json={"status": "JOB_PUBLISHED"})
+    assert launched.status_code == 200, launched.text
     emp_need = client.get(f"/api/hiring-requests/{request_id}", headers=emp_h)
     assert emp_need.status_code == 200
     assert emp_need.json()["data"]["status"] == "JOB_PUBLISHED"

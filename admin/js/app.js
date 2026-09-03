@@ -658,7 +658,7 @@
       <div class="page-head"><div><h1>${U.esc(c.name)}</h1><p>${U.esc(c.sector)} · ${U.esc(c.city)} · ${U.badge(c.status)}</p></div>
         <div class="actions">
           <button class="btn btn-ghost" data-edit-client="${id}">Modifier</button>
-          <button class="btn btn-orange" data-add-contract="${id}">Nouveau contrat</button>
+          <button class="btn btn-orange" data-add-contract="${id}">Préparer et envoyer le mandat</button>
         </div></div>
       <div class="grid grid-2">
         <div class="card card-pad"><h3>Informations générales</h3>
@@ -671,9 +671,9 @@
         <div class="card card-pad"><h3>Contrats</h3>${contracts.map(function (ct) {
           var signBtn = ct.signed
             ? "<p style='color:var(--steel);font-size:12px'>Signé " + U.esc(ct.signedAt || "") + " · " + U.esc(ct.signerName || "") + (ct.documentHash ? "<br>Hash " + U.esc(ct.documentHash.slice(0, 12)) + "…" : "") + "</p>"
-            : '<button class="btn btn-ghost btn-sm" data-sign-contract="' + ct.id + '">Enregistrer la signature</button>';
-          return "<p><b>" + U.esc(ct.type) + "</b> · " + U.badge(ct.status) + "<br>Commission " + ct.commission + " % · " + U.dateFr(ct.start) + " → " + U.dateFr(ct.end) + "<br><span style='color:var(--steel)'>" + U.esc(ct.terms) + "</span></p>" + signBtn;
-        }).join("") || "<p>Aucun contrat.</p>"}</div>
+            : '<button class="btn btn-ghost btn-sm" data-send-contract="' + ct.id + '">Renvoyer pour signature</button> <button class="btn btn-ghost btn-sm" data-sign-contract="' + ct.id + '">Enregistrer la signature</button>';
+          return "<p><b>" + U.esc(ct.type) + "</b> · " + U.badge(ct.status) + "<br>Commission " + ct.commission + " % · " + U.dateFr(ct.start) + " → " + U.dateFr(ct.end) + "<br><span style='color:var(--steel)'>" + U.esc((ct.terms || "").slice(0, 220)) + ((ct.terms || "").length > 220 ? "…" : "") + "</span></p>" + signBtn;
+        }).join("") || "<p>Aucun mandat. Préparez-le ici : les parties et les clauses se remplissent, puis l’admin l’envoie au client pour signature électronique.</p>"}</div>
       </div>
       <div class="grid grid-2" style="margin-top:16px">
         <div class="card card-pad"><h3>Missions</h3>${missions.map(function (m) { return '<p><a href="#/missions/' + m.id + '">' + U.esc(m.title) + "</a> " + U.badge(m.status) + "</p>"; }).join("") || "<p>—</p>"}</div>
@@ -851,6 +851,7 @@
       <div class="crumbs"><a href="#/hiring">Besoins</a> / ${U.esc(h.title)}</div>
       <div class="page-head"><div><h1>${U.esc(h.title)}</h1><p>${U.esc(h.company_name || "")} · ${U.esc(h.location || "")} · ${U.badge(h.status)}</p></div>
         <div class="actions">
+          ${h.company_id ? '<button class="btn btn-ghost" data-add-contract="' + h.company_id + '" data-role="' + U.esc(h.title || "") + '">Envoyer le mandat à signer</button>' : ""}
           ${h.job_id ? "" : '<button class="btn btn-orange" data-hire-convert="' + h.id + '">Créer l’offre (brouillon)</button>'}
           ${job && job.status !== "publiee" && job.id ? '<button class="btn btn-electric" data-job-act="publiee:' + job.id + '" data-hire-id="' + h.id + '">Publier sur le site</button>' : ""}
           ${job && job.slug ? '<a class="btn btn-ghost" href="' + U.esc(job.url || ("/emploi-" + job.slug + ".html")) + '" target="_blank" rel="noopener">Voir sur le site</a>' : ""}
@@ -2119,40 +2120,84 @@
         });
         return;
       }
+      var sendCt = t.closest("[data-send-contract]");
+      if (sendCt) {
+        var sendId = sendCt.getAttribute("data-send-contract");
+        (async function () {
+          try {
+            if (live()) {
+              await window.TalendusAPI.sendContract(sendId);
+              await refreshLive();
+            }
+            U.toast("Mandat renvoyé dans l’espace employeur.", "ok");
+            render();
+          } catch (err) {
+            U.toast((err && err.message) || "Envoi impossible.", "err");
+          }
+        })();
+        return;
+      }
       var addCt = t.closest("[data-add-contract]");
       if (addCt) {
         var companyId = addCt.getAttribute("data-add-contract");
+        var roleHint = addCt.getAttribute("data-role") || "";
         U.modal({
-          title: "Nouveau mandat",
+          title: "Préparer et envoyer le mandat",
           body: '<form id="ct-form" class="form-grid">' +
-            U.field("Type", "type", "Succès") +
+            U.field("Modèle", "template", { options: [{ v: "succes", l: "Recrutement au succès" }, { v: "temporaire", l: "Placement temporaire" }], selected: "succes" }, "select") +
+            U.field("Type", "type", "Mandat de recrutement au succès") +
+            U.field("Poste visé", "role", roleHint) +
             U.field("Début", "start_date", new Date().toISOString().slice(0, 10), "date") +
             U.field("Fin", "end_date", "", "date") +
             U.field("Commission (%)", "commission_percent", "16", "number") +
-            U.field("Conditions", "terms", "16 % au succès, garantie 90 jours.", "textarea", "full") +
+            U.field("Conditions (préremplies)", "terms", "Chargement du modèle…", "textarea", "full") +
             "</form>",
-          footer: '<button class="btn btn-ghost" data-close>Annuler</button><button class="btn btn-orange" id="save">Créer</button>',
+          footer: '<button class="btn btn-ghost" data-close>Annuler</button><button class="btn btn-orange" id="save">Envoyer pour signature</button>',
           onMount: function (box, close) {
+            var form = box.querySelector("#ct-form");
+            async function fillPreview() {
+              if (!live()) return;
+              try {
+                var q = "?company_id=" + encodeURIComponent(companyId) +
+                  "&template=" + encodeURIComponent(form.template.value || "succes") +
+                  "&commission_percent=" + encodeURIComponent(form.commission_percent.value || "16") +
+                  (form.role.value ? "&role=" + encodeURIComponent(form.role.value) : "");
+                var prev = await window.TalendusAPI.previewContract(q);
+                var data = (prev && prev.data) || prev || {};
+                if (data.type) form.type.value = data.type;
+                if (data.start_date) form.start_date.value = data.start_date;
+                if (data.commission_percent != null) form.commission_percent.value = data.commission_percent;
+                if (data.terms) form.terms.value = data.terms;
+              } catch (err) {
+                form.terms.value = "Parties, honoraires et garantie se remplissent à l’envoi.";
+              }
+            }
+            fillPreview();
+            ["template", "commission_percent", "role"].forEach(function (name) {
+              form[name].addEventListener("change", fillPreview);
+            });
             box.querySelector("#save").onclick = async function () {
-              var d = U.formData(box.querySelector("#ct-form"));
+              var d = U.formData(form);
               try {
                 if (live()) {
                   await api().createContract({
                     company_id: companyId,
+                    template: d.template || "succes",
                     type: d.type,
+                    role: d.role || null,
                     start_date: d.start_date,
                     end_date: d.end_date || null,
-                    commission_percent: Number(d.commission_percent) || 0,
+                    commission_percent: Number(d.commission_percent) || 16,
                     terms: d.terms
                   });
                   await refreshLive();
                 } else {
                   TLStore.update(function (st) {
-                    st.contracts.push({ id: TLStore.nid("ct"), clientId: companyId, type: d.type || "Succès", start: d.start_date, end: d.end_date, commission: Number(d.commission_percent) || 16, terms: d.terms, status: "Actif", document: "" });
+                    st.contracts.push({ id: TLStore.nid("ct"), clientId: companyId, type: d.type || "Mandat de recrutement au succès", start: d.start_date, end: d.end_date, commission: Number(d.commission_percent) || 16, terms: d.terms, status: "À signer", document: "" });
                   });
                 }
-                close(); U.toast("Mandat créé.", "ok"); render();
-              } catch (err) { U.toast((err && err.message) || "Création impossible.", "err"); }
+                close(); U.toast("Mandat envoyé pour signature électronique.", "ok"); render();
+              } catch (err) { U.toast((err && err.message) || "Envoi impossible.", "err"); }
             };
           }
         });

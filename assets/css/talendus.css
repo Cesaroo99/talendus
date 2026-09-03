@@ -828,8 +828,10 @@ a.tl-card:hover, .tl-job-card:hover, .tl-case:hover {
 /* ----- Process ----- */
 .tl-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
 .tl-steps-4,
+.tl-steps-5,
 .tl-steps-7,
 .tl-steps-8 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.tl-steps-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 
 /* ----- Page employeur : prise en charge, piliers, métiers ----- */
 .tl-takeover-list {
@@ -1678,6 +1680,7 @@ a.tl-card:hover, .tl-job-card:hover, .tl-case:hover {
   .tl-grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .tl-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .tl-steps-4,
+  .tl-steps-5,
   .tl-steps-7,
   .tl-steps-8 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .tl-takeover-list,
@@ -1778,7 +1781,8 @@ a.tl-card:hover, .tl-job-card:hover, .tl-case:hover {
   .tl-hire-sectors,
   .tl-pillars,
   .tl-risk-list,
-  .tl-steps-4 { grid-template-columns: 1fr; }
+  .tl-steps-4,
+  .tl-steps-5 { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 479px) {
@@ -4001,6 +4005,7 @@ a.tl-job-card:hover .tl-job-card-cta::after {
 }
 @media (max-width: 991px) {
   .tl-why-grid { grid-template-columns: 1fr; }
+  .tl-steps-5,
   .tl-steps-7,
   .tl-steps-8 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .tl-step { min-height: 0; }
@@ -4419,27 +4424,6 @@ html.tl-native-app .tl-install-section {
   font-weight: 700 !important;
   font-size: 15.5px !important;
   letter-spacing: 0;
-}
-.tl-footer-cities {
-  margin-top: 4px !important;
-}
-.tl-footer-cities li {
-  padding: 0 0 9px !important;
-}
-.tl-footer-cities a {
-  display: inline !important;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: none;
-  color: rgba(255, 255, 255, .74) !important;
-  font-size: 14.5px !important;
-  font-weight: 500 !important;
-}
-.tl-footer-cities a:hover {
-  background: none;
-  border: 0;
-  color: #fff !important;
 }
 .tl-site-footer .copyright-area,
 .tl-site-footer .tl-footer-legal {
