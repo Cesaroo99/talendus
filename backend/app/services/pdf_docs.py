@@ -212,6 +212,43 @@ En signant, chaque partie confirme avoir lu l'intégralité du mandat, en avoir 
 """
 
 
+PAGE_W = 612
+PAGE_H = 792
+MARGIN = 48
+CONTENT_TOP = 720
+CONTENT_BOTTOM = 50
+NAVY = (0.043, 0.122, 0.227)
+ORANGE = (1.0, 0.42, 0.0)
+INK = (0.08, 0.10, 0.14)
+MUTED = (0.32, 0.36, 0.42)
+RULE = (0.89, 0.92, 0.94)
+STAMP_PAID = (0.09, 0.42, 0.26)
+STAMP_DUE = (0.72, 0.22, 0.12)
+STAMP_DRAFT = (0.42, 0.45, 0.50)
+STAMP_SIGNED = (0.043, 0.122, 0.227)
+STAMP_PAY = (0.75, 0.38, 0.08)
+
+INVOICE_STATUS_FR = {
+    "DRAFT": "Brouillon",
+    "SENT": "Envoyee",
+    "PENDING": "En attente",
+    "PAID": "Payee",
+    "OVERDUE": "En retard",
+    "CANCELLED": "Annulee",
+    "REFUNDED": "Remboursee",
+}
+
+INVOICE_STAMP = {
+    "PAID": ("PAYEE", STAMP_PAID),
+    "OVERDUE": ("EN RETARD", STAMP_DUE),
+    "DRAFT": ("BROUILLON", STAMP_DRAFT),
+    "CANCELLED": ("ANNULEE", STAMP_DUE),
+    "REFUNDED": ("REMBOURSEE", STAMP_DRAFT),
+    "SENT": ("A PAYER", STAMP_PAY),
+    "PENDING": ("A PAYER", STAMP_PAY),
+}
+
+
 def _latin(text: str) -> str:
     table = str.maketrans(
         {
@@ -250,7 +287,80 @@ def _wrap(text: str, width: int = 92) -> list[str]:
     return lines
 
 
-def build_pdf(title: str, body_lines: list[str], *, heading: str | None = None) -> bytes:
+def _rgb(color: tuple[float, float, float], *, fill: bool = True) -> str:
+    op = "rg" if fill else "RG"
+    return f"{color[0]:.3f} {color[1]:.3f} {color[2]:.3f} {op}"
+
+
+def _text(x: float, y: float, size: int, content: str, *, bold: bool = False) -> str:
+    font = "F2" if bold else "F1"
+    return f"BT /{font} {size} Tf 1 0 0 1 {x:.1f} {y:.1f} Tm ({_escape(content)}) Tj ET"
+
+
+def _header_footer(issuer: dict, *, page_no: int = 1, page_count: int = 1) -> list[str]:
+    phone = issuer.get("phone") or "263 558 5225"
+    email = issuer.get("email") or "info@talendus.ca"
+    return [
+        _rgb(NAVY),
+        "0 752 612 40 re f",
+        _rgb(ORANGE),
+        "0 748 612 4 re f",
+        "1 1 1 rg",
+        "18 759 22 22 re f",
+        _rgb(NAVY),
+        _text(23.5, 765, 13, "T", bold=True),
+        "1 1 1 rg",
+        _text(46, 770, 13, "TALENDUS", bold=True),
+        _text(46, 757, 8, "Cabinet de recrutement  ·  agence de placement  ·  talendus.ca"),
+        _rgb(NAVY),
+        "0 0 612 34 re f",
+        "1 1 1 rg",
+        _text(48, 16, 8, f"Talendus  ·  {email}  ·  {phone}  ·  Document officiel"),
+        _text(520, 16, 8, f"{page_no} / {page_count}"),
+    ]
+
+
+def _watermark(word: str = "TALENDUS") -> list[str]:
+    return [
+        "q",
+        "/GS1 gs",
+        "0.7071 0.7071 -0.7071 0.7071 306 400 cm",
+        _rgb((0.78, 0.80, 0.84)),
+        f"BT /F2 48 Tf 1 0 0 1 -98 -10 Tm ({_escape(word)}) Tj ET",
+        "Q",
+    ]
+
+
+def _stamp(label: str, color: tuple[float, float, float], *, x: int = 528, y: int = 700) -> list[str]:
+    """Cachet rotatif dans le coin supérieur droit, hors du texte métier."""
+    mark = _latin(label).upper()
+    width = max(72, int(len(mark) * 7.4) + 18)
+    height = 28
+    return [
+        "q",
+        f"0.809 0.588 -0.588 0.809 {x} {y} cm",
+        _rgb(color, fill=False),
+        "1.6 w",
+        f"-{width // 2} -{height // 2} {width} {height} re S",
+        f"-{width // 2 + 3} -{height // 2 + 3} {width + 6} {height + 6} re S",
+        _rgb(color),
+        f"BT /F2 10 Tf 1 0 0 1 -{int(len(mark) * 2.8)} -3 Tm ({_escape(mark)}) Tj ET",
+        "Q",
+    ]
+
+
+def _rule(y: float, *, x: int = MARGIN, width: int = 516) -> list[str]:
+    return [_rgb(RULE), f"{x} {y:.1f} {width} 1 re f"]
+
+
+def build_pdf(
+    title: str,
+    body_lines: list[str],
+    *,
+    heading: str | None = None,
+    stamp: tuple[str, tuple[float, float, float]] | None = None,
+) -> bytes:
+    issuer = billing_identity()
     items: list[tuple[str, int, bool]] = [(_latin(title), 16, True)]
     if heading:
         items.append((_latin(heading), 11, False))
@@ -260,13 +370,13 @@ def build_pdf(title: str, body_lines: list[str], *, heading: str | None = None) 
 
     pages: list[list[tuple[str, int, bool]]] = []
     current: list[tuple[str, int, bool]] = []
-    y = 742
+    y = CONTENT_TOP
     for item in items:
         size = item[1]
-        if y < 56:
+        if y < CONTENT_BOTTOM + 18:
             pages.append(current)
             current = []
-            y = 742
+            y = CONTENT_TOP
         current.append(item)
         y -= size + 5
     if current:
@@ -274,66 +384,27 @@ def build_pdf(title: str, body_lines: list[str], *, heading: str | None = None) 
     if not pages:
         pages = [[(_latin(title), 16, True)]]
 
-    def content_stream(page_items: list[tuple[str, int, bool]]) -> bytes:
-        y = 742
-        buf = ["BT"]
+    streams: list[bytes] = []
+    total = len(pages)
+    for index, page_items in enumerate(pages):
+        cursor = CONTENT_TOP
+        cmds = _watermark() + _header_footer(issuer, page_no=index + 1, page_count=total)
+        if stamp and index == 0:
+            cmds += _stamp(stamp[0], stamp[1])
+        cmds.append(_rgb(INK))
         for text, size, bold in page_items:
-            font = "F2" if bold else "F1"
-            buf.append(f"/{font} {size} Tf")
-            buf.append(f"1 0 0 1 48 {y} Tm")
-            buf.append(f"({_escape(text)}) Tj")
-            y -= size + 5
-        buf.append("ET")
-        return "\n".join(buf).encode("latin-1")
-
-    n_pages = len(pages)
-    font1 = 3 + 2 * n_pages
-    font2 = font1 + 1
-    objects: list[bytes] = []
-
-    def add(data: bytes | str) -> None:
-        objects.append(data if isinstance(data, bytes) else data.encode("latin-1"))
-
-    add(b"<< /Type /Catalog /Pages 2 0 R >>")
-    kids = " ".join(f"{i} 0 R" for i in range(3, 3 + n_pages))
-    add(f"<< /Type /Pages /Kids [{kids}] /Count {n_pages} >>")
-    for i in range(n_pages):
-        add(
-            f"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] "
-            f"/Resources << /Font << /F1 {font1} 0 R /F2 {font2} 0 R >> >> "
-            f"/Contents {3 + n_pages + i} 0 R >>"
-        )
-    for page_items in pages:
-        raw = content_stream(page_items)
-        add(f"<< /Length {len(raw)} >>\nstream\n".encode("latin-1") + raw + b"\nendstream")
-    add(b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>")
-    add(b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>")
-
-    out = bytearray(b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n")
-    offsets = [0]
-    for i, obj in enumerate(objects, start=1):
-        offsets.append(len(out))
-        out.extend(f"{i} 0 obj\n".encode("latin-1"))
-        out.extend(obj)
-        if not out.endswith(b"\n"):
-            out.extend(b"\n")
-        out.extend(b"endobj\n")
-    xref = len(out)
-    out.extend(f"xref\n0 {len(objects) + 1}\n".encode("latin-1"))
-    out.extend(b"0000000000 65535 f \n")
-    for off in offsets[1:]:
-        out.extend(f"{off:010d} 00000 n \n".encode("latin-1"))
-    out.extend(
-        f"trailer\n<< /Size {len(objects) + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n".encode("latin-1")
-    )
-    return bytes(out)
+            if text:
+                cmds.append(_text(MARGIN, cursor, size, text, bold=bold))
+            cursor -= size + 5
+        streams.append("\n".join(cmds).encode("latin-1"))
+    return _pdf_objects(streams)
 
 
 def _money(amount: int | None, currency: str = "CAD") -> str:
     n = int(amount or 0)
     sign = "-" if n < 0 else ""
     formatted = f"{abs(n):,}".replace(",", " ")
-    return f"{sign}{formatted},00 $ {currency}"
+    return f"{sign}{formatted},00 $"
 
 
 def tax_from_bp(ht: int, bp: int | None) -> int:
@@ -373,6 +444,7 @@ def _pdf_objects(page_streams: list[bytes]) -> bytes:
     n_pages = len(page_streams) or 1
     font1 = 3 + 2 * n_pages
     font2 = font1 + 1
+    gs = font2 + 1
     objects: list[bytes] = []
 
     def add(data: bytes | str) -> None:
@@ -383,14 +455,16 @@ def _pdf_objects(page_streams: list[bytes]) -> bytes:
     add(f"<< /Type /Pages /Kids [{kids}] /Count {n_pages} >>")
     for i in range(n_pages):
         add(
-            f"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] "
-            f"/Resources << /Font << /F1 {font1} 0 R /F2 {font2} 0 R >> >> "
+            f"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {PAGE_W} {PAGE_H}] "
+            f"/Resources << /Font << /F1 {font1} 0 R /F2 {font2} 0 R >> "
+            f"/ExtGState << /GS1 {gs} 0 R >> >> "
             f"/Contents {3 + n_pages + i} 0 R >>"
         )
     for raw in page_streams:
         add(f"<< /Length {len(raw)} >>\nstream\n".encode("latin-1") + raw + b"\nendstream")
     add(b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>")
     add(b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>")
+    add(b"<< /Type /ExtGState /ca 0.07 /CA 0.07 >>")
 
     out = bytearray(b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n")
     offsets = [0]
@@ -412,11 +486,6 @@ def _pdf_objects(page_streams: list[bytes]) -> bytes:
     return bytes(out)
 
 
-def _text(x: int, y: int, size: int, content: str, *, bold: bool = False) -> str:
-    font = "F2" if bold else "F1"
-    return f"BT /{font} {size} Tf 1 0 0 1 {x} {y} Tm ({_escape(content)}) Tj ET"
-
-
 def invoice_pdf(row: Invoice) -> bytes:
     issuer = billing_identity()
     company = row.company
@@ -424,11 +493,22 @@ def invoice_pdf(row: Invoice) -> bytes:
     tax = int(row.tax_amount or 0)
     total = row.amount_total if row.amount_total is not None else row.amount
     gst, qst = qc_tax_split(int(ht or 0), tax)
+    status_key = row.status.value if row.status else ""
+    status_label = INVOICE_STATUS_FR.get(status_key, status_key)
+    stamp = INVOICE_STAMP.get(status_key)
+
     client_lines = [
         company.name if company else "",
         (company.legal_name if company and company.legal_name and company.legal_name != company.name else ""),
         " ".join(part for part in [(company.address if company else None), (company.city if company else None)] if part),
-        " ".join(part for part in [(company.province if company else None) or "Quebec", (company.country if company else None) or "Canada"] if part),
+        " ".join(
+            part
+            for part in [
+                (company.province if company else None) or "Quebec",
+                (company.country if company else None) or "Canada",
+            ]
+            if part
+        ),
         company.email if company and company.email else "",
     ]
     client_lines = [line for line in client_lines if line]
@@ -441,97 +521,112 @@ def invoice_pdf(row: Invoice) -> bytes:
     else:
         line_rows.append(("Honoraires de recrutement", _money(ht, row.currency)))
 
-    cmds: list[str] = [
-        "0.043 0.122 0.227 rg",
-        "0 732 612 60 re f",
-        "1 0.42 0 rg",
-        "0 728 612 4 re f",
-        "1 1 1 rg",
-        "36 747 28 28 re f",
-        "0.043 0.122 0.227 rg",
-        _text(42, 756, 16, "T", bold=True),
-        "1 1 1 rg",
-        _text(74, 756, 18, "TALENDUS", bold=True),
-        _text(74, 740, 9, "Agence de placement  ·  talendus.ca"),
-        "0.043 0.122 0.227 rg",
-        _text(48, 700, 16, "FACTURE", bold=True),
-        _text(400, 704, 11, f"N° {row.number}", bold=True),
-        _text(400, 688, 10, f"Date : {row.issued_at or '-'}"),
-        _text(400, 674, 10, f"Echeance : {row.due_date or '-'}"),
-        _text(400, 660, 10, f"Statut : {row.status.value if row.status else ''}"),
-        _text(48, 672, 9, issuer["legal_name"], bold=True),
-        _text(48, 658, 9, issuer["address"]),
-        _text(48, 644, 9, f"{issuer['email']}  ·  {issuer['phone']}"),
-    ]
-    y = 630
+    cmds = _watermark() + _header_footer(issuer)
+    if stamp:
+        cmds += _stamp(stamp[0], stamp[1])
+
+    left_y = CONTENT_TOP
+    cmds += [_rgb(NAVY), _text(MARGIN, left_y, 18, "FACTURE", bold=True)]
+    left_y -= 24
+    cmds += [_rgb(INK), _text(MARGIN, left_y, 10, issuer["legal_name"], bold=True)]
+    left_y -= 13
+    cmds.append(_text(MARGIN, left_y, 9, issuer["address"]))
+    left_y -= 12
+    cmds.append(_text(MARGIN, left_y, 9, f"{issuer['email']}  ·  {issuer['phone']}"))
+    left_y -= 12
     if issuer["neq"]:
-        cmds.append(_text(48, y, 8, f"NEQ : {issuer['neq']}"))
-        y -= 12
-    else:
-        cmds.append(_text(48, y, 8, "NEQ : a renseigner (Paramètres > Plateforme)"))
-        y -= 12
-    gst_no = issuer["gst"] or "a renseigner"
-    qst_no = issuer["qst"] or "a renseigner"
-    cmds.append(_text(48, y, 8, f"N° TPS : {gst_no}    N° TVQ : {qst_no}"))
+        cmds.append(_text(MARGIN, left_y, 8, f"NEQ : {issuer['neq']}"))
+        left_y -= 11
+    gst_no = issuer["gst"]
+    qst_no = issuer["qst"]
+    if gst_no:
+        cmds.append(_text(MARGIN, left_y, 8, f"No TPS : {gst_no}"))
+        left_y -= 11
+    if qst_no:
+        cmds.append(_text(MARGIN, left_y, 8, f"No TVQ : {qst_no}"))
+        left_y -= 11
+    left_y -= 8
+
+    right_x = 360
+    right_y = CONTENT_TOP
     cmds += [
-        "0.894 0.918 0.941 rg",
-        "48 560 516 1 re f",
-        "0.043 0.122 0.227 rg",
-        _text(48, 600, 10, "Facturee a", bold=True),
+        _rgb(NAVY),
+        _text(right_x, right_y, 11, f"No {row.number}", bold=True),
     ]
-    cy = 584
+    right_y -= 16
+    cmds += [
+        _rgb(INK),
+        _text(right_x, right_y, 10, f"Date : {row.issued_at or '-'}"),
+    ]
+    right_y -= 14
+    cmds.append(_text(right_x, right_y, 10, f"Echeance : {row.due_date or '-'}"))
+    right_y -= 14
+    cmds.append(_text(right_x, right_y, 10, f"Statut : {status_label}"))
+    right_y -= 16
+
+    y = min(left_y, right_y) - 4
+    cmds += _rule(y)
+    y -= 18
+    cmds += [_rgb(NAVY), _text(MARGIN, y, 10, "Facturee a", bold=True)]
+    y -= 14
+    cmds.append(_rgb(INK))
     for line in client_lines[:5]:
-        cmds.append(_text(48, cy, 10, line))
-        cy -= 13
+        cmds.append(_text(MARGIN, y, 10, line))
+        y -= 13
+    y -= 12
 
     cmds += [
-        "0.043 0.122 0.227 rg",
-        "48 528 516 22 re f",
+        _rgb(NAVY),
+        f"{MARGIN} {y - 6} 516 20 re f",
         "1 1 1 rg",
-        _text(56, 535, 9, "Description", bold=True),
-        _text(430, 535, 9, "Montant (CAD)", bold=True),
+        _text(56, y, 9, "Description", bold=True),
+        _text(448, y, 9, "Montant", bold=True),
     ]
-    y = 508
-    cmds.append("0 0 0 rg")
-    for desc, amount in line_rows[:12]:
-        wrapped = _wrap(desc, 62)
+    y -= 26
+    cmds.append(_rgb(INK))
+    for desc, amount in line_rows[:14]:
+        if y < 220:
+            break
+        wrapped = _wrap(desc, 58)
         cmds.append(_text(56, y, 10, wrapped[0] if wrapped else desc))
-        cmds.append(_text(430, y, 10, amount))
+        cmds.append(_text(448, y, 10, amount))
         y -= 16
         for extra in wrapped[1:2]:
             cmds.append(_text(56, y, 10, extra))
             y -= 14
-    y -= 8
+    y -= 10
+
+    box_top = y
+    box_h = 78
     cmds += [
-        "0.894 0.918 0.941 rg",
-        f"320 {y - 70} 244 78 re f",
-        "0.043 0.122 0.227 rg",
-        _text(332, y, 10, "Sous-total (avant taxes)"),
-        _text(470, y, 10, _money(ht, row.currency), bold=True),
-        _text(332, y - 16, 10, "TPS 5 %"),
-        _text(470, y - 16, 10, _money(gst, row.currency)),
-        _text(332, y - 32, 10, "TVQ 9,975 %"),
-        _text(470, y - 32, 10, _money(qst, row.currency)),
-        _text(332, y - 52, 11, "Total a payer", bold=True),
-        _text(470, y - 52, 11, _money(total, row.currency), bold=True),
-        _text(48, y, 10, "Paiement", bold=True),
-        _text(48, y - 16, 9, "Virement ou cheque a l'ordre de Talendus."),
-        _text(48, y - 30, 9, "Devise : dollar canadien (CAD). Taxes du Quebec (TPS + TVQ)."),
-        _text(48, y - 44, 9, "L'encaissement est enregistre par Talendus. Pas de intermediaire requis."),
+        _rgb(RULE),
+        f"318 {box_top - box_h + 8} 246 {box_h} re f",
+        _rgb(NAVY),
+        _text(330, box_top, 10, "Sous-total"),
+        _text(490, box_top, 10, _money(ht, row.currency)),
+        _text(330, box_top - 16, 10, "TPS 5 %"),
+        _text(490, box_top - 16, 10, _money(gst, row.currency)),
+        _text(330, box_top - 32, 10, "TVQ 9,975 %"),
+        _text(490, box_top - 32, 10, _money(qst, row.currency)),
+        _text(330, box_top - 52, 11, "Total a payer", bold=True),
+        _text(490, box_top - 52, 11, _money(total, row.currency), bold=True),
+        _text(MARGIN, box_top, 10, "Paiement", bold=True),
+        _rgb(INK),
+        _text(MARGIN, box_top - 16, 9, "Virement ou cheque a l'ordre de Talendus."),
+        _text(MARGIN, box_top - 30, 9, "Devise : dollar canadien (CAD)."),
+        _text(MARGIN, box_top - 44, 9, "Taxes du Quebec (TPS + TVQ)."),
+        _text(MARGIN, box_top - 58, 9, "Encaissement enregistre par Talendus."),
     ]
-    fy = y - 72
-    if row.notes:
-        cmds.append(_text(48, fy, 10, "Notes", bold=True))
-        fy -= 14
-        for line in _wrap(row.notes, 86)[:6]:
-            cmds.append(_text(48, fy, 9, line))
-            fy -= 12
-    cmds += [
-        "0.043 0.122 0.227 rg",
-        "0 0 612 36 re f",
-        "1 1 1 rg",
-        _text(48, 14, 8, "Talendus  ·  Agence de placement  ·  talendus.ca  ·  " + issuer["phone"]),
-    ]
+    y = box_top - box_h - 8
+    if row.notes and y > CONTENT_BOTTOM + 24:
+        cmds += [_rgb(NAVY), _text(MARGIN, y, 10, "Notes", bold=True)]
+        y -= 14
+        cmds.append(_rgb(INK))
+        for line in _wrap(row.notes, 78)[:5]:
+            if y < CONTENT_BOTTOM + 10:
+                break
+            cmds.append(_text(MARGIN, y, 9, line))
+            y -= 12
     stream = "\n".join(cmds).encode("latin-1")
     return _pdf_objects([stream])
 
@@ -548,7 +643,8 @@ def _signature_block(title: str, signatures: list, party: str) -> list[str]:
             f"Signe par : {match.signer_name}",
             f"Courriel : {match.signer_email or '-'}",
             f"Le : {signed}",
-            f"Empreinte SHA-256 : {match.document_hash}",
+            "Empreinte SHA-256 :",
+            (match.document_hash or "")[:64],
             "Signature electronique interne Talendus (sans DocuSign ni Adobe Sign).",
         ]
     else:
@@ -563,6 +659,20 @@ def _signature_block(title: str, signatures: list, party: str) -> list[str]:
 
 def contract_pdf(row: Contract) -> bytes:
     company = row.company
+    client_signed = bool(getattr(row, "client_signed_at", None))
+    talendus_signed = bool(getattr(row, "talendus_signed_at", None))
+    if not client_signed or not talendus_signed:
+        for item in row.signatures or []:
+            party = (getattr(item, "party", None) or PARTY_CLIENT).upper()
+            if party == PARTY_CLIENT:
+                client_signed = True
+            elif party == PARTY_TALENDUS:
+                talendus_signed = True
+    stamp = None
+    if client_signed and talendus_signed:
+        stamp = ("SIGNE", STAMP_SIGNED)
+    elif talendus_signed:
+        stamp = ("A SIGNER", STAMP_PAY)
     lines = [
         f"Entreprise : {company.name if company else ''}",
         f"Type : {row.type or 'Mandat de recrutement'}",
@@ -577,8 +687,13 @@ def contract_pdf(row: Contract) -> bytes:
     lines.extend(_wrap(row.terms or ""))
     lines += _signature_block("Signature Talendus", row.signatures, PARTY_TALENDUS)
     lines += _signature_block("Signature du client", row.signatures, PARTY_CLIENT)
-    lines += ["", "Talendus · info@talendus.ca · 263 558 5225"]
+    lines += ["", "Document emis par Talendus · info@talendus.ca · 263 558 5225"]
     body: list[str] = []
     for line in lines:
-        body.extend(_wrap(line) if len(line) > 92 else [line])
-    return build_pdf("MANDAT DE RECRUTEMENT", body, heading="Talendus — agence de placement")
+        body.extend(_wrap(line) if len(line) > 88 else [line])
+    return build_pdf(
+        "MANDAT DE RECRUTEMENT",
+        body,
+        heading="Talendus - cabinet de recrutement et agence de placement",
+        stamp=stamp,
+    )
