@@ -92,28 +92,28 @@ INDEX_EN = rf"""
         <div class="img1"><img src="{img('usine-equipe.jpg')}" alt="Team at work" fetchpriority="high" decoding="async"></div>
         <div class="container">
             <div class="hero2-heading tl-hero-lock">
-                <h5>Talendus. An intelligent placement agency.</h5>
+                <h5>Talendus. A recruiting firm.</h5>
                 <div class="space16"></div>
-                <h1 data-persona-only="gateway">Are you hiring, or looking for a job?</h1>
+                <h1 data-persona-only="gateway">A seat to fill? Or a job to find?</h1>
                 <h1 data-persona-only="talent">Your path, studied. The right opportunities.</h1>
-                <h1 data-persona-only="entreprise">The right talent. Faster. Smarter.</h1>
+                <h1 data-persona-only="entreprise">The right candidate. Fast.</h1>
                 <div class="space16"></div>
-                <p data-persona-only="gateway">Pick your side to continue. Candidates and employers do not land on the same pages.</p>
+                <p data-persona-only="gateway">Employers talk to a headhunter first. Candidates create a profile. Two doors, one firm.</p>
                 <p data-persona-only="talent">Create your profile, submit your resume. We study your path and contact you when an opportunity fits. Free for you. Call or write — a consultant takes it from there.</p>
-                <p data-persona-only="entreprise">Hand us the need. We search, screen and present a qualified shortlist. You do not browse a resume database. You keep the final decision.</p>
+                <p data-persona-only="entreprise">Search, first interview, terms: we take it on. You keep the hire. Fees when they start. Book a free consultation to open the mandate.</p>
             </div>
             <div class="tl-persona-cards" data-persona-only="gateway">
+              <a class="tl-persona-card is-hire" href="employers.html" data-set-persona="entreprise">
+                <span class="tl-kicker">Employers</span>
+                <h2>I'm hiring</h2>
+                <p>Book a free consultation. A headhunter takes the seat: search, first interview, shortlist.</p>
+                <span class="tl-persona-go">Book a consultation <i class="fa-solid fa-arrow-right"></i></span>
+              </a>
               <a class="tl-persona-card is-talent" href="candidates.html" data-set-persona="talent">
                 <span class="tl-kicker">Candidates</span>
                 <h2>I'm looking for a job</h2>
                 <p>Join the Talendus network. Profile, resume and next steps live on the candidate side.</p>
                 <span class="tl-persona-go">Create my profile <i class="fa-solid fa-arrow-right"></i></span>
-              </a>
-              <a class="tl-persona-card is-hire" href="employers.html" data-set-persona="entreprise">
-                <span class="tl-kicker">Employers</span>
-                <h2>I'm hiring</h2>
-                <p>Hand us the role to fill. Search, screening and the shortlist live on the employer side.</p>
-                <span class="tl-persona-go">Hand us the search <i class="fa-solid fa-arrow-right"></i></span>
               </a>
             </div>
         </div>
@@ -124,8 +124,8 @@ INDEX_EN = rf"""
 
 def build_en(write, wrap, page_hero):
     write("en/index.html", wrap(
-        "Talendus | Intelligent placement agency",
-        "Talendus is a placement agency. Companies: hand us a need, receive a shortlist. Candidates: create a profile, be contacted when an opportunity fits. Every industry.",
+        "Talendus | Recruiting firm in Quebec",
+        "Talendus hires for Quebec companies. Free consultation, headhunting, a qualified shortlist. Candidates create a profile: a consultant calls when it fits.",
         "en/",
         INDEX_EN + homepage_after_hero("en") + homepage_faq("en") + sectors_cloud("en") + trades_cloud("en"),
         solid=False,

@@ -80,9 +80,9 @@ COPY = {
         "cta_hire_need": "Décrire le poste",
         "cta_gateway_talent": "Je cherche un emploi",
         "cta_gateway_hire": "Je recrute",
-        "cta_gateway_kicker": "Emploi ou recrutement",
+        "cta_gateway_kicker": "Recrutement ou emploi",
         "cta_gateway_h2": "Dites-nous ce que vous venez faire.",
-        "cta_gateway_p": "Cherchez-vous un emploi, ou avez-vous un poste à pourvoir ? Choisissez. Talendus est l'intermédiaire.",
+        "cta_gateway_p": "Avez-vous un poste à pourvoir, ou cherchez-vous un emploi ? Les entreprises parlent d'abord à un chasseur. Talendus est l'intermédiaire.",
         "speed_kicker_talent": "Sans frais pour vous",
         "speed_h2_talent": "Talendus étudie votre profil et vous présente aux entreprises quand ça colle.",
         "speed_p_talent": "Vous créez votre profil. Nous comprenons votre parcours. Lorsqu'une opportunité correspond, un conseiller vous rappelle. Appelez-nous ou écrivez-nous dès que vous voulez avancer.",
@@ -172,9 +172,9 @@ COPY = {
         "cta_hire_need": "Describe the role",
         "cta_gateway_talent": "I'm looking for a job",
         "cta_gateway_hire": "I'm hiring",
-        "cta_gateway_kicker": "Job search or hiring",
+        "cta_gateway_kicker": "Hiring or job search",
         "cta_gateway_h2": "Tell us what you came to do.",
-        "cta_gateway_p": "Looking for a job, or filling a role? Pick a side. Talendus is the intermediary.",
+        "cta_gateway_p": "Filling a seat, or looking for a job? Employers talk to a headhunter first. Talendus is the intermediary.",
         "speed_kicker_talent": "Free for you",
         "speed_h2_talent": "Talendus studies your profile and introduces you when it actually fits.",
         "speed_p_talent": "You create your profile. We understand your path. When an opportunity fits, a consultant calls you. Call or write whenever you want to move forward.",
@@ -339,15 +339,6 @@ def nav_html(lang):
     t, h = COPY[lang], HREFS[lang]
     return f"""
                               <li data-nav="home"><a href="{h['home']}">{t['nav_home']}</a></li>
-                              <li class="has-dropdown" data-nav="candidats">
-                                <a href="{h['candidates']}" data-set-persona="talent">{t['nav_candidates']} <span class="tl-nav-caret" aria-hidden="true"><i class="fa-solid fa-angle-down"></i></span></a>
-                                  <ul class="sub-menu">
-                                      <li><a href="{h['jobs']}" data-set-persona="talent">{t['nav_jobs_list']}</a></li>
-                                      <li><a href="{h['cv']}" data-set-persona="talent">{t['nav_cv']}</a></li>
-                                      <li><a href="{h['process_page']}" data-set-persona="talent">{t['nav_process']}</a></li>
-                                      <li><a href="{h['candidates']}#faq" data-set-persona="talent">{t['nav_talent_faq']}</a></li>
-                                  </ul>
-                              </li>
                               <li class="has-dropdown" data-nav="employeurs">
                                 <a href="{h['employers']}" data-set-persona="entreprise">{t['nav_employers']} <span class="tl-nav-caret" aria-hidden="true"><i class="fa-solid fa-angle-down"></i></span></a>
                                   <ul class="sub-menu">
@@ -357,6 +348,15 @@ def nav_html(lang):
                                       <li><a href="{h['hr']}" data-set-persona="entreprise">{t['nav_hr']}</a></li>
                                       <li><a href="{h['services']}" data-set-persona="entreprise">{t['nav_services']}</a></li>
                                       <li><a href="{h['sectors']}" data-set-persona="entreprise">{t['nav_sectors']}</a></li>
+                                  </ul>
+                              </li>
+                              <li class="has-dropdown" data-nav="candidats">
+                                <a href="{h['candidates']}" data-set-persona="talent">{t['nav_candidates']} <span class="tl-nav-caret" aria-hidden="true"><i class="fa-solid fa-angle-down"></i></span></a>
+                                  <ul class="sub-menu">
+                                      <li><a href="{h['jobs']}" data-set-persona="talent">{t['nav_jobs_list']}</a></li>
+                                      <li><a href="{h['cv']}" data-set-persona="talent">{t['nav_cv']}</a></li>
+                                      <li><a href="{h['process_page']}" data-set-persona="talent">{t['nav_process']}</a></li>
+                                      <li><a href="{h['candidates']}#faq" data-set-persona="talent">{t['nav_talent_faq']}</a></li>
                                   </ul>
                               </li>
                               <li data-nav="jobs"><a href="{h['jobs']}" data-set-persona="talent">{t['nav_jobs']}</a></li>
@@ -954,10 +954,10 @@ def homepage_faq(lang="fr"):
     if lang == "en":
         gateway = [
             FAQ_HOME_EN[0],
+            ("I'm hiring, what should I do?",
+             "Book a free consultation. Hand us the need: role, criteria, terms. A headhunter takes the search, the first interview and the shortlist. You keep the hire. Fees when they start."),
             ("I'm looking for a job, what should I do?",
              "Create a profile and submit your resume. Talendus studies your path and contacts you when an opportunity fits. It is free. Call us or write — a consultant takes it from there."),
-            ("I'm hiring, what should I do?",
-             "Book a free consultation. Hand us the need: role, criteria, conditions. Talendus searches, screens and presents a qualified shortlist. You do not browse a resume database. You keep the final decision."),
             FAQ_HOME_EN[1],
         ]
         talent = FAQ_CANDIDATES_EN[:6]
@@ -966,10 +966,10 @@ def homepage_faq(lang="fr"):
     else:
         gateway = [
             FAQ_HOME[0],
+            ("Je recrute : que dois-je faire ?",
+             "Réservez une consultation gratuite. Confiez-nous le besoin : poste, critères, conditions. Un chasseur reprend la recherche, la première entrevue et la shortlist. Vous gardez l'embauche. Honoraires à l'entrée en poste."),
             ("Je cherche un emploi : que dois-je faire ?",
              "Créez un profil et déposez votre CV. Talendus étudie votre parcours et vous contacte lorsqu'une opportunité correspond. C'est gratuit. Appelez-nous ou écrivez-nous : un conseiller s'en occupe."),
-            ("Je recrute : que dois-je faire ?",
-             "Réservez une consultation gratuite. Confiez-nous le besoin : poste, critères, conditions. Talendus recherche, présélectionne et présente une shortlist qualifiée. Vous ne parcourez pas une base de CV. Vous gardez la décision finale."),
             FAQ_HOME[1],
         ]
         talent = FAQ_CANDIDATS[:6]

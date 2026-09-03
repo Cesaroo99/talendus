@@ -185,28 +185,28 @@ INDEX_BODY = r"""
         <div class="img1"><img src="assets/img/all-images/industry/usine-equipe.jpg" alt="Équipe au travail" fetchpriority="high" decoding="async"></div>
         <div class="container">
             <div class="hero2-heading tl-hero-lock">
-                <h5>Talendus. Agence de placement intelligente.</h5>
+                <h5>Talendus. Cabinet de recrutement.</h5>
                 <div class="space16"></div>
-                <h1 data-persona-only="gateway">Vous recrutez ou vous cherchez un emploi ?</h1>
+                <h1 data-persona-only="gateway">Un poste à pourvoir ? Ou un emploi à trouver ?</h1>
                 <h1 data-persona-only="talent">Votre parcours, étudié. Les bonnes opportunités.</h1>
-                <h1 data-persona-only="entreprise">Les bons talents. Plus rapidement. Plus intelligemment.</h1>
+                <h1 data-persona-only="entreprise">Le bon candidat. Rapidement.</h1>
                 <div class="space16"></div>
-                <p data-persona-only="gateway">Choisissez votre côté pour continuer. Candidats et entreprises n'arrivent pas sur les mêmes pages.</p>
+                <p data-persona-only="gateway">Les entreprises parlent d'abord à un chasseur de têtes. Les candidats créent un profil. Deux portes, une agence.</p>
                 <p data-persona-only="talent">Créez votre profil, déposez votre CV. Nous étudions votre parcours et vous contactons lorsqu'une opportunité correspond. Gratuit pour vous. Appelez-nous ou écrivez-nous : un conseiller s'en occupe.</p>
-                <p data-persona-only="entreprise">Confiez-nous votre besoin. Nous recherchons, présélectionnons et vous présentons une shortlist qualifiée. Vous ne parcourez pas une base de CV. Vous gardez la décision finale.</p>
+                <p data-persona-only="entreprise">Recherche, première entrevue, conditions : on prend en charge. Vous gardez l'embauche. Honoraires à l'entrée en poste. Réservez une consultation gratuite pour ouvrir le mandat.</p>
             </div>
             <div class="tl-persona-cards" data-persona-only="gateway">
+              <a class="tl-persona-card is-hire" href="entreprises.html" data-set-persona="entreprise">
+                <span class="tl-kicker">Entreprises</span>
+                <h2>Je recrute</h2>
+                <p>Réservez une consultation gratuite. Un chasseur reprend le poste : recherche, première entrevue, shortlist.</p>
+                <span class="tl-persona-go">Réserver une consultation <i class="fa-solid fa-arrow-right"></i></span>
+              </a>
               <a class="tl-persona-card is-talent" href="candidats.html" data-set-persona="talent">
                 <span class="tl-kicker">Candidats</span>
                 <h2>Je cherche un emploi</h2>
                 <p>Entrez dans le réseau Talendus. Profil, CV, suite du parcours : tout se passe du côté candidats.</p>
                 <span class="tl-persona-go">Créer mon profil <i class="fa-solid fa-arrow-right"></i></span>
-              </a>
-              <a class="tl-persona-card is-hire" href="entreprises.html" data-set-persona="entreprise">
-                <span class="tl-kicker">Entreprises</span>
-                <h2>Je recrute</h2>
-                <p>Transmettez le poste à pourvoir. La recherche, la présélection et la shortlist se font du côté entreprises.</p>
-                <span class="tl-persona-go">Confier mon recrutement <i class="fa-solid fa-arrow-right"></i></span>
               </a>
             </div>
         </div>
@@ -215,8 +215,8 @@ INDEX_BODY = r"""
 """
 
 write("index.html", wrap(
-    "Talendus | Agence de placement intelligente",
-    "Talendus est une agence de placement. Entreprises : confiez un besoin, recevez une shortlist. Candidats : créez un profil, soyez contacté lorsqu'une opportunité correspond. Tous secteurs.",
+    "Talendus | Cabinet de recrutement au Québec",
+    "Talendus recrute pour les entreprises du Québec. Consultation gratuite, chasse de têtes, shortlist qualifiée. Les candidats créent un profil : un conseiller les rappelle quand ça colle.",
     "",
     INDEX_BODY + homepage_after_hero("fr") + homepage_faq("fr") + sectors_cloud("fr") + trades_cloud("fr"),
     solid=False,

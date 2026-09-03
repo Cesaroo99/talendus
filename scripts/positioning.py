@@ -790,6 +790,17 @@ def gateway_orientation_section(lang="fr"):
       <p class="tl-lead">Once that choice is made, Talendus does not work the same way. Here is what actually changes on each side.</p>
     </div>
     <div class="tl-gateway-lanes">
+      <article class="tl-gateway-lane is-hire">
+        <span class="tl-kicker">On the employer side</span>
+        <h3>We hire for you</h3>
+        <p>You describe the seat. A headhunter searches, runs the first interview and brings a shortlist. You keep the hire. Fees when they start. The first consultation is free.</p>
+        <ul class="tl-gateway-points">
+          <li>A free consultation — not a tool to learn.</li>
+          <li>People already qualified, not a pile of CVs.</li>
+          <li>One headhunter through start date.</li>
+        </ul>
+        <a class="tl-btn" href="employers.html" data-set-persona="entreprise">See the recruiting process</a>
+      </article>
       <article class="tl-gateway-lane is-talent">
         <span class="tl-kicker">On the candidate side</span>
         <h3>We represent you</h3>
@@ -800,17 +811,6 @@ def gateway_orientation_section(lang="fr"):
           <li>A consultant stays with you through screening and any presentation. Call us anytime.</li>
         </ul>
         <a class="tl-btn" href="candidates.html" data-set-persona="talent">See how it works for you</a>
-      </article>
-      <article class="tl-gateway-lane is-hire">
-        <span class="tl-kicker">On the employer side</span>
-        <h3>We hire for you</h3>
-        <p>You describe the role. We search, talk to people, bring a shortlist. You retain. Fees at the hire.</p>
-        <ul class="tl-gateway-points">
-          <li>A brief to hand over — not a tool to learn.</li>
-          <li>People already qualified, not a pile of CVs.</li>
-          <li>One consultant through start date.</li>
-        </ul>
-        <a class="tl-btn" href="employers.html" data-set-persona="entreprise">See how it works for you</a>
       </article>
     </div>
   </div>
@@ -825,6 +825,17 @@ def gateway_orientation_section(lang="fr"):
       <p class="tl-lead">Une fois ce choix fait, Talendus ne travaille pas de la même façon. Voici ce qui change concrètement, de chaque côté.</p>
     </div>
     <div class="tl-gateway-lanes">
+      <article class="tl-gateway-lane is-hire">
+        <span class="tl-kicker">Du côté entreprises</span>
+        <h3>On recrute pour vous</h3>
+        <p>Vous décrivez le poste. Un chasseur cherche, mène la première entrevue et vous amène une shortlist. Vous gardez l'embauche. Honoraires à l'entrée en poste. La consultation de départ est gratuite.</p>
+        <ul class="tl-gateway-points">
+          <li>Une consultation gratuite — pas un outil à apprendre.</li>
+          <li>Des gens déjà qualifiés, pas une pile de CV.</li>
+          <li>Un chasseur jusqu'à l'entrée en poste.</li>
+        </ul>
+        <a class="tl-btn" href="entreprises.html" data-set-persona="entreprise">Voir le processus de recrutement</a>
+      </article>
       <article class="tl-gateway-lane is-talent">
         <span class="tl-kicker">Du côté candidats</span>
         <h3>On vous représente</h3>
@@ -835,17 +846,6 @@ def gateway_orientation_section(lang="fr"):
           <li>Un conseiller vous suit jusqu'à une présentation. Appelez-nous quand vous voulez.</li>
         </ul>
         <a class="tl-btn" href="candidats.html" data-set-persona="talent">Voir comment ça se passe</a>
-      </article>
-      <article class="tl-gateway-lane is-hire">
-        <span class="tl-kicker">Du côté entreprises</span>
-        <h3>On recrute pour vous</h3>
-        <p>Vous décrivez le poste. On cherche, on parle aux gens, on vous amène une shortlist. Vous retenez. Honoraires à l'embauche.</p>
-        <ul class="tl-gateway-points">
-          <li>Un brief à nous passer — pas un outil à apprendre.</li>
-          <li>Des gens déjà qualifiés, pas une pile de CV.</li>
-          <li>Un conseiller jusqu'à l'entrée en poste.</li>
-        </ul>
-        <a class="tl-btn" href="entreprises.html" data-set-persona="entreprise">Voir comment ça se passe</a>
       </article>
     </div>
   </div>
@@ -1714,10 +1714,9 @@ def homepage_after_hero(lang="fr"):
         + talent_cta_band(lang)
     )
     hire = (
-        for_companies_section(lang)
+        employer_takeover_section(lang)
+        + employer_pillars_section(lang)
         + process_section(lang)
-        + why_talendus_section(lang)
-        + ai_engine_section(lang)
         + human_hire_band(lang)
     )
     return (
