@@ -330,32 +330,32 @@ def build_en(write, wrap, page_hero):
           <div class="icon" aria-hidden="true"><i class="fa-solid fa-phone"></i></div>
           <div>
             <h3>Phone</h3>
-            <p><a href="tel:+12635585225">263 558 5225</a></p>
-            <p>On weekdays we usually reply within 30 minutes.</p>
+            <p class="tl-info-value"><a href="tel:+12635585225">263 558 5225</a></p>
+            <p class="tl-info-note">On weekdays we usually reply within 30 minutes.</p>
           </div>
         </div>
         <div class="tl-info-card">
           <div class="icon" aria-hidden="true"><i class="fa-regular fa-envelope"></i></div>
           <div>
             <h3>Email</h3>
-            <p><a href="mailto:info@talendus.ca">info@talendus.ca</a></p>
-            <p>Mon–Fri, 8 a.m. to 5 p.m.</p>
+            <p class="tl-info-value"><a href="mailto:info@talendus.ca">info@talendus.ca</a></p>
+            <p class="tl-info-note">Mon–Fri, 8 a.m. to 5 p.m.</p>
           </div>
         </div>
         <div class="tl-info-card">
           <div class="icon" aria-hidden="true"><i class="fa-brands fa-whatsapp"></i></div>
           <div>
             <h3>WhatsApp</h3>
-            <p><a href="{WA}" target="_blank" rel="noopener noreferrer">Open a conversation</a></p>
-            <p>Replies during business hours.</p>
+            <p class="tl-info-value"><a href="{WA}" target="_blank" rel="noopener noreferrer">Open a conversation</a></p>
+            <p class="tl-info-note">Replies during business hours.</p>
           </div>
         </div>
         <div class="tl-info-card">
           <div class="icon" aria-hidden="true"><i class="fa-solid fa-calendar-check"></i></div>
           <div>
             <h3>Meetings</h3>
-            <p>Calls are by appointment.</p>
-            <p>We work around your availability.</p>
+            <p class="tl-info-value">Calls are by appointment.</p>
+            <p class="tl-info-note">We work around your availability.</p>
           </div>
         </div>
       </div>

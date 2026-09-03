@@ -476,32 +476,32 @@ write("contact.html", wrap(
           <div class="icon" aria-hidden="true"><i class="fa-solid fa-phone"></i></div>
           <div>
             <h3>Téléphone</h3>
-            <p><a href="tel:+12635585225">263 558 5225</a></p>
-            <p>En semaine, on répond en général en moins de 30 minutes.</p>
+            <p class="tl-info-value"><a href="tel:+12635585225">263 558 5225</a></p>
+            <p class="tl-info-note">En semaine, on répond en général en moins de 30 minutes.</p>
           </div>
         </div>
         <div class="tl-info-card">
           <div class="icon" aria-hidden="true"><i class="fa-regular fa-envelope"></i></div>
           <div>
             <h3>Courriel</h3>
-            <p><a href="mailto:info@talendus.ca">info@talendus.ca</a></p>
-            <p>Lun–Ven, 8 h à 17 h</p>
+            <p class="tl-info-value"><a href="mailto:info@talendus.ca">info@talendus.ca</a></p>
+            <p class="tl-info-note">Lun–Ven, 8 h à 17 h</p>
           </div>
         </div>
         <div class="tl-info-card">
           <div class="icon" aria-hidden="true"><i class="fa-brands fa-whatsapp"></i></div>
           <div>
             <h3>WhatsApp</h3>
-            <p><a href="https://wa.me/12635585225?text=Bonjour%20Talendus%2C%20je%20souhaite%20discuter%20d%27un%20besoin%20de%20recrutement." target="_blank" rel="noopener noreferrer">Ouvrir une conversation</a></p>
-            <p>Réponse durant les heures d’ouverture.</p>
+            <p class="tl-info-value"><a href="https://wa.me/12635585225?text=Bonjour%20Talendus%2C%20je%20souhaite%20discuter%20d%27un%20besoin%20de%20recrutement." target="_blank" rel="noopener noreferrer">Ouvrir une conversation</a></p>
+            <p class="tl-info-note">Réponse durant les heures d’ouverture.</p>
           </div>
         </div>
         <div class="tl-info-card">
           <div class="icon" aria-hidden="true"><i class="fa-solid fa-calendar-check"></i></div>
           <div>
             <h3>Rencontres</h3>
-            <p>Les appels se font sur rendez-vous.</p>
-            <p>On s'ajuste à vos disponibilités.</p>
+            <p class="tl-info-value">Les appels se font sur rendez-vous.</p>
+            <p class="tl-info-note">On s'ajuste à vos disponibilités.</p>
           </div>
         </div>
       </div>
