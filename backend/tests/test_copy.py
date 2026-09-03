@@ -100,10 +100,12 @@ def test_employer_pages_sound_like_a_recruiting_firm():
     assert "première entrevue" in page.lower() or "premiere entrevue" in page.lower()
     assert "Processus de recrutement" in page
     assert "Prise de besoins" in page
+    assert "Signature du mandat" in page
     assert "Recrutement actif" in page
     chasse = (ROOT / "chasse-de-tetes.html").read_text(encoding="utf-8")
     assert "consultation gratuite" in chasse.lower()
     assert "Recrutement actif" in chasse
+    assert "Signature du mandat" in chasse
     en = (ROOT / "en" / "employers.html").read_text(encoding="utf-8")
     assert "In practice" not in en
     assert "What that looks like" not in en
@@ -122,6 +124,12 @@ def test_public_pages_use_jakarta_sans_and_distinct_footer():
     assert "Plus Jakarta Sans" in css
     assert ".tl-site-footer" in css
     assert ".tl-footer-contact" in css
+    assert "tl-footer-cities" not in page
+    assert "Ces exemples n'enferment personne" not in (ROOT / "index.html").read_text(encoding="utf-8")
+    assert "These examples do not box anyone" not in (ROOT / "en" / "index.html").read_text(encoding="utf-8")
+    footer = (ROOT / "index.html").read_text(encoding="utf-8")
+    assert "tl-footer-cities" not in footer
+    assert 'href="recrutement-industriel-laval.html">Laval</a>' not in footer
 
 
 def test_generated_pages_drop_no_contact_copy():

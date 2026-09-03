@@ -267,6 +267,14 @@ def set_status(db: Session, user: User, request_id: str, status_raw: str) -> Rec
     except ValueError as exc:
         raise AppError(400, "Statut invalide.", "VALIDATION_ERROR") from exc
     row = get_request(db, user, request_id)
+    from app.services.contracts import WORK_STATUSES, company_has_signed_mandate
+
+    if status.value in WORK_STATUSES and not company_has_signed_mandate(db, row.company_id):
+        raise AppError(
+            409,
+            "Le client doit signer le mandat avant que la recherche commence.",
+            "MANDATE_NOT_SIGNED",
+        )
     row.status = status
     row.updated_at = utcnow()
     audit(db, f"hiring_request.{status.value.lower()}", user, "mission", row.id)

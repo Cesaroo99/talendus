@@ -241,6 +241,8 @@
     createInterview: function (body) { return request("/interviews", { method: "POST", body: body }); },
     signContract: function (id, body) { return request("/contracts/" + id + "/sign", { method: "POST", body: body }); },
     createContract: function (body) { return request("/contracts", { method: "POST", body: body }); },
+    previewContract: function (query) { return request("/contracts/preview" + (query || "")); },
+    sendContract: function (id) { return request("/contracts/" + id + "/send", { method: "POST" }); },
     download: function (path, filename) {
       var token = getAccess();
       var abs = apiRoot() + path;

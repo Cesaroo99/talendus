@@ -128,13 +128,14 @@ def write_fr(write, wrap, page_hero, cta):
               <div class="tl-prose" style="max-width:720px;margin:0 auto 36px">
                 <div class="tl-kicker">Processus de chasse</div>
                 <h2 class="tl-h2">Un processus simple, conçu pour combler le poste vite.</h2>
-                <p>Nous contacter. Prise de besoins. Recrutement actif. Accompagnement jusqu'à l'embauche. C'est seulement à ce moment que vous payez.</p>
+                <p>Nous contacter. Prise de besoins. Signature du mandat. Recrutement actif. Accompagnement jusqu'à l'embauche. C'est seulement à ce moment que vous payez.</p>
               </div>
               <div class="tl-takeover-list tl-takeover-list-3">
                 <article class="tl-takeover-item"><span>01</span><h3>Nous contacter</h3><p>Parlez à un chasseur de têtes. Consultation gratuite, vingt minutes. On dit si on peut prendre le poste.</p></article>
                 <article class="tl-takeover-item"><span>02</span><h3>Prise de besoins</h3><p>On écoute le poste affiché et celui que vous n'oseriez pas afficher. Puis on ajuste la stratégie au marché réel.</p></article>
-                <article class="tl-takeover-item"><span>03</span><h3>Recrutement actif</h3><p>Les meilleurs ne regardent pas les babillards. Le chasseur fait le tour du bassin et approche le talent déjà en poste.</p></article>
-                <article class="tl-takeover-item"><span>04</span><h3>Accompagnement</h3><p>Première entrevue, suivi, conditions. Vous rencontrez. Vous retenez. On reste jusqu'à l'entrée en poste.</p></article>
+                <article class="tl-takeover-item"><span>03</span><h3>Signature du mandat</h3><p>Talendus prépare le contrat et l'admin l'envoie. Vous signez électroniquement. La chasse ne commence pas avant.</p></article>
+                <article class="tl-takeover-item"><span>04</span><h3>Recrutement actif</h3><p>Les meilleurs ne regardent pas les babillards. Le chasseur fait le tour du bassin et approche le talent déjà en poste.</p></article>
+                <article class="tl-takeover-item"><span>05</span><h3>Accompagnement</h3><p>Première entrevue, suivi, conditions. Vous rencontrez. Vous retenez. On reste jusqu'à l'entrée en poste.</p></article>
               </div>
             </div></section>
             <section class="tl-section tl-ice"><div class="container">
@@ -359,13 +360,14 @@ def write_en(write, wrap, page_hero, cta):
               <div class="tl-prose" style="max-width:720px;margin:0 auto 36px">
                 <div class="tl-kicker">Search process</div>
                 <h2 class="tl-h2">A simple process, built to fill the seat fast.</h2>
-                <p>Contact us. Needs intake. Active search. Support through the hire. That is when you pay.</p>
+                <p>Contact us. Needs intake. Mandate signature. Active search. Support through the hire. That is when you pay.</p>
               </div>
               <div class="tl-takeover-list tl-takeover-list-3">
                 <article class="tl-takeover-item"><span>01</span><h3>Contact us</h3><p>Talk to a headhunter. Free consultation, twenty minutes. We say if we can take the seat.</p></article>
                 <article class="tl-takeover-item"><span>02</span><h3>Needs intake</h3><p>We hear the role you would post and the one you would not. Then we adjust the strategy to the real market.</p></article>
-                <article class="tl-takeover-item"><span>03</span><h3>Active search</h3><p>The best people do not watch job boards. The headhunter maps the pool and approaches talent already in a job.</p></article>
-                <article class="tl-takeover-item"><span>04</span><h3>Support</h3><p>First interview, follow-up, terms. You meet. You retain. We stay through start date.</p></article>
+                <article class="tl-takeover-item"><span>03</span><h3>Mandate signature</h3><p>Talendus prepares the contract and admin sends it. You sign electronically. Search does not start before that.</p></article>
+                <article class="tl-takeover-item"><span>04</span><h3>Active search</h3><p>The best people do not watch job boards. The headhunter maps the pool and approaches talent already in a job.</p></article>
+                <article class="tl-takeover-item"><span>05</span><h3>Support</h3><p>First interview, follow-up, terms. You meet. You retain. We stay through start date.</p></article>
               </div>
             </div></section>
             <section class="tl-section tl-ice"><div class="container">

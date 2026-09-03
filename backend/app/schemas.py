@@ -624,13 +624,15 @@ class ContractSignIn(BaseModel):
 
 class ContractIn(BaseModel):
     company_id: str
-    type: str = Field(default="Succès", min_length=2, max_length=80)
+    type: str = Field(default="Mandat de recrutement au succès", min_length=2, max_length=80)
     start_date: str | None = None
     end_date: str | None = None
     commission_percent: int | None = Field(default=None, ge=0, le=100)
     terms: str | None = None
     document_name: str | None = Field(default=None, max_length=255)
     status: str | None = None
+    template: str | None = Field(default=None, max_length=40)
+    role: str | None = Field(default=None, max_length=180)
 
 
 class SiteContentIn(BaseModel):

@@ -19,6 +19,23 @@ def list_contracts(db: Session = Depends(get_db), user: User = Depends(get_curre
     return ok([contracts_service.serialize_contract(row) for row in contracts_service.list_contracts(db, user)])
 
 
+@router.get("/templates")
+def contract_templates(user: User = Depends(require_roles(UserRole.RECRUITER, UserRole.ADMIN, UserRole.FINANCE))):
+    return ok(contracts_service.list_templates())
+
+
+@router.get("/preview")
+def preview_contract(
+    company_id: str,
+    template: str | None = None,
+    commission_percent: int | None = None,
+    role: str | None = None,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_roles(UserRole.RECRUITER, UserRole.ADMIN, UserRole.FINANCE)),
+):
+    return ok(contracts_service.preview_contract(db, user, company_id, template, commission_percent, role))
+
+
 @router.post("")
 def create_contract(
     payload: ContractIn,
@@ -26,7 +43,7 @@ def create_contract(
     user: User = Depends(require_roles(UserRole.RECRUITER, UserRole.ADMIN, UserRole.FINANCE)),
 ):
     row = contracts_service.create_contract(db, user, payload)
-    return ok(contracts_service.serialize_contract(row), message="Mandat créé.")
+    return ok(contracts_service.serialize_contract(row), message="Mandat envoyé pour signature.")
 
 
 @router.get("/{contract_id}")
@@ -46,6 +63,16 @@ def contract_pdf(contract_id: str, db: Session = Depends(get_db), user: User = D
         media_type="application/pdf",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
+
+@router.post("/{contract_id}/send")
+def send_contract(
+    contract_id: str,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_roles(UserRole.RECRUITER, UserRole.ADMIN, UserRole.FINANCE)),
+):
+    row = contracts_service.send_contract(db, user, contract_id)
+    return ok(contracts_service.serialize_contract(row), message="Mandat renvoyé pour signature.")
 
 
 @router.post("/{contract_id}/sign")
