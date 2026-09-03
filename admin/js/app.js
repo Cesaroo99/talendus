@@ -198,11 +198,19 @@
       if (!u) {
         var err = TLStore.lastError;
         if (err === "not-staff") U.toast("Ce compte n’a pas accès au back-office. Utilisez le compte administrateur de production.", "err");
-        else if (err === "api") U.toast("Connexion au serveur impossible. Réessayez.", "err");
+        else if (err === "account-disabled") U.toast("Ce compte est désactivé.", "err");
+        else if (err === "email-not-verified") U.toast("Vérifiez votre courriel avant de vous connecter.", "err");
+        else if (err === "locked") U.toast("Trop de tentatives. Réessayez dans quelques minutes.", "err");
+        else if (err === "invalid-credentials") U.toast("Identifiants incorrects. Vérifiez le courriel et le mot de passe.", "err");
+        else if (err === "api") U.toast("Connexion au serveur impossible. Vérifiez votre connexion, puis réessayez.", "err");
         else U.toast("Identifiants incorrects.", "err");
         return;
       }
-      U.toast("Bienvenue " + u.firstName + ".", "ok");
+      if (TLStore.lastError === "hydrate") {
+        U.toast("Connecté. Le chargement des dossiers a échoué — rafraîchissez la page.", "warn");
+      } else {
+        U.toast("Bienvenue " + u.firstName + ".", "ok");
+      }
       go("#/" + firstModule());
       render();
     };

@@ -135,7 +135,12 @@ def test_admin_ui_covers_ops_gaps():
     assert "css/admin.css?v=" in html
     assert "js/app.js?v=" in html
     assert "js/store.js?v=" in html
+    store = (ROOT / "admin" / "js" / "store.js").read_text(encoding="utf-8")
+    assert "INVALID_CREDENTIALS" in store
+    assert "invalid-credentials" in store
     js = (ROOT / "admin" / "js" / "app.js").read_text(encoding="utf-8")
+    assert "Identifiants incorrects. Vérifiez le courriel et le mot de passe." in js
+    assert 'err === "invalid-credentials"' in js
     assert "viewInterviews" in js
     assert "hydrateTeam" in js
     assert "hydrateAnalytics" in js

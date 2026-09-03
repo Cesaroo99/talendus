@@ -287,16 +287,29 @@
         }
         sessionStorage.setItem(SESSION, JSON.stringify({ id: local.id, role: mapped, access_token: json.data.access_token }));
         var hydrated = await this.hydrateFromApi();
-        if (!hydrated) {
-          this.logout();
-          this.lastError = "api";
-          return null;
-        }
         var again = state.users.find(function (x) { return x.email === email; }) || local;
         sessionStorage.setItem(SESSION, JSON.stringify({ id: again.id, role: again.role, access_token: json.data.access_token }));
+        if (!hydrated) this.lastError = "hydrate";
         return again;
       } catch (e) {
-        this.lastError = (e && e.message === "not-staff") ? "not-staff" : "api";
+        // Un mot de passe erroné ou un compte bloqué ne sont pas un serveur hors service :
+        // on distingue ces cas pour ne pas afficher "Connexion au serveur impossible" à tort.
+        var codeMap = {
+          INVALID_CREDENTIALS: "invalid-credentials",
+          ACCOUNT_DISABLED: "account-disabled",
+          EMAIL_NOT_VERIFIED: "email-not-verified",
+          LOGIN_LOCKED: "locked"
+        };
+        var code = e && e.code;
+        if (e && e.message === "not-staff") {
+          this.lastError = "not-staff";
+        } else if (code && codeMap[code]) {
+          this.lastError = codeMap[code];
+        } else if (e && e.status && e.status >= 400 && e.status < 500) {
+          this.lastError = "invalid-credentials";
+        } else {
+          this.lastError = "api";
+        }
         return null;
       }
     },
