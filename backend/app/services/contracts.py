@@ -1,10 +1,13 @@
 import hashlib
+import logging
 import re
 from datetime import date, timedelta
 
-from sqlalchemy import select
-from sqlalchemy.exc import DataError, IntegrityError, StatementError
+from sqlalchemy import inspect, select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, joinedload, selectinload
+
+logger = logging.getLogger("talendus.contracts")
 
 from app.errors import AppError
 from app.models import Company, Contract, ContractSignature, User
@@ -349,28 +352,27 @@ def create_contract(db: Session, user: User, data: ContractIn) -> Contract:
     terms = filled_terms(company, draft, template=meta["key"])
     company_id = company.id
     company_name = company.name
-    row = _contract_row(company_id, mandate_type, start, end, percent, terms, status, user.id, meta["key"], company_name, data.document_name)
+    document_name = data.document_name or f"mandat-talendus-{_slug(company_name)}-{start}.pdf"
     try:
-        db.add(row)
-        db.flush()
-    except (DataError, IntegrityError, StatementError):
-        db.rollback()
-        if status != ContractStatus.ACTIVE:
-            company = db.get(Company, company_id)
-            if not company:
-                raise AppError(404, "Entreprise introuvable.", "COMPANY_NOT_FOUND")
-            row = _contract_row(
-                company_id, mandate_type, start, end, percent, terms,
-                ContractStatus.ACTIVE, user.id, meta["key"], company_name, data.document_name,
-            )
-            try:
-                db.add(row)
-                db.flush()
-            except (DataError, IntegrityError, StatementError):
-                db.rollback()
-                raise AppError(400, "Le brouillon n’a pas pu être enregistré. Vérifiez les dates et l’entreprise, puis réessayez.", "CONTRACT_SAVE_FAILED")
-        else:
-            raise AppError(400, "Le brouillon n’a pas pu être enregistré. Vérifiez les dates et l’entreprise, puis réessayez.", "CONTRACT_SAVE_FAILED")
+        from app.schema_repair import ensure_contracts_schema
+
+        ensure_contracts_schema(db.get_bind())
+    except Exception:
+        logger.exception("ensure_contracts_schema")
+    row = _persist_contract(
+        db,
+        company_id=company_id,
+        mandate_type=mandate_type[:120],
+        start=start,
+        end=end,
+        percent=percent,
+        terms=terms,
+        status=status,
+        recruiter_id=user.id,
+        template_key=meta["key"],
+        company_name=company_name,
+        document_name=document_name,
+    )
     audit(db, "contract.create", user, "contract", row.id)
     db.commit()
     return get_contract(db, user, row.id)
@@ -402,6 +404,138 @@ def _contract_row(
         template_key=template_key,
         reminder_count=0,
     )
+
+
+def _column_names(db: Session) -> set[str]:
+    try:
+        return {col["name"] for col in inspect(db.get_bind()).get_columns("contracts")}
+    except Exception:
+        return set()
+
+
+def _persist_contract(
+    db: Session,
+    *,
+    company_id: str,
+    mandate_type: str,
+    start: str,
+    end: str,
+    percent: int,
+    terms: str,
+    status: ContractStatus,
+    recruiter_id: str,
+    template_key: str,
+    company_name: str,
+    document_name: str | None,
+) -> Contract:
+    attempts = [status]
+    if status != ContractStatus.ACTIVE:
+        attempts.append(ContractStatus.ACTIVE)
+    last_error: Exception | None = None
+    for current in attempts:
+        row = _contract_row(
+            company_id,
+            mandate_type,
+            start,
+            end,
+            percent,
+            terms,
+            current,
+            recruiter_id,
+            template_key,
+            company_name,
+            document_name,
+        )
+        try:
+            db.add(row)
+            db.flush()
+            return row
+        except SQLAlchemyError as exc:
+            last_error = exc
+            logger.warning("Enregistrement mandat status=%s en échec: %s", current, exc)
+            db.rollback()
+    row_id = _insert_contract_core(
+        db,
+        company_id=company_id,
+        mandate_type=mandate_type,
+        start=start,
+        end=end,
+        percent=percent,
+        terms=terms,
+        recruiter_id=recruiter_id,
+        template_key=template_key,
+        company_name=company_name,
+        document_name=document_name,
+    )
+    if row_id:
+        row = db.get(Contract, row_id)
+        if row:
+            return row
+    logger.exception("Mandat impossible à enregistrer: %s", last_error)
+    raise AppError(
+        400,
+        "Le brouillon n’a pas pu être enregistré. Vérifiez les dates et l’entreprise, puis réessayez.",
+        "CONTRACT_SAVE_FAILED",
+    )
+
+
+def _insert_contract_core(
+    db: Session,
+    *,
+    company_id: str,
+    mandate_type: str,
+    start: str,
+    end: str,
+    percent: int,
+    terms: str,
+    recruiter_id: str,
+    template_key: str,
+    company_name: str,
+    document_name: str | None,
+) -> str | None:
+    from sqlalchemy import insert
+
+    from app.models.identity import uid
+
+    cols = _column_names(db)
+    row_id = uid()
+    payload: dict = {
+        "id": row_id,
+        "company_id": company_id,
+        "type": (mandate_type or "Mandat")[:32],
+        "start_date": start,
+        "end_date": end,
+        "commission_percent": percent,
+        "terms": terms,
+        "status": "ACTIVE",
+        "document_name": document_name or f"mandat-talendus-{_slug(company_name)}-{start}.pdf",
+        "recruiter_id": recruiter_id,
+        "template_key": template_key,
+        "reminder_count": 0,
+    }
+    if cols:
+        payload = {key: value for key, value in payload.items() if key in cols}
+    try:
+        db.execute(insert(Contract.__table__).values(**payload))
+        db.flush()
+        return row_id
+    except SQLAlchemyError as exc:
+        logger.warning("Insert SQL mandat en échec: %s", exc)
+        db.rollback()
+        short = {key: payload[key] for key in ("id", "company_id", "type", "status", "terms") if key in payload}
+        short["type"] = (mandate_type or "Mandat")[:20]
+        short["status"] = "ACTIVE"
+        if "start_date" in (cols or payload):
+            short["start_date"] = start
+        if "end_date" in (cols or payload):
+            short["end_date"] = end
+        try:
+            db.execute(insert(Contract.__table__).values(**short))
+            db.flush()
+            return row_id
+        except SQLAlchemyError:
+            db.rollback()
+            return None
 
 
 def update_contract(db: Session, user: User, contract_id: str, data: ContractPatchIn) -> Contract:

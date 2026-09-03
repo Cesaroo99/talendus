@@ -122,4 +122,7 @@ def test_cms_testimonials_and_faq_persist_in_bootstrap(client):
     assert settings.status_code == 200
     keys = {row["key"] for row in settings.json()["data"]}
     assert "agency_name" in keys
+    assert "billing.neq" in keys
+    neq = next(row for row in settings.json()["data"] if row["key"] == "billing.neq")
+    assert neq["value"] == "2282510496"
     assert not any(k.startswith("cms.") for k in keys)

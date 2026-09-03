@@ -624,7 +624,7 @@ class ContractSignIn(BaseModel):
 
 class ContractIn(BaseModel):
     company_id: str
-    type: str = Field(default="Mandat de recrutement au succès", min_length=2, max_length=80)
+    type: str = Field(default="Mandat de recrutement au succès", min_length=2, max_length=120)
     start_date: str | None = None
     end_date: str | None = None
     commission_percent: int | None = Field(default=None, ge=0, le=100)
@@ -636,7 +636,7 @@ class ContractIn(BaseModel):
 
 
 class ContractPatchIn(BaseModel):
-    type: str | None = Field(default=None, min_length=2, max_length=80)
+    type: str | None = Field(default=None, min_length=2, max_length=120)
     start_date: str | None = None
     end_date: str | None = None
     commission_percent: int | None = Field(default=None, ge=0, le=100)

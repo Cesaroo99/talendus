@@ -87,6 +87,7 @@ def test_invoice_pdf_has_branding_and_no_overlap():
     assert "FACTURE" in raw
     assert "A PAYER" in raw
     assert "Document officiel" in raw
+    assert "2282510496" in raw
     assert "Facturee a" in raw
     assert "Métalco".encode("latin-1", "replace").decode("latin-1") in raw or "Metalco" in raw
     hits = _overlaps(_axis_aligned_boxes(data))
@@ -129,6 +130,7 @@ def test_contract_pdf_watermark_and_signed_stamp():
     assert "SIGNE" in raw
     assert "MANDAT" in raw
     assert "Document officiel" in raw
+    assert "2282510496" in raw
 
 
 def test_build_pdf_keeps_accents_and_branding():

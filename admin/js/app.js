@@ -705,9 +705,11 @@
   function mandatePayload(d) {
     var percent = parseInt(d.commission_percent, 10);
     if (!(percent >= 0 && percent <= 100)) percent = 16;
+    var type = (d.type || "").trim();
+    if (type.length > 120) type = type.slice(0, 120);
     return {
       template: d.template || "succes",
-      type: (d.type || "").trim() || undefined,
+      type: type || undefined,
       role: (d.role || "").trim() || null,
       start_date: d.start_date || null,
       end_date: d.end_date || null,
