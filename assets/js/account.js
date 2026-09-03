@@ -1530,7 +1530,7 @@
           ? '<button type="button" class="tl-btn tl-btn-ghost" data-open-pdf="' + esc(c.pdf_path) + '">' + esc(t.readPdf) + "</button>" +
             ' <button type="button" class="tl-btn tl-btn-ghost" data-dl="' + esc(c.pdf_path) + '" data-dl-name="' + esc(c.document_name || "mandat.pdf") + '">' + esc(t.downloadPdf) + "</button>"
           : "";
-        var canSign = c.can_sign || (!c.signed && !c.client_signed);
+        var canSign = !!c.can_sign;
         var sign = (c.signed || c.client_signed)
           ? '<span class="tl-chip">' + esc(t.signed) + "</span>"
           : (canSign
