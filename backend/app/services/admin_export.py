@@ -1,5 +1,7 @@
 """Projection des données API vers le format du back-office Talendus."""
 
+import logging
+
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, joinedload, selectinload
 
@@ -23,6 +25,8 @@ from app.models.enums import ApplicationStatus, InterviewType, InvoiceStatus, Jo
 from app.services.hiring_requests import STATUS_COPY, serialize_request
 from app.services.interviews import CALL_TYPES, LIVE_CALL_STATUSES
 from app.services.pipeline import stage_for
+
+logger = logging.getLogger("talendus.admin")
 
 APP_STATUS = {
     ApplicationStatus.SUBMITTED: "nouveau",
@@ -128,7 +132,12 @@ def bootstrap(db: Session, user: User | None = None) -> dict:
         .options(joinedload(RecruitmentMission.company), selectinload(RecruitmentMission.linked_jobs))
         .order_by(RecruitmentMission.created_at.desc())
     ).unique().all()
-    contracts = db.scalars(select(Contract).options(selectinload(Contract.signatures))).all()
+    try:
+        contracts = db.scalars(select(Contract).options(selectinload(Contract.signatures))).all()
+    except Exception:
+        logger.exception("bootstrap: lecture des mandats impossible")
+        db.rollback()
+        contracts = []
     notes = db.scalars(select(InternalNote).order_by(InternalNote.created_at.desc()).limit(200)).all()
     notif_stmt = select(Notification).order_by(Notification.created_at.desc())
     if user:
