@@ -89,11 +89,21 @@ class Contract(Base):
     esign_status: Mapped[str | None] = mapped_column(String(32))
     recruiter_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"))
     notes: Mapped[str | None] = mapped_column(Text)
+    template_key: Mapped[str | None] = mapped_column(String(40))
+    sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    opened_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    talendus_signed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    client_signed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    reminder_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    last_reminded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
 
     company: Mapped[Company] = relationship(back_populates="contracts")
-    signatures: Mapped[list["ContractSignature"]] = relationship(back_populates="contract")
+    signatures: Mapped[list["ContractSignature"]] = relationship(
+        back_populates="contract",
+        order_by="ContractSignature.signed_at",
+    )
 
 
 class RecruitmentMission(Base):

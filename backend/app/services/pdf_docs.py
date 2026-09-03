@@ -16,13 +16,22 @@ MANDATE_TEMPLATES = (
         "key": "succes",
         "type": "Mandat de recrutement au succès",
         "commission_percent": DEFAULT_COMMISSION_PERCENT,
+        "duration_days": 90,
+        "guarantee_days": 90,
+        "presented_months": 12,
     },
     {
         "key": "temporaire",
         "type": "Mandat de placement temporaire",
         "commission_percent": DEFAULT_COMMISSION_PERCENT,
+        "duration_days": 90,
+        "guarantee_days": 10,
+        "presented_months": 12,
     },
 )
+
+PARTY_TALENDUS = "TALENDUS"
+PARTY_CLIENT = "CLIENT"
 
 
 def mandate_terms(
@@ -36,9 +45,13 @@ def mandate_terms(
     mandate_type: str = "Mandat de recrutement au succès",
     role: str | None = None,
     start_date: str | None = None,
+    end_date: str | None = None,
     template: str = "succes",
+    duration_days: int | None = None,
+    guarantee_days: int | None = None,
+    presented_months: int | None = None,
 ) -> str:
-    settings = get_settings()
+    issuer = billing_identity()
     percent = commission if commission is not None else DEFAULT_COMMISSION_PERCENT
     client = (legal_name or "").strip()
     trade = (company_name or "").strip() or "le client"
@@ -46,56 +59,157 @@ def mandate_terms(
         party_client = f"{client} (faisant affaire sous {trade})"
     else:
         party_client = client or trade
-    loc = ", ".join(part for part in [address, city, province or "Québec"] if part)
-    email = settings.public_email
-    phone = settings.public_phone_display
-    if (template or "succes").lower() == "temporaire":
-        fees = (
-            f"Honoraires de placement temporaire : {percent} % de la rémunération brute "
-            "versée pendant la période de mission, facturés selon les périodes convenues."
+    loc = ", ".join(part for part in [address, city, province or "Québec"] if part) or "Québec, Canada"
+    email = issuer["email"]
+    phone = issuer["phone"]
+    agency_addr = issuer["address"]
+    agency_name = issuer["legal_name"] or "Talendus"
+    kind = (template or "succes").strip().lower()
+    days = int(duration_days or 90)
+    guarantee = int(guarantee_days or (10 if kind == "temporaire" else 90))
+    presented = int(presented_months or 12)
+    poste = (role or "").strip() or "le poste confié par le Client"
+    debut = start_date or "la date de signature du présent mandat"
+    fin = end_date or f"{days} jours à compter de la date d'ouverture"
+    neq_line = f" NEQ : {issuer['neq']}." if issuer.get("neq") else ""
+
+    if kind == "temporaire":
+        objet = (
+            f"Le Client confie à Talendus un mandat de placement temporaire pour le poste de {poste}. "
+            "Talendus recherche, présélectionne et présente des personnes disponibles pour une mission "
+            "à durée déterminée. Un conseiller coordonne les échanges. Le Client conserve le pouvoir "
+            "d'accepter ou de refuser une personne présentée et assume la supervision quotidienne sur "
+            "le lieu de travail. La recherche active ne commence qu'après signature électronique du "
+            "présent mandat par Talendus et par le Client."
         )
-        guarantee = (
-            "Si la mission est interrompue dans les 10 premiers jours ouvrables pour un motif "
-            "qui n'est pas imputable à Talendus, une relance de recherche est offerte sans "
-            "honoraires supplémentaires pour le même poste."
+        honoraires = (
+            f"Les honoraires de placement temporaire sont de {percent} % de la rémunération brute "
+            "versée à la personne placée pendant toute la durée de la mission, taxes en sus "
+            "(TPS et TVQ). Ils sont facturés selon les périodes convenues, au plus tard à chaque "
+            "période de paie. Si le Client embauche la personne en poste permanent pendant la mission "
+            f"ou dans les {presented} mois suivant la fin de la mission, les honoraires du mandat au "
+            f"succès ({percent} % de la rémunération annuelle brute) deviennent exigibles, déduction "
+            "faite des honoraires temporaires déjà payés pour les quatre (4) dernières semaines de mission."
+        )
+        garantie = (
+            f"Si la mission est interrompue dans les {guarantee} premiers jours ouvrables pour un motif "
+            "qui n'est pas imputable à Talendus (refus de se présenter, abandon sans motif valable, "
+            "incompétence manifeste constatée par écrit), Talendus relance la recherche pour le même "
+            "poste sans honoraires supplémentaires. Cette relance ne s'applique pas si le Client met "
+            "fin à la mission pour un motif économique, une réorganisation ou un changement de besoin."
+        )
+        exclusivite = (
+            "Le mandat de placement temporaire n'est pas exclusif. Toutefois, toute personne présentée "
+            f"par Talendus est protégée pendant {presented} mois : si le Client l'engage, directement "
+            "ou par un autre intermédiaire, les honoraires prévus au présent mandat sont dus."
         )
     else:
-        fees = (
-            f"Commission de {percent} % calculée sur la rémunération annuelle brute du candidat "
-            "placé, payable à l'entrée en poste."
+        objet = (
+            f"Le Client confie à Talendus un mandat de recrutement au succès pour le poste de {poste}. "
+            "Talendus agit comme cabinet de recrutement et agence de placement : recherche (y compris "
+            "approche directe lorsque le profil l'exige), présélection, vérification des éléments "
+            "communiqués, présentation d'une shortlist et coordination jusqu'à la première entrevue "
+            "avec le Client. Le Client conserve la décision d'embauche, les conditions d'emploi et "
+            "l'offre écrite. La recherche active ne commence qu'après signature électronique du "
+            "présent mandat par Talendus et par le Client."
         )
-        guarantee = (
-            "En cas de départ du candidat dans les 90 jours suivant l'entrée en fonction, "
-            "Talendus relance la recherche sans honoraires supplémentaires, sauf congédiement "
-            "sans motif valable."
+        honoraires = (
+            f"Les honoraires sont de {percent} % de la rémunération annuelle brute du candidat placé "
+            "(salaire de base annualisé ; si la rémunération est horaire, elle est convertie sur la "
+            "base de quarante (40) heures par semaine et de cinquante-deux (52) semaines). Les primes "
+            "garanties à l'embauche sont incluses. Les taxes applicables (TPS et TVQ) s'ajoutent. "
+            "Les honoraires sont exigibles à la date d'entrée en poste, payables dans les trente (30) "
+            "jours de la facture, par virement ou chèque à l'ordre de Talendus. Tout solde en souffrance "
+            "porte intérêt à un pour cent et demi (1,5 %) par mois (18 % par an)."
         )
-    role_line = f"Poste visé : {role.strip()}.\n\n" if role and role.strip() else ""
-    date_line = f"Date d'ouverture : {start_date}.\n\n" if start_date else ""
-    return f"""Parties
-Talendus (« l'agence »), {email}, {phone}.
-Le client : {party_client}, {loc or 'Québec'}.
+        garantie = (
+            f"Si le candidat placé quitte ou est congédié pour un motif valable dans les {guarantee} jours "
+            "suivant l'entrée en fonction, Talendus relance la recherche pour le même poste, au même "
+            "niveau, sans honoraires supplémentaires. La garantie ne s'applique pas en cas de mise à "
+            "pied, de congédiement sans motif valable, de changement substantiel des fonctions ou de "
+            "la rémunération, de harcèlement, de non-paiement du salaire, ou si le Client n'a pas "
+            "réglé les honoraires du premier placement."
+        )
+        exclusivite = (
+            "Le mandat n'est pas exclusif pour le marché en général. En revanche, tout candidat "
+            f"présenté par Talendus (dossier, entrevue, mise en relation) est protégé pendant {presented} mois "
+            "à compter de la présentation : si le Client l'embauche, directement ou via un autre canal, "
+            "les honoraires prévus à l'article 8 sont dus comme s'il s'agissait d'un placement Talendus."
+        )
 
-{date_line}{role_line}Type de mandat
+    return f"""MANDAT DE RECRUTEMENT
 {mandate_type}
 
-Objet
-Talendus agit comme agence de placement. Le client confie un besoin de recrutement. Talendus recherche, présélectionne et présente les profils. Un conseiller coordonne les échanges. Le client conserve la décision d'embauche. La recherche active ne commence qu'après signature électronique du présent mandat.
+Entre
+{agency_name} (« Talendus » ou « l'Agence »), cabinet de recrutement et agence de placement, {agency_addr}.
+Courriel : {email} · Téléphone : {phone}.{neq_line}
 
-Honoraires
-{fees}
+Et
+{party_client} (« le Client »), {loc}.
 
-Garantie
-{guarantee}
+Date d'ouverture du mandat : {debut}
+Date de fin prévue : {fin}
+Poste visé : {poste}
 
-Confidentialité
-Les dossiers présentés restent confidentiels. Les coordonnées des talents ne sont pas transmises en libre-service.
+ARTICLE 1 — PARTIES
+Talendus et le Client sont les seules parties au présent mandat. Aucun prestataire de signature externe (DocuSign, Adobe Sign ou autre) n'est requis. Les notifications se font dans l'espace Talendus et, le cas échéant, par courriel.
 
-Signature
-Le client signe électroniquement dans son espace Talendus (empreinte SHA-256, horodatage, adresse IP). Cette signature a la même valeur qu'une signature manuscrite entre les parties.
+ARTICLE 2 — DÉFINITIONS
+« Candidat présenté » : toute personne dont le nom, le dossier, le curriculum vitae ou les coordonnées ont été communiqués au Client par Talendus, ou que le Client a rencontrée par l'entremise de Talendus.
+« Placement » : l'acceptation, par le Client, d'une personne présentée, que le contrat de travail soit à durée indéterminée, déterminée, à l'essai ou temporaire.
+« Shortlist » : la liste de profils présélectionnés que Talendus juge pertinents au regard du brief.
+
+ARTICLE 3 — OBJET
+{objet}
+
+ARTICLE 4 — DURÉE
+Le mandat est conclu pour {days} jours à compter de la date d'ouverture, renouvelable par accord écrit ou par poursuite manifeste de la recherche. Il prend fin à l'expiration de cette période, à la résiliation prévue à l'article 14, ou lorsqu'un placement a été réalisé et que les obligations de garantie, s'il y a lieu, sont éteintes.
+
+ARTICLE 5 — OBLIGATIONS DE TALENDUS
+Talendus s'engage à : (a) confirmer le brief et le profil recherché avec le Client ; (b) rechercher et présélectionner des profils ; (c) présenter une shortlist et coordonner les entrevues ; (d) tenir le Client informé de l'avancement, sans inventer de délais ou de volumes ; (e) conserver confidentiels les renseignements du Client ; (f) ne pas transmettre les coordonnées des talents en libre-service. Talendus n'est pas l'employeur du candidat placé en recrutement au succès, sauf entente écrite contraire pour une mission temporaire.
+
+ARTICLE 6 — OBLIGATIONS DU CLIENT
+Le Client s'engage à : (a) fournir un brief exact (fonctions, horaire, quart, présence, rémunération, exigences) ; (b) donner une suite écrite sur chaque dossier présenté dans les cinq (5) jours ouvrables ; (c) ne pas contacter un candidat présenté autrement que par l'intermédiaire de Talendus pendant la durée du mandat ; (d) informer Talendus sans délai de toute embauche d'un candidat présenté, y compris après la fin du mandat si elle survient pendant la période de protection ; (e) payer les honoraires et les taxes aux échéances prévues.
+
+ARTICLE 7 — EXCLUSIVITÉ ET CANDIDATS PRÉSENTÉS
+{exclusivite}
+
+ARTICLE 8 — HONORAIRES ET PAIEMENT
+{honoraires}
+
+ARTICLE 9 — GARANTIE DE REMPLACEMENT
+{garantie}
+
+ARTICLE 10 — CONFIDENTIALITÉ
+Chaque partie garde confidentiels les renseignements de l'autre, les dossiers de candidats et les conditions du présent mandat. Les documents remis au Client restent la propriété de Talendus et ne peuvent être transmis à un tiers, une autre agence ou un autre établissement du Client non partie au mandat, sans accord écrit.
+
+ARTICLE 11 — RENSEIGNEMENTS PERSONNELS
+Les parties traitent les renseignements personnels des candidats conformément à la Loi sur la protection des renseignements personnels dans le secteur privé (CQLR c. P-39.1). Le Client n'utilise un dossier présenté que pour évaluer le poste visé et le conserve le temps nécessaire à cette évaluation.
+
+ARTICLE 12 — NON-SOLLICITATION
+Pendant la durée du mandat et douze (12) mois après sa fin, le Client ne sollicite pas le personnel de Talendus en vue de l'embaucher. Une embauche contraire à cet article donne lieu à des honoraires égaux à ceux de l'article 8, calculés sur la rémunération offerte.
+
+ARTICLE 13 — RESPONSABILITÉ
+Talendus exécute le mandat avec diligence. Elle ne garantit pas qu'un poste sera pourvu dans un délai donné. Sa responsabilité, tous motifs confondus, est limitée aux honoraires effectivement payés au titre du mandat. Talendus n'est pas responsable des actes, omissions, compétences ou conduite du candidat une fois l'embauche décidée par le Client.
+
+ARTICLE 14 — RÉSILIATION
+Chaque partie peut résilier le mandat moyennant un avis écrit de quinze (15) jours. La résiliation n'éteint pas les honoraires dus pour un candidat déjà présenté si un placement intervient pendant la période de protection. Les articles 7, 8, 10, 11, 12 et 13 survivent à la fin du mandat.
+
+ARTICLE 15 — FORCE MAJEURE
+Aucune partie n'est responsable d'un retard ou d'une inexécution causés par un événement échappant à son contrôle raisonnable (interruption de réseau, sinistre, décision d'autorité). L'obligation de payer les honoraires déjà exigibles n'est pas suspendue.
+
+ARTICLE 16 — DISPOSITIONS GÉNÉRALES
+Le présent mandat constitue l'entente complète des parties et remplace toute discussion antérieure sur le même objet. Une modification se fait par écrit (y compris par signature électronique dans l'espace Talendus). La nullité d'une clause n'affecte pas les autres. Le fait de ne pas exercer un droit ne vaut pas renonciation. Le Client ne cède pas le mandat sans accord écrit de Talendus.
+
+ARTICLE 17 — DROIT APPLICABLE ET FOR
+Le présent mandat est régi par les lois du Québec et les lois du Canada qui y sont applicables. Les tribunaux compétents du district judiciaire de Montréal ont compétence exclusive, sous réserve d'un recours en injonction ou en recouvrement ailleurs si le Client y a un établissement.
+
+ARTICLE 18 — SIGNATURE ÉLECTRONIQUE ET EXEMPLAIRES
+Le mandat est signé électroniquement dans l'espace Talendus : Talendus signe en premier, puis le Client. Chaque signature est horodatée, associée à un nom, un courriel, une adresse IP et une empreinte SHA-256 du document. Conformément à la Loi concernant le cadre juridique des technologies de l'information (CQLR c. C-1.1), cette signature a la même valeur qu'une signature manuscrite entre les parties. Chaque partie peut télécharger un exemplaire PDF. Deux exemplaires électroniques font également foi.
+
+ARTICLE 19 — ACCEPTATION
+En signant, chaque partie confirme avoir lu l'intégralité du mandat, en avoir compris la portée et l'accepter. La recherche active commence lorsque le Client a signé.
 """
-
-
-DEFAULT_MANDATE_TERMS = mandate_terms()
 
 
 def _latin(text: str) -> str:
@@ -422,9 +536,33 @@ def invoice_pdf(row: Invoice) -> bytes:
     return _pdf_objects([stream])
 
 
+def _signature_block(title: str, signatures: list, party: str) -> list[str]:
+    match = None
+    for item in signatures or []:
+        if (getattr(item, "party", None) or PARTY_CLIENT).upper() == party:
+            match = item
+    lines = ["", title, "-" * len(title)]
+    if match:
+        signed = match.signed_at.isoformat() if match.signed_at else "-"
+        lines += [
+            f"Signe par : {match.signer_name}",
+            f"Courriel : {match.signer_email or '-'}",
+            f"Le : {signed}",
+            f"Empreinte SHA-256 : {match.document_hash}",
+            "Signature electronique interne Talendus (sans DocuSign ni Adobe Sign).",
+        ]
+    else:
+        waiting = (
+            "En attente de la signature de Talendus."
+            if party == PARTY_TALENDUS
+            else "En attente de la signature du client dans l'espace employeur."
+        )
+        lines.append(waiting)
+    return lines
+
+
 def contract_pdf(row: Contract) -> bytes:
     company = row.company
-    latest = row.signatures[-1] if row.signatures else None
     lines = [
         f"Entreprise : {company.name if company else ''}",
         f"Type : {row.type or 'Mandat de recrutement'}",
@@ -437,18 +575,8 @@ def contract_pdf(row: Contract) -> bytes:
         "----------",
     ]
     lines.extend(_wrap(row.terms or ""))
-    lines += ["", "Signature", "---------"]
-    if latest:
-        signed = latest.signed_at.isoformat() if latest.signed_at else "-"
-        lines += [
-            f"Signe par : {latest.signer_name}",
-            f"Courriel : {latest.signer_email or '-'}",
-            f"Le : {signed}",
-            f"Empreinte SHA-256 : {latest.document_hash}",
-            "Signature electronique interne Talendus (sans DocuSign ni Adobe Sign).",
-        ]
-    else:
-        lines.append("En attente de signature dans l'espace employeur Talendus.")
+    lines += _signature_block("Signature Talendus", row.signatures, PARTY_TALENDUS)
+    lines += _signature_block("Signature du client", row.signatures, PARTY_CLIENT)
     lines += ["", "Talendus · info@talendus.ca · 263 558 5225"]
     body: list[str] = []
     for line in lines:

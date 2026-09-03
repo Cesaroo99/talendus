@@ -31,6 +31,13 @@
     "en-retard": ["En retard", "danger"],
     Actif: ["Actif", "ok"],
     "À signer": ["À signer", "warn"],
+    "Reçu": ["Reçu", "info"],
+    "Ouvert": ["Ouvert", "warn"],
+    "Signé": ["Signé", "ok"],
+    "Non envoyé": ["Non envoyé", "muted"],
+    "Signé Talendus": ["Signé Talendus", "ok"],
+    "Prêt à envoyer": ["Prêt à envoyer", "orange"],
+    Brouillon: ["Brouillon", "muted"],
     Prospect: ["Prospect", "warn"],
     "Expire bientôt": ["Expire bientôt", "warn"],
     "besoin-transmis": ["Besoin transmis", "info"],
@@ -120,7 +127,7 @@
 
   function modal(opts) {
     var root = document.getElementById("modal-root");
-    root.innerHTML = '<div class="modal-back"><div class="modal" role="dialog" aria-modal="true"><header><h3 style="margin:0">' + esc(opts.title || "") + '</h3><button class="icon-btn" data-close>×</button></header><div class="body">' + (opts.body || "") + '</div><footer>' + (opts.footer || '<button class="btn btn-ghost" data-close>Fermer</button>') + "</footer></div></div>";
+    root.innerHTML = '<div class="modal-back"><div class="modal' + (opts.wide ? " modal-wide" : "") + '" role="dialog" aria-modal="true"><header><h3 style="margin:0">' + esc(opts.title || "") + '</h3><button class="icon-btn" data-close>×</button></header><div class="body">' + (opts.body || "") + '</div><footer>' + (opts.footer || '<button class="btn btn-ghost" data-close>Fermer</button>') + "</footer></div></div>";
     var back = root.firstElementChild;
     function close() { root.innerHTML = ""; if (opts.onClose) opts.onClose(); }
     back.addEventListener("click", function (e) {

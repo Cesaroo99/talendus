@@ -1,0 +1,12 @@
+Subject: Rappel — mandat Talendus à signer — {{company}}
+{{name}},
+
+Un mandat de recrutement Talendus attend toujours votre lecture et votre signature pour {{company}}.
+
+Type : {{type}}
+Honoraires : {{percent}} %
+
+Ouvrez votre espace, lisez le mandat, puis signez :
+{{link}}
+
+Talendus · info@talendus.ca · 263 558 5225

@@ -1,12 +1,12 @@
-Subject: Mandat Talendus à signer — {{company}}
+Subject: Mandat Talendus à lire et signer — {{company}}
 {{name}},
 
-Un mandat de recrutement Talendus est prêt pour {{company}}.
+Un mandat de recrutement Talendus vous a été transmis pour {{company}}.
 
 Type : {{type}}
-Commission : {{percent}} %
+Honoraires : {{percent}} %
 
-Ouvrez votre espace employeur pour lire le PDF et signer électroniquement (signature interne Talendus, sans DocuSign) :
+Ouvrez votre espace employeur, lisez le mandat en entier, puis signez électroniquement (signature interne Talendus, sans DocuSign) :
 {{link}}
 
-Talendus · info@talendus.ca · 514 555-0199
+Talendus · info@talendus.ca · 263 558 5225

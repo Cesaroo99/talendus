@@ -446,6 +446,21 @@ table.data .check { width: 36px; cursor: default; }
   max-height: 90vh; overflow: auto; box-shadow: var(--shadow);
   animation: pop .18s ease;
 }
+.modal.modal-wide { width: min(920px, 100%); }
+.mandate-read {
+  white-space: pre-wrap;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.55;
+  max-height: 52vh;
+  overflow: auto;
+  background: #f6f8fb;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px 18px;
+}
+.mandate-meta { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 12px; }
+.mandate-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .modal header, .modal footer {
   display: flex; align-items: center; justify-content: space-between;
   padding: 16px 20px; border-bottom: 1px solid var(--line);

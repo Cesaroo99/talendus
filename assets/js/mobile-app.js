@@ -125,6 +125,9 @@
     emptyContracts: "No mandate to sign.",
     sign: "Sign",
     signed: "Signed",
+    readMandate: "Read the mandate",
+    clientReceived: "Received",
+    clientOpened: "Opened",
     availability: "Availability",
     missing: "Still to complete",
     nextInterview: "Next interview",
@@ -386,6 +389,9 @@
     emptyContracts: "Aucun mandat à signer.",
     sign: "Signer",
     signed: "Signé",
+    readMandate: "Lire le mandat",
+    clientReceived: "Reçu",
+    clientOpened: "Ouvert",
     availability: "Disponibilité",
     missing: "À compléter",
     nextInterview: "Prochain entretien",
@@ -1820,11 +1826,20 @@
     }), "#/me");
   }
   function contractsView() {
+    (state.contracts || []).forEach(function (row) {
+      if (row && row.id && row.sent_at && !row.opened_at && !row.signed && !row.client_signed && api.openContract) {
+        api.openContract(row.id).catch(function () {});
+      }
+    });
     return backTo("#/me") + "<h1 class=\"tn-title\">" + esc(t.contracts) + "</h1>" + flash() + '<div class="tn-grid">' +
       ((state.contracts || []).map(function (row) {
+        var status = row.client_signed || row.signed ? t.signed : (row.opened_at ? t.clientOpened : (row.sent_at ? t.clientReceived : t.unsigned));
+        var read = row.terms
+          ? '<details class="tn-job"><summary>' + esc(t.readMandate) + "</summary><p class=\"tn-meta\" style=\"white-space:pre-wrap\">" + esc(row.terms) + "</p></details>"
+          : "";
         return '<div class="tn-job"><h3>' + esc(row.document_name || row.type || t.contracts) + '</h3><p class="tn-meta">' +
-          esc(row.signed ? t.signed : t.unsigned) + "</p>" +
-          (row.signed ? "" : '<button type="button" class="tn-btn" data-sign="' + esc(row.id) + '">' + esc(t.sign) + "</button>") +
+          esc(status) + "</p>" + read +
+          (row.signed || row.client_signed ? "" : '<button type="button" class="tn-btn" data-sign="' + esc(row.id) + '">' + esc(t.sign) + "</button>") +
           '<button type="button" class="tn-btn tn-btn-ghost" data-pdf="contracts" data-id="' + esc(row.id) + '">' + esc(t.downloadPdf) + "</button></div>";
       }).join("") || '<div class="tn-empty">' + esc(t.emptyContracts) + "</div>") + "</div>";
   }
