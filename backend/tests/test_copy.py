@@ -65,6 +65,32 @@ def test_site_and_app_invite_contact_instead_of_no_contact():
     assert "hand us a hiring need" in joined
 
 
+def test_homepage_puts_employers_before_candidates():
+    page = (ROOT / "index.html").read_text(encoding="utf-8")
+    hire = page.find('class="tl-persona-card is-hire"')
+    talent = page.find('class="tl-persona-card is-talent"')
+    assert hire != -1 and talent != -1
+    assert hire < talent
+    assert "Le bon candidat. Rapidement." in page
+    assert "consultation gratuite" in page.lower()
+    assert "Cabinet de recrutement" in page
+    nav_hire = page.find('data-nav="employeurs"')
+    nav_talent = page.find('data-nav="candidats"')
+    assert nav_hire != -1 and nav_talent != -1
+    assert nav_hire < nav_talent
+    faq_hire = page.find("Je recrute : que dois-je faire")
+    faq_talent = page.find("Je cherche un emploi : que dois-je faire")
+    assert faq_hire != -1 and faq_talent != -1
+    assert faq_hire < faq_talent
+    en = (ROOT / "en" / "index.html").read_text(encoding="utf-8")
+    hire_en = en.find('class="tl-persona-card is-hire"')
+    talent_en = en.find('class="tl-persona-card is-talent"')
+    assert hire_en != -1 and talent_en != -1
+    assert hire_en < talent_en
+    assert "The right candidate. Fast." in en
+    assert "free consultation" in en.lower()
+
+
 def test_employer_pages_sound_like_a_recruiting_firm():
     page = (ROOT / "entreprises.html").read_text(encoding="utf-8")
     assert "Concrètement" not in page
