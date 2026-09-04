@@ -264,6 +264,8 @@
     notifyPush: "Phone notification bar",
     pushOn: "Updates will appear in your notification bar.",
     joinCall: "Join the call",
+    waitHost: "Waiting for the recruiter to start the call.",
+    callReady: "The recruiter has started the call. You can join.",
     callAudio: "Audio call",
     callVideo: "Video call",
     langTitle: "Language",
@@ -528,6 +530,8 @@
     notifyPush: "Barre de notifications du téléphone",
     pushOn: "Les suivis apparaîtront dans la barre de notifications.",
     joinCall: "Rejoindre l’appel",
+    waitHost: "En attente que le recruteur lance l’appel.",
+    callReady: "Le recruteur a lancé l’appel. Vous pouvez rejoindre.",
     callAudio: "Appel audio",
     callVideo: "Appel vidéo",
     langTitle: "Langue",
@@ -1201,7 +1205,10 @@
   function identityHead() {
     var u = state.user || {};
     var name = personName(u) || t.me;
-    return '<div class="tn-identity"><div class="tn-avatar" aria-hidden="true">' + esc(initialsOf(u)) + "</div>" +
+    var face = window.__tlAvatarUrl
+      ? '<div class="tn-avatar"><img src="' + esc(window.__tlAvatarUrl) + '" alt=""></div>'
+      : '<div class="tn-avatar" aria-hidden="true">' + esc(initialsOf(u)) + "</div>";
+    return '<div class="tn-identity">' + face +
       "<div><h1 class=\"tn-title\">" + esc(name) + '</h1><p class="tn-meta">' + esc(u.email || "") + "</p></div></div>";
   }
   function menuGroup(title, items) {
@@ -1233,7 +1240,7 @@
   function nextInterview() {
     var now = Date.now();
     return (state.interviews || []).filter(function (row) {
-      return row.scheduled_at && new Date(row.scheduled_at).getTime() >= now && row.status !== "CANCELLED" && row.status !== "COMPLETED";
+      return row.scheduled_at && new Date(row.scheduled_at).getTime() >= now && row.status !== "CANCELLED" && row.status !== "COMPLETED" && row.status !== "NO_SHOW";
     }).sort(function (a, b) { return new Date(a.scheduled_at) - new Date(b.scheduled_at); })[0] || null;
   }
   function missingChips() {
@@ -1248,13 +1255,19 @@
       missing.map(function (key) { return '<span class="tn-chip">' + esc(labels[key] || key) + "</span>"; }).join("") + "</div>";
   }
   function canJoinCall(row) {
-    return !!(row && row.in_app_call && row.status !== "CANCELLED" && row.status !== "COMPLETED" && row.status !== "NO_SHOW");
+    return !!(row && (row.can_join_call || row.can_start_call));
   }
   function callActions(row) {
-    if (!canJoinCall(row)) return "";
+    if (!row || !row.in_app_call) return "";
+    if (row.status === "CANCELLED" || row.status === "COMPLETED" || row.status === "NO_SHOW") {
+      return '<p class="tn-meta">' + esc(row.status_label || statusLabel(row.status)) + "</p>";
+    }
+    if (!canJoinCall(row)) {
+      return '<p class="tn-meta">' + esc(t.waitHost) + "</p>";
+    }
     var audio = '<a class="tn-btn tn-btn-ghost" href="#/call/' + encodeURIComponent(row.id) + '?video=0">' + esc(t.callAudio) + "</a>";
     var video = row.call_video === false ? "" : '<a class="tn-btn" href="#/call/' + encodeURIComponent(row.id) + '?video=1">' + esc(t.callVideo) + "</a>";
-    return '<div class="tn-row-actions"><p class="tn-meta">' + esc(t.joinCall) + "</p>" + audio + video + "</div>";
+    return '<div class="tn-row-actions"><p class="tn-meta">' + esc(row.can_start_call ? t.callReady : t.joinCall) + "</p>" + audio + video + "</div>";
   }
   function interviewCard() {
     var row = nextInterview();

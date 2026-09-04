@@ -112,7 +112,16 @@
   }
 
   function avatar(person, size) {
+    person = person || {};
     var initials = person.initials || ((person.firstName || "?")[0] + (person.lastName || "?")[0]);
+    var uid = person.userId || person.candidateUserId || "";
+    if (!uid && person.id && String(person.id).length > 12) uid = person.id;
+    var cache = window.__tlAdminAvatars || {};
+    var url = person.avatarUrl || "";
+    if (!url && uid && typeof cache[uid] === "string" && cache[uid].indexOf("blob:") === 0) url = cache[uid];
+    if (url) {
+      return '<div class="avatar ' + (size || "") + '"><img src="' + esc(url) + '" alt=""></div>';
+    }
     return '<div class="avatar ' + (size || "") + '">' + esc(initials) + "</div>";
   }
 

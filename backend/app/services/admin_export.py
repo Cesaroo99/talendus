@@ -247,6 +247,7 @@ def _user(u: User) -> dict:
         "role": ROLE.get(u.role.value, "recruiter"),
         "title": u.title or "",
         "initials": ((u.first_name or "?")[:1] + (u.last_name or "?")[:1]).upper(),
+        "hasAvatar": bool(u.avatar_path),
     }
 
 
@@ -307,6 +308,7 @@ def _candidate(c: Candidate) -> dict:
     return {
         "id": c.id,
         "userId": user.id if user else "",
+        "hasAvatar": bool(user and user.avatar_path),
         "firstName": user.first_name if user else "",
         "lastName": user.last_name if user else "",
         "email": user.email if user else "",
@@ -475,6 +477,9 @@ def _interview(i: Interview) -> dict:
         "candidate_can_start": bool(getattr(i, "candidate_can_start", False)),
         "call_open": bool(getattr(i, "call_opened_at", None)),
         "host_in_call": host_in_call(i),
+        "can_close_call": i.status in LIVE_CALL_STATUSES,
+        "candidateUserId": i.candidate.user.id if i.candidate and i.candidate.user else "",
+        "candidateHasAvatar": bool(i.candidate.user.avatar_path) if i.candidate and i.candidate.user else False,
     }
 
 

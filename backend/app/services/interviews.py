@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session, joinedload, object_session
 
 from app.errors import AppError
 from app.models import Application, Candidate, Company, Interview, JobOffer, User
-from app.models.calls import CallPeer
+from app.models.calls import CallPeer, CallSignal
 from app.models.enums import EmailType, InterviewStatus, InterviewType, NotificationType, UserRole, utcnow
 from app.rbac import ADMINS, INTERNAL
 from app.schemas import InterviewIn, InterviewPatchIn
@@ -59,7 +59,7 @@ def call_is_open(row: Interview) -> bool:
 
 
 def host_in_call(row: Interview) -> bool:
-    """Le conseiller est réellement dans la salle (pair encore vivant)."""
+    """Le recruteur est réellement dans la salle (pair encore vivant)."""
     db = object_session(row)
     if db is None:
         return False
@@ -151,6 +151,7 @@ def serialize_interview(row: Interview, viewer: User | None = None) -> dict:
         "host_in_call": host_in_call(row),
         "can_start_call": viewer_can_start_call(row, viewer),
         "can_join_call": viewer_can_join_call(row, viewer),
+        "can_close_call": bool(is_staff(viewer) and row.status in LIVE_CALL_STATUSES),
         "call_step": call_step(row, viewer),
     }
 
@@ -258,7 +259,7 @@ def create_interview(db: Session, user: User, data: InterviewIn, ip: str | None)
         next_step = (
             "Confirmez votre présence. Vous pourrez lancer l’appel au moment convenu."
             if row.candidate_can_start
-            else "Confirmez votre présence. Vous rejoindrez l’appel lorsque le conseiller l’aura ouvert."
+            else "Confirmez votre présence. Vous rejoindrez l’appel lorsque le recruteur l’aura lancé."
         )
         invite_msg = f"{TYPE_LABEL.get(row.type, row.type.value)} le {when_label} — {row.location or ''}. {next_step}".strip()
     else:
@@ -345,11 +346,19 @@ def patch_interview(db: Session, user: User, interview_id: str, data: InterviewP
                 cand_user,
                 NotificationType.INTERVIEW_INVITE,
                 "Vous pouvez lancer l’appel",
-                "Le conseiller vous autorise à ouvrir la salle. Confirmez votre présence, puis lancez l’appel au moment convenu.",
+                "Le recruteur vous autorise à ouvrir la salle. Confirmez votre présence, puis lancez l’appel au moment convenu.",
                 href=portal_href(cand_user, "interviews"),
             )
     db.commit()
     return get_interview(db, user, row.id)
+
+
+def _clear_call_room(db: Session, interview: Interview) -> None:
+    interview.call_opened_at = None
+    for peer in list(db.scalars(select(CallPeer).where(CallPeer.interview_id == interview.id)).all()):
+        db.delete(peer)
+    for sig in list(db.scalars(select(CallSignal).where(CallSignal.interview_id == interview.id)).all()):
+        db.delete(sig)
 
 
 def set_status(db: Session, user: User, interview_id: str, status: InterviewStatus) -> Interview:
@@ -359,15 +368,36 @@ def set_status(db: Session, user: User, interview_id: str, status: InterviewStat
     if user.role == UserRole.CANDIDATE and status not in {InterviewStatus.CONFIRMED, InterviewStatus.CANCELLED}:
         raise AppError(403, "Un candidat peut confirmer ou annuler uniquement.", "FORBIDDEN")
     row.status = status
+    if status not in LIVE_CALL_STATUSES:
+        _clear_call_room(db, row)
     audit(db, "interview.status", user, "interview", row.id, metadata={"status": status.value})
     cand_user = row.candidate.user if row.candidate else None
-    if cand_user and status in {InterviewStatus.CONFIRMED, InterviewStatus.CANCELLED}:
+    staff_closed = is_staff(user) and cand_user and cand_user.id != user.id
+    if staff_closed and status in {
+        InterviewStatus.CONFIRMED,
+        InterviewStatus.CANCELLED,
+        InterviewStatus.COMPLETED,
+        InterviewStatus.NO_SHOW,
+    }:
+        shown = interview_status_label(status, cand_user)
+        titles = {
+            InterviewStatus.COMPLETED: "Entretien terminé",
+            InterviewStatus.NO_SHOW: "Entretien : absence",
+            InterviewStatus.CANCELLED: "Entretien annulé",
+            InterviewStatus.CONFIRMED: "Entretien mis à jour",
+        }
+        bodies = {
+            InterviewStatus.COMPLETED: f"Le recruteur a clôturé l’entretien. Statut : {shown}.",
+            InterviewStatus.NO_SHOW: f"Le recruteur a indiqué une absence. Statut : {shown}.",
+            InterviewStatus.CANCELLED: f"Le recruteur a annulé l’entretien. Statut : {shown}.",
+            InterviewStatus.CONFIRMED: f"Statut : {shown}.",
+        }
         notify(
             db,
             cand_user,
             NotificationType.INTERVIEW_INVITE,
-            "Entretien mis à jour",
-            f"Statut : {status.value}",
+            titles[status],
+            bodies[status],
             href=portal_href(cand_user, "interviews"),
         )
         from app.integrations.hooks import maybe_send_whatsapp
@@ -375,7 +405,7 @@ def set_status(db: Session, user: User, interview_id: str, status: InterviewStat
         maybe_send_whatsapp(
             recipient=cand_user.phone,
             template="candidate_notice",
-            variables={"status": status.value, "when": row.scheduled_at.strftime("%Y-%m-%d %H:%M") if row.scheduled_at else ""},
+            variables={"status": shown, "when": row.scheduled_at.strftime("%Y-%m-%d %H:%M") if row.scheduled_at else ""},
         )
     db.commit()
     return get_interview(db, user, row.id)

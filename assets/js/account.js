@@ -144,12 +144,12 @@
       noBilling: "Billing is not available for this access.",
       startCallAudio: "Start audio", startCallVideo: "Start video",
       joinCallAudio: "Join audio", joinCallVideo: "Join video",
-      waitHost: "Waiting for your consultant to start the call.",
-      callReady: "The consultant has started the call. You can join.",
+      waitHost: "Waiting for the recruiter to start the call.",
+      callReady: "The recruiter has started the call. You can join.",
       stepConfirm: "Confirm you will attend",
-      stepWait: "Wait for the consultant to start the call",
+      stepWait: "Wait for the recruiter to start the call",
       stepStart: "Start the call at the scheduled time",
-      stepJoin: "Join the call when the consultant has started it",
+      stepJoin: "Join the call when the recruiter has started it",
       emptyExp: "No experience added yet.", emptyEdu: "No education added yet.", emptyCert: "No certification added yet.",
       profileIdentity: "Photo and identity", profileContact: "Contact details",
       profilePro: "Professional profile", profilePrefs: "Availability and preferences",
@@ -158,7 +158,7 @@
       notifGroupInterviews: "Interviews and calls", notifGroupApps: "Applications",
       notifGroupMsgs: "Messages", notifGroupJobs: "Roles that may fit",
       notifGroupFile: "Your file", notifGroupAccount: "Account", notifGroupHiring: "Hiring",
-      interviewStepsLead: "Follow the steps. Confirm your attendance, then wait: Join appears only after your consultant starts the call."
+      interviewStepsLead: "Follow the steps. Confirm your attendance, then wait: Join appears only after the recruiter starts the call."
     } : {
       login: "Connexion", register: "Créer un compte", email: "Courriel", password: "Mot de passe",
       first: "Prénom", last: "Nom", submitLogin: "Me connecter", submitRegister: "Créer mon compte",
@@ -185,10 +185,10 @@
       confirm: "Confirmer", cancel: "Annuler", callAudio: "Appel audio", callVideo: "Appel vidéo",
       startCallAudio: "Lancer l’audio", startCallVideo: "Lancer la visio",
       joinCallAudio: "Rejoindre en audio", joinCallVideo: "Rejoindre en visio",
-      waitHost: "En attente que le conseiller lance l’appel.",
-      callReady: "Le conseiller a lancé l’appel. Vous pouvez rejoindre.",
+      waitHost: "En attente que le recruteur lance l’appel.",
+      callReady: "Le recruteur a lancé l’appel. Vous pouvez rejoindre.",
       stepConfirm: "Confirmez votre présence",
-      stepWait: "Attendez que le conseiller lance l’appel",
+      stepWait: "Attendez que le recruteur lance l’appel",
       stepStart: "Lancez l’appel à l’heure prévue",
       stepJoin: "Rejoignez l’appel une fois qu’il est lancé",
       emptyExp: "Aucune expérience ajoutée.", emptyEdu: "Aucune formation ajoutée.", emptyCert: "Aucune certification ajoutée.",
@@ -199,7 +199,7 @@
       notifGroupInterviews: "Entretiens et appels", notifGroupApps: "Candidatures",
       notifGroupMsgs: "Messages", notifGroupJobs: "Offres qui peuvent convenir",
       notifGroupFile: "Votre dossier", notifGroupAccount: "Compte", notifGroupHiring: "Recrutement",
-      interviewStepsLead: "Suivez les étapes. Confirmez votre présence, puis attendez : Rejoindre n’apparaît que lorsque le conseiller a lancé l’appel.",
+      interviewStepsLead: "Suivez les étapes. Confirmez votre présence, puis attendez : Rejoindre n’apparaît que lorsque le recruteur a lancé l’appel.",
       to: "Destinataire", write: "Votre message", score: "Score",
       welcomeEmployer: "Votre espace employeur", guestEmployer: "Connectez-vous pour suivre les profils que Talendus vous présente.",
       registerEmployer: "Créer un compte employeur", company: "Entreprise", inbox: "Candidatures",
@@ -666,7 +666,7 @@
         pageLead = '<p class="tl-portal-pagehead-lead">' + esc(isEmployerSpace() ? t.settingsLeadEmployer : t.settingsLeadCandidate) + "</p>";
       }
       var av = window.__tlAvatarUrl
-        ? '<span class="tl-avatar is-lg"><img src="' + esc(window.__tlAvatarUrl) + '" alt=""></span>'
+        ? '<span class="tl-avatar is-lg" data-initials="' + esc(initials(user)) + '"><img src="' + esc(window.__tlAvatarUrl) + '" alt="" onerror="this.style.display=\'none\';var p=this.parentNode;if(p&&!p.getAttribute(\'data-fb\')){p.setAttribute(\'data-fb\',\'1\');p.appendChild(document.createTextNode(p.getAttribute(\'data-initials\')||\'\'));}"></span>'
         : '<span class="tl-avatar is-lg" aria-hidden="true">' + esc(initials(user)) + "</span>";
       root.innerHTML = mobile + '<div class="tl-portal">' +
         '<nav class="tl-portal-nav" aria-label="Talendus">' +
@@ -829,7 +829,7 @@
         return "<li><span>" + esc(e.name) + '</span> <button type="button" class="tl-btn tl-btn-ghost" data-del-cert="' + esc(e.id) + '">' + esc(t.remove) + "</button></li>";
       }).join("") || "<li><span>" + esc(t.emptyCert) + "</span></li>";
       var photo = window.__tlAvatarUrl
-        ? '<span class="tl-avatar"><img src="' + esc(window.__tlAvatarUrl) + '" alt=""></span>'
+        ? '<span class="tl-avatar" data-initials="' + esc(((user.first_name || "?") + "").charAt(0).toUpperCase()) + '"><img src="' + esc(window.__tlAvatarUrl) + '" alt="" onerror="this.style.display=\'none\';var p=this.parentNode;if(p&&!p.getAttribute(\'data-fb\')){p.setAttribute(\'data-fb\',\'1\');p.appendChild(document.createTextNode(p.getAttribute(\'data-initials\')||\'\'));}"></span>'
         : '<span class="tl-avatar" aria-hidden="true">' + esc(((user.first_name || "?") + "").charAt(0).toUpperCase()) + "</span>";
       return '<p class="tl-meta">' + esc(t.updated) + " : " + esc(fmtDate(profile.updated_at)) + "</p>" +
         '<div class="tl-profile-stack">' +
@@ -920,6 +920,7 @@
           if (json && json.data) {
             try { localStorage.setItem("talendus_user", JSON.stringify(Object.assign(api.currentUser() || {}, json.data))); } catch (err) {}
           }
+          if (window.__tlAvatarUrl) { try { URL.revokeObjectURL(window.__tlAvatarUrl); } catch (err) {} }
           window.__tlAvatarUrl = "";
           if (window.TalendusAuth && window.TalendusAuth.paint) window.TalendusAuth.paint();
         }).catch(function (err) {
@@ -1912,7 +1913,11 @@
     }
 
     function interviewCallButtons(i) {
-      if (!i || !i.in_app_call) return "";
+      if (!i) return "";
+      if (i.status === "COMPLETED" || i.status === "CANCELLED" || i.status === "NO_SHOW") {
+        return '<p class="tl-int-outcome">' + esc(i.status_label || statusLabel(i.status)) + "</p>";
+      }
+      if (!i.in_app_call) return "";
       var canStart = !!i.can_start_call;
       var canJoin = !!i.can_join_call;
       if (canStart) {
@@ -1952,7 +1957,7 @@
             '</button> <button type="button" class="tl-btn tl-btn-ghost" data-int-status="CANCELLED" data-int-id="' + esc(i.id) + '">' + esc(t.cancel) + "</button></p>";
         }
         var ready = i.host_in_call || i.can_start_call;
-        return '<article class="tl-int-card' + (ready ? " is-ready" : "") + '"><b>' + esc(i.type_label || i.type) + " · " + esc(statusLabel(i.status)) + "</b><p>" +
+        return '<article class="tl-int-card' + (ready ? " is-ready" : "") + '"><b>' + esc(i.type_label || i.type) + " · " + esc(i.status_label || statusLabel(i.status)) + "</b><p>" +
           esc(fmtDate(i.scheduled_at)) + " · " + esc(i.location || "") + (i.job_title ? " · " + esc(i.job_title) : "") +
           (i.candidate_name ? " · " + esc(i.candidate_name) : "") + "</p>" +
           (i.in_app_call && !isEmployerSpace() ? interviewSteps(i) : "") + actions + "</article>";

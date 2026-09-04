@@ -31,6 +31,21 @@ KINDS = {"offer", "answer", "ice", "hangup"}
 ICE_SERVERS = [
     {"urls": "stun:stun.l.google.com:19302"},
     {"urls": "stun:stun.cloudflare.com:3478"},
+    {
+        "urls": "turn:openrelay.metered.ca:80",
+        "username": "openrelayproject",
+        "credential": "openrelayproject",
+    },
+    {
+        "urls": "turn:openrelay.metered.ca:443",
+        "username": "openrelayproject",
+        "credential": "openrelayproject",
+    },
+    {
+        "urls": "turns:openrelay.metered.ca:443",
+        "username": "openrelayproject",
+        "credential": "openrelayproject",
+    },
 ]
 
 
@@ -125,10 +140,14 @@ def _peers(db: Session, interview: Interview, viewer: User) -> list[dict]:
         user = db.get(User, row.user_id)
         if not user:
             continue
+        parts = (user.full_name or "").split()
+        initials = "".join(p[:1] for p in parts[:2]).upper() or (user.email or "?")[:1].upper()
         out.append(
             {
                 "user_id": row.user_id,
                 "name": user.full_name,
+                "initials": initials,
+                "has_avatar": bool(user.avatar_path),
                 "video": row.video,
                 "self": row.user_id == viewer.id,
             }
@@ -163,7 +182,7 @@ def _open_room(db: Session, interview: Interview, user: User, *, notify_candidat
             cand_user,
             NotificationType.INTERVIEW_INVITE,
             "L’entretien se prépare",
-            "Le conseiller prépare l’appel. Les boutons Rejoindre apparaîtront dès qu’il l’aura lancé.",
+            "Le recruteur prépare l’appel. Les boutons Rejoindre apparaîtront dès qu’il l’aura lancé.",
             href=portal_href(cand_user, "interviews"),
         )
     return True
@@ -200,7 +219,7 @@ def join(db: Session, user: User, interview_id: str, video: bool | None = None) 
     if not viewer_can_join_call(interview, user) and not viewer_can_start_call(interview, user):
         raise AppError(
             409,
-            "Le conseiller n’a pas encore lancé l’appel. Vous pourrez rejoindre dès qu’il sera dans la salle.",
+            "Le recruteur n’a pas encore lancé l’appel. Vous pourrez rejoindre dès qu’il sera dans la salle.",
             "CALL_WAITING_FOR_HOST",
         )
     if is_staff(user) or viewer_can_start_call(interview, user):
@@ -225,7 +244,7 @@ def join(db: Session, user: User, interview_id: str, video: bool | None = None) 
                 cand_user,
                 NotificationType.INTERVIEW_INVITE,
                 "L’appel est lancé",
-                "Le conseiller a lancé l’entretien. Vous pouvez rejoindre maintenant.",
+                "Le recruteur a lancé l’entretien. Vous pouvez rejoindre maintenant.",
                 href=portal_href(cand_user, "interviews"),
             )
     db.commit()

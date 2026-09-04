@@ -798,7 +798,7 @@ def footer(lang="fr", persona="gateway"):
 <script src="{a}assets/js/talendus.js" defer></script>
 <script src="{a}assets/js/persona.js" defer></script>
 <script src="{a}assets/js/auth-gate.js" defer></script>
-<script src="{a}assets/js/talendus-call.js?v=20260904-appels-relance" defer></script>
+<script src="{a}assets/js/talendus-call.js?v=20260904-appels-visio" defer></script>
 <script src="{a}assets/js/account.js" defer></script>
 <script src="{a}assets/js/consent.js" defer></script>
 <script src="{a}assets/js/tracking.js" defer></script>
