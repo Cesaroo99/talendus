@@ -436,6 +436,29 @@ def test_matching_scores_and_job_board(client):
     staff = promote_admin(client, "match-admin@example.com")
     matches = client.get(f"/api/matching/jobs/{job['id']}/candidates", headers=auth_header(staff))
     assert matches.status_code == 200
+    board_rows = matches.json()["data"]
+    assert board_rows
+    assert "application_id" in board_rows[0]
+    assert board_rows[0]["application_id"] is None
+    cand_id = client.get("/api/candidates/me", headers=cand_h).json()["data"]["id"]
+    linked = client.post(
+        "/api/applications/staff",
+        headers=auth_header(staff),
+        json={"candidate_id": cand_id, "job_id": job["id"]},
+    )
+    assert linked.status_code == 200, linked.text
+    assert linked.json()["data"]["source"] == "staff"
+    assert linked.json()["data"]["status"] == "UNDER_REVIEW"
+    again = client.post(
+        "/api/applications/staff",
+        headers=auth_header(staff),
+        json={"candidate_id": cand_id, "job_id": job["id"]},
+    )
+    assert again.status_code == 409
+    after = client.get(f"/api/matching/jobs/{job['id']}/candidates", headers=auth_header(staff)).json()["data"]
+    karine = next(row for row in after if row["candidate"]["id"] == cand_id)
+    assert karine["application_id"]
+    assert karine["application_status"] == "UNDER_REVIEW"
     board = client.get("/api/job-board")
     assert board.status_code == 200
     slugs = [j["slug"] for j in board.json()["data"]["jobs"]]
@@ -540,12 +563,7 @@ def test_interview_invoice_contract_and_email_body(client):
     )
     assert created.status_code == 200, created.text
     cid = created.json()["data"]["id"]
-    agency = client.post(
-        f"/api/contracts/{cid}/sign-talendus",
-        headers=admin_h,
-        json={"signer_name": "Lea Super", "accepted": True},
-    )
-    assert agency.status_code == 200, agency.text
+    assert created.json()["data"]["talendus_signed"] is True
     mailed = client.post(f"/api/contracts/{cid}/send", headers=admin_h)
     assert mailed.status_code == 200, mailed.text
     signed = client.post(
@@ -704,6 +722,10 @@ def test_resume_parse_status_on_upload(client):
     me = client.get("/api/candidates/me", headers=auth_header(cand)).json()["data"]
     assert me["resumes"]
     assert me["resumes"][0]["parse_status"] in {"done", "failed", "unsupported"}
+    assert "summary" in me["resumes"][0]
+    assert me["resumes"][0]["summary"]
+    assert "previewable" in me["resumes"][0]
+    assert "cv_summary" in me
 
 
 def test_job_match_notification_on_publish(client):

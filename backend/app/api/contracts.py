@@ -45,21 +45,23 @@ def preview_contract(
 @router.post("")
 def create_contract(
     payload: ContractIn,
+    request: Request,
     db: Session = Depends(get_db),
     user: User = Depends(require_roles(UserRole.RECRUITER, UserRole.ADMIN, UserRole.FINANCE)),
 ):
-    row = contracts_service.create_contract(db, user, payload)
-    return ok(contracts_service.serialize_contract(row), message="Mandat préparé. Signez pour Talendus, puis envoyez-le au client.")
+    row = contracts_service.create_contract(db, user, payload, client_ip(request))
+    return ok(contracts_service.serialize_contract(row), message="Mandat préparé et signé pour Talendus. Envoyez-le au client.")
 
 
 @router.patch("/{contract_id}")
 def update_contract(
     contract_id: str,
     payload: ContractPatchIn,
+    request: Request,
     db: Session = Depends(get_db),
     user: User = Depends(require_roles(UserRole.RECRUITER, UserRole.ADMIN, UserRole.FINANCE)),
 ):
-    row = contracts_service.update_contract(db, user, contract_id, payload)
+    row = contracts_service.update_contract(db, user, contract_id, payload, client_ip(request))
     return ok(contracts_service.serialize_contract(row), message="Brouillon mis à jour.")
 
 

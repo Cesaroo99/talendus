@@ -16,7 +16,12 @@ from app.schemas import AdminCandidatePatchIn, CandidateProfileIn, Certification
 from app.services.audit import audit
 from app.services.auth import ensure_candidate
 from app.services.notifications import notify
-from app.services.resume_parse import parse_json_dump, parse_resume_bytes
+from app.services.resume_parse import (
+    is_previewable,
+    parse_json_dump,
+    parse_resume_bytes,
+    summary_from_storage,
+)
 from app.services.storage import delete_stored, save_resume
 
 
@@ -381,6 +386,29 @@ def submit_public_talent(
     return {"id": profile.id, "resume_id": resume.id if resume else None, "created": created}
 
 
+def serialize_resume(row: Resume) -> dict:
+    mime = row.mime_type or ""
+    return {
+        "id": row.id,
+        "original_name": row.original_name,
+        "is_primary": row.is_primary,
+        "size_bytes": row.size_bytes,
+        "mime_type": mime,
+        "parse_status": row.parse_status,
+        "summary": summary_from_storage(row.parse_json),
+        "previewable": is_previewable(mime, row.original_name),
+        "kind": "cv" if row.is_primary else "document",
+        "created_at": row.created_at.isoformat() if row.created_at else None,
+        "download_path": f"/api/candidates/resumes/{row.id}/file",
+    }
+
+
+def _primary_cv_summary(profile: Candidate) -> str:
+    resumes = list(profile.resumes or [])
+    primary = next((row for row in resumes if row.is_primary), None) or (resumes[0] if resumes else None)
+    return summary_from_storage(primary.parse_json) if primary else ""
+
+
 def serialize_candidate(profile: Candidate, include_private: bool = True) -> dict:
     from app.services.portal import profile_completeness
 
@@ -409,18 +437,8 @@ def serialize_candidate(profile: Candidate, include_private: bool = True) -> dic
             {"id": c.id, "name": c.name, "issuer": c.issuer, "year": c.year}
             for c in (profile.certifications or [])
         ],
-        "resumes": [
-            {
-                "id": r.id,
-                "original_name": r.original_name,
-                "is_primary": r.is_primary,
-                "size_bytes": r.size_bytes,
-                "parse_status": r.parse_status,
-                "created_at": r.created_at.isoformat() if r.created_at else None,
-                "download_path": f"/api/candidates/resumes/{r.id}/file",
-            }
-            for r in (profile.resumes or [])
-        ],
+        "resumes": [serialize_resume(r) for r in (profile.resumes or [])],
+        "cv_summary": _primary_cv_summary(profile),
     }
     if not include_private:
         return public

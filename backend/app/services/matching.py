@@ -8,8 +8,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.errors import AppError
-from app.models import Candidate, JobOffer, User
-from app.models.enums import OPEN_JOB_STATUSES, UserRole
+from app.models import Application, Candidate, JobOffer, User
+from app.models.enums import JobStatus, OPEN_JOB_STATUSES, UserRole
 from app.rbac import ADMINS
 from app.services.auth import ensure_candidate
 from app.services.jobs import serialize_job
@@ -110,15 +110,43 @@ def score_pair(candidate: Candidate, job: JobOffer) -> tuple[int, list[str]]:
     return min(100, total), reasons
 
 
-def jobs_for_candidate(db: Session, candidate: Candidate, limit: int = 20) -> list[dict]:
+STAFF_JOB_STATUSES = {
+    JobStatus.DRAFT,
+    JobStatus.PENDING_VALIDATION,
+    JobStatus.PUBLISHED,
+    JobStatus.PAUSED,
+}
+
+
+def _application_index(db: Session, candidate_ids: list[str], job_ids: list[str]) -> dict[tuple[str, str], Application]:
+    if not candidate_ids or not job_ids:
+        return {}
+    rows = db.scalars(
+        select(Application).where(
+            Application.candidate_id.in_(candidate_ids),
+            Application.job_id.in_(job_ids),
+        )
+    ).all()
+    return {(row.candidate_id, row.job_id): row for row in rows}
+
+
+def _link_payload(app: Application | None) -> dict:
+    if not app:
+        return {"application_id": None, "application_status": None}
+    return {"application_id": app.id, "application_status": app.status.value if app.status else None}
+
+
+def jobs_for_candidate(db: Session, candidate: Candidate, limit: int = 20, *, staff: bool = False) -> list[dict]:
+    statuses = STAFF_JOB_STATUSES if staff else OPEN_JOB_STATUSES
     jobs = list(
         db.scalars(
             select(JobOffer)
             .options(joinedload(JobOffer.company))
-            .where(JobOffer.status.in_(OPEN_JOB_STATUSES))
+            .where(JobOffer.status.in_(statuses))
             .order_by(JobOffer.published_at.desc())
         ).unique().all()
     )
+    links = _application_index(db, [candidate.id], [job.id for job in jobs])
     ranked: list[dict] = []
     for job in jobs:
         score, reasons = score_pair(candidate, job)
@@ -127,6 +155,7 @@ def jobs_for_candidate(db: Session, candidate: Candidate, limit: int = 20) -> li
                 "score": score,
                 "reasons": reasons,
                 "job": serialize_job(job),
+                **_link_payload(links.get((candidate.id, job.id))),
             }
         )
     ranked.sort(key=lambda row: row["score"], reverse=True)
@@ -137,6 +166,7 @@ def candidates_for_job(db: Session, job: JobOffer, limit: int = 20) -> list[dict
     candidates = list(
         db.scalars(select(Candidate).options(joinedload(Candidate.user), selectinload(Candidate.experiences))).unique().all()
     )
+    links = _application_index(db, [candidate.id for candidate in candidates], [job.id])
     ranked: list[dict] = []
     for candidate in candidates:
         user = candidate.user
@@ -145,6 +175,7 @@ def candidates_for_job(db: Session, job: JobOffer, limit: int = 20) -> list[dict
             {
                 "score": score,
                 "reasons": reasons,
+                **_link_payload(links.get((candidate.id, job.id))),
                 "candidate": {
                     "id": candidate.id,
                     "user_id": candidate.user_id,
@@ -183,7 +214,7 @@ def staff_candidate_jobs(db: Session, user: User, candidate_id: str, limit: int 
     candidate = db.get(Candidate, candidate_id)
     if not candidate:
         raise AppError(404, "Candidat introuvable.", "CANDIDATE_NOT_FOUND")
-    return jobs_for_candidate(db, candidate, limit)
+    return jobs_for_candidate(db, candidate, limit, staff=True)
 
 
 def notify_job_matches(db: Session, job: JobOffer, limit: int = 40) -> int:

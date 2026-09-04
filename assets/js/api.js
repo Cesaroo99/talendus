@@ -97,6 +97,33 @@
     return err;
   }
 
+  function escapeHtml(value) {
+    return String(value || "").replace(/[&<>"']/g, function (ch) {
+      return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch];
+    });
+  }
+
+  function escapeAttr(value) {
+    return escapeHtml(value).replace(/`/g, "&#96;");
+  }
+
+  function ensurePreviewChrome() {
+    if (document.getElementById("tl-file-preview-style")) return;
+    var style = document.createElement("style");
+    style.id = "tl-file-preview-style";
+    style.textContent = [
+      ".tl-file-preview{position:fixed;inset:0;z-index:12000;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;padding:18px;}",
+      ".tl-file-preview-box{background:#fff;width:min(980px,100%);height:min(90vh,100%);border-radius:14px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 50px rgba(15,23,42,.25);}",
+      ".tl-file-preview-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid #e5e7eb;}",
+      ".tl-file-preview-bar h2{margin:0;font-size:16px;font-weight:700;}",
+      ".tl-file-preview-close{border:0;background:#0b1f3a;color:#fff;border-radius:8px;padding:8px 12px;cursor:pointer;}",
+      ".tl-file-preview-frame,.tl-file-preview-img{flex:1;width:100%;border:0;background:#f8fafc;}",
+      ".tl-file-preview-img{object-fit:contain;}",
+      ".tl-file-preview-empty{padding:24px;margin:0;}"
+    ].join("");
+    document.head.appendChild(style);
+  }
+
   function request(path, opts) {
     opts = opts || {};
     var headers = Object.assign({ "Accept": "application/json" }, opts.headers || {});
@@ -246,22 +273,52 @@
     previewContract: function (query) { return request("/contracts/preview" + (query || "")); },
     sendContract: function (id) { return request("/contracts/" + id + "/send", { method: "POST" }); },
     openContract: function (id) { return request("/contracts/" + id + "/open", { method: "POST" }); },
-    openPdf: function (path) {
+    previewFile: function (path, filename) {
+      ensurePreviewChrome();
       var token = getAccess();
-      var abs = apiRoot() + path;
+      var rel = String(path || "").replace(/^\/api/, "");
+      var abs = apiRoot() + rel;
       if (abs.indexOf("http") !== 0) abs = (location.origin || "") + abs;
-      var headers = { "Accept": "application/pdf" };
+      var headers = { "Accept": "*/*" };
       if (token) headers.Authorization = "Bearer " + token;
+      var title = filename || (pageIsEn() ? "Document" : "Document");
       return fetch(abs, { headers: headers, credentials: "same-origin" }).then(function (res) {
-        if (!res.ok) throw new Error(pageIsEn() ? "Unable to open the PDF." : "Impossible d’ouvrir le PDF.");
+        if (!res.ok) throw new Error(pageIsEn() ? "Unable to open the file." : "Impossible d’ouvrir le fichier.");
         return res.blob().then(function (blob) {
           var url = URL.createObjectURL(blob);
-          var opened = null;
-          try { opened = window.open(url, "_blank"); } catch (e) {}
-          if (!opened) location.assign(url);
-          setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+          var mime = blob.type || "";
+          var overlay = document.createElement("div");
+          overlay.className = "tl-file-preview";
+          overlay.setAttribute("role", "dialog");
+          overlay.setAttribute("aria-modal", "true");
+          var inner;
+          if (mime.indexOf("pdf") >= 0 || /\.pdf$/i.test(title)) {
+            inner = '<iframe class="tl-file-preview-frame" title="' + escapeAttr(title) + '" src="' + url + '"></iframe>';
+          } else if (mime.indexOf("image/") === 0) {
+            inner = '<img class="tl-file-preview-img" alt="' + escapeAttr(title) + '" src="' + url + '">';
+          } else {
+            inner = '<p class="tl-file-preview-empty">' +
+              (pageIsEn() ? "Preview is not available for this format. Use Download." : "Aperçu indisponible pour ce format. Utilisez Télécharger.") +
+              "</p>";
+          }
+          overlay.innerHTML = '<div class="tl-file-preview-box"><div class="tl-file-preview-bar"><h2>' +
+            escapeHtml(title) + '</h2><button type="button" class="tl-file-preview-close">' +
+            (pageIsEn() ? "Close" : "Fermer") + "</button></div>" + inner + "</div>";
+          function close() {
+            if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+            URL.revokeObjectURL(url);
+            document.removeEventListener("keydown", onKey);
+          }
+          function onKey(ev) { if (ev.key === "Escape") close(); }
+          overlay.addEventListener("click", function (ev) { if (ev.target === overlay) close(); });
+          overlay.querySelector(".tl-file-preview-close").addEventListener("click", close);
+          document.addEventListener("keydown", onKey);
+          document.body.appendChild(overlay);
         });
       });
+    },
+    openPdf: function (path) {
+      return this.previewFile(path, "document.pdf");
     },
     download: function (path, filename) {
       var token = getAccess();

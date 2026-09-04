@@ -247,7 +247,7 @@ def serialize_contract(row: Contract) -> dict:
     talendus = by_party[PARTY_TALENDUS]
     status = client_status(row)
     _, _, days = mandate_window(row.start_date, row.end_date)
-    locked = bool(row.talendus_signed_at or talendus or row.sent_at or row.client_signed_at or client)
+    locked = bool(row.sent_at or row.client_signed_at or client)
     return {
         "id": row.id,
         "company_id": row.company_id,
@@ -324,7 +324,7 @@ def get_contract(db: Session, user: User, contract_id: str, *, mark_open: bool =
     return row
 
 
-def create_contract(db: Session, user: User, data: ContractIn) -> Contract:
+def create_contract(db: Session, user: User, data: ContractIn, ip: str | None = None) -> Contract:
     if user.role not in STAFF:
         raise AppError(403, "Seule l’équipe Talendus peut créer un mandat.", "FORBIDDEN")
     company = db.get(Company, data.company_id)
@@ -353,12 +353,21 @@ def create_contract(db: Session, user: User, data: ContractIn) -> Contract:
         terms = filled_terms(company, draft, template=meta["key"])
     except Exception:
         logger.exception("filled_terms")
-        terms = (
-            f"Mandat Talendus — {mandate_type}\n"
-            f"Entreprise : {company.name}\n"
-            f"Debut : {start}\nFin : {end}\n"
-            f"Commission : {percent} %\n"
-            f"Poste : {(data.role or '-').strip() or '-'}"
+        terms = mandate_terms(
+            company_name=company.name,
+            legal_name=company.legal_name,
+            address=company.address,
+            city=company.city,
+            province=company.province,
+            commission=percent,
+            mandate_type=mandate_type,
+            role=data.role,
+            start_date=start,
+            end_date=end,
+            template=meta["key"],
+            duration_days=meta.get("duration_days"),
+            guarantee_days=meta.get("guarantee_days"),
+            presented_months=meta.get("presented_months"),
         )
     company_id = company.id
     company_name = company.name
@@ -383,6 +392,7 @@ def create_contract(db: Session, user: User, data: ContractIn) -> Contract:
         company_name=company_name,
         document_name=document_name,
     )
+    ensure_talendus_signed(db, row, user, ip)
     audit(db, "contract.create", user, "contract", row.id)
     db.commit()
     return get_contract(db, user, row.id)
@@ -518,7 +528,7 @@ def _persist_contract(
         "id": uid(),
         "company_id": company_id,
         "type": "Mandat",
-        "terms": (terms or "Mandat Talendus")[:8000],
+        "terms": terms or mandate_terms(company_name=company_name or "le client"),
         "status": "ACTIVE",
         "created_at": now,
         "updated_at": now,
@@ -540,14 +550,12 @@ def _persist_contract(
     )
 
 
-def update_contract(db: Session, user: User, contract_id: str, data: ContractPatchIn) -> Contract:
+def update_contract(db: Session, user: User, contract_id: str, data: ContractPatchIn, ip: str | None = None) -> Contract:
     if user.role not in STAFF:
         raise AppError(403, "Seule l’équipe Talendus peut modifier un mandat.", "FORBIDDEN")
     row = get_contract(db, user, contract_id)
     if row.client_signed_at or _party_signature(row, PARTY_CLIENT):
         raise AppError(409, "Ce mandat est déjà signé par le client.", "ALREADY_SIGNED")
-    if row.talendus_signed_at or _party_signature(row, PARTY_TALENDUS):
-        raise AppError(409, "Talendus a déjà signé. Préparez un nouveau brouillon pour changer les dates.", "ALREADY_SIGNED")
     if row.sent_at:
         raise AppError(409, "Ce mandat a déjà été envoyé au client.", "ALREADY_SENT")
     company = row.company or db.get(Company, row.company_id)
@@ -581,9 +589,41 @@ def update_contract(db: Session, user: User, contract_id: str, data: ContractPat
         template=meta["key"],
     )
     row.document_name = f"mandat-talendus-{_slug(company.name)}-{start}.pdf"
+    _refresh_talendus_signature(db, row, user, ip)
     audit(db, "contract.update", user, "contract", row.id)
     db.commit()
     return get_contract(db, user, row.id)
+
+
+def _signer_name(user: User) -> str:
+    name = (user.full_name or "").strip()
+    return name if len(name) >= 2 else "Talendus"
+
+
+def ensure_talendus_signed(db: Session, row: Contract, user: User, ip: str | None = None) -> Contract:
+    if row.talendus_signed_at or _party_signature(row, PARTY_TALENDUS):
+        return row
+    _add_signature(
+        db,
+        row,
+        user,
+        ContractSignIn(signer_name=_signer_name(user), accepted=True),
+        ip,
+        PARTY_TALENDUS,
+    )
+    row.talendus_signed_at = utcnow()
+    return row
+
+
+def _refresh_talendus_signature(db: Session, row: Contract, user: User, ip: str | None) -> None:
+    existing = _party_signature(row, PARTY_TALENDUS)
+    if existing:
+        stamp = utcnow().isoformat()
+        payload = f"{row.id}|{PARTY_TALENDUS}|{row.terms or ''}|{row.document_name or ''}|{existing.signer_name}|{stamp}|{ip or ''}"
+        existing.document_hash = hashlib.sha256(payload.encode("utf-8")).hexdigest()
+        existing.document_name = row.document_name
+        return
+    ensure_talendus_signed(db, row, user, ip)
 
 
 def _add_signature(db: Session, row: Contract, user: User, data: ContractSignIn, ip: str | None, party: str) -> ContractSignature:

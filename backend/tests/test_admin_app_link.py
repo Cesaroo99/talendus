@@ -82,12 +82,7 @@ def test_admin_and_app_share_jobs_hiring_and_applications(client):
     )
     assert mandate.status_code == 200, mandate.text
     cid = mandate.json()["data"]["id"]
-    agency = client.post(
-        f"/api/contracts/{cid}/sign-talendus",
-        headers=admin_h,
-        json={"signer_name": "Lea Super", "accepted": True},
-    )
-    assert agency.status_code == 200, agency.text
+    assert mandate.json()["data"]["talendus_signed"] is True
     sent = client.post(f"/api/contracts/{cid}/send", headers=admin_h)
     assert sent.status_code == 200, sent.text
     signed = client.post(

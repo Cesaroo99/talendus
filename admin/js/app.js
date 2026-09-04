@@ -579,7 +579,7 @@
     var ints = S().interviews.filter(function (i) { return i.candidateId === id; });
     var docs = S().documents.filter(function (d) { return d.entity === "candidate" && d.entityId === id; });
     var client = TLStore.client(c.clientId);
-    var tabs = { profil: "Profil", cv: "CV & documents", histo: "Candidatures", entretiens: "Entretiens", notes: "Notes internes", interactions: "Historique" };
+    var tabs = { profil: "Profil", cv: "CV & documents", ats: "Correspondances", histo: "Candidatures", entretiens: "Entretiens", notes: "Notes internes", interactions: "Historique" };
     var body = "";
     if (detailTab === "profil") {
       var salary = (typeof c.salaryMin === "number" && c.salaryMin < 1000 && c.salaryMin > 0)
@@ -616,18 +616,29 @@
         </div>
         <div class="card card-pad"><h3>Expériences</h3>${(c.experiences || []).map(function (e) { return "<p><b>" + U.esc(e.role) + "</b> — " + U.esc(e.company) + "<br><span style='color:var(--steel)'>" + U.esc(e.years) + "</span></p>"; }).join("") || "<p>—</p>"}</div>
         <div class="card card-pad"><h3>Formations</h3>${(c.education || []).map(function (e) { return "<p><b>" + U.esc(e.diploma) + "</b> — " + U.esc(e.school) + " (" + e.year + ")</p>"; }).join("") || "<p>—</p>"}</div>
+        <div class="card card-pad full"><h3>Résumé du CV</h3>
+          <p>${U.esc(c.cvSummary || (docs[0] && docs[0].summary) || "Aucun CV analysé pour le moment.")}</p>
+        </div>
       </div>`;
     } else if (detailTab === "cv") {
       var docRows = docs.map(function (d) {
         var href = d.url || "";
-        return "<p><i class='fa-regular fa-file'></i> " + U.esc(d.name) + " · " + U.esc(d.size || "") +
+        var canSee = d.previewable !== false && href;
+        return "<div class='manage-row'><div><i class='fa-regular fa-file'></i> " + U.esc(d.name) + " · " + U.esc(d.size || "") +
+          (d.summary ? "<div class='sub'>" + U.esc(d.summary) + "</div>" : "") + "</div><div>" +
+          (canSee ? " <button class='btn btn-ghost btn-sm' data-preview-doc='" + U.esc(href) + "' data-preview-name='" + U.esc(d.name) + "'>Voir</button>" : "") +
           (href ? " <button class='btn btn-ghost btn-sm' data-dl-doc='" + U.esc(href) + "' data-dl-name='" + U.esc(d.name) + "'>Télécharger</button>" : "") +
-          "</p>";
+          "</div></div>";
       }).join("");
       body = '<div class="card card-pad"><h3>Documents</h3>' +
+        (c.cvSummary ? "<p>" + U.esc(c.cvSummary) + "</p>" : "") +
         (docRows || "<p>Aucun document dans le dossier.</p>") +
         '<form id="cand-upload" style="margin-top:12px"><input type="file" name="file" accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png,image/webp" required> ' +
         '<button class="btn btn-orange" type="submit">Ajouter un document</button></form></div>';
+    } else if (detailTab === "ats") {
+      body = '<div class="card card-pad"><h3>Correspondance directe avec les offres</h3>' +
+        "<p class='hint'>Score déterministe (compétences, ville, secteur, expérience, salaire). Lier un candidat crée une candidature interne, sans que l’employeur voie le vivier.</p>" +
+        '<div id="cand-matches-live"><p class="hint">Chargement des correspondances…</p></div></div>';
     } else if (detailTab === "histo") {
       var apps = c.applications || [];
       body = `<div class="card card-pad"><h3>Demandes et candidatures à gérer</h3>
@@ -670,6 +681,8 @@
           <div class="row"><span>Inscription</span><b>${U.dateFr(c.createdAt)}</b></div>
           <div class="row"><span>Dernière activité</span><b>${U.dateFr(c.lastActivity)}</b></div>
           <div class="row"><span>CV</span><b>${docs.length ? docs[0].name : "Non déposé"}</b></div>
+          ${c.cvSummary ? '<p class="hint" style="margin-top:10px">' + U.esc(c.cvSummary) + "</p>" : ""}
+          ${docs[0] && docs[0].url ? '<p><button class="btn btn-ghost btn-sm" data-preview-doc="' + U.esc(docs[0].url) + '" data-preview-name="' + U.esc(docs[0].name) + '">Voir le CV</button></p>' : ""}
         </div>
         <div>
           <div class="tabs">${Object.keys(tabs).map(function (k) { return '<button class="tab' + (detailTab === k ? " is-on" : "") + '" data-dtab="' + k + '">' + tabs[k] + "</button>"; }).join("")}</div>
@@ -907,7 +920,7 @@
               });
             }
             close();
-            U.toast(isEdit ? "Brouillon mis à jour." : "Brouillon enregistré. Lisez-le, signez pour Talendus, puis envoyez-le au client.", "ok");
+            U.toast(isEdit ? "Brouillon mis à jour." : "Mandat préparé et signé pour Talendus. Envoyez-le au client.", "ok");
             render();
           } catch (err) {
             U.toast((err && err.message) || "Enregistrement impossible.", "err");
@@ -1044,13 +1057,85 @@
           <div class="row"><span>Candidatures</span><b>${j.applications}</b></div>
         </div>
       </div>
-      <div class="card card-pad" style="margin-top:16px"><h3>Candidats correspondants (score déterministe)</h3>
-        ${(S().jobMatches || []).filter(function (m) { return m.jobId === id; }).map(function (m) {
-          var c = TLStore.candidate(m.candidateId);
-          if (!c) return "";
-          return '<p><a href="#/candidates/' + c.id + '">' + U.esc(c.firstName + " " + c.lastName) + "</a> — " + m.score + " % · " + U.esc((m.reasons || []).slice(0, 2).join(" · ")) + "</p>";
-        }).join("") || "<p>Aucun profil au-dessus du seuil pour le moment.</p>"}
+      <div class="card card-pad" style="margin-top:16px"><h3>Candidats correspondants</h3>
+        <p class="hint">Score déterministe. Liez un profil pour créer une candidature interne — l’employeur ne voit le dossier qu’après présentation.</p>
+        <div id="job-matches-live"><p class="hint">Chargement des correspondances…</p></div>
       </div>`;
+  }
+
+  function matchStatusLabel(status) {
+    var found = APP_STATUSES.filter(function (s) { return s[0] === status; })[0];
+    return found ? found[1] : (status || "Lié");
+  }
+
+  function loadCandidateMatches(candidateId) {
+    var box = document.getElementById("cand-matches-live");
+    if (!box || !api()) return;
+    box.innerHTML = "<p class='hint'>Chargement des correspondances…</p>";
+    api().request("/matching/candidates/" + candidateId + "?limit=20").then(function (res) {
+      var rows = res.data || [];
+      if (!rows.length) {
+        box.innerHTML = "<p>Aucune offre ouverte ou en brouillon à comparer pour le moment.</p>";
+        return;
+      }
+      box.innerHTML = rows.map(function (m) {
+        var job = m.job || {};
+        var linked = m.application_id;
+        var action = linked
+          ? '<span class="badge">' + U.esc(matchStatusLabel(m.application_status)) + '</span> <a href="#/jobs/' + U.esc(job.id || "") + '">Voir l’offre</a>'
+          : '<button class="btn btn-orange btn-sm" data-link-cand="' + U.esc(candidateId) + '" data-link-job="' + U.esc(job.id || "") + '">Lier à l’offre</button>';
+        return "<div class='manage-row'><div><a href=\"#/jobs/" + U.esc(job.id || "") + "\">" + U.esc(job.title || "Offre") +
+          "</a><div class='sub'>" + (m.score || 0) + " % · " + U.esc((m.reasons || []).slice(0, 2).join(" · ")) +
+          "</div></div><div>" + action + "</div></div>";
+      }).join("");
+    }).catch(function (err) {
+      box.innerHTML = "<p>" + U.esc((err && err.message) || "Correspondances indisponibles.") + "</p>";
+    });
+  }
+
+  function loadJobMatches(jobId) {
+    var box = document.getElementById("job-matches-live");
+    if (!box || !api()) return;
+    box.innerHTML = "<p class='hint'>Chargement des correspondances…</p>";
+    api().request("/matching/jobs/" + jobId + "/candidates?limit=20").then(function (res) {
+      var rows = res.data || [];
+      if (!rows.length) {
+        box.innerHTML = "<p>Aucun profil à comparer pour le moment.</p>";
+        return;
+      }
+      box.innerHTML = rows.map(function (m) {
+        var c = m.candidate || {};
+        var linked = m.application_id;
+        var action = linked
+          ? '<span class="badge">' + U.esc(matchStatusLabel(m.application_status)) + '</span> <a href="#/candidates/' + U.esc(c.id || "") + '">Voir le profil</a>'
+          : '<button class="btn btn-orange btn-sm" data-link-cand="' + U.esc(c.id || "") + '" data-link-job="' + U.esc(jobId) + '">Lier ce candidat</button>';
+        return "<div class='manage-row'><div><a href=\"#/candidates/" + U.esc(c.id || "") + "\">" +
+          U.esc(((c.first_name || "") + " " + (c.last_name || "")).trim() || "Candidat") +
+          "</a><div class='sub'>" + (m.score || 0) + " % · " + U.esc((m.reasons || []).slice(0, 2).join(" · ")) +
+          "</div></div><div>" + action + "</div></div>";
+      }).join("");
+    }).catch(function (err) {
+      box.innerHTML = "<p>" + U.esc((err && err.message) || "Correspondances indisponibles.") + "</p>";
+    });
+  }
+
+  function loadAtsPanels() {
+    var r = route();
+    if (r.name === "candidates" && r.id && detailTab === "ats") loadCandidateMatches(r.id);
+    if (r.name === "jobs" && r.id) loadJobMatches(r.id);
+  }
+
+  async function linkCandidateToJob(candidateId, jobId) {
+    if (!api() || !candidateId || !jobId) return;
+    try {
+      await api().request("/applications/staff", { method: "POST", body: { candidate_id: candidateId, job_id: jobId } });
+      if (typeof refreshLive === "function") await refreshLive();
+      U.toast("Candidat lié à l’offre.", "ok");
+      loadAtsPanels();
+      render();
+    } catch (err) {
+      U.toast((err && err.message) || "Liaison impossible.", "err");
+    }
   }
 
   /* ---------- Missions / pipeline ---------- */
@@ -2981,6 +3066,18 @@
         }
         return;
       }
+      var preview = t.closest("[data-preview-doc]");
+      if (preview && api()) {
+        api().previewFile(preview.getAttribute("data-preview-doc"), preview.getAttribute("data-preview-name") || "document").catch(function (err) {
+          U.toast((err && err.message) || "Ouverture impossible.", "err");
+        });
+        return;
+      }
+      var linkPair = t.closest("[data-link-cand]");
+      if (linkPair) {
+        linkCandidateToJob(linkPair.getAttribute("data-link-cand"), linkPair.getAttribute("data-link-job"));
+        return;
+      }
       var dl = t.closest("[data-dl-doc]");
       if (dl && api()) {
         api().download(dl.getAttribute("data-dl-doc").replace(/^\/api/, ""), dl.getAttribute("data-dl-name") || "document").catch(function (err) {
@@ -3709,6 +3806,7 @@
       if (r.name === "prospects" && r.extra) hydrateProspectFiche(r.extra);
       else if (r.name === "prospects") hydrateProspects();
       if (r.name === "journal") hydrateJournal();
+      loadAtsPanels();
     }, 180);
   }
 

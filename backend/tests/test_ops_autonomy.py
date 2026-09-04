@@ -20,12 +20,7 @@ def test_invoice_and_contract_pdf_and_internal_mail(client):
     )
     assert contract.status_code == 200, contract.text
     cid = contract.json()["data"]["id"]
-    agency = client.post(
-        f"/api/contracts/{cid}/sign-talendus",
-        headers=admin_h,
-        json={"signer_name": "Lea Super", "accepted": True},
-    )
-    assert agency.status_code == 200, agency.text
+    assert contract.json()["data"]["talendus_signed"] is True
     sent = client.post(f"/api/contracts/{cid}/send", headers=admin_h)
     assert sent.status_code == 200, sent.text
     assert "Talendus" in (contract.json()["data"]["terms"] or "")

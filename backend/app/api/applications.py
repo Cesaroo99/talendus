@@ -8,7 +8,7 @@ from app.deps import client_ip, get_current_user, require_roles
 from app.errors import ok
 from app.models import User
 from app.models.enums import ApplicationStatus, UserRole
-from app.schemas import ApplicationCreateIn, PublicApplyIn, StatusChangeIn
+from app.schemas import ApplicationCreateIn, PublicApplyIn, StaffApplicationIn, StatusChangeIn
 from app.services import applications as applications_service
 from app.services.spam import reject_honeypot
 
@@ -74,6 +74,17 @@ async def apply_public(request: Request, db: Session = Depends(get_db)):
         db, payload, client_ip(request), cv_file=cv_file, cv_filename=cv_filename
     )
     return ok(applications_service.serialize_application(application, None), message="Candidature envoyée.")
+
+
+@router.post("/staff")
+def apply_staff(
+    payload: StaffApplicationIn,
+    request: Request,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_roles(UserRole.RECRUITER, UserRole.ADMIN)),
+):
+    application = applications_service.apply_staff(db, user, payload, client_ip(request))
+    return ok(applications_service.serialize_application(application, user), message="Candidat lié à l’offre.")
 
 
 @router.get("/me")
