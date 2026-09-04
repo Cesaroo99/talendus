@@ -158,10 +158,88 @@ def test_admin_shell_can_join_in_app_call():
     assert "data-open-call" in js
 
 
+def test_call_restarts_after_hangup_without_stale_signals(client):
+    admin = promote_admin(client, "call-retry-admin@example.com")
+    admin_h = auth_header(admin)
+    emp = register(client, "call-retry-emp@example.com", "EMPLOYER")
+    job = staff_publish_job(client, emp, admin, slug="call-retry", title="Cariste")
+    cand = register(client, "call-retry-cand@example.com")
+    cand_h = auth_header(cand)
+    applied = client.post("/api/applications", headers=cand_h, json={"job_id": job["id"]}).json()["data"]
+    interview = _interview(client, admin_h, cand, applied, "VIDEO")
+    iid = interview["id"]
+
+    assert client.post(f"/api/calls/{iid}/join", headers=admin_h, json={"video": True}).status_code == 200
+    assert client.post(f"/api/calls/{iid}/join", headers=cand_h, json={"video": True}).status_code == 200
+    offer = client.post(
+        f"/api/calls/{iid}/signal",
+        headers=admin_h,
+        json={"kind": "offer", "payload": {"type": "offer", "sdp": "v=0-first"}},
+    )
+    assert offer.status_code == 200, offer.text
+    assert client.post(f"/api/calls/{iid}/hangup", headers=cand_h).status_code == 200
+    assert client.post(f"/api/calls/{iid}/hangup", headers=admin_h).status_code == 200
+
+    leftover = client.get(f"/api/calls/{iid}/signals", headers=admin_h).json()["data"]
+    assert leftover["signals"] == []
+    assert leftover["peers"] == []
+
+    again = client.post(f"/api/calls/{iid}/join", headers=admin_h, json={"video": True})
+    assert again.status_code == 200, again.text
+    assert again.json()["data"]["call_open"] is True
+    cand_again = client.post(f"/api/calls/{iid}/join", headers=cand_h, json={"video": True})
+    assert cand_again.status_code == 200, cand_again.text
+    incoming = client.get(f"/api/calls/{iid}/signals", headers=cand_h).json()["data"]
+    kinds = [row["kind"] for row in incoming["signals"]]
+    assert "hangup" not in kinds
+    assert "offer" not in kinds
+    assert any(p["user_id"] == admin["user"]["id"] for p in incoming["peers"])
+
+    second_offer = client.post(
+        f"/api/calls/{iid}/signal",
+        headers=admin_h,
+        json={"kind": "offer", "payload": {"type": "offer", "sdp": "v=0-second"}},
+    )
+    assert second_offer.status_code == 200, second_offer.text
+    fresh = client.get(f"/api/calls/{iid}/signals", headers=cand_h).json()["data"]
+    offers = [row for row in fresh["signals"] if row["kind"] == "offer"]
+    assert len(offers) == 1
+    assert offers[0]["payload"]["sdp"] == "v=0-second"
+
+
+def test_open_room_clears_idle_signaling(client):
+    admin = promote_admin(client, "call-open-admin@example.com")
+    admin_h = auth_header(admin)
+    emp = register(client, "call-open-emp@example.com", "EMPLOYER")
+    job = staff_publish_job(client, emp, admin, slug="call-open-room", title="Cariste")
+    cand = register(client, "call-open-cand@example.com")
+    cand_h = auth_header(cand)
+    applied = client.post("/api/applications", headers=cand_h, json={"job_id": job["id"]}).json()["data"]
+    interview = _interview(client, admin_h, cand, applied, "VIDEO")
+    iid = interview["id"]
+    client.post(f"/api/calls/{iid}/join", headers=admin_h, json={"video": True})
+    client.post(f"/api/calls/{iid}/signal", headers=admin_h, json={"kind": "offer", "payload": {"sdp": "stale"}})
+    client.post(f"/api/calls/{iid}/hangup", headers=admin_h)
+    opened = client.post(f"/api/calls/{iid}/open", headers=admin_h)
+    assert opened.status_code == 200, opened.text
+    lobby = client.get(f"/api/calls/{iid}/lobby", headers=cand_h).json()["data"]
+    assert lobby["call_open"] is True
+    assert lobby["can_join"] is True
+    joined = client.post(f"/api/calls/{iid}/join", headers=cand_h, json={"video": True})
+    assert joined.status_code == 200, joined.text
+    signals = client.get(f"/api/calls/{iid}/signals", headers=cand_h).json()["data"]["signals"]
+    assert signals == []
+
+
 def test_candidate_shell_loads_call_engine():
     html = (ROOT / "espace.html").read_text(encoding="utf-8")
     assert "talendus-call.js" in html
     account = (ROOT / "assets" / "js" / "account.js").read_text(encoding="utf-8")
+    engine = (ROOT / "assets" / "js" / "talendus-call.js").read_text(encoding="utf-8")
+    assert "sessionIsUsable" in engine
+    assert "signalIsStale" in engine
+    assert "replacePc" in engine
+    assert "data-call-retry" in engine
     assert "interviewStepsLead" in account
     assert "can_start_call" in account
     assert "tl-profile-stack" in account

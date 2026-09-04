@@ -53,6 +53,62 @@ def _prune_stale(db: Session, interview_id: str) -> None:
         db.delete(row)
 
 
+def _delete_signals(db: Session, interview_id: str) -> None:
+    for row in list(db.scalars(select(CallSignal).where(CallSignal.interview_id == interview_id)).all()):
+        db.delete(row)
+
+
+def _latest_signal(db: Session, interview_id: str) -> CallSignal | None:
+    return db.scalar(
+        select(CallSignal)
+        .where(CallSignal.interview_id == interview_id)
+        .order_by(CallSignal.created_at.desc(), CallSignal.id.desc())
+    )
+
+
+def _live_peers(db: Session, interview_id: str, *, exclude_user_id: str | None = None) -> list[CallPeer]:
+    _prune_stale(db, interview_id)
+    cutoff = utcnow() - PEER_TTL
+    stmt = select(CallPeer).where(CallPeer.interview_id == interview_id, CallPeer.last_seen >= cutoff)
+    if exclude_user_id:
+        stmt = stmt.where(CallPeer.user_id != exclude_user_id)
+    return list(db.scalars(stmt).all())
+
+
+def _reset_idle_room(db: Session, interview_id: str) -> bool:
+    """Vide offer/answer/ice/hangup dès qu’il n’y a plus personne dans la salle."""
+    if _live_peers(db, interview_id):
+        return False
+    leftover = list(db.scalars(select(CallPeer).where(CallPeer.interview_id == interview_id)).all())
+    for row in leftover:
+        db.delete(row)
+    _delete_signals(db, interview_id)
+    return True
+
+
+def _prepare_join_session(db: Session, interview_id: str, user_id: str, peer: CallPeer | None) -> None:
+    """Nouveau participant : on jette la négociation précédente, pas celle en cours."""
+    cutoff = utcnow() - PEER_TTL
+    arriving = peer is None or peer.last_seen < cutoff
+    if not arriving:
+        return
+    others = _live_peers(db, interview_id, exclude_user_id=user_id)
+    if not others:
+        _delete_signals(db, interview_id)
+        return
+    last = _latest_signal(db, interview_id)
+    if last is None or last.kind == "hangup":
+        _delete_signals(db, interview_id)
+        return
+    hangups = list(
+        db.scalars(
+            select(CallSignal).where(CallSignal.interview_id == interview_id, CallSignal.kind == "hangup")
+        ).all()
+    )
+    for row in hangups:
+        db.delete(row)
+
+
 def _peers(db: Session, interview: Interview, viewer: User) -> list[dict]:
     _prune_stale(db, interview.id)
     cutoff = utcnow() - PEER_TTL
@@ -128,6 +184,7 @@ def open_room(db: Session, user: User, interview_id: str) -> dict:
         raise AppError(409, "Cet entretien ne peut pas se faire en appel dans l'appli.", "CALL_NOT_AVAILABLE")
     if not is_staff(user) and not viewer_can_start_call(interview, user):
         raise AppError(403, "Vous ne pouvez pas ouvrir cet appel.", "CALL_CANNOT_START")
+    _reset_idle_room(db, interview.id)
     _open_room(db, interview, user, notify_candidate=True)
     db.commit()
     return lobby(db, user, interview_id)
@@ -149,6 +206,7 @@ def join(db: Session, user: User, interview_id: str, video: bool | None = None) 
     peer = db.scalar(
         select(CallPeer).where(CallPeer.interview_id == interview.id, CallPeer.user_id == user.id)
     )
+    _prepare_join_session(db, interview.id, user.id, peer)
     now = utcnow()
     if peer:
         peer.video = want_video
@@ -209,6 +267,7 @@ def post_signal(db: Session, user: User, interview_id: str, kind: str, payload: 
         raise AppError(400, "Signal d'appel trop volumineux.", "CALL_SIGNAL_TOO_LARGE")
     row = CallSignal(interview_id=interview.id, sender_id=user.id, kind=key, payload=raw)
     db.add(row)
+    db.flush()
     peer = db.scalar(
         select(CallPeer).where(CallPeer.interview_id == interview.id, CallPeer.user_id == user.id)
     )
@@ -217,6 +276,14 @@ def post_signal(db: Session, user: User, interview_id: str, kind: str, payload: 
     if key == "hangup":
         if peer:
             db.delete(peer)
+            db.flush()
+        if not _live_peers(db, interview.id, exclude_user_id=user.id):
+            _delete_signals(db, interview.id)
+            leftover = list(db.scalars(select(CallPeer).where(CallPeer.interview_id == interview.id)).all())
+            for leftover_peer in leftover:
+                db.delete(leftover_peer)
+            db.commit()
+            return {"id": row.id, "kind": "hangup", "payload": {}, "sender_id": user.id, "created_at": None, "cleared": True}
     db.commit()
     db.refresh(row)
     return _serialize_signal(row)
