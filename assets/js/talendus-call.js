@@ -24,6 +24,7 @@
     "#tn-call-overlay .tn-call-btn.is-mute{background:#3d4f66}" +
     "#tn-call-overlay .tn-call-btn.is-cam{background:#16365f}" +
     "#tn-call-overlay .tn-call-btn.is-hang{background:#c62828;min-width:132px;border-radius:29px;width:auto;padding:0 22px;flex-direction:row;gap:8px;font-size:14px}" +
+    "#tn-call-overlay .tn-call-btn.is-retry{background:#e87024}" +
     "#tn-call-overlay .tn-call-err{padding:48px 24px 12px;text-align:center;font-size:18px;font-weight:700;max-width:420px;margin:auto}";
 
   var live = null;
@@ -72,7 +73,10 @@
       unsupported: "This device cannot place an in-app call.",
       waitHost: "The consultant has not opened the room yet.",
       brand: "Talendus interview",
-      audioHint: "Audio only. Stay on this screen — the consultant will join here."
+      audioHint: "Audio only. Stay on this screen — the consultant will join here.",
+      unavailable: "This interview cannot be taken in the app.",
+      forbidden: "You cannot join this call.",
+      retry: "Try again"
     } : {
       connecting: "Connexion…",
       waiting: "En attente de l’autre personne…",
@@ -86,7 +90,10 @@
       unsupported: "Cet appareil ne peut pas passer d’appel dans l’appli.",
       waitHost: "Le conseiller n’a pas encore ouvert la salle.",
       brand: "Entretien Talendus",
-      audioHint: "Audio seulement. Restez sur cet écran — le conseiller vous rejoint ici."
+      audioHint: "Audio seulement. Restez sur cet écran — le conseiller vous rejoint ici.",
+      unavailable: "Cet entretien ne peut pas se faire dans l’appli.",
+      forbidden: "Vous ne pouvez pas rejoindre cet appel.",
+      retry: "Relancer"
     };
   }
 
@@ -103,6 +110,15 @@
         global.TalendusNative.requestMedia();
       }
     } catch (e) {}
+  }
+
+  function sessionIsUsable() {
+    if (!live || live.failed) return false;
+    var el = document.getElementById("tn-call-overlay");
+    if (!el || !el.classList.contains("is-on") || el.hasAttribute("hidden")) return false;
+    if (!live.pc) return true;
+    var state = live.pc.connectionState || "";
+    return state !== "failed" && state !== "closed" && state !== "disconnected";
   }
 
   function post(kind, payload) {
@@ -147,37 +163,77 @@
     return Promise.all(list.map(function (c) { return pc.addIceCandidate(c).catch(function () {}); }));
   }
 
-  function makePc(iceServers) {
-    var pc = new RTCPeerConnection({ iceServers: iceServers || [] });
+  function bindPc(pc) {
     pc.onicecandidate = function (ev) {
       if (ev.candidate) post("ice", ev.candidate.toJSON());
     };
     pc.ontrack = function (ev) {
+      if (!live || live.pc !== pc) return;
       live.remoteStream = ev.streams[0] || (ev.track ? new MediaStream([ev.track]) : null);
       attachVideos();
       overlay().classList.add("is-live");
       setStatus(labels().live);
     };
     pc.onconnectionstatechange = function () {
-      if (!live) return;
+      if (!live || live.pc !== pc) return;
       if (pc.connectionState === "connected") {
+        if (live.dropTimer) { clearTimeout(live.dropTimer); live.dropTimer = null; }
         overlay().classList.add("is-live");
         setStatus(labels().live);
+        return;
       }
-      if (pc.connectionState === "disconnected" || pc.connectionState === "failed") setStatus(labels().ended);
+      if (pc.connectionState === "failed" || pc.connectionState === "closed") {
+        setStatus(labels().ended);
+        live.failed = true;
+        if (live.dropTimer) clearTimeout(live.dropTimer);
+        live.dropTimer = setTimeout(function () {
+          if (live && live.pc === pc) hangup(true);
+        }, 1200);
+      }
+      if (pc.connectionState === "disconnected") {
+        setStatus(labels().ended);
+        if (live.dropTimer) clearTimeout(live.dropTimer);
+        live.dropTimer = setTimeout(function () {
+          if (live && live.pc === pc && pc.connectionState !== "connected") {
+            live.failed = true;
+            hangup(true);
+          }
+        }, 6000);
+      }
     };
+  }
+
+  function makePc(iceServers) {
+    var pc = new RTCPeerConnection({ iceServers: iceServers || [] });
+    bindPc(pc);
     if (live.localStream) {
       live.localStream.getTracks().forEach(function (track) { pc.addTrack(track, live.localStream); });
     }
     return pc;
   }
 
+  function replacePc() {
+    if (!live) return null;
+    try { if (live.pc) live.pc.close(); } catch (e) {}
+    live.pendingIce = [];
+    live.offered = false;
+    live.offerTo = "";
+    live.remoteStream = null;
+    live.pc = makePc(live.iceServers || []);
+    overlay().classList.remove("is-live");
+    return live.pc;
+  }
+
   function maybeOffer(peers) {
-    if (!live || live.offered || !live.pc) return;
+    if (!live || !live.pc) return;
     var others = (peers || []).filter(function (p) { return p && !p.self; });
-    if (!others.length) return;
-    var otherId = others[0].user_id;
-    if (String(live.selfId) > String(otherId)) return;
+    var otherId = others.length ? String(others[0].user_id || "") : "";
+    if (live.offerTo !== otherId) {
+      live.offered = false;
+      live.offerTo = otherId;
+    }
+    if (live.offered || !others.length) return;
+    if (String(live.selfId) > otherId) return;
     live.offered = true;
     live.pc.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: !!live.video })
       .then(function (offer) { return live.pc.setLocalDescription(offer); })
@@ -188,15 +244,27 @@
       .catch(function () { live.offered = false; });
   }
 
+  function signalIsStale(row) {
+    if (!live || !row || !row.created_at) return false;
+    var when = Date.parse(row.created_at);
+    if (!when) return false;
+    return when < (live.joinedAt - 1500);
+  }
+
   function handleSignal(row) {
     if (!live || !live.pc || !row) return Promise.resolve();
+    if (signalIsStale(row)) return Promise.resolve();
     var kind = row.kind;
     var payload = row.payload || {};
     if (kind === "hangup") {
       setStatus(labels().ended);
+      live.failed = true;
       return hangup(false);
     }
     if (kind === "offer") {
+      if (live.pc.signalingState === "closed" || live.pc.currentRemoteDescription) {
+        replacePc();
+      }
       return live.pc.setRemoteDescription(new RTCSessionDescription(payload))
         .then(function () { return flushIce(live.pc); })
         .then(function () { return live.pc.createAnswer(); })
@@ -204,11 +272,13 @@
         .then(function () {
           var desc = live.pc.localDescription;
           return post("answer", { type: desc.type, sdp: desc.sdp });
-        });
+        })
+        .catch(function () { return replacePc(); });
     }
     if (kind === "answer") {
       return live.pc.setRemoteDescription(new RTCSessionDescription(payload))
-        .then(function () { return flushIce(live.pc); });
+        .then(function () { return flushIce(live.pc); })
+        .catch(function () {});
     }
     if (kind === "ice") {
       return queueIce(live.pc, payload);
@@ -217,10 +287,10 @@
   }
 
   function poll() {
-    if (!live) return;
+    if (!live || live.failed) return;
     request("/calls/" + encodeURIComponent(live.interviewId) + "/signals" + (live.after ? "?after=" + encodeURIComponent(live.after) : ""))
       .then(function (json) {
-        if (!live) return;
+        if (!live || live.failed) return;
         var data = dataOf(json) || {};
         var rows = data.signals || [];
         var chain = Promise.resolve();
@@ -234,12 +304,12 @@
   }
 
   function heartbeat() {
-    if (!live) return;
+    if (!live || live.failed) return;
     request("/calls/" + encodeURIComponent(live.interviewId) + "/join", {
       method: "POST",
       body: { video: !!live.video }
     }).then(function (json) {
-      if (!live) return;
+      if (!live || live.failed) return;
       var data = dataOf(json) || {};
       maybeOffer(data.peers || []);
     }).catch(function () {});
@@ -302,9 +372,10 @@
     if (session) {
       clearInterval(session.pollTimer);
       clearInterval(session.beatTimer);
+      if (session.dropTimer) clearTimeout(session.dropTimer);
       try { if (session.pc) session.pc.close(); } catch (e) {}
       stopTracks(session.localStream);
-      if (notifyRemote) {
+      if (notifyRemote && session.interviewId) {
         request("/calls/" + encodeURIComponent(session.interviewId) + "/hangup", { method: "POST" }).catch(function () {});
       }
       if (typeof session.onHangup === "function") {
@@ -334,17 +405,33 @@
     });
   }
 
-  function showCallError(message) {
+  function showCallError(message, retryOpts) {
     var el = overlay();
+    var t = labels();
     injectCss();
     el.classList.add("is-on");
     el.removeAttribute("hidden");
-    el.innerHTML = '<p class="tn-call-err">' + message + '</p><div class="tn-call-bar"><button type="button" class="tn-call-btn is-hang" data-call-hang>' + labels().hangup + "</button></div>";
+    el.innerHTML = '<p class="tn-call-err">' + message + '</p><div class="tn-call-bar">' +
+      (retryOpts ? '<button type="button" class="tn-call-btn is-retry" data-call-retry>' + t.retry + "</button>" : "") +
+      '<button type="button" class="tn-call-btn is-hang" data-call-hang>' + t.hangup + "</button></div>";
+    var retry = el.querySelector("[data-call-retry]");
+    if (retry && retryOpts) {
+      retry.onclick = function () { start(retryOpts); };
+    }
     el.querySelector("[data-call-hang]").onclick = function () { hangup(false); };
   }
 
-  function mediaError() {
-    showCallError(labels().micDenied);
+  function joinErrorMessage(err) {
+    var t = labels();
+    var code = (err && (err.code || err.error)) || "";
+    var msg = (err && err.message) || "";
+    if (code === "CALL_WAITING_FOR_HOST" || /ouvert/.test(msg)) return t.waitHost;
+    if (code === "CALL_NOT_AVAILABLE") return t.unavailable;
+    if (code === "CALL_CANNOT_START" || code === "FORBIDDEN") return t.forbidden;
+    if (code === "NotAllowedError" || code === "NotFoundError" || /media|permission|NotAllowed|NotFound/i.test(msg)) return t.micDenied;
+    if (err && err.status === 409) return msg || t.waitHost;
+    if (err && (err.status === 403 || err.status === 404)) return t.forbidden;
+    return "";
   }
 
   function start(opts) {
@@ -355,8 +442,11 @@
     }
     var interviewId = opts.interviewId;
     if (!interviewId) return Promise.resolve(false);
-    if (live && live.interviewId === interviewId) return Promise.resolve(true);
-    return hangup(false).then(function () {
+    if (live && live.interviewId === interviewId && sessionIsUsable()) {
+      return Promise.resolve(true);
+    }
+    var notifyRemote = !!(live && live.interviewId);
+    return hangup(notifyRemote).then(function () {
       nativeMedia();
       live = {
         interviewId: interviewId,
@@ -364,14 +454,20 @@
         onHangup: opts.onHangup,
         after: "",
         pendingIce: [],
-        offered: false
+        offered: false,
+        offerTo: "",
+        failed: false,
+        joinedAt: Date.now(),
+        iceServers: []
       };
       renderShell(labels().connecting);
       var constraints = { audio: true, video: live.video ? { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } } : false };
       return getMedia(constraints).catch(function () {
-        if (!live.video) throw new Error("media");
+        if (!live || !live.video) throw new Error("media");
         live.video = false;
         overlay().classList.add("is-audio");
+        var hint = overlay().querySelector(".tn-call-hint");
+        if (hint) hint.textContent = labels().audioHint;
         return getMedia({ audio: true, video: false });
       }).then(function (stream) {
         if (!live) {
@@ -388,7 +484,9 @@
         if (!live) return false;
         var data = dataOf(json) || {};
         live.selfId = data.self_id;
-        live.pc = makePc(data.ice_servers);
+        live.iceServers = data.ice_servers || [];
+        live.joinedAt = Date.now();
+        live.pc = makePc(live.iceServers);
         attachVideos();
         setStatus(labels().waiting);
         maybeOffer(data.peers || []);
@@ -397,13 +495,17 @@
         poll();
         return true;
       }).catch(function (err) {
-        var code = err && (err.code || err.error || "");
-        var msg = (err && err.message) || "";
-        if (code === "CALL_WAITING_FOR_HOST" || /ouvert/.test(msg)) {
-          showCallError(labels().waitHost);
-          return false;
+        var retry = { interviewId: interviewId, video: !!opts.video, onHangup: opts.onHangup };
+        var message = joinErrorMessage(err) || labels().micDenied;
+        var session = live;
+        live = null;
+        if (session) {
+          clearInterval(session.pollTimer);
+          clearInterval(session.beatTimer);
+          try { if (session.pc) session.pc.close(); } catch (e) {}
+          stopTracks(session.localStream);
         }
-        mediaError();
+        showCallError(message, retry);
         return false;
       });
     });
@@ -413,7 +515,7 @@
     start: start,
     hangup: function () { return hangup(true); },
     isLive: function (interviewId) {
-      return !!(live && (!interviewId || live.interviewId === interviewId));
+      return !!(live && sessionIsUsable() && (!interviewId || live.interviewId === interviewId));
     }
   };
 })(window);
