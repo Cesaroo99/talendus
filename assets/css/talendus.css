@@ -2832,18 +2832,166 @@ body.tl-persona-entreprise .tl-settings-tab.is-active {
   width: 100%;
 }
 .tl-pager { display: flex; gap: 8px; justify-content: center; margin-top: 16px; }
-.tl-mobile-nav {
-  display: none;
+.tl-mobile-nav,
+.tl-space-bar,
+.tl-space-sheet { display: none; }
+.tl-space-bar {
   position: sticky;
   top: 0;
-  z-index: 5;
-  background: #fff;
-  border: 1px solid var(--tl-line);
-  border-radius: var(--tl-radius);
-  padding: 8px;
-  margin-bottom: 14px;
+  z-index: 30;
+  margin: 0 0 14px;
 }
-.tl-mobile-nav select { width: 100%; min-height: 44px; }
+.tl-space-bar-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 10px 14px;
+  border: 1px solid var(--tl-line);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(11, 31, 58, .06);
+  color: var(--tl-navy);
+  cursor: pointer;
+  text-align: left;
+}
+.tl-space-bar-ico {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: var(--tl-navy);
+  color: #fff;
+  flex: 0 0 40px;
+}
+.tl-space-bar-copy { flex: 1; min-width: 0; }
+.tl-space-bar-kicker {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--tl-steel);
+}
+.tl-space-bar-copy strong {
+  display: block;
+  font-size: 16px;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tl-space-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+}
+.tl-space-sheet.is-open { display: block; }
+.tl-space-sheet-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(7, 17, 31, .46);
+}
+.tl-space-sheet-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: min(360px, 88vw);
+  background: #fff;
+  box-shadow: 16px 0 48px rgba(7, 17, 31, .22);
+  display: flex;
+  flex-direction: column;
+  transform: translateX(-12px);
+  animation: tl-space-in .22s ease forwards;
+}
+@keyframes tl-space-in { to { transform: translateX(0); } }
+.tl-space-sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 16px 16px;
+  padding-top: calc(16px + env(safe-area-inset-top));
+  background: linear-gradient(160deg, #0b1f3a, #16365f);
+  color: #fff;
+}
+.tl-space-sheet-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.tl-space-sheet-user strong,
+.tl-space-sheet-user span { display: block; }
+.tl-space-sheet-user span { opacity: .72; font-size: 12px; }
+.tl-space-sheet-user .tl-avatar {
+  background: var(--tl-orange);
+  color: #fff;
+}
+.tl-space-sheet-close {
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(255,255,255,.12);
+  color: #fff;
+  cursor: pointer;
+}
+.tl-space-sheet-body {
+  overflow: auto;
+  padding: 14px 12px calc(20px + env(safe-area-inset-bottom));
+}
+.tl-space-sheet-label {
+  margin: 12px 8px 6px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--tl-steel);
+}
+.tl-space-sheet-list { display: grid; gap: 4px; }
+.tl-space-sheet-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 48px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--tl-navy);
+  font-weight: 700;
+  font-size: 15px;
+  text-align: left;
+  cursor: pointer;
+}
+.tl-space-sheet-item span:nth-of-type(2) { flex: 1; }
+.tl-space-sheet-ico {
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  background: var(--tl-ice);
+  color: var(--tl-navy);
+  flex: 0 0 36px;
+}
+.tl-space-sheet-item.is-active {
+  background: var(--tl-navy);
+  color: #fff;
+}
+.tl-space-sheet-item.is-active .tl-space-sheet-ico {
+  background: var(--tl-orange);
+  color: #fff;
+}
+.tl-space-sheet-item.is-active .tl-portal-badge { background: #fff; color: var(--tl-navy); }
+.tl-space-sheet-chevron { font-size: 11px; opacity: .35; }
+.tl-space-sheet-item.is-active .tl-space-sheet-chevron { opacity: .7; }
+body.tl-space-menu-on { overflow: hidden; }
 .tl-table-wrap { overflow-x: auto; }
 .tl-portal-table { width: 100%; border-collapse: collapse; }
 .tl-portal-table th, .tl-portal-table td {
@@ -2855,7 +3003,7 @@ body.tl-persona-entreprise .tl-settings-tab.is-active {
 }
 @media (max-width: 979px) {
   .tl-portal-nav { display: none; }
-  .tl-mobile-nav { display: block; }
+  .tl-space-bar { display: block; }
   .tl-portal-table, .tl-portal-table thead, .tl-portal-table tbody, .tl-portal-table th, .tl-portal-table td, .tl-portal-table tr {
     display: block;
   }
