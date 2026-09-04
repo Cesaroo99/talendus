@@ -65,9 +65,16 @@ def test_smtp_test_email_is_logged(client):
     admin_h = auth_header(admin)
     sent = client.post("/api/admin/settings/test-email", headers=admin_h, json={})
     assert sent.status_code == 200, sent.text
-    assert sent.json()["data"]["to_email"] == "smtp-test-admin@example.com"
-    logs = _emails_to(client, admin_h, "smtp-test-admin@example.com")
+    assert sent.json()["data"]["to_email"] == "cesarmemoli1@gmail.com"
+    logs = _emails_to(client, admin_h, "cesarmemoli1@gmail.com")
     assert any("test" in (row.get("subject") or "").lower() for row in logs)
+    rewritten = client.post(
+        "/api/admin/settings/test-email",
+        headers=admin_h,
+        json={"to_email": "lea.super@talendus.ca"},
+    )
+    assert rewritten.status_code == 200, rewritten.text
+    assert rewritten.json()["data"]["to_email"] == "cesarmemoli1@gmail.com"
 
 
 def test_interview_actions_email_and_thread(client):
@@ -164,7 +171,9 @@ def test_admin_ui_explains_smtp_steps():
     js = (ROOT / "admin" / "js" / "app.js").read_text(encoding="utf-8")
     assert 'data-stab="email"' in js
     assert "Google Workspace" in js
-    assert "ssl0.ovh.net" in js
+    assert "smtp.gmail.com" in js
+    assert "apppasswords" in js
     assert "info@talendus.ca" in js
     assert "adm-smtp-form" in js
     assert "Envoyer un test" in js
+    assert "cesarmemoli1@gmail.com" in js
