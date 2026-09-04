@@ -61,130 +61,155 @@ TEMPLATES: tuple[dict, ...] = (
     {
         "key": "cand_first_contact",
         "side": "candidate",
-        "label": "Premier contact",
-        "intent": "Présenter Talendus et l’inviter à nous confier sa recherche.",
-        "subject": "{{first_name}}, Talendus peut vous placer — sans frais pour vous",
-        "body": "{{first_name}},\n\nJe vous écris de la part de Talendus, cabinet de recrutement au Québec.\n\nNous travaillons avec des usines, entrepôts et ateliers qui cherchent des profils {{title_or_metier}}. Vous n’avez rien à payer : nos honoraires sont versés par l’employeur (16 %).\n\nSi une opportunité vous intéresse, répondez à ce courriel ou ouvrez votre espace :\n{{candidate_link}}\n\n{{recruiter_name}}\nTalendus · {{phone}}",
+        "stage": "nouveau",
+        "label": "1. Premier contact",
+        "intent": "Étape Nouveau / à contacter — présenter le cabinet et obtenir un oui, sans frais pour le talent.",
+        "subject": "{{who_lead}}Talendus peut vous placer — sans frais pour vous",
+        "body": "{{hello}}\n\nJe vous écris de Talendus, cabinet de recrutement au Québec. Nous travaillons avec des usines, entrepôts et ateliers qui cherchent des profils {{title_or_metier}}{{city_bit}}.\n\nVous n’avez rien à débourser : nos honoraires (16 % du salaire annuel) sont payés par l’employeur, à l’embauche.\n\nSi vous êtes ouvert à voir des mandats concrets, répondez simplement « oui » à ce courriel. Je ne vous enverrai que des postes qui tiennent la route.\n\nVous pouvez aussi déposer votre CV ici :\n{{candidate_link}}\n\n{{recruiter_name}}",
     },
     {
         "key": "cand_followup",
         "side": "candidate",
-        "label": "Relance",
-        "intent": "Relancer un profil qui n’a pas répondu.",
-        "subject": "{{first_name}}, un mot rapide de Talendus",
-        "body": "{{first_name}},\n\nJe reviens vers vous : nous avons toujours des mandats {{sector_or_industrie}} au Québec{{city_bit}}.\n\nDeux minutes suffisent pour me dire si vous êtes ouvert à échanger, ou pour déposer votre CV ici :\n{{candidate_link}}\n\n{{recruiter_name}}\nTalendus",
+        "stage": "contacte",
+        "label": "2. Relance",
+        "intent": "Étape Contacté — relancer sans pression, obtenir une réponse claire.",
+        "subject": "{{who_lead}}est-ce que je vous reviens plus tard ?",
+        "body": "{{hello}}\n\nJe vous avais écrit au sujet de mandats {{sector_or_industrie}} au Québec{{city_bit}}. Je ne veux pas insister : dites-moi simplement où vous en êtes.\n\n- « oui » si vous êtes ouvert à échanger\n- « plus tard » si ce n’est pas le bon moment\n- « non » si vous n’êtes plus en recherche\n\nDeux lignes suffisent. Si oui, déposez votre CV ici pour qu’on avance :\n{{candidate_link}}\n\n{{recruiter_name}}",
     },
     {
         "key": "cand_qualify",
         "side": "candidate",
-        "label": "Qualification",
-        "intent": "Obtenir disponibilité, quart et prétentions.",
-        "subject": "{{first_name}}, quelques précisions pour vous proposer le bon poste",
-        "body": "{{first_name}},\n\nPour vous proposer un poste qui tient la route, j’ai besoin de trois infos :\n- votre disponibilité\n- le quart accepté (jour, soir, rotatif)\n- votre fourchette salariale\n\nRépondez directement à ce courriel. Je reviens ensuite avec des mandats concrets.\n\n{{recruiter_name}}\nTalendus",
-    },
-    {
-        "key": "cand_interview",
-        "side": "candidate",
-        "label": "Proposition d’entretien",
-        "intent": "Proposer un appel de qualification.",
-        "subject": "{{first_name}}, 20 minutes avec Talendus ?",
-        "body": "{{first_name}},\n\nJe vous propose un court appel pour parler de votre parcours{{title_bit}} et des postes ouverts.\n\nRépondez avec deux créneaux qui vous conviennent, ou ouvrez votre espace pour confirmer :\n{{candidate_link}}\n\n{{recruiter_name}}\nTalendus · {{phone}}",
-    },
-    {
-        "key": "cand_job_ready",
-        "side": "candidate",
-        "label": "Poste à pourvoir",
-        "intent": "Annoncer qu’un mandat correspond au profil.",
-        "subject": "{{first_name}}, un mandat {{title_or_metier}} peut vous correspondre",
-        "body": "{{first_name}},\n\nNous avons un mandat {{title_or_metier}}{{city_bit}} qui correspond à votre profil. L’employeur passe par Talendus : vous n’avez pas à négocier les honoraires.\n\nSi vous êtes intéressé, répondez « oui » et je vous envoie le détail, ou ouvrez :\n{{candidate_link}}\n\n{{recruiter_name}}\nTalendus",
+        "stage": "qualifie",
+        "label": "3. Qualification",
+        "intent": "Étape Qualifié — obtenir disponibilité, quart et fourchette avant de proposer un poste.",
+        "subject": "{{who_lead}}trois infos pour vous proposer le bon poste",
+        "body": "{{hello}}\n\nAvant de vous envoyer un mandat{{title_bit}}, j’ai besoin de trois précisions pour ne pas vous faire perdre de temps :\n\n- votre disponibilité (immédiat, 2 semaines, 1 mois…)\n- le quart accepté (jour, soir, rotatif)\n- votre fourchette salariale\n\nRépondez directement à ce courriel. Dès que j’ai ça, je reviens avec des postes concrets{{city_bit}}.\n\n{{recruiter_name}}",
     },
     {
         "key": "cand_documents",
         "side": "candidate",
-        "label": "Documents manquants",
-        "intent": "Demander CV ou pièces pour avancer.",
-        "subject": "{{first_name}}, il nous manque un document pour avancer",
-        "body": "{{first_name}},\n\nPour présenter votre dossier aux employeurs, déposez votre CV à jour dans votre espace :\n{{candidate_link}}\n\nDès réception, on avance.\n\n{{recruiter_name}}\nTalendus",
+        "stage": "qualifie",
+        "label": "4. CV / documents",
+        "intent": "Avant présentation — obtenir un CV à jour pour ouvrir le dossier aux employeurs.",
+        "subject": "{{who_lead}}il nous manque votre CV pour vous présenter",
+        "body": "{{hello}}\n\nVotre dossier est bien engagé. Pour vous présenter à un employeur, il nous faut un CV à jour (PDF de préférence).\n\nDéposez-le ici, ça prend deux minutes :\n{{candidate_link}}\n\nDès réception, on avance. Si un autre document est demandé (cartes, permis), je vous le précise.\n\n{{recruiter_name}}",
+    },
+    {
+        "key": "cand_interview",
+        "side": "candidate",
+        "stage": "entretien",
+        "label": "5. Entretien Talendus",
+        "intent": "Étape Entretien — proposer un appel de 20 minutes, avec deux créneaux en réponse.",
+        "subject": "{{who_lead}}20 minutes pour parler d’un vrai poste ?",
+        "body": "{{hello}}\n\nJe vous propose un court appel (20 minutes) pour parler de votre parcours{{title_bit}} et des mandats ouverts{{city_bit}}.\n\nRépondez avec deux créneaux qui vous conviennent, ou confirmez ici :\n{{candidate_link}}\n\nVous pouvez aussi m’appeler au {{phone}}.\n\n{{recruiter_name}}",
+    },
+    {
+        "key": "cand_job_ready",
+        "side": "candidate",
+        "stage": "presente",
+        "label": "6. Poste à présenter",
+        "intent": "Étape Présenté — annoncer un mandat concret et demander un oui pour envoyer le détail.",
+        "subject": "{{who_lead}}un mandat {{title_or_metier}} peut vous correspondre",
+        "body": "{{hello}}\n\nNous avons un mandat {{title_or_metier}}{{city_bit}} qui correspond à votre profil. L’employeur passe par Talendus : vous n’avez pas à négocier les honoraires.\n\nSi ça vous parle, répondez « oui » : je vous envoie le détail (quart, salaire, lieu) et on voit ensemble si on vous présente.\n\nVotre espace :\n{{candidate_link}}\n\n{{recruiter_name}}",
     },
     {
         "key": "cand_offer",
         "side": "candidate",
-        "label": "Offre / suite",
-        "intent": "Encadrer une offre ou une décision.",
-        "subject": "{{first_name}}, suite de votre dossier Talendus",
-        "body": "{{first_name}},\n\nVotre dossier avance. Je reste votre interlocuteur pour les conditions, les horaires et la décision.\n\nRépondez à ce courriel si une question bloque, ou suivez l’étape dans votre espace :\n{{candidate_link}}\n\n{{recruiter_name}}\nTalendus",
+        "stage": "offre",
+        "label": "7. Offre / décision",
+        "intent": "Étape Offre — rester l’interlocuteur pour les conditions et débloquer la décision.",
+        "subject": "{{who_lead}}votre dossier avance — je reste votre contact",
+        "body": "{{hello}}\n\nUne offre ou une suite concrète est sur la table. Je reste votre interlocuteur pour les conditions, les horaires et ce qui bloque encore.\n\nRépondez à ce courriel si une question vous retient, même courte. Vous pouvez aussi suivre l’étape ici :\n{{candidate_link}}\n\nOn règle ça ensemble, sans précipiter une décision qui ne vous convient pas.\n\n{{recruiter_name}}",
+    },
+    {
+        "key": "cand_placed",
+        "side": "candidate",
+        "stage": "place",
+        "label": "8. Placement confirmé",
+        "intent": "Étape Placé — confirmer l’embauche et rester disponible pour les premiers jours.",
+        "subject": "{{who_lead}}bienvenue dans votre nouveau poste",
+        "body": "{{hello}}\n\nVotre placement est confirmé. Bravo. Les premiers jours, je reste disponible si un horaire, un document ou une question pratique bloque.\n\nRépondez à ce courriel, ou écrivez-nous à {{info}}. Votre espace reste ouvert :\n{{candidate_link}}\n\nBon départ, et merci de votre confiance.\n\n{{recruiter_name}}",
     },
     {
         "key": "cand_reactivate",
         "side": "candidate",
-        "label": "Réactivation",
-        "intent": "Relancer un profil inactif.",
-        "subject": "{{first_name}}, on a de nouveaux mandats",
-        "body": "{{first_name}},\n\nCela fait un moment. Nous avons de nouveaux mandats {{sector_or_industrie}}. Si vous cherchez encore, répondez simplement « je suis ouvert ».\n\n{{recruiter_name}}\nTalendus",
+        "stage": "inactif",
+        "label": "9. Réactivation",
+        "intent": "Étape Inactif — rouvrir le dossier sans insister.",
+        "subject": "{{who_lead}}de nouveaux mandats {{sector_or_industrie}} sont ouverts",
+        "body": "{{hello}}\n\nCela fait un moment. Nous avons de nouveaux mandats {{sector_or_industrie}}{{city_bit}}.\n\nSi vous cherchez encore, répondez simplement « je suis ouvert ». Sinon, ignorez ce message, aucun suivi ne sera envoyé.\n\n{{recruiter_name}}",
     },
     {
         "key": "emp_first_contact",
         "side": "employer",
-        "label": "Premier contact",
-        "intent": "Présenter le cabinet et proposer un mandat.",
-        "subject": "{{company}}, Talendus recrute vos profils d’usine — 16 %",
-        "body": "{{hello}},\n\nJe vous contacte pour {{company}}. Talendus est un cabinet de recrutement au Québec : on préqualifie les talents d’usine, d’entrepôt et de maintenance, puis on vous présente seulement les profils qui tiennent.\n\nHonoraires : 16 % du salaire annuel, payés à l’embauche. Pas de logiciel à acheter, pas de mise de fonds.\n\nSi un poste vous manque{{title_bit}}, répondez à ce courriel ou déposez le besoin ici :\n{{employer_link}}\n\n{{recruiter_name}}\nTalendus · {{phone}} · {{info}}",
+        "stage": "nouveau",
+        "label": "1. Premier contact",
+        "intent": "Étape Nouveau / à contacter — présenter le cabinet, les 16 %, et demander le poste ouvert.",
+        "subject": "{{company_lead}}recruter sans perdre de semaines — honoraires 16 %",
+        "body": "{{hello}}\n\nJe vous contacte{{about_company}}. Talendus préqualifie des talents d’usine, d’entrepôt et de maintenance, puis ne vous présente que les profils qui tiennent.\n\nHonoraires : 16 % du salaire annuel, payés à l’embauche. Pas de logiciel à acheter, pas de mise de fonds.\n\nS’il vous manque un poste{{title_bit}}, répondez avec le métier et le quart : je vous dis ensuite si on peut le pourvoir.\n\nVous pouvez aussi déposer le besoin ici :\n{{employer_link}}\n\n{{recruiter_name}}",
     },
     {
         "key": "emp_followup",
         "side": "employer",
-        "label": "Relance",
-        "intent": "Relancer un employeur silencieux.",
-        "subject": "{{company}} — un mot de Talendus",
-        "body": "{{hello}},\n\nJe reviens vers {{company}}. Nous recrutons encore des profils {{sector_or_industrie}} pour des usines d’ici.\n\nSi le besoin est toujours là, dites-moi le poste et le quart : je reviens avec un plan concret.\n\n{{recruiter_name}}\nTalendus",
+        "stage": "contacte",
+        "label": "2. Relance",
+        "intent": "Étape Contacté — relancer avec une question unique (poste + quart).",
+        "subject": "{{company_lead}}le poste est-il toujours ouvert ?",
+        "body": "{{hello}}\n\nJe reviens{{about_company}}. Nous recrutons encore des profils {{sector_or_industrie}} pour des usines d’ici.\n\nSi le besoin est toujours là, répondez avec le poste et le quart. Je reviens avec un plan concret, sans engagement de votre côté à ce stade.\n\n{{recruiter_name}}",
     },
     {
         "key": "emp_discovery",
         "side": "employer",
-        "label": "Appel découverte",
-        "intent": "Obtenir un appel pour cadrer le besoin.",
-        "subject": "{{company}}, 20 minutes pour cadrer votre besoin ?",
-        "body": "{{hello}},\n\nPour {{company}}, je vous propose un court appel : poste, quart, salaire, et ce qui a déjà échoué en recrutement.\n\nRépondez avec deux créneaux. Ensuite on décide ensemble s’il vaut la peine d’ouvrir un mandat.\n\n{{recruiter_name}}\nTalendus · {{phone}}",
+        "stage": "qualifie",
+        "label": "3. Appel de cadrage",
+        "intent": "Étape Qualifié — obtenir 20 minutes pour cadrer poste, quart, salaire et ce qui a échoué.",
+        "subject": "{{company_lead}}20 minutes pour cadrer le besoin ?",
+        "body": "{{hello}}\n\nAvant d’ouvrir un mandat{{about_company}}, je vous propose un court appel : poste, quart, salaire, et ce qui a déjà échoué en recrutement.\n\nRépondez avec deux créneaux. Ensuite on décide ensemble s’il vaut la peine de lancer une recherche.\n\nVous pouvez aussi m’appeler au {{phone}}.\n\n{{recruiter_name}}",
     },
     {
         "key": "emp_mandate",
         "side": "employer",
-        "label": "Proposition de mandat",
-        "intent": "Envoyer ou rappeler le mandat à signer.",
-        "subject": "{{company}} — mandat Talendus à lire et signer",
-        "body": "{{hello}},\n\nVoici la suite pour {{company}} : le mandat de recrutement Talendus (honoraires 16 %). Lisez-le, signez-le dans votre espace, et on lance la recherche.\n\n{{employer_link}}\n\nLe PDF peut être joint à ce courriel.\n\n{{recruiter_name}}\nTalendus · {{info}}",
+        "stage": "proposition",
+        "label": "4. Mandat à signer",
+        "intent": "Étape Proposition — envoyer le mandat 16 % et expliquer quoi faire s’il est joint.",
+        "subject": "{{company_lead}}mandat Talendus à lire et signer",
+        "body": "{{hello}}\n\nVoici la suite{{about_company}} : le mandat de recrutement Talendus (honoraires 16 %, payés à l’embauche).\n\nLisez-le, signez-le dans votre espace, et on lance la recherche. Rien n’est dû avant une embauche.\n\n{{employer_link}}\n\n{{recruiter_name}}",
+    },
+    {
+        "key": "emp_search_start",
+        "side": "employer",
+        "stage": "proposition",
+        "label": "5. Recherche lancée",
+        "intent": "Après signature — confirmer que la chasse est ouverte et ce qui se passe ensuite.",
+        "subject": "{{company_lead}}la recherche Talendus est lancée",
+        "body": "{{hello}}\n\nLe mandat est en place{{about_company}}. La recherche est ouverte : on préqualifie, on ne vous présente que les profils qui tiennent.\n\nDe votre côté, rien à faire pour le moment. Dès qu’un dossier est prêt, je vous propose un créneau de présentation.\n\nSuivi dans votre espace :\n{{employer_link}}\n\n{{recruiter_name}}",
     },
     {
         "key": "emp_talent_ready",
         "side": "employer",
-        "label": "Talents à présenter",
-        "intent": "Annoncer des profils préqualifiés.",
-        "subject": "{{company}}, des profils {{title_or_poste}} sont prêts",
-        "body": "{{hello}},\n\nNous avons préqualifié des profils {{title_or_poste}} pour {{company}}. Je peux vous les présenter dès que vous confirmez un créneau.\n\nRépondez à ce courriel, ou ouvrez votre espace :\n{{employer_link}}\n\n{{recruiter_name}}\nTalendus",
+        "stage": "client",
+        "label": "6. Profils à présenter",
+        "intent": "Pendant le mandat — annoncer des talents préqualifiés et fixer un créneau.",
+        "subject": "{{company_lead}}des profils {{title_or_poste}} sont prêts",
+        "body": "{{hello}}\n\nNous avons préqualifié des profils {{title_or_poste}}{{about_company}}. Je peux vous les présenter dès que vous confirmez un créneau (visio ou sur place).\n\nRépondez à ce courriel avec deux disponibilités, ou ouvrez votre espace :\n{{employer_link}}\n\n{{recruiter_name}}",
     },
     {
         "key": "emp_invoice",
         "side": "employer",
-        "label": "Facture",
-        "intent": "Transmettre une facture en pièce jointe.",
-        "subject": "{{company}} — facture Talendus",
-        "body": "{{hello}},\n\nVeuillez trouver la facture Talendus pour {{company}}. Paiement par virement ou chèque, selon les modalités du mandat.\n\nLe PDF est joint. Vous pouvez aussi la télécharger ici :\n{{employer_link}}\n\n{{recruiter_name}}\nTalendus · {{info}} · {{phone}}",
-    },
-    {
-        "key": "emp_contract",
-        "side": "employer",
-        "label": "Contrat / mandat PDF",
-        "intent": "Joindre le contrat ou le mandat.",
-        "subject": "{{company}} — document Talendus",
-        "body": "{{hello}},\n\nLe document Talendus pour {{company}} est joint à ce courriel (mandat ou contrat).\n\nPour signer électroniquement :\n{{employer_link}}\n\n{{recruiter_name}}\nTalendus",
+        "stage": "client",
+        "label": "7. Facture",
+        "intent": "Après embauche — transmettre la facture et dire comment payer.",
+        "subject": "{{company_lead}}facture Talendus — modalités de paiement",
+        "body": "{{hello}}\n\nLa facture Talendus{{about_company}} est prête, selon le mandat (honoraires 16 %, à l’embauche).\n\nPaiement par virement ou chèque, aux conditions prévues. Une question sur le montant ou l’échéance : répondez à ce courriel.\n\nVous pouvez aussi la télécharger ici :\n{{employer_link}}\n\n{{recruiter_name}}",
     },
     {
         "key": "emp_reactivate",
         "side": "employer",
-        "label": "Réactivation",
-        "intent": "Relancer un ancien prospect employeur.",
-        "subject": "{{company}}, Talendus recrute encore vos métiers",
-        "body": "{{hello}},\n\nNous n’avons pas échangé depuis un moment. Si {{company}} a un poste {{title_or_poste}} à pourvoir, je peux relancer une recherche cette semaine.\n\n{{recruiter_name}}\nTalendus · {{phone}}",
+        "stage": "inactif",
+        "label": "8. Réactivation",
+        "intent": "Étape Inactif / perdu — rouvrir un besoin sans relance lourde.",
+        "subject": "{{company_lead}}un poste à pourvoir cette semaine ?",
+        "body": "{{hello}}\n\nNous n’avons pas échangé depuis un moment. Si un poste {{title_or_poste}} est à pourvoir{{about_company}}, je peux relancer une recherche cette semaine.\n\nRépondez avec le métier et le quart, ou ignorez ce message si le besoin n’est plus là.\n\n{{recruiter_name}}",
     },
 )
 
@@ -228,21 +253,26 @@ def display_name(row: Prospect) -> str:
 
 
 def context_for(row: Prospect, actor: User | None = None) -> dict[str, str]:
-    first = (row.first_name or "").strip() or (row.company_name or "bonjour")
+    first = (row.first_name or "").strip()
     last = (row.last_name or "").strip()
-    company = (row.company_name or "").strip() or "votre entreprise"
+    company = (row.company_name or "").strip()
     title = (row.title or "").strip()
     city = (row.city or "").strip()
     sector = (row.sector or "").strip()
     recruiter = ""
     if actor:
-        recruiter = f"{actor.first_name} {actor.last_name}".strip() or "L’équipe Talendus"
+        recruiter = f"{actor.first_name} {actor.last_name}".strip()
+    hello = f"Bonjour {first}," if first else "Bonjour,"
     return {
-        "first_name": first,
+        "first_name": first or company or "bonjour",
         "last_name": last,
         "name": display_name(row),
-        "hello": f"Bonjour {first}" if row.first_name else f"Bonjour {company}",
-        "company": company,
+        "hello": hello,
+        "who_lead": f"{first}, " if first else "",
+        "company": company or "votre entreprise",
+        "company_lead": f"{company} — " if company else "",
+        "about_company": f" au sujet de {company}" if company else "",
+        "chez_company": f"chez {company}" if company else "chez vous",
         "title": title,
         "title_or_metier": title or "industriels",
         "title_or_poste": title or "recherchés",
@@ -272,7 +302,7 @@ def catalog(side: str | None = None) -> list[dict]:
     for item in TEMPLATES:
         if wanted and item["side"] != wanted:
             continue
-        rows.append({k: item[k] for k in ("key", "side", "label", "intent")})
+        rows.append({k: item[k] for k in ("key", "side", "label", "intent", "stage") if k in item})
     return rows
 
 
@@ -596,6 +626,7 @@ def proposals_for(db: Session, row: Prospect, actor: User | None) -> list[dict]:
                 "key": item["key"],
                 "label": item["label"],
                 "intent": item["intent"],
+                "stage": item.get("stage") or "",
                 "subject": fill_tokens(item["subject"], ctx),
                 "body": fill_tokens(item["body"], ctx),
                 "already_sent": item["key"] in sent,
@@ -629,6 +660,8 @@ def _attachments_for(db: Session, row: Prospect, invoice_ids: list[str] | None, 
                 filename=f"{invoice.number or 'facture'}.pdf",
                 data=invoice_pdf(invoice),
                 mime="application/pdf",
+                kind="invoice",
+                label=invoice.number or "facture",
             )
         )
     for contract_id in contract_ids or []:
@@ -642,9 +675,53 @@ def _attachments_for(db: Session, row: Prospect, invoice_ids: list[str] | None, 
                 filename=f"mandat-{(contract.company.name if contract.company else 'talendus')}.pdf",
                 data=contract_pdf(contract),
                 mime="application/pdf",
+                kind="contract",
+                label=contract.type or "Mandat",
             )
         )
     return files
+
+
+def attachment_note(attachments: list[EmailAttachment], ctx: dict[str, str]) -> str:
+    blocks = []
+    for att in attachments:
+        name = att.filename or "document.pdf"
+        kind = (att.kind or "").lower()
+        if kind == "invoice" or name.lower().startswith("f-") or "facture" in name.lower():
+            blocks.append(
+                "Pièce jointe — facture\n"
+                f"Le fichier {name} est joint à ce courriel.\n\n"
+                "À faire :\n"
+                "- ouvrir le PDF et vérifier le montant\n"
+                "- régler par virement ou chèque, selon le mandat (honoraires 16 %, à l’embauche)\n"
+                f"- écrire à {ctx.get('info') or INFO} si une ligne vous interroge\n\n"
+                f"Vous pouvez aussi la télécharger ici :\n{ctx.get('employer_link') or EMPLOYEUR}"
+            )
+        elif kind == "contract" or "mandat" in name.lower() or "contrat" in name.lower():
+            blocks.append(
+                "Pièce jointe — mandat / contrat\n"
+                f"Le fichier {name} est joint à ce courriel.\n\n"
+                "À faire :\n"
+                "- ouvrir le PDF et lire les honoraires (16 %) et les délais\n"
+                "- signer dans votre espace (plus simple que d’imprimer)\n"
+                "- nous répondre « signé » une fois c’est fait\n\n"
+                f"Signature électronique :\n{ctx.get('employer_link') or EMPLOYEUR}\n\n"
+                "Dès réception de la signature, on lance la recherche. Aucun logiciel à acheter."
+            )
+        else:
+            blocks.append(
+                "Pièce jointe\n"
+                f"Le fichier {name} est joint à ce courriel. Ouvrez-le, puis répondez si une suite est demandée."
+            )
+    return "\n\n".join(blocks)
+
+
+def append_attachment_note(body: str, attachments: list[EmailAttachment], ctx: dict[str, str]) -> str:
+    if not attachments:
+        return body
+    if "Pièce jointe —" in (body or "") or "Pièce jointe\n" in (body or ""):
+        return body
+    return f"{(body or '').rstrip()}\n\n{attachment_note(attachments, ctx)}"
 
 
 def available_attachments(db: Session, row: Prospect) -> dict:
@@ -687,6 +764,7 @@ def send_to_prospect(db: Session, actor: User, row: Prospect, req: SendRequest) 
             "ALREADY_SENT",
         )
     attachments = _attachments_for(db, row, req.invoice_ids, req.contract_ids)
+    body = append_attachment_note(body, attachments, ctx)
     log = send_composed_email(
         db,
         row.email,

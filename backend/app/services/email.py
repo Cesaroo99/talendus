@@ -47,6 +47,8 @@ class EmailAttachment:
     filename: str
     data: bytes
     mime: str = "application/octet-stream"
+    kind: str = ""
+    label: str = ""
 
 
 @dataclass(frozen=True)
@@ -161,19 +163,67 @@ def signed_plain(body: str) -> str:
     return f"{core}{SIGNATURE_TEXT}"
 
 
+_LINK_BTN = (
+    '<a href="{href}" style="display:inline-block;margin:6px 0 2px;padding:11px 18px;'
+    "background:#ff6b00;color:#ffffff;text-decoration:none;font-weight:700;"
+    'font-size:14px;border-radius:6px;">{label}</a>'
+)
+_LINK_INLINE = '<a href="{href}" style="color:#0b1f3a;font-weight:700;">{href}</a>'
+
+
+def _linkify(text: str) -> str:
+    def repl(match: re.Match[str]) -> str:
+        href = match.group(1).rstrip(").,;")
+        label = "Ouvrir mon espace"
+        if "employeur" in href:
+            label = "Déposer le besoin"
+        if match.group(0) == match.string.strip() or text.strip() == match.group(0):
+            return _LINK_BTN.format(href=href, label=label)
+        return _LINK_INLINE.format(href=href)
+
+    return _URL_RE.sub(repl, text)
+
+
+def _html_list(lines: list[str]) -> str:
+    items = []
+    for line in lines:
+        item = re.sub(r"^(?:[-•]|\d+[.)])\s+", "", line).strip()
+        if not item:
+            continue
+        items.append(f'<li style="margin:0 0 8px;">{_linkify(item)}</li>')
+    if not items:
+        return ""
+    return (
+        '<ul style="margin:0 0 16px;padding:0 0 0 20px;font-family:Arial,Helvetica,sans-serif;">'
+        + "".join(items)
+        + "</ul>"
+    )
+
+
 def _text_to_html_blocks(core: str) -> str:
     escaped = html.escape(core or "")
     blocks = []
-    for block in re.split(r"\n\s*\n", escaped):
-        block = block.strip()
+    for raw in re.split(r"\n\s*\n", escaped):
+        block = raw.strip()
         if not block:
             continue
-        block = block.replace("\n", "<br>\n")
-        block = _URL_RE.sub(
-            r'<a href="\1" style="color:#2563eb;text-decoration:underline;">\1</a>',
-            block,
-        )
-        blocks.append(f'<p style="margin:0 0 14px;">{block}</p>')
+        lines = [ln.strip() for ln in block.split("\n") if ln.strip()]
+        is_list = len(lines) > 1 and all(re.match(r"^(?:[-•]|\d+[.)])\s+", ln) for ln in lines)
+        is_attach = block.lower().startswith("pièce jointe")
+        if is_list:
+            html_block = _html_list(lines)
+        else:
+            rendered = "<br>\n".join(_linkify(ln) for ln in lines)
+            html_block = f'<p style="margin:0 0 16px;">{rendered}</p>'
+        if is_attach:
+            html_block = (
+                '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" '
+                'style="margin:8px 0 20px;border:1px solid #f3d2b8;border-left:4px solid #ff6b00;'
+                'background:#fff8f1;border-radius:8px;">'
+                f'<tr><td style="padding:14px 16px;font-family:Arial,Helvetica,sans-serif;'
+                f'font-size:15px;line-height:1.55;color:#1a2332;">{html_block}</td></tr></table>'
+            )
+        blocks.append(html_block)
     return "".join(blocks) or '<p style="margin:0;"></p>'
 
 
@@ -181,13 +231,20 @@ def signed_html(body: str) -> str:
     core = strip_legacy_footer(body)
     inner = _text_to_html_blocks(core)
     return (
-        "<!DOCTYPE html><html lang=\"fr-CA\"><head><meta charset=\"utf-8\"></head>"
-        '<body style="margin:0;padding:0;background:#f3f5f8;">'
-        '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f3f5f8;">'
-        '<tr><td align="center" style="padding:24px 12px;">'
-        '<table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width:600px;width:100%;background:#ffffff;">'
-        f'<tr><td style="padding:28px 24px 8px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.55;color:#1a2332;">{inner}</td></tr>'
-        '<tr><td style="padding:8px 16px 20px;">'
+        "<!DOCTYPE html><html lang=\"fr-CA\"><head><meta charset=\"utf-8\">"
+        '<meta name="viewport" content="width=device-width,initial-scale=1"></head>'
+        '<body style="margin:0;padding:0;background:#e8edf4;">'
+        '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#e8edf4;">'
+        '<tr><td align="center" style="padding:28px 12px;">'
+        '<table role="presentation" width="600" cellspacing="0" cellpadding="0" '
+        'style="max-width:600px;width:100%;background:#ffffff;border:1px solid #d5dce6;border-radius:12px;">'
+        '<tr><td style="height:5px;background:#ff6b00;font-size:0;line-height:0;border-radius:12px 12px 0 0;">&nbsp;</td></tr>'
+        '<tr><td style="padding:18px 28px 14px;background:#0b1f3a;">'
+        '<div style="font-family:Arial,Helvetica,sans-serif;color:#ffffff;font-size:20px;font-weight:800;letter-spacing:0.02em;">Talendus</div>'
+        '<div style="font-family:Arial,Helvetica,sans-serif;color:#c5d0de;font-size:12px;padding-top:4px;">Cabinet de recrutement au Québec</div>'
+        "</td></tr>"
+        f'<tr><td style="padding:28px 28px 10px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.6;color:#1a2332;">{inner}</td></tr>'
+        '<tr><td style="padding:4px 16px 22px;">'
         f'<img src="cid:{SIGNATURE_CID}" width="600" alt="Talendus — Votre partenaire stratégique en recrutement au Québec. info@talendus.ca · 263 558 5225 · talendus.ca" style="display:block;width:100%;max-width:600px;height:auto;border:0;">'
         "</td></tr></table></td></tr></table></body></html>"
     )
