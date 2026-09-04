@@ -23,7 +23,7 @@ from app.models import (
 )
 from app.models.enums import ApplicationStatus, InterviewType, InvoiceStatus, JobStatus, MissionStatus, utcnow
 from app.services.hiring_requests import STATUS_COPY, serialize_request
-from app.services.interviews import CALL_TYPES, LIVE_CALL_STATUSES
+from app.services.interviews import CALL_TYPES, LIVE_CALL_STATUSES, host_in_call
 from app.services.pipeline import stage_for
 
 logger = logging.getLogger("talendus.admin")
@@ -474,6 +474,7 @@ def _interview(i: Interview) -> dict:
         "call_video": i.type != InterviewType.PHONE,
         "candidate_can_start": bool(getattr(i, "candidate_can_start", False)),
         "call_open": bool(getattr(i, "call_opened_at", None)),
+        "host_in_call": host_in_call(i),
     }
 
 

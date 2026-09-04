@@ -144,6 +144,8 @@ def _visible(db: Session, user: User, row: Invoice) -> bool:
     if user.role in {UserRole.FINANCE, UserRole.RECRUITER} | ADMINS:
         return True
     if user.role == UserRole.EMPLOYER:
+        if row.status == InvoiceStatus.DRAFT:
+            return False
         return row.company_id in company_ids_for_employer(db, user)
     return False
 
@@ -159,7 +161,7 @@ def list_invoices(db: Session, user: User) -> list[Invoice]:
         ids = company_ids_for_employer(db, user)
         if not ids:
             return []
-        stmt = stmt.where(Invoice.company_id.in_(ids))
+        stmt = stmt.where(Invoice.company_id.in_(ids), Invoice.status != InvoiceStatus.DRAFT)
     elif user.role not in {UserRole.FINANCE, UserRole.RECRUITER} | ADMINS:
         raise AppError(403, "Vous n'avez pas accès aux factures.", "FORBIDDEN")
     return list(db.scalars(stmt.order_by(Invoice.created_at.desc())).unique().all())

@@ -83,6 +83,9 @@ def _reset_idle_room(db: Session, interview_id: str) -> bool:
     for row in leftover:
         db.delete(row)
     _delete_signals(db, interview_id)
+    interview = db.get(Interview, interview_id)
+    if interview:
+        interview.call_opened_at = None
     return True
 
 
@@ -159,8 +162,8 @@ def _open_room(db: Session, interview: Interview, user: User, *, notify_candidat
             db,
             cand_user,
             NotificationType.INTERVIEW_INVITE,
-            "L’appel est ouvert",
-            "Le conseiller a ouvert la salle. Vous pouvez rejoindre l’entretien maintenant.",
+            "L’entretien se prépare",
+            "Le conseiller prépare l’appel. Les boutons Rejoindre apparaîtront dès qu’il l’aura lancé.",
             href=portal_href(cand_user, "interviews"),
         )
     return True
@@ -197,15 +200,16 @@ def join(db: Session, user: User, interview_id: str, video: bool | None = None) 
     if not viewer_can_join_call(interview, user) and not viewer_can_start_call(interview, user):
         raise AppError(
             409,
-            "Le conseiller n’a pas encore ouvert l’appel. Vous pourrez rejoindre dès qu’il sera lancé.",
+            "Le conseiller n’a pas encore lancé l’appel. Vous pourrez rejoindre dès qu’il sera dans la salle.",
             "CALL_WAITING_FOR_HOST",
         )
     if is_staff(user) or viewer_can_start_call(interview, user):
-        _open_room(db, interview, user, notify_candidate=is_staff(user))
+        _open_room(db, interview, user, notify_candidate=False)
     want_video = default_video(interview) if video is None else bool(video)
     peer = db.scalar(
         select(CallPeer).where(CallPeer.interview_id == interview.id, CallPeer.user_id == user.id)
     )
+    arriving = peer is None or peer.last_seen < utcnow() - PEER_TTL
     _prepare_join_session(db, interview.id, user.id, peer)
     now = utcnow()
     if peer:
@@ -213,6 +217,17 @@ def join(db: Session, user: User, interview_id: str, video: bool | None = None) 
         peer.last_seen = now
     else:
         db.add(CallPeer(interview_id=interview.id, user_id=user.id, video=want_video, last_seen=now))
+    if arriving and is_staff(user):
+        cand_user = interview.candidate.user if interview.candidate else None
+        if cand_user and cand_user.id != user.id:
+            notify(
+                db,
+                cand_user,
+                NotificationType.INTERVIEW_INVITE,
+                "L’appel est lancé",
+                "Le conseiller a lancé l’entretien. Vous pouvez rejoindre maintenant.",
+                href=portal_href(cand_user, "interviews"),
+            )
     db.commit()
     return {
         "interview": serialize_interview(interview, user),
@@ -282,6 +297,7 @@ def post_signal(db: Session, user: User, interview_id: str, kind: str, payload: 
             leftover = list(db.scalars(select(CallPeer).where(CallPeer.interview_id == interview.id)).all())
             for leftover_peer in leftover:
                 db.delete(leftover_peer)
+            interview.call_opened_at = None
             db.commit()
             return {"id": row.id, "kind": "hangup", "payload": {}, "sender_id": user.id, "created_at": None, "cleared": True}
     db.commit()

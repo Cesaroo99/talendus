@@ -100,14 +100,13 @@
 
   function callButtons(i) {
     if (!i || !i.in_app_call) return "";
-    var open = i.call_open ? "Rejoindre" : "Lancer";
-    var html = "";
-    if (!i.call_open) {
-      html += ' <button type="button" class="btn btn-ghost btn-sm" data-open-call="' + U.esc(i.id) + '">Ouvrir la salle</button>';
+    var html = '<span class="int-call-help">1. Lancez l’audio ou la visio — 2. Le candidat voit alors Rejoindre — 3. Raccrochez pour refermer la salle.</span>';
+    if (!i.host_in_call) {
+      html += ' <button type="button" class="btn btn-ghost btn-sm" data-open-call="' + U.esc(i.id) + '">Prévenir le candidat</button>';
     }
-    html += ' <button type="button" class="btn btn-ghost btn-sm" data-join-call="' + U.esc(i.id) + '" data-video="0">' + open + " audio</button>";
+    html += ' <button type="button" class="btn btn-ghost btn-sm" data-join-call="' + U.esc(i.id) + '" data-video="0">Lancer audio</button>';
     if (i.call_video !== false) {
-      html += ' <button type="button" class="btn btn-sm btn-orange" data-join-call="' + U.esc(i.id) + '" data-video="1">' + open + " visio</button>";
+      html += ' <button type="button" class="btn btn-sm btn-orange" data-join-call="' + U.esc(i.id) + '" data-video="1">Lancer visio</button>';
     }
     html += i.candidate_can_start
       ? ' <button type="button" class="btn btn-ghost btn-sm" data-call-perm="' + U.esc(i.id) + '" data-allow="0">Candidat : lancer retiré</button>'
@@ -1329,7 +1328,7 @@
       return '<div class="int-col"><h4>' + col[1] + ' <span class="badge">' + items.length + "</span></h4>" + cards + "</div>";
     }).join("");
     return `
-      <div class="page-head"><div><h1>Entretiens</h1><p>Audio, visio Talendus ou sur place — rejoignez l’appel depuis la carte.</p></div>
+      <div class="page-head"><div><h1>Entretiens</h1><p>Lancez l’appel depuis la carte. Le candidat ne voit Rejoindre que lorsque vous êtes dans la salle.</p></div>
         <div class="actions"><button class="btn btn-orange" data-create="interview">Planifier</button></div></div>
       <div class="int-board">${board}</div>`;
   }
@@ -1931,7 +1930,7 @@
           try {
             await window.TalendusAPI.request("/calls/" + openCall.getAttribute("data-open-call") + "/open", { method: "POST" });
             await refreshLive();
-            U.toast("Salle ouverte. Le candidat peut rejoindre.", "ok");
+            U.toast("Le candidat est prévenu. Lancez l’appel pour qu’il puisse rejoindre.", "ok");
             render();
           } catch (err) {
             U.toast((err && err.message) || "Ouverture impossible.", "err");

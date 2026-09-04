@@ -288,6 +288,8 @@ def test_invoice_refund_and_paypal_unconfigured(client):
     company = client.get("/api/companies/me", headers=auth_header(emp)).json()["data"]
     invoice = client.post("/api/invoices", headers=h, json={"company_id": company["id"], "amount": 2500})
     inv_id = invoice.json()["data"]["id"]
+    sent = client.post(f"/api/invoices/{inv_id}/send", headers=h)
+    assert sent.status_code == 200, sent.text
     refund = client.post(f"/api/invoices/{inv_id}/refund", headers=h, json={})
     assert refund.status_code == 503
     assert refund.json()["code"] == "STRIPE_NOT_CONFIGURED"
