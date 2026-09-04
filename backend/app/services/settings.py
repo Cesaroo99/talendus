@@ -47,6 +47,19 @@ def list_settings(db: Session) -> list[SystemSetting]:
     return list(db.scalars(select(SystemSetting).order_by(SystemSetting.key.asc())).all())
 
 
+SMTP_SECRET_KEYS = {"smtp.password"}
+SECRET_MASK = "••••••••"
+
+
+def setting_value(db: Session, key: str, default: str = "") -> str:
+    from sqlalchemy import select
+
+    row = db.scalar(select(SystemSetting).where(SystemSetting.key == key))
+    if row is None or row.value is None:
+        return default
+    return row.value
+
+
 def upsert_setting(db: Session, user: User, key: str, value: str, label: str | None = None) -> SystemSetting:
     from sqlalchemy import select
 
@@ -55,12 +68,17 @@ def upsert_setting(db: Session, user: User, key: str, value: str, label: str | N
         raise AppError(400, "La clé de paramètre est requise.", "VALIDATION_ERROR")
     row = db.scalar(select(SystemSetting).where(SystemSetting.key == key))
     old = row.value if row else None
+    incoming = value if value is not None else ""
+    if key in SMTP_SECRET_KEYS and row and (not incoming.strip() or incoming.strip() == SECRET_MASK):
+        value = row.value or ""
     if row:
         row.value = value
         if label is not None:
             row.label = label
         row.updated_by = user.id
     else:
+        if key in SMTP_SECRET_KEYS and incoming.strip() == SECRET_MASK:
+            value = ""
         row = SystemSetting(key=key, value=value, label=label, updated_by=user.id)
         db.add(row)
     audit(db, "admin.setting", user, "system_setting", row.id, metadata={"key": key}, old_value=old, new_value=value)
@@ -70,19 +88,23 @@ def upsert_setting(db: Session, user: User, key: str, value: str, label: str | N
 
 
 def serialize_setting(row: SystemSetting) -> dict:
+    value = row.value
+    if row.key in SMTP_SECRET_KEYS and (row.value or "").strip():
+        value = SECRET_MASK
     return {
         "id": row.id,
         "key": row.key,
-        "value": row.value,
+        "value": value,
         "label": row.label,
         "updated_at": row.updated_at.isoformat() if row.updated_at else None,
         "updated_by": row.updated_by,
+        "secret": row.key in SMTP_SECRET_KEYS,
     }
 
 
 PLATFORM_DEFAULTS = (
     ("agency_name", "Talendus", "Nom de l’agence"),
-    ("support_email", "ivan.p@example.net", "Courriel interne"),
+    ("support_email", "info@talendus.ca", "Courriel interne"),
     ("default_commission_percent", "16", "Commission type (%)"),
     ("invoice_payment_days", "30", "Délai de paiement (jours)"),
     ("billing.legal_name", "Talendus", "Raison sociale (factures)"),
@@ -90,6 +112,13 @@ PLATFORM_DEFAULTS = (
     ("billing.neq", "2282510496", "NEQ (Registraire des entreprises du Québec)"),
     ("billing.gst", "", "N° de TPS (RT)"),
     ("billing.qst", "", "N° de TVQ"),
+    ("smtp.enabled", "", "Activer l’envoi SMTP (oui / non ; vide = variable d’environnement)"),
+    ("smtp.host", "", "Serveur SMTP"),
+    ("smtp.port", "587", "Port SMTP"),
+    ("smtp.username", "", "Identifiant SMTP (souvent info@talendus.ca)"),
+    ("smtp.password", "", "Mot de passe SMTP"),
+    ("smtp.from", "Talendus <info@talendus.ca>", "Expéditeur (From)"),
+    ("smtp.use_tls", "oui", "TLS STARTTLS (oui / non)"),
 )
 
 CMS_KEYS = {"testimonials", "faq"}

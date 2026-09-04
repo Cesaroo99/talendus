@@ -1,0 +1,10 @@
+Subject: Vous pouvez lancer l’appel — {{job_title}}
+{{name}},
+
+Le recruteur vous autorise à ouvrir la salle d’entretien pour « {{job_title}} ».
+Confirmez votre présence, puis lancez l’appel au moment convenu.
+
+Ouvrir l’entretien :
+{{link}}
+
+Talendus · info@talendus.ca

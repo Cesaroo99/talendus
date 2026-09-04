@@ -331,6 +331,14 @@ def login_with_identity(
         db.flush()
         db.add(UserPreference(user_id=user.id))
         _provision_role(db, user, company_name)
+        send_email(
+            db,
+            user.email,
+            EmailType.WELCOME,
+            "welcome",
+            name=user.first_name,
+            link=f"{settings.frontend_url}/espace.html",
+        )
         notify(db, user, NotificationType.ACCOUNT_CREATED, "Compte créé", "Bienvenue chez Talendus.")
         audit(db, f"account.oauth.{provider}", user, "user", user.id, ip)
     if not user.is_active or user.account_status in {AccountStatus.SUSPENDED, AccountStatus.DEACTIVATED}:

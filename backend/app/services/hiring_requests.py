@@ -7,13 +7,13 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.errors import AppError
 from app.models import RecruitmentMission, User
-from app.models.enums import MissionStatus, NotificationType, UserRole, utcnow
+from app.models.enums import EmailType, MissionStatus, NotificationType, UserRole, utcnow
 from app.rbac import ADMINS, INTERNAL
 from app.schemas import HiringRequestIn, HiringRequestPatchIn, JobIn
 from app.services.access import company_ids_for_employer, first_employer_company, user_belongs_to_company
 from app.services.audit import audit
 from app.services.jobs import create_job
-from app.services.notifications import notify, portal_href
+from app.services.ops_notify import first_staff, notify_people
 
 STAFF_ROLES = INTERNAL | ADMINS
 
@@ -162,13 +162,36 @@ def _notify_employer(db: Session, row: RecruitmentMission) -> None:
         return
     owner = db.get(User, company.owner_user_id)
     title, message = STATUS_COPY.get(row.status, ("Mise à jour", "Votre recrutement avance avec Talendus."))
-    notify(db, owner, NotificationType.HIRING_REQUEST, title, message, portal_href(owner, "jobs", row.id))
+    notify_people(
+        db,
+        owner,
+        actor=first_staff(db),
+        ntype=NotificationType.HIRING_REQUEST,
+        title=title,
+        message=message,
+        section="jobs",
+        item_id=row.id,
+        template="hiring_update",
+        email_type=EmailType.ADMIN,
+        ctx={"name": owner.first_name if owner else "", "title": title, "detail": message},
+    )
 
 
-def _notify_staff(db: Session, row: RecruitmentMission, title: str, message: str) -> None:
+def _notify_staff(db: Session, row: RecruitmentMission, title: str, message: str, actor: User | None = None) -> None:
     staff = db.scalars(select(User).where(User.role.in_(STAFF_ROLES), User.is_active.is_(True))).all()
-    for user in staff:
-        notify(db, user, NotificationType.HIRING_REQUEST, title, message, portal_href(user, "hiring", row.id))
+    notify_people(
+        db,
+        list(staff),
+        actor=actor,
+        ntype=NotificationType.HIRING_REQUEST,
+        title=title,
+        message=message,
+        section="hiring",
+        item_id=row.id,
+        template="hiring_update",
+        email_type=EmailType.ADMIN,
+        ctx={"title": title, "detail": message},
+    )
 
 
 def create_request(db: Session, user: User, data: HiringRequestIn, ip: str | None = None) -> RecruitmentMission:
@@ -214,6 +237,7 @@ def create_request(db: Session, user: User, data: HiringRequestIn, ip: str | Non
         row,
         "Nouveau besoin de recrutement",
         f"{company.name} a transmis un besoin : {row.title}.",
+        actor=user,
     )
     db.commit()
     db.refresh(row)

@@ -17,6 +17,10 @@ def frontend() -> str:
     return (get_settings().frontend_url or "https://talendus.ca").rstrip("/")
 
 
+def absolute_link(user: User | None, section: str, item_id: str | None = None) -> str:
+    return f"{frontend()}{portal_href(user, section, item_id)}"
+
+
 def company_users(db: Session, company_id: str) -> list[User]:
     company = db.get(Company, company_id)
     ids: set[str] = set()
@@ -57,6 +61,57 @@ def first_staff(db: Session) -> User | None:
     )
 
 
+def _as_users(recipients: User | list[User | None] | None) -> list[User]:
+    if recipients is None:
+        return []
+    rows = recipients if isinstance(recipients, list) else [recipients]
+    out: list[User] = []
+    seen: set[str] = set()
+    for user in rows:
+        if user and user.id not in seen:
+            seen.add(user.id)
+            out.append(user)
+    return out
+
+
+def notify_people(
+    db: Session,
+    recipients: User | list[User | None] | None,
+    *,
+    actor: User | None,
+    ntype: NotificationType,
+    title: str,
+    message: str,
+    section: str,
+    template: str,
+    email_type: EmailType,
+    ctx: dict[str, str] | None = None,
+    item_id: str | None = None,
+    application_id: str | None = None,
+    thread: bool = True,
+    already_notified: bool = False,
+) -> None:
+    """In-app + e-mail info@ + copie dans le fil avec l'interlocuteur."""
+    from app.services.messages import post_thread_note
+
+    users = _as_users(recipients)
+    base_ctx = {key: "" if value is None else str(value) for key, value in (ctx or {}).items()}
+    thread_sender = actor or first_staff(db)
+    for user in users:
+        href = portal_href(user, section, item_id)
+        link = base_ctx.get("link") or f"{frontend()}{href}"
+        if not already_notified:
+            notify(db, user, ntype, title, message, href=href)
+        if actor and user.id == actor.id:
+            continue
+        if user.email:
+            payload = {"name": user.first_name or "", **base_ctx, "link": link}
+            send_email(db, user.email, email_type, template, **payload)
+        if thread and thread_sender and thread_sender.id != user.id:
+            note = f"{title}\n\n{message}\n\nOuvrir : {link}"
+            post_thread_note(db, thread_sender, user, note, application_id)
+
+
 def notify_company(
     db: Session,
     company_id: str,
@@ -95,6 +150,6 @@ def message_company(db: Session, actor: User, company_id: str, body: str) -> Non
     owner_ids = {u.id for u in company_users(db, company_id) if u.id != actor.id and u.role == UserRole.EMPLOYER}
     for uid in owner_ids:
         try:
-            send_message(db, actor, uid, body, None, None)
+            send_message(db, actor, uid, body, None, None, email=False)
         except AppError:
             continue

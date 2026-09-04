@@ -3,9 +3,10 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.errors import AppError
 from app.models import Application, Conversation, ConversationParticipant, Message, User
-from app.models.enums import NotificationType, UserRole, utcnow
+from app.models.enums import EmailType, NotificationType, UserRole, utcnow
 from app.rbac import ADMINS
 from app.services.audit import audit
+from app.services.email import send_email
 from app.services.notifications import notify, portal_href
 
 
@@ -48,7 +49,16 @@ def _get_or_create_conversation(db: Session, user_a: str, user_b: str, applicati
     return conv
 
 
-def send_message(db: Session, sender: User, recipient_id: str, body: str, application_id: str | None, ip: str | None) -> Message:
+def send_message(
+    db: Session,
+    sender: User,
+    recipient_id: str,
+    body: str,
+    application_id: str | None,
+    ip: str | None,
+    *,
+    email: bool = True,
+) -> Message:
     text = (body or "").strip()
     if not text or len(text) > 4000:
         raise AppError(400, "Le message doit contenir entre 1 et 4000 caractères.", "VALIDATION_ERROR")
@@ -70,17 +80,64 @@ def send_message(db: Session, sender: User, recipient_id: str, body: str, applic
         body=text,
     )
     db.add(row)
+    href = portal_href(recipient, "messages")
     notify(
         db,
         recipient,
         NotificationType.MESSAGE,
         "Nouveau message",
         f"{sender.full_name} vous a écrit.",
-        href=portal_href(recipient, "messages"),
+        href=href,
     )
+    if email and recipient.email:
+        from app.config import get_settings
+
+        origin = (get_settings().frontend_url or "https://talendus.ca").rstrip("/")
+        send_email(
+            db,
+            recipient.email,
+            EmailType.ADMIN,
+            "new_message",
+            name=recipient.first_name or "",
+            sender_name=sender.full_name or "Talendus",
+            preview=text[:400],
+            link=f"{origin}{href}",
+        )
     audit(db, "message.send", sender, "message", None, ip, {"to": recipient.id})
     db.commit()
     db.refresh(row)
+    return row
+
+
+def post_thread_note(
+    db: Session,
+    sender: User,
+    recipient: User,
+    body: str,
+    application_id: str | None = None,
+) -> Message | None:
+    """Copie une action dans le fil, sans notification ni e-mail (évite les boucles)."""
+    text = (body or "").strip()
+    if not text or sender.id == recipient.id:
+        return None
+    if not recipient.is_active or not _can_converse(db, sender, recipient):
+        return None
+    if len(text) > 4000:
+        text = text[:3999]
+    if application_id:
+        application = db.get(Application, application_id)
+        if not application:
+            application_id = None
+    conversation = _get_or_create_conversation(db, sender.id, recipient.id, application_id)
+    row = Message(
+        conversation_id=conversation.id,
+        sender_id=sender.id,
+        recipient_id=recipient.id,
+        application_id=application_id,
+        body=text,
+    )
+    db.add(row)
+    db.flush()
     return row
 
 

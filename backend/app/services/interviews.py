@@ -12,9 +12,8 @@ from app.schemas import InterviewIn, InterviewPatchIn
 from app.services.access import company_ids_for_employer
 from app.services.audit import audit
 from app.services.auth import ensure_candidate
-from app.services.email import send_email
 from app.services.labels import interview_status_label, interview_type_label
-from app.services.notifications import notify, portal_href
+from app.services.ops_notify import first_staff, notify_people
 
 CALL_TYPES = {
     InterviewType.TALENDUS,
@@ -264,24 +263,25 @@ def create_interview(db: Session, user: User, data: InterviewIn, ip: str | None)
         invite_msg = f"{TYPE_LABEL.get(row.type, row.type.value)} le {when_label} — {row.location or ''}. {next_step}".strip()
     else:
         invite_msg = f"{TYPE_LABEL.get(row.type, row.type.value)} le {when_label} — {row.location or ''}".strip()
-    notify(
-        db,
-        cand_user,
-        NotificationType.INTERVIEW_INVITE,
-        "Entretien planifié",
-        invite_msg,
-        href=portal_href(cand_user, "interviews"),
-    )
     if cand_user:
-        send_email(
+        notify_people(
             db,
-            cand_user.email,
-            EmailType.INTERVIEW_INVITE,
-            "interview",
-            name=cand_user.first_name,
-            job_title=(job.title if job else "Talendus"),
-            status=when_label,
-            comment=row.location or "",
+            cand_user,
+            actor=user,
+            ntype=NotificationType.INTERVIEW_INVITE,
+            title="Entretien planifié",
+            message=invite_msg,
+            section="interviews",
+            item_id=row.id,
+            template="interview",
+            email_type=EmailType.INTERVIEW_INVITE,
+            ctx={
+                "name": cand_user.first_name or "",
+                "job_title": job.title if job else "Talendus",
+                "status": when_label,
+                "comment": row.location or "",
+            },
+            application_id=row.application_id,
         )
         from app.integrations.hooks import maybe_send_whatsapp
 
@@ -321,15 +321,24 @@ def patch_interview(db: Session, user: User, interview_id: str, data: InterviewP
         cand_user = row.candidate.user if row.candidate else None
         when_label = row.scheduled_at.strftime("%Y-%m-%d %H:%M") if row.scheduled_at else ""
         if cand_user:
-            send_email(
+            notify_people(
                 db,
-                cand_user.email,
-                EmailType.INTERVIEW_INVITE,
-                "interview",
-                name=cand_user.first_name,
-                job_title=(row.job.title if row.job else "Talendus"),
-                status=when_label,
-                comment=row.location or "",
+                cand_user,
+                actor=user,
+                ntype=NotificationType.INTERVIEW_INVITE,
+                title="Entretien reporté",
+                message=f"Nouveau créneau : {when_label} — {row.location or ''}".strip(),
+                section="interviews",
+                item_id=row.id,
+                template="interview",
+                email_type=EmailType.INTERVIEW_INVITE,
+                ctx={
+                    "name": cand_user.first_name or "",
+                    "job_title": row.job.title if row.job else "Talendus",
+                    "status": when_label,
+                    "comment": row.location or "",
+                },
+                application_id=row.application_id,
             )
             from app.integrations.hooks import maybe_send_whatsapp
 
@@ -341,13 +350,22 @@ def patch_interview(db: Session, user: User, interview_id: str, data: InterviewP
     if granted_start:
         cand_user = row.candidate.user if row.candidate else None
         if cand_user:
-            notify(
+            notify_people(
                 db,
                 cand_user,
-                NotificationType.INTERVIEW_INVITE,
-                "Vous pouvez lancer l’appel",
-                "Le recruteur vous autorise à ouvrir la salle. Confirmez votre présence, puis lancez l’appel au moment convenu.",
-                href=portal_href(cand_user, "interviews"),
+                actor=user,
+                ntype=NotificationType.INTERVIEW_INVITE,
+                title="Vous pouvez lancer l’appel",
+                message="Le recruteur vous autorise à ouvrir la salle. Confirmez votre présence, puis lancez l’appel au moment convenu.",
+                section="interviews",
+                item_id=row.id,
+                template="interview_can_start",
+                email_type=EmailType.INTERVIEW_INVITE,
+                ctx={
+                    "name": cand_user.first_name or "",
+                    "job_title": row.job.title if row.job else "Talendus",
+                },
+                application_id=row.application_id,
             )
     db.commit()
     return get_interview(db, user, row.id)
@@ -392,13 +410,24 @@ def set_status(db: Session, user: User, interview_id: str, status: InterviewStat
             InterviewStatus.CANCELLED: f"Le recruteur a annulé l’entretien. Statut : {shown}.",
             InterviewStatus.CONFIRMED: f"Statut : {shown}.",
         }
-        notify(
+        notify_people(
             db,
             cand_user,
-            NotificationType.INTERVIEW_INVITE,
-            titles[status],
-            bodies[status],
-            href=portal_href(cand_user, "interviews"),
+            actor=user,
+            ntype=NotificationType.INTERVIEW_INVITE,
+            title=titles[status],
+            message=bodies[status],
+            section="interviews",
+            item_id=row.id,
+            template="interview_status",
+            email_type=EmailType.INTERVIEW_INVITE,
+            ctx={
+                "name": cand_user.first_name or "",
+                "job_title": row.job.title if row.job else "Talendus",
+                "status": shown,
+                "comment": bodies[status],
+            },
+            application_id=row.application_id,
         )
         from app.integrations.hooks import maybe_send_whatsapp
 
@@ -407,6 +436,30 @@ def set_status(db: Session, user: User, interview_id: str, status: InterviewStat
             template="candidate_notice",
             variables={"status": shown, "when": row.scheduled_at.strftime("%Y-%m-%d %H:%M") if row.scheduled_at else ""},
         )
+    elif cand_user and user.id == cand_user.id and status in {InterviewStatus.CONFIRMED, InterviewStatus.CANCELLED}:
+        recruiter = db.get(User, row.recruiter_id) if row.recruiter_id else None
+        staff = recruiter or first_staff(db)
+        shown = interview_status_label(status, staff)
+        if staff:
+            notify_people(
+                db,
+                staff,
+                actor=user,
+                ntype=NotificationType.INTERVIEW_INVITE,
+                title="Le candidat a répondu à l’entretien",
+                message=f"{cand_user.full_name} : {shown}.",
+                section="interviews",
+                item_id=row.id,
+                template="interview_status",
+                email_type=EmailType.INTERVIEW_INVITE,
+                ctx={
+                    "name": staff.first_name or "",
+                    "job_title": row.job.title if row.job else "Talendus",
+                    "status": shown,
+                    "comment": f"{cand_user.full_name} a mis à jour l’entretien.",
+                },
+                application_id=row.application_id,
+            )
     db.commit()
     return get_interview(db, user, row.id)
 
@@ -442,15 +495,24 @@ def dispatch_due_reminders(db: Session, *, hours: int = 24) -> dict:
             skipped += 1
             continue
         when_label = row.scheduled_at.strftime("%Y-%m-%d %H:%M") if row.scheduled_at else ""
-        send_email(
+        notify_people(
             db,
-            cand_user.email,
-            EmailType.INTERVIEW_INVITE,
-            "interview",
-            name=cand_user.first_name,
-            job_title=(row.job.title if row.job else "Talendus"),
-            status=when_label,
-            comment=row.location or "Rappel",
+            cand_user,
+            actor=first_staff(db),
+            ntype=NotificationType.INTERVIEW_INVITE,
+            title="Rappel d’entretien",
+            message=f"Entretien le {when_label} — {row.location or ''}".strip(),
+            section="interviews",
+            item_id=row.id,
+            template="interview",
+            email_type=EmailType.INTERVIEW_INVITE,
+            ctx={
+                "name": cand_user.first_name or "",
+                "job_title": row.job.title if row.job else "Talendus",
+                "status": when_label,
+                "comment": row.location or "Rappel",
+            },
+            application_id=row.application_id,
         )
         maybe_send_whatsapp(
             recipient=cand_user.phone,

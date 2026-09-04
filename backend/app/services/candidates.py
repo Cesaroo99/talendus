@@ -23,8 +23,6 @@ from app.services.storage import delete_stored, save_resume
 def create_staff_candidate(db: Session, actor: User, data) -> Candidate:
     from app.models import UserPreference
     from app.security import hash_password, random_password
-    from app.services.email import send_email
-    from app.services.notifications import notify
 
     existing = db.scalar(select(User).where(User.email == str(data.email).lower()))
     if existing:
@@ -50,8 +48,20 @@ def create_staff_candidate(db: Session, actor: User, data) -> Candidate:
     )
     db.add(profile)
     db.flush()
-    send_email(db, user.email, EmailType.WELCOME, "welcome", name=user.first_name, link="espace.html")
-    notify(db, user, NotificationType.ACCOUNT_CREATED, "Compte créé", "Votre dossier a été ouvert chez Talendus.")
+    from app.services.ops_notify import frontend, notify_people
+
+    notify_people(
+        db,
+        user,
+        actor=actor,
+        ntype=NotificationType.ACCOUNT_CREATED,
+        title="Compte créé",
+        message="Votre dossier a été ouvert chez Talendus.",
+        section="dashboard",
+        template="welcome",
+        email_type=EmailType.WELCOME,
+        ctx={"name": user.first_name or "", "link": f"{frontend()}/espace.html"},
+    )
     audit(db, "candidate.staff_create", actor, "candidate", profile.id)
     db.commit()
     db.refresh(profile)
@@ -154,7 +164,20 @@ def upload_cv_for_candidate(db: Session, actor: User, candidate_id: str, data: b
     )
     db.add(row)
     if profile.user:
-        notify(db, profile.user, NotificationType.RESUME_UPDATED, "CV mis à jour", "Talendus a déposé un document dans votre dossier.")
+        from app.services.ops_notify import notify_people
+
+        notify_people(
+            db,
+            profile.user,
+            actor=actor,
+            ntype=NotificationType.RESUME_UPDATED,
+            title="CV mis à jour",
+            message="Talendus a déposé un document dans votre dossier.",
+            section="documents",
+            template="document_added",
+            email_type=EmailType.ADMIN,
+            ctx={"name": profile.user.first_name or "", "document": original},
+        )
     audit(db, "candidate.staff_resume_upload", actor, "candidate", profile.id)
     db.commit()
     db.refresh(row)
@@ -273,7 +296,9 @@ def submit_public_talent(
         db.add(user)
         db.flush()
         db.add(UserPreference(user_id=user.id))
-        send_email(db, user.email, EmailType.WELCOME, "welcome", name=user.first_name, link="espace.html")
+        from app.services.ops_notify import frontend
+
+        send_email(db, user.email, EmailType.WELCOME, "welcome", name=user.first_name, link=f"{frontend()}/espace.html")
         notify(db, user, NotificationType.ACCOUNT_CREATED, "Compte créé", "Votre dossier a été ouvert chez Talendus.")
 
     profile = ensure_candidate(db, user)

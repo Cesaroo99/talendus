@@ -173,6 +173,7 @@ def list_emails(
                 "to_email": r.to_email,
                 "type": r.type.value,
                 "subject": r.subject,
+                "body": r.body,
                 "status": r.status.value,
                 "error": r.error,
                 "attempts": r.attempts,

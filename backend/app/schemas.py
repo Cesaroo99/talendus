@@ -676,3 +676,7 @@ class SystemSettingIn(BaseModel):
     key: str = Field(min_length=1, max_length=80)
     value: str = ""
     label: str | None = None
+
+
+class EmailTestIn(BaseModel):
+    to_email: EmailStr | None = None

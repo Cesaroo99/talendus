@@ -38,7 +38,7 @@ class Settings(BaseSettings):
     email_port: int = 587
     email_username: str = ""
     email_password: str = ""
-    email_from: str = "Talendus <noreply@talendus.ca>"
+    email_from: str = "Talendus <info@talendus.ca>"
     email_use_tls: bool = True
 
     storage_dir: str = str(BACKEND_ROOT / "storage")

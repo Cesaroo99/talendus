@@ -1,0 +1,11 @@
+Subject: Entretien — {{status}}
+{{name}},
+
+Mise à jour de votre entretien « {{job_title}} ».
+Statut : {{status}}
+{{comment}}
+
+Voir le suivi dans votre espace :
+{{link}}
+
+Talendus · info@talendus.ca
