@@ -2014,19 +2014,19 @@
             var login = detail.login_link || "";
             var register = detail.register_link || "";
             return "Comment faire :\n" +
-              "- Si vous avez déjà un compte Talendus, connectez-vous ici :\n" + login + "\n" +
-              "- Si vous n’avez pas encore créé de compte, ouvrez ce lien : il préremplit votre courriel et crée votre accès :\n" + register;
+              "- Vous avez déjà un compte : connectez-vous ici :\n" + login + "\n" +
+              "- Vous n’avez pas encore de compte : ce lien ouvre l’inscription, avec votre courriel déjà indiqué :\n" + register;
           };
           var noteFor = function (kind, filename) {
             var hook = "Vous trouverez ceci en pièce jointe : " + filename;
             var howto = accountHowto();
             if (kind === "invoice") {
-              return hook + "\n\nÀ faire :\n- ouvrir le PDF et vérifier le montant\n- régler par virement ou chèque, selon les conditions du mandat signé\n- nous écrire si une ligne vous interroge\n\n" + howto;
+              return hook + "\n\nÀ faire :\n- ouvrir le PDF et vérifier le montant\n- régler par virement ou par chèque, selon les conditions du mandat signé\n- m’écrire si une ligne demande une précision\n\n" + howto;
             }
             if (kind === "contract") {
-              return hook + "\n\nÀ faire :\n- ouvrir le PDF et le lire en entier\n- le signer dans votre espace (plus simple que d’imprimer)\n- nous répondre « signé » une fois c’est fait\n\n" + howto;
+              return hook + "\n\nÀ faire :\n- ouvrir le PDF et le lire en entier\n- le signer dans votre espace, sans l’imprimer\n- me le confirmer ensuite par retour de courriel\n\n" + howto;
             }
-            return hook + "\n\nÀ faire : ouvrez le fichier, puis répondez si une suite est demandée.\n\n" + howto;
+            return hook + "\n\nÀ faire : ouvrez le fichier, puis répondez-moi si une suite est demandée.\n\n" + howto;
           };
           var syncAttachmentNotes = function () {
             var bodyEl = box.querySelector("#pc-body");
