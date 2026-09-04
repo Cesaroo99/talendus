@@ -136,10 +136,10 @@ def test_apply_and_duplicate_and_status_and_notifications(client):
 
     notifs2 = client.get("/api/notifications", headers=cand_headers)
     titles = [n["title"] for n in notifs2.json()["data"]]
-    assert any("candidature" in t.lower() or "Mise à jour" in t for t in titles)
+    assert any("présenté" in t.lower() or "candidature" in t.lower() or "Mise à jour" in t for t in titles)
     bodies = " ".join((n.get("message") or "") for n in notifs2.json()["data"])
     assert "SHORTLISTED" not in bodies
-    assert "Présélection" in bodies
+    assert "présenté" in bodies.lower()
 
 
 def test_idor_application_and_candidate_profile(client):

@@ -438,6 +438,11 @@ class StatusChangeIn(BaseModel):
     comment: str | None = None
 
 
+class ClientFeedbackIn(BaseModel):
+    action: str
+    comment: str | None = None
+
+
 class NoteIn(BaseModel):
     entity_type: str
     entity_id: str

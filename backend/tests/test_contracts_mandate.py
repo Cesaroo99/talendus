@@ -316,6 +316,8 @@ def test_admin_ui_sends_mandate_for_signature():
     assert "Lier à l’offre" in js
     assert "openDossier360" in js
     assert "Dossier 360" in js
+    assert "client-feedback" in (root / "assets" / "js" / "account.js").read_text(encoding="utf-8")
+    assert "Présenté à l’employeur" in js
     assert "planInterview" in js
     assert "previewFile" in (root / "assets" / "js" / "api.js").read_text(encoding="utf-8")
     assert "tl-file-preview" in (root / "assets" / "js" / "api.js").read_text(encoding="utf-8")

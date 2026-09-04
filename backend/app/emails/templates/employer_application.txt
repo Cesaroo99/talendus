@@ -1,0 +1,7 @@
+Subject: {{title}} — {{job_title}}
+{{name}},
+
+{{detail}}
+
+Ouvrir le suivi :
+{{link}}

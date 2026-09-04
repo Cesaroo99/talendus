@@ -146,7 +146,7 @@ def test_application_tracker_advances_with_status(client):
     assert states["INTERVIEW"] == "current"
     assert states["OFFER_SENT"] == "todo"
     assert viewed["job"]["shift"] is not None or viewed["job"].get("location")
-    assert viewed["status_label"] == "Entretien"
+    assert viewed["status_label"] == "Entretien Talendus"
     withdrawn = client.post(f"/api/applications/{app_id}/withdraw", headers=headers)
     assert withdrawn.status_code == 200, withdrawn.text
     assert withdrawn.json()["data"]["status"] == "WITHDRAWN"

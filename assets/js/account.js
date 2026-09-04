@@ -88,6 +88,9 @@
       sms: "SMS", wa: "WhatsApp", push: "Push notifications",
       profilePublic: "Allow a public professional summary", changeEmail: "Email address is used to sign in.",
       emptyInbox: "No profiles presented yet. Talendus will share qualified shortlists.", emptyInvoices: "No invoices.",
+      interested: "Interested", askInterview: "Request an interview", passProfile: "Not a fit",
+      feedbackSent: "Talendus has your reply.", inboxLead: "Talendus presents profiles here. Reply in one click: we handle the rest.",
+      presentedAt: "Presented",
       amount: "Amount", status: "Status",
       pay: "Record a card payment", payPal: "Pay with PayPal", pipeline: "Pipeline",
       contracts: "Contracts", emptyContracts: "No mandate yet.",
@@ -252,6 +255,9 @@
       sms: "SMS", wa: "WhatsApp", push: "Notifications push",
       profilePublic: "Autoriser un résumé professionnel visible", changeEmail: "Le courriel sert à vous connecter.",
       emptyInbox: "Aucun dossier présenté pour le moment. Talendus vous transmet les profils qualifiés.", emptyInvoices: "Aucune facture.",
+      interested: "Intéressé", askInterview: "Demander un entretien", passProfile: "Non retenu",
+      feedbackSent: "Talendus a bien reçu votre suite.", inboxLead: "Talendus présente les dossiers ici. Une suite suffit : nous nous occupons du reste.",
+      presentedAt: "Présenté",
       amount: "Montant", status: "Statut",
       pay: "Payer par carte", payPal: "Payer avec PayPal", pipeline: "Pipeline",
       contracts: "Contrats", emptyContracts: "Aucun mandat pour le moment.",
@@ -427,10 +433,10 @@
       var map = {
         SUBMITTED: isEn ? "Submitted" : "Candidature envoyée",
         RECEIVED: isEn ? "Received" : "Reçue",
-        UNDER_REVIEW: isEn ? "Under review" : "En cours d’analyse",
-        SHORTLISTED: isEn ? "Shortlisted" : "Présélection",
-        INTERVIEW: isEn ? "Interview" : "Entretien",
-        SECOND_INTERVIEW: isEn ? "Second interview" : "Deuxième entretien",
+        UNDER_REVIEW: isEn ? "Talendus screening" : "Présélection Talendus",
+        SHORTLISTED: isEn ? "Presented to employer" : "Présenté à l’employeur",
+        INTERVIEW: isEn ? "Talendus interview" : "Entretien Talendus",
+        SECOND_INTERVIEW: isEn ? "Client interview" : "Entretien client",
         OFFER_SENT: isEn ? "Offer" : "Offre d’emploi",
         REJECTED: isEn ? "Declined" : "Refusée",
         HIRED: isEn ? "Hired" : "Acceptée",
@@ -1157,10 +1163,10 @@
         return html;
       }
       var fallback = [
-        ["SUBMITTED", t.sent], ["UNDER_REVIEW", t.review], ["SHORTLISTED", t.preselect],
-        ["INTERVIEW", t.interview], ["SECOND_INTERVIEW", t.secondInterview], ["OFFER_SENT", t.offerSent], ["HIRED", t.decision]
+        ["SUBMITTED", t.sent], ["UNDER_REVIEW", t.review], ["INTERVIEW", t.interview],
+        ["SHORTLISTED", t.presentedAt], ["SECOND_INTERVIEW", t.secondInterview], ["OFFER_SENT", t.offerSent], ["HIRED", t.decision]
       ];
-      var order = ["SUBMITTED", "RECEIVED", "UNDER_REVIEW", "SHORTLISTED", "INTERVIEW", "SECOND_INTERVIEW", "OFFER_SENT", "HIRED"];
+      var order = ["SUBMITTED", "RECEIVED", "UNDER_REVIEW", "INTERVIEW", "SHORTLISTED", "SECOND_INTERVIEW", "OFFER_SENT", "HIRED"];
       var cur = order.indexOf(app.status);
       if (app.status === "REJECTED" || app.status === "WITHDRAWN") cur = -1;
       return '<ol class="tl-timeline">' + fallback.map(function (st) {
@@ -1630,19 +1636,31 @@
         feedback;
     }
 
+    function employerFeedback(app) {
+      if (!app || !app.id) return "";
+      if (app.client_feedback) return "<p class=\"tl-meta\">" + esc(app.client_feedback) + "</p>";
+      if (app.status !== "SHORTLISTED") return "";
+      return '<p class="tl-job-card-actions">' +
+        '<button type="button" class="tl-btn" data-app-feedback="' + esc(app.id) + '" data-action="interested">' + esc(t.interested) + "</button> " +
+        '<button type="button" class="tl-btn tl-btn-ghost" data-app-feedback="' + esc(app.id) + '" data-action="interview">' + esc(t.askInterview) + "</button> " +
+        '<button type="button" class="tl-btn tl-btn-ghost" data-app-feedback="' + esc(app.id) + '" data-action="pass">' + esc(t.passProfile) + "</button></p>";
+    }
+
     function renderInbox(apps) {
       if (!apps || !apps.length) return mediateNote() + empty(t.emptyInbox);
-      return mediateNote() + '<div class="tl-table-wrap"><table class="tl-portal-table"><thead><tr><th>' + esc(t.first) + "</th><th>" + esc(t.title) +
-        "</th><th>" + esc(t.status || t.decision) + "</th><th>" + esc(t.experience) + "</th><th></th></tr></thead><tbody>" + apps.map(function (a) {
-        var c = a.candidate || {};
-        var job = a.job || {};
-        return "<tr><td data-label=\"" + esc(t.first) + "\">" + esc((c.first_name || "") + " " + (c.last_name || "")) +
-          "</td><td data-label=\"" + esc(t.title) + "\">" + esc(c.title || job.title || "") + "</td><td data-label=\"" + esc(t.status || t.decision) + "\">" +
-          '<span class="tl-chip orange">' + esc(statusLabel(a.status)) + "</span></td><td data-label=\"" + esc(t.experience) + "\">" +
-          esc(c.years_experience || "—") +
-          '</td><td><button type="button" class="tl-btn tl-btn-ghost" data-nav="candidate" data-id="' + esc(c.id || "") + '">' +
-          esc(t.candidates) + "</button></td></tr>";
-      }).join("") + "</tbody></table></div>";
+      return mediateNote() + "<p class=\"tl-lead\">" + esc(t.inboxLead) + "</p>" +
+        '<div class="tl-list-cards">' + apps.map(function (a) {
+          var c = a.candidate || {};
+          var job = a.job || {};
+          var next = a.next_action && a.next_action.label ? "<p class=\"tl-meta\">" + esc(a.next_action.label) + "</p>" : "";
+          return '<article class="tl-list-card"><span class="tl-chip orange">' + esc(statusLabel(a.status)) + "</span>" +
+            "<h3>" + esc((c.first_name || "") + " " + (c.last_name || "")) + "</h3>" +
+            "<p class=\"tl-meta\">" + esc(job.title || "") + (c.city ? " · " + esc(c.city) : "") +
+            (c.years_experience ? " · " + esc(String(c.years_experience)) + " " + esc(isEn ? "yrs" : "ans") : "") + "</p>" +
+            next + employerFeedback(a) +
+            (c.id ? '<p><button type="button" class="tl-btn tl-btn-ghost" data-nav="candidate" data-id="' + esc(c.id) + '">' + esc(t.viewFile) + "</button></p>" : "") +
+            "</article>";
+        }).join("") + "</div>";
     }
 
     function money(amount) {
@@ -1712,9 +1730,10 @@
 
     function renderPipeline(apps) {
       var stages = [
-        ["nouveaux", t.sent], ["preselection", t.review], ["presentation", t.preselect],
-        ["entretien-talendus", t.interview], ["entretien-client", isEn ? "Client interview" : "Entretien client"],
-        ["offre", isEn ? "Offer" : "Offre"], ["placement", t.hired]
+        ["presentation", t.presentedAt],
+        ["entretien-client", isEn ? "Client interview" : "Entretien client"],
+        ["offre", isEn ? "Offer" : "Offre"],
+        ["placement", t.hired]
       ];
       var grouped = {};
       stages.forEach(function (st) { grouped[st[0]] = []; });
@@ -1730,7 +1749,8 @@
           return '<article class="tl-pipe-card"><b>' + esc((c.first_name || "") + " " + (c.last_name || "")) +
             "</b><p class=\"tl-meta\">" + esc(job.title || "") + "</p>" +
             '<span class="tl-chip orange">' + esc(statusLabel(a.status)) + "</span>" +
-            (c.id ? '<p><button type="button" class="tl-btn tl-btn-ghost" data-nav="candidate" data-id="' + esc(c.id) + '">' + esc(t.candidates) + "</button></p>" : "") +
+            employerFeedback(a) +
+            (c.id ? '<p><button type="button" class="tl-btn tl-btn-ghost" data-nav="candidate" data-id="' + esc(c.id) + '">' + esc(t.viewFile) + "</button></p>" : "") +
             "</article>";
         }).join("");
         return '<section class="tl-pipe-col"><h4>' + esc(st[1]) + " <span>" + (grouped[st[0]] || []).length + "</span></h4>" +
@@ -1811,10 +1831,16 @@
       root.querySelectorAll("[data-del-alert]").forEach(function (b) {
         b.onclick = function () { api.request("/alerts/" + b.getAttribute("data-del-alert"), { method: "DELETE" }).then(function () { go("alerts"); }); };
       });
-      root.querySelectorAll("[data-app-status]").forEach(function (sel) {
-        sel.onchange = function () {
+      root.querySelectorAll("[data-app-feedback]").forEach(function (btn) {
+        btn.onclick = function () {
           var dest = currentRoute().name === "pipeline" ? "pipeline" : "inbox";
-          api.request("/applications/" + sel.getAttribute("data-app-status") + "/status", { method: "POST", body: { status: sel.value } }).then(function () { go(dest); });
+          api.request("/applications/" + btn.getAttribute("data-app-feedback") + "/client-feedback", {
+            method: "POST",
+            body: { action: btn.getAttribute("data-action") }
+          }).then(function () {
+            window.alert(t.feedbackSent);
+            go(dest);
+          }).catch(function (err) { window.alert((err && err.message) || t.err); });
         };
       });
       root.querySelectorAll("[data-open-notif]").forEach(function (el) {

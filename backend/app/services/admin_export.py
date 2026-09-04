@@ -31,8 +31,8 @@ logger = logging.getLogger("talendus.admin")
 APP_STATUS = {
     ApplicationStatus.SUBMITTED: "nouveau",
     ApplicationStatus.RECEIVED: "nouveau",
-    ApplicationStatus.UNDER_REVIEW: "a-contacter",
-    ApplicationStatus.SHORTLISTED: "qualifie",
+    ApplicationStatus.UNDER_REVIEW: "qualifie",
+    ApplicationStatus.SHORTLISTED: "presente",
     ApplicationStatus.INTERVIEW: "entretien",
     ApplicationStatus.SECOND_INTERVIEW: "entretien-client",
     ApplicationStatus.OFFER_SENT: "offre",

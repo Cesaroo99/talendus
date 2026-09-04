@@ -12,7 +12,6 @@ CONTRACT_STAFF = {UserRole.RECRUITER, UserRole.FINANCE} | ADMINS
 MESSAGE_STAFF = {UserRole.RECRUITER, UserRole.FINANCE} | ADMINS
 PRESENTED_STATUSES = {
     ApplicationStatus.SHORTLISTED,
-    ApplicationStatus.INTERVIEW,
     ApplicationStatus.SECOND_INTERVIEW,
     ApplicationStatus.OFFER_SENT,
     ApplicationStatus.HIRED,

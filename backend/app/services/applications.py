@@ -23,7 +23,13 @@ from app.services.jobs import assert_job_open, get_public_job
 from app.services.labels import application_status_label
 from app.services.ops_notify import first_staff, frontend, notify_people
 from app.site_jobs import open_site_job_for_apply
-from app.services.pipeline import stage_for, tracker_for
+from app.services.pipeline import (
+    VIVIER_FOR_STATUS,
+    client_feedback_from,
+    next_action_for,
+    stage_for,
+    tracker_for,
+)
 
 
 def _talendus_staff(db: Session) -> list[User]:
@@ -452,43 +458,12 @@ def change_status(db: Session, user: User, application_id: str, status: Applicat
     old = application.status.value
     application.status = status
     _history(db, application, old, status.value, user, comment)
-    candidate_user = application.candidate.user
-    ntype = NotificationType.APPLICATION_STATUS
-    if status == ApplicationStatus.HIRED:
-        ntype = NotificationType.APPLICATION_ACCEPTED
-    elif status == ApplicationStatus.REJECTED:
-        ntype = NotificationType.APPLICATION_REJECTED
-    elif status == ApplicationStatus.INTERVIEW:
-        ntype = NotificationType.INTERVIEW_INVITE
-    shown = application_status_label(status, candidate_user)
-    template = "interview" if status == ApplicationStatus.INTERVIEW else "application_status"
-    notify_people(
-        db,
-        candidate_user,
-        actor=user,
-        ntype=ntype,
-        title="Mise à jour de candidature",
-        message=f"{application.job.title} : {shown}",
-        section="application",
-        item_id=application.id,
-        template=template,
-        email_type=EmailType.INTERVIEW_INVITE if status == ApplicationStatus.INTERVIEW else EmailType.APPLICATION_STATUS,
-        ctx={
-            "name": candidate_user.first_name or "",
-            "job_title": application.job.title,
-            "status": shown,
-            "comment": comment or "",
-        },
-        application_id=application.id,
-    )
-    from app.integrations.hooks import maybe_send_whatsapp
-
-    wa_template = "interview_invite" if status == ApplicationStatus.INTERVIEW else "application_status"
-    maybe_send_whatsapp(
-        recipient=candidate_user.phone,
-        template=wa_template,
-        variables={"name": candidate_user.first_name or "", "job": application.job.title, "status": shown},
-    )
+    if application.candidate:
+        vivier = VIVIER_FOR_STATUS.get(status)
+        if vivier:
+            application.candidate.pipeline_status = vivier
+    _notify_pipeline_parties(db, user, application, status, comment)
+    _advance_mission_for_status(db, application, status)
     audit(
         db,
         "application.status",
@@ -502,6 +477,232 @@ def change_status(db: Session, user: User, application_id: str, status: Applicat
     db.commit()
     db.refresh(application)
     return application
+
+
+def record_client_feedback(db: Session, user: User, application_id: str, action: str, comment: str | None) -> Application:
+    if user.role != UserRole.EMPLOYER:
+        raise AppError(403, "Ce retour est réservé à l’entreprise.", "FORBIDDEN")
+    application = get_application(db, user, application_id)
+    if not is_presented_to_employer(application):
+        raise AppError(403, "Ce dossier n'a pas encore été transmis par Talendus.", "FORBIDDEN")
+    key = (action or "").strip().lower()
+    labels = {
+        "interested": "intéressé",
+        "interview": "demande un entretien",
+        "pass": "non retenu",
+    }
+    if key not in labels:
+        raise AppError(400, "Indiquez intéressé, entretien ou non retenu.", "VALIDATION_ERROR")
+    note = f"Retour employeur : {labels[key]}"
+    extra = (comment or "").strip()
+    if extra:
+        note = f"{note}. {extra}"
+    _history(db, application, application.status.value, application.status.value, user, note)
+    job_title = application.job.title if application.job else "un poste"
+    cand_name = application.candidate.user.full_name if application.candidate and application.candidate.user else "un candidat"
+    staff_targets = _talendus_staff(db)
+    if application.job and application.job.recruiter_id:
+        recruiter = db.get(User, application.job.recruiter_id)
+        if recruiter:
+            staff_targets.append(recruiter)
+    notify_people(
+        db,
+        staff_targets,
+        actor=user,
+        ntype=NotificationType.APPLICATION_STATUS,
+        title="Retour employeur",
+        message=f"{cand_name} · {job_title} : {labels[key]}.",
+        section="candidates",
+        item_id=application.candidate_id,
+        template="hiring_update",
+        email_type=EmailType.ADMIN,
+        ctx={
+            "name": "",
+            "title": "Retour employeur",
+            "detail": note,
+            "job_title": job_title,
+        },
+        application_id=application.id,
+    )
+    audit(db, "application.client_feedback", user, "application", application.id, metadata={"action": key})
+    db.commit()
+    db.refresh(application)
+    return application
+
+
+def _notify_pipeline_parties(
+    db: Session, actor: User, application: Application, status: ApplicationStatus, comment: str | None
+) -> None:
+    from app.integrations.hooks import maybe_send_whatsapp
+    from app.services.ops_notify import company_users
+
+    candidate_user = application.candidate.user if application.candidate else None
+    job = application.job
+    job_title = job.title if job else "un poste"
+    company_name = job.company.name if job and job.company else ""
+    cand_name = candidate_user.full_name if candidate_user else "Candidat"
+    shown = application_status_label(status, candidate_user)
+    comment_text = (comment or "").strip()
+
+    if candidate_user and status != ApplicationStatus.UNDER_REVIEW:
+        ntype = NotificationType.APPLICATION_STATUS
+        title = "Mise à jour de candidature"
+        message = f"{job_title} : {shown}"
+        template = "application_status"
+        email_type = EmailType.APPLICATION_STATUS
+        if status == ApplicationStatus.HIRED:
+            ntype = NotificationType.APPLICATION_ACCEPTED
+            title = "Placement confirmé"
+            message = f"Bonne nouvelle : le suivi pour {job_title} est maintenant confirmé."
+        elif status == ApplicationStatus.REJECTED:
+            ntype = NotificationType.APPLICATION_REJECTED
+            title = "Suivi de candidature"
+        elif status == ApplicationStatus.INTERVIEW:
+            ntype = NotificationType.INTERVIEW_INVITE
+            title = "Entretien Talendus"
+            template = "interview"
+            email_type = EmailType.INTERVIEW_INVITE
+        elif status == ApplicationStatus.SHORTLISTED:
+            title = "Dossier présenté"
+            message = f"Talendus a présenté votre dossier pour {job_title}."
+        elif status == ApplicationStatus.SECOND_INTERVIEW:
+            title = "Entretien chez l’employeur"
+            message = f"La suite pour {job_title} se poursuit avec l’employeur."
+        elif status == ApplicationStatus.OFFER_SENT:
+            title = "Offre en cours"
+            message = f"Une offre est en préparation pour {job_title}."
+        elif status == ApplicationStatus.WITHDRAWN:
+            title = "Candidature retirée"
+        notify_people(
+            db,
+            candidate_user,
+            actor=actor,
+            ntype=ntype,
+            title=title,
+            message=message,
+            section="application",
+            item_id=application.id,
+            template=template,
+            email_type=email_type,
+            ctx={
+                "name": candidate_user.first_name or "",
+                "job_title": job_title,
+                "status": shown,
+                "comment": comment_text if status in {ApplicationStatus.REJECTED, ApplicationStatus.WITHDRAWN} else "",
+            },
+            application_id=application.id,
+        )
+        maybe_send_whatsapp(
+            recipient=candidate_user.phone,
+            template="interview_invite" if status == ApplicationStatus.INTERVIEW else "application_status",
+            variables={"name": candidate_user.first_name or "", "job": job_title, "status": shown},
+        )
+
+    employer_statuses = {
+        ApplicationStatus.SHORTLISTED,
+        ApplicationStatus.SECOND_INTERVIEW,
+        ApplicationStatus.OFFER_SENT,
+        ApplicationStatus.HIRED,
+        ApplicationStatus.REJECTED,
+    }
+    if job and job.company_id and status in employer_statuses:
+        if status == ApplicationStatus.REJECTED and not is_presented_to_employer(application):
+            pass
+        else:
+            emp_title = {
+                ApplicationStatus.SHORTLISTED: "Dossier présenté",
+                ApplicationStatus.SECOND_INTERVIEW: "Entretien client",
+                ApplicationStatus.OFFER_SENT: "Offre en cours",
+                ApplicationStatus.HIRED: "Placement confirmé",
+                ApplicationStatus.REJECTED: "Dossier non retenu",
+            }[status]
+            emp_message = {
+                ApplicationStatus.SHORTLISTED: f"{cand_name} vous est présenté pour {job_title}. Donnez une suite à Talendus.",
+                ApplicationStatus.SECOND_INTERVIEW: f"Entretien client à prévoir pour {cand_name} · {job_title}.",
+                ApplicationStatus.OFFER_SENT: f"Une offre est en cours pour {cand_name} · {job_title}.",
+                ApplicationStatus.HIRED: f"{cand_name} est placé sur {job_title}.",
+                ApplicationStatus.REJECTED: f"Le suivi de {cand_name} pour {job_title} est refermé.",
+            }[status]
+            notify_people(
+                db,
+                company_users(db, job.company_id),
+                actor=actor,
+                ntype=NotificationType.APPLICATION_NEW if status == ApplicationStatus.SHORTLISTED else NotificationType.APPLICATION_STATUS,
+                title=emp_title,
+                message=emp_message,
+                section="inbox",
+                template="candidate_presented" if status == ApplicationStatus.SHORTLISTED else "employer_application",
+                email_type=EmailType.ADMIN,
+                ctx={
+                    "name": "",
+                    "candidate_name": cand_name,
+                    "job_title": job_title,
+                    "company_name": company_name,
+                    "detail": emp_message,
+                    "title": emp_title,
+                },
+                application_id=application.id,
+            )
+
+    if status == ApplicationStatus.WITHDRAWN:
+        staff_targets = _talendus_staff(db)
+        if job and job.recruiter_id:
+            recruiter = db.get(User, job.recruiter_id)
+            if recruiter:
+                staff_targets.append(recruiter)
+        notify_people(
+            db,
+            staff_targets,
+            actor=actor,
+            ntype=NotificationType.APPLICATION_STATUS,
+            title="Candidature retirée",
+            message=f"{cand_name} s’est retiré de {job_title}.",
+            section="candidates",
+            item_id=application.candidate_id,
+            template="hiring_update",
+            email_type=EmailType.ADMIN,
+            ctx={"title": "Candidature retirée", "detail": f"{cand_name} s’est retiré de {job_title}."},
+            application_id=application.id,
+        )
+
+
+def _advance_mission_for_status(db: Session, application: Application, status: ApplicationStatus) -> None:
+    job = application.job
+    if not job:
+        return
+    mission = db.scalar(
+        select(RecruitmentMission).where(RecruitmentMission.job_id == job.id).order_by(RecruitmentMission.created_at.desc())
+    )
+    if not mission:
+        mission = db.scalar(
+            select(RecruitmentMission)
+            .join(mission_jobs, mission_jobs.c.mission_id == RecruitmentMission.id)
+            .where(mission_jobs.c.job_id == job.id)
+            .order_by(RecruitmentMission.created_at.desc())
+        )
+    if not mission:
+        return
+    desired = {
+        ApplicationStatus.UNDER_REVIEW: MissionStatus.SCREENING,
+        ApplicationStatus.INTERVIEW: MissionStatus.INTERVIEWS,
+        ApplicationStatus.SHORTLISTED: MissionStatus.CLIENT_REVIEW,
+        ApplicationStatus.SECOND_INTERVIEW: MissionStatus.CLIENT_REVIEW,
+        ApplicationStatus.OFFER_SENT: MissionStatus.HIRING,
+        ApplicationStatus.HIRED: MissionStatus.HIRING,
+    }.get(status)
+    if not desired:
+        return
+    order = [item.value for item in MissionStatus]
+    try:
+        if order.index(desired.value) <= order.index(mission.status.value if mission.status else ""):
+            return
+    except ValueError:
+        return
+    from app.services.contracts import WORK_STATUSES, company_has_signed_mandate
+
+    if desired.value in WORK_STATUSES and not company_has_signed_mandate(db, mission.company_id):
+        return
+    mission.status = desired
 
 
 def list_inbox(db: Session, user: User, job_id: str | None = None) -> list[Application]:
@@ -558,6 +759,9 @@ def serialize_application(row: Application, viewer: User | None = None) -> dict:
         "resume_id": row.resume_id,
         "pipeline_stage": stage_for(row.status),
         "tracker": tracker_for(row),
+        "presented": is_presented_to_employer(row),
+        "next_action": next_action_for(row, viewer),
+        "client_feedback": client_feedback_from(row) if not hide_internal or (viewer and viewer.role == UserRole.EMPLOYER) else None,
         "history": [
             {
                 "old_status": h.old_status,
