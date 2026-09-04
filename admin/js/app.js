@@ -1649,8 +1649,9 @@
               </ul>
             </li>
             <li>Cliquez <b>Enregistrer le courriel</b>, puis <b>Envoyer un test</b>.</li>
-            <li>Ouvrez Gmail <code>info@talendus.ca</code> (et les spams). Le journal sous le formulaire doit passer à « SENT ». Les réponses des candidats arriveront dans cette même boîte.</li>
+            <li>Ouvrez Gmail <code>cesarmemoli1@gmail.com</code> (et les spams). Le journal sous le formulaire doit passer à « SENT ». Les réponses des candidats arriveront dans <code>info@talendus.ca</code>.</li>
           </ol>
+          <p class="sub">Erreur <code>535 5.7.8 Username and Password not accepted</code> : Google refuse le couple identifiant / mot de passe. Ce n’est pas le destinataire. Recréez un mot de passe d’application <b>en étant connecté à info@talendus.ca</b> (pas le Gmail perso), identifiant = <code>info@talendus.ca</code>, collez les 16 lettres, Enregistrer, puis renvoyer le test.</p>
           <p class="sub">Si « Mots de passe d’application » n’apparaît pas : la validation en 2 étapes n’est pas encore active sur info@, ou l’admin Workspace ne l’a pas autorisée. Les deux doivent être ouvertes avant de réessayer le lien <code>myaccount.google.com/apppasswords</code>.</p>
           <p class="sub">Variante serveur (Render) : les mêmes valeurs existent en variables <code>EMAIL_*</code>. Un champ rempli ici prime sur la variable.</p>
         </div>
@@ -2834,7 +2835,7 @@
           '<label>Serveur SMTP</label><input name="smtp.host" placeholder="smtp.gmail.com" value="' + U.esc(val("smtp.host")) + '">' +
           '<label>Port</label><input name="smtp.port" placeholder="587" value="' + U.esc(val("smtp.port", "587")) + '">' +
           '<label>Identifiant</label><input name="smtp.username" placeholder="info@talendus.ca" value="' + U.esc(val("smtp.username")) + '" autocomplete="off">' +
-          '<label>Mot de passe SMTP</label><input name="smtp.password" type="password" value="' + U.esc(val("smtp.password")) + '" autocomplete="new-password" placeholder="Laisser vide pour conserver">' +
+          '<label>Mot de passe SMTP (16 lettres, sans espaces)</label><input name="smtp.password" type="password" value="' + U.esc(val("smtp.password")) + '" autocomplete="new-password" placeholder="Mot de passe d’application Google">' +
           '<label>Expéditeur (From)</label><input name="smtp.from" value="' + U.esc(val("smtp.from", "Talendus <info@talendus.ca>")) + '">' +
           '<label>TLS (STARTTLS)</label><select name="smtp.use_tls">' +
           '<option value="oui"' + (val("smtp.use_tls", "oui") !== "non" ? " selected" : "") + ">oui</option>" +

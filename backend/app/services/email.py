@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import queue
+import re
 import smtplib
 import threading
 import time
@@ -59,6 +60,28 @@ def load_smtp_overrides(db: Session | None) -> dict[str, str]:
         return {}
 
 
+def normalize_smtp_username(raw: str | None) -> str:
+    value = (raw or "").strip()
+    angled = re.search(r"<([^>]+)>", value)
+    if angled:
+        value = angled.group(1).strip()
+    return value.lower()
+
+
+def normalize_smtp_password(raw: str | None) -> str:
+    return "".join((raw or "").split())
+
+
+def is_smtp_bad_credentials(error: str | None) -> bool:
+    raw = error or ""
+    return (
+        "5.7.8" in raw
+        or "BadCredentials" in raw
+        or "Username and Password not accepted" in raw
+        or "535" in raw and "not accepted" in raw.lower()
+    )
+
+
 def runtime_email_config(db: Session | None = None) -> SmtpRuntime:
     env = get_settings()
     stored = load_smtp_overrides(db)
@@ -69,7 +92,7 @@ def runtime_email_config(db: Session | None = None) -> SmtpRuntime:
         port = int(port_raw) if port_raw else int(env.email_port)
     except ValueError:
         port = int(env.email_port)
-    password = (stored.get("smtp.password") or "").strip() or (env.email_password or "")
+    password = normalize_smtp_password(stored.get("smtp.password")) or normalize_smtp_password(env.email_password)
     from_addr = (
         (stored.get("smtp.from") or "").strip()
         or (env.email_from or "").strip()
@@ -79,7 +102,7 @@ def runtime_email_config(db: Session | None = None) -> SmtpRuntime:
         enabled=env.email_enabled if enabled_ov is None else enabled_ov,
         host=(stored.get("smtp.host") or "").strip() or env.email_server,
         port=port,
-        username=(stored.get("smtp.username") or "").strip() or env.email_username,
+        username=normalize_smtp_username(stored.get("smtp.username")) or (env.email_username or "").strip(),
         password=password,
         from_addr=from_addr,
         use_tls=env.email_use_tls if tls_ov is None else tls_ov,
