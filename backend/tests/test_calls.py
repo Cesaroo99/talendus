@@ -273,6 +273,10 @@ def test_candidate_shell_loads_call_engine():
     assert "t.joinCallAudio" in account
     assert "tl-profile-stack" in account
     assert "notifGroupInterviews" in account
+    assert "acc-mobile-nav" not in account
+    assert "data-space-menu" in account
+    assert "tl-space-sheet" in account
+    assert "navGroupHome" in account
     assert "canWrap" in engine
     assert "RTCIceCandidate" in engine
     assert "iceRestart" in engine
@@ -282,6 +286,8 @@ def test_candidate_shell_loads_call_engine():
     assert ".tl-session-menu-copy" in css
     assert ".tl-avatar.is-menu" in css
     assert ".tl-int-outcome" in css
+    assert ".tl-space-sheet" in css
+    assert ".tl-space-bar-btn" in css
 
 
 PNG = (

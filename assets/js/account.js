@@ -144,6 +144,8 @@
       noBilling: "Billing is not available for this access.",
       startCallAudio: "Start audio", startCallVideo: "Start video",
       joinCallAudio: "Join audio", joinCallVideo: "Join video",
+      menu: "Menu", closeMenu: "Close menu",
+      navGroupHome: "Workspace", navGroupFile: "Your file", navGroupFollow: "Follow-up", navGroupHire: "Hiring",
       waitHost: "Waiting for the recruiter to start the call.",
       callReady: "The recruiter has started the call. You can join.",
       stepConfirm: "Confirm you will attend",
@@ -185,6 +187,8 @@
       confirm: "Confirmer", cancel: "Annuler", callAudio: "Appel audio", callVideo: "Appel vidéo",
       startCallAudio: "Lancer l’audio", startCallVideo: "Lancer la visio",
       joinCallAudio: "Rejoindre en audio", joinCallVideo: "Rejoindre en visio",
+      menu: "Menu", closeMenu: "Fermer le menu",
+      navGroupHome: "Espace", navGroupFile: "Dossier", navGroupFollow: "Suivi", navGroupHire: "Recrutement",
       waitHost: "En attente que le recruteur lance l’appel.",
       callReady: "Le recruteur a lancé l’appel. Vous pouvez rejoindre.",
       stepConfirm: "Confirmez votre présence",
@@ -620,6 +624,24 @@
         ["settings", t.settings, "fa-gear"]
       ];
     }
+    function navGroups(unreadN, unreadM) {
+      var byKey = {};
+      navItems(unreadN, unreadM).forEach(function (it) { byKey[it[0]] = it; });
+      function pick(keys) {
+        return keys.map(function (k) { return byKey[k]; }).filter(Boolean);
+      }
+      if (isEmployerSpace()) {
+        return [
+          [t.navGroupHire, pick(["dashboard", "company", "jobs", "inbox", "pipeline", "interviews"])],
+          [t.navGroupFollow, pick(["messages", "invoices", "contracts", "notifs", "settings"])]
+        ];
+      }
+      return [
+        [t.navGroupHome, pick(["dashboard", "jobs", "interviews"])],
+        [t.navGroupFile, pick(["profile", "documents", "apps", "saved", "alerts"])],
+        [t.navGroupFollow, pick(["messages", "notifs", "settings"])]
+      ];
+    }
     function navKey(name) {
       if (name === "job-edit" || name === "job-new" || name === "job") return "jobs";
       if (name === "application") return "apps";
@@ -650,14 +672,6 @@
     function shell(user, content, unreadN, unreadM) {
       var route = currentRoute();
       var active = navKey(route.name);
-      var items = navItems(unreadN, unreadM).map(function (it) {
-        var badge = it[3] ? '<span class="tl-portal-badge">' + it[3] + "</span>" : "";
-        return '<button type="button" data-go="' + it[0] + '" class="' + (active === it[0] ? "is-active" : "") + '">' +
-          '<span class="tl-portal-nav-label"><i class="fa-solid ' + it[2] + '" aria-hidden="true"></i>' + esc(it[1]) + "</span>" + badge + "</button>";
-      }).join("");
-      var mobile = '<div class="tl-mobile-nav"><select id="acc-mobile-nav">' + navItems(unreadN, unreadM).map(function (it) {
-        return '<option value="' + it[0] + '"' + (active === it[0] ? " selected" : "") + ">" + esc(it[1]) + "</option>";
-      }).join("") + "</select></div>";
       var name = ((user.first_name || "") + " " + (user.last_name || "")).trim() || user.email;
       var role = isEmployerSpace() ? (isEn ? "Employer" : "Entreprise") : (isEn ? "Candidate" : "Candidat");
       var pageTitle = pageTitleFor(route);
@@ -668,6 +682,40 @@
       var av = window.__tlAvatarUrl
         ? '<span class="tl-avatar is-lg" data-initials="' + esc(initials(user)) + '"><img src="' + esc(window.__tlAvatarUrl) + '" alt="" onerror="this.style.display=\'none\';var p=this.parentNode;if(p&&!p.getAttribute(\'data-fb\')){p.setAttribute(\'data-fb\',\'1\');p.appendChild(document.createTextNode(p.getAttribute(\'data-initials\')||\'\'));}"></span>'
         : '<span class="tl-avatar is-lg" aria-hidden="true">' + esc(initials(user)) + "</span>";
+      var items = navItems(unreadN, unreadM).map(function (it) {
+        var badge = it[3] ? '<span class="tl-portal-badge">' + it[3] + "</span>" : "";
+        return '<button type="button" data-go="' + it[0] + '" class="' + (active === it[0] ? "is-active" : "") + '">' +
+          '<span class="tl-portal-nav-label"><i class="fa-solid ' + it[2] + '" aria-hidden="true"></i>' + esc(it[1]) + "</span>" + badge + "</button>";
+      }).join("");
+      var unreadTotal = (unreadN || 0) + (unreadM || 0);
+      var mobileRows = navGroups(unreadN, unreadM).map(function (group) {
+        if (!group[1].length) return "";
+        return '<p class="tl-space-sheet-label">' + esc(group[0]) + "</p><div class=\"tl-space-sheet-list\">" + group[1].map(function (it) {
+          var badge = it[3] ? '<span class="tl-portal-badge">' + it[3] + "</span>" : "";
+          return '<button type="button" class="tl-space-sheet-item' + (active === it[0] ? " is-active" : "") + '" data-go="' + it[0] + '">' +
+            '<span class="tl-space-sheet-ico" aria-hidden="true"><i class="fa-solid ' + it[2] + '"></i></span>' +
+            "<span>" + esc(it[1]) + "</span>" + badge +
+            '<i class="fa-solid fa-chevron-right tl-space-sheet-chevron" aria-hidden="true"></i></button>';
+        }).join("") + "</div>";
+      }).join("");
+      var mobile =
+        '<div class="tl-space-bar">' +
+          '<button type="button" class="tl-space-bar-btn" data-space-menu aria-expanded="false" aria-controls="acc-space-menu">' +
+            '<span class="tl-space-bar-ico" aria-hidden="true"><i class="fa-solid fa-bars"></i></span>' +
+            '<span class="tl-space-bar-copy"><span class="tl-space-bar-kicker">' + esc(t.menu) + "</span><strong>" + esc(pageTitleFor(route)) + "</strong></span>" +
+            (unreadTotal ? '<span class="tl-portal-badge">' + unreadTotal + "</span>" : "") +
+          "</button>" +
+        "</div>" +
+        '<div class="tl-space-sheet" id="acc-space-menu" hidden>' +
+          '<div class="tl-space-sheet-backdrop" data-space-close></div>' +
+          '<div class="tl-space-sheet-panel" role="dialog" aria-modal="true" aria-label="' + esc(t.menu) + '">' +
+            '<div class="tl-space-sheet-head">' +
+              '<div class="tl-space-sheet-user">' + av + "<div><strong>" + esc(name) + "</strong><span>" + esc(role) + "</span></div></div>" +
+              '<button type="button" class="tl-space-sheet-close" data-space-close aria-label="' + esc(t.closeMenu) + '"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>' +
+            "</div>" +
+            '<div class="tl-space-sheet-body">' + mobileRows + "</div>" +
+          "</div>" +
+        "</div>";
       root.innerHTML = mobile + '<div class="tl-portal">' +
         '<nav class="tl-portal-nav" aria-label="Talendus">' +
           '<div class="tl-portal-user">' + av + "<div><strong>" + esc(name) + "</strong><span>" + esc(role) + "</span></div></div>" +
@@ -684,11 +732,38 @@
         if (!next.id) next.id = "acc-field-" + (next.getAttribute("name") || i);
         label.setAttribute("for", next.id);
       });
+      function setSpaceMenu(open) {
+        var sheet = document.getElementById("acc-space-menu");
+        var toggle = root.querySelector("[data-space-menu]");
+        if (!sheet) return;
+        sheet.hidden = !open;
+        sheet.classList.toggle("is-open", open);
+        document.body.classList.toggle("tl-space-menu-on", open);
+        if (toggle) toggle.setAttribute("aria-expanded", open ? "true" : "false");
+      }
       root.querySelectorAll("[data-go]").forEach(function (btn) {
-        btn.onclick = function () { go(btn.getAttribute("data-go")); };
+        btn.onclick = function () {
+          setSpaceMenu(false);
+          go(btn.getAttribute("data-go"));
+        };
       });
-      var sel = document.getElementById("acc-mobile-nav");
-      if (sel) sel.onchange = function () { go(sel.value); };
+      var menuBtn = root.querySelector("[data-space-menu]");
+      if (menuBtn) menuBtn.onclick = function () { setSpaceMenu(true); };
+      root.querySelectorAll("[data-space-close]").forEach(function (btn) {
+        btn.onclick = function () { setSpaceMenu(false); };
+      });
+      if (!window.__tlSpaceEsc) {
+        window.__tlSpaceEsc = true;
+        document.addEventListener("keydown", function (e) {
+          if (e.key !== "Escape") return;
+          var sheet = document.getElementById("acc-space-menu");
+          if (sheet && sheet.classList.contains("is-open")) {
+            sheet.hidden = true;
+            sheet.classList.remove("is-open");
+            document.body.classList.remove("tl-space-menu-on");
+          }
+        });
+      }
       root.querySelectorAll("[data-nav]").forEach(function (btn) {
         btn.onclick = function () { go(btn.getAttribute("data-nav"), btn.getAttribute("data-id") || ""); };
       });
