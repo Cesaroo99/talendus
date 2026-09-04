@@ -7,10 +7,11 @@ from app.rbac import ADMINS
 from app.models.enums import (
     ApplicationStatus,
     EmailType,
+    JobStatus,
     NotificationType,
     UserRole,
 )
-from app.schemas import ApplicationCreateIn, PublicApplyIn
+from app.schemas import ApplicationCreateIn, PublicApplyIn, StaffApplicationIn
 from app.security import hash_password, random_password
 from app.services.access import company_ids_for_employer, is_presented_to_employer
 from app.services.audit import audit
@@ -173,6 +174,51 @@ def apply(db: Session, user: User, data: ApplicationCreateIn, ip: str | None = N
     db.commit()
     db.refresh(application)
     return application
+
+
+def apply_staff(db: Session, actor: User, data: StaffApplicationIn, ip: str | None = None) -> Application:
+    if actor.role not in {UserRole.RECRUITER} | ADMINS:
+        raise AppError(403, "Seul le personnel Talendus peut lier un candidat à une offre.", "FORBIDDEN")
+    job = db.scalar(select(JobOffer).options(joinedload(JobOffer.company)).where(JobOffer.id == data.job_id))
+    candidate = db.get(Candidate, data.candidate_id)
+    if not job:
+        raise AppError(404, "Offre introuvable.", "JOB_NOT_FOUND")
+    if not candidate:
+        raise AppError(404, "Candidat introuvable.", "CANDIDATE_NOT_FOUND")
+    if job.status in {JobStatus.CLOSED, JobStatus.ARCHIVED}:
+        raise AppError(409, "Cette offre est fermée.", "JOB_CLOSED")
+    existing = db.scalar(
+        select(Application).where(Application.candidate_id == candidate.id, Application.job_id == job.id)
+    )
+    if existing:
+        raise AppError(409, "Ce candidat est déjà lié à cette offre.", "APPLICATION_ALREADY_EXISTS")
+    resume = _primary_resume(db, candidate, data.resume_id)
+    from app.services.matching import score_pair
+
+    score, _reasons = score_pair(candidate, job)
+    application = Application(
+        candidate_id=candidate.id,
+        job_id=job.id,
+        resume_id=resume.id if resume else None,
+        status=ApplicationStatus.UNDER_REVIEW,
+        cover_note=data.cover_note,
+        source="staff",
+        match_score=score,
+    )
+    db.add(application)
+    db.flush()
+    _history(db, application, None, ApplicationStatus.UNDER_REVIEW.value, actor)
+    audit(
+        db,
+        "application.staff_link",
+        actor,
+        "application",
+        application.id,
+        ip,
+        {"job_id": job.id, "candidate_id": candidate.id},
+    )
+    db.commit()
+    return get_application(db, actor, application.id)
 
 
 def apply_public(

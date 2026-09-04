@@ -54,7 +54,7 @@
       experience: "Experience", sort: "Sort", bio: "Professional summary", availability: "Availability",
       mobility: "Geographic mobility", languages: "Languages", desiredSalary: "Desired salary",
       updated: "Last updated", photo: "Photo", add: "Add", remove: "Remove", replace: "Replace",
-      download: "Download", personal: "Personal information", security: "Security",
+      download: "Download", viewFile: "View", personal: "Personal information", security: "Security",
       privacy: "Privacy", danger: "Delete account", newPass: "New password", currentPass: "Current password",
       confirmDanger: "This will deactivate your account. Continue?", members: "Users",
       permissions: "Role", invite: "Invite", legal: "Legal information", website: "Website",
@@ -218,7 +218,7 @@
       experience: "Expérience", sort: "Trier", bio: "Résumé professionnel", availability: "Disponibilité",
       mobility: "Mobilité géographique", languages: "Langues", desiredSalary: "Salaire souhaité",
       updated: "Dernière mise à jour", photo: "Photo", add: "Ajouter", remove: "Supprimer", replace: "Remplacer",
-      download: "Télécharger", personal: "Informations personnelles", security: "Sécurité",
+      download: "Télécharger", viewFile: "Voir", personal: "Informations personnelles", security: "Sécurité",
       privacy: "Confidentialité", danger: "Supprimer le compte", newPass: "Nouveau mot de passe",
       currentPass: "Mot de passe actuel", confirmDanger: "Cette action désactivera votre compte. Continuer ?",
       members: "Utilisateurs", permissions: "Rôle", invite: "Inviter", legal: "Informations légales",
@@ -879,7 +879,10 @@
         }).join("") + "</div><div class=\"tl-quick-actions\">" +
         '<button type="button" class="tl-btn" data-nav="jobs">' + esc(t.quickSearch) + "</button>" +
         '<button type="button" class="tl-btn tl-btn-ghost" data-nav="profile">' + esc(t.quickProfile) + "</button>" +
-        (primary ? '<button type="button" class="tl-btn tl-btn-ghost" data-dl="' + esc(primary.download_path) + '" data-dl-name="' + esc(primary.original_name || "cv.pdf") + '">' + esc(t.quickCv) + "</button>" : "") +
+        (primary ? (
+          (primary.previewable !== false ? '<button type="button" class="tl-btn tl-btn-ghost" data-preview="' + esc(primary.download_path) + '" data-preview-name="' + esc(primary.original_name || "cv.pdf") + '">' + esc(t.viewFile) + "</button> " : "") +
+          '<button type="button" class="tl-btn tl-btn-ghost" data-dl="' + esc(primary.download_path) + '" data-dl-name="' + esc(primary.original_name || "cv.pdf") + '">' + esc(t.quickCv) + "</button>"
+        ) : "") +
         '<button type="button" class="tl-btn tl-btn-ghost" data-nav="apps">' + esc(t.quickApps) + "</button></div>";
       var notifs = (dash && dash.notifications) || [];
       html += "<h3>" + esc(t.notifs) + "</h3>" + (notifs.length ? notifs.map(function (n) {
@@ -1267,13 +1270,22 @@
       });
     }
 
+    function filePreviewBtn(path, name, previewable) {
+      if (previewable === false || !path) return "";
+      return ' <button type="button" class="tl-btn tl-btn-ghost" data-preview="' + esc(path) + '" data-preview-name="' + esc(name || "document") + '">' + esc(t.viewFile) + "</button>";
+    }
+
     function renderDocs(docs, resumes) {
       var list = (docs || []).map(function (d) {
-        return "<li>" + esc(d.original_name) + " · " + esc(d.kind) + ' <button type="button" class="tl-btn tl-btn-ghost" data-dl="' + esc(d.download_path) + '" data-dl-name="' + esc(d.original_name) + '">' + esc(t.download) +
+        return "<li>" + esc(d.original_name) + " · " + esc(d.kind) +
+          filePreviewBtn(d.download_path, d.original_name, d.previewable) +
+          ' <button type="button" class="tl-btn tl-btn-ghost" data-dl="' + esc(d.download_path) + '" data-dl-name="' + esc(d.original_name) + '">' + esc(t.download) +
           '</button> <button type="button" class="tl-btn tl-btn-ghost" data-del-doc="' + esc(d.id) + '">' + esc(t.remove) + "</button></li>";
       }).join("") || "<li>" + esc(t.emptyDocs) + "</li>";
       var cvs = (resumes || []).map(function (r) {
         return "<li>" + esc(r.original_name) + (r.is_primary ? " · CV" : "") +
+          (r.summary ? '<p class="tl-hint">' + esc(r.summary) + "</p>" : "") +
+          filePreviewBtn(r.download_path, r.original_name, r.previewable) +
           ' <button type="button" class="tl-btn tl-btn-ghost" data-dl="' + esc(r.download_path) + '" data-dl-name="' + esc(r.original_name) + '">' + esc(t.download) + "</button>" +
           ' <button type="button" class="tl-btn tl-btn-ghost" data-del-cv="' + esc(r.id) + '">' + esc(t.remove) + "</button></li>";
       }).join("") || "<li>" + esc(t.emptyDocs) + "</li>";
@@ -1985,6 +1997,14 @@
       root.querySelectorAll("[data-dl]").forEach(function (b) {
         b.onclick = function () { authDownload(b.getAttribute("data-dl"), b.getAttribute("data-dl-name") || "document"); };
       });
+      root.querySelectorAll("[data-preview]").forEach(function (b) {
+        b.onclick = function () {
+          if (window.TalendusAPI && typeof window.TalendusAPI.previewFile === "function") {
+            window.TalendusAPI.previewFile(b.getAttribute("data-preview"), b.getAttribute("data-preview-name") || "document")
+              .catch(function () { window.alert(t.err); });
+          }
+        };
+      });
     }
 
     function interviewCallButtons(i) {
@@ -2093,8 +2113,12 @@
           else if (route.name === "contracts") p = unwrap(api.request("/contracts")).then(renderContracts);
           else if (route.name === "candidate") p = unwrap(api.request("/candidates/" + route.id)).then(function (c) {
             return mediateNote() + "<h3>" + esc((c.first_name || "") + " " + (c.last_name || "")) + "</h3><p>" + esc(c.title || "") + " · " + esc(c.city || "") +
-              "</p><p>" + esc(c.skills || "") + "</p>" + ((c.resumes || []).map(function (r) {
-                return '<p><button type="button" class="tl-btn tl-btn-ghost" data-dl="' + esc(r.download_path) + '" data-dl-name="' + esc(r.original_name || "cv.pdf") + '">' + esc(t.download) + " CV</button></p>";
+              "</p><p>" + esc(c.skills || "") + "</p>" +
+              (c.cv_summary ? "<p>" + esc(c.cv_summary) + "</p>" : "") +
+              ((c.resumes || []).map(function (r) {
+                return (r.summary && r.summary !== c.cv_summary ? "<p>" + esc(r.summary) + "</p>" : "") +
+                  "<p>" + filePreviewBtn(r.download_path, r.original_name || "cv.pdf", r.previewable) +
+                  ' <button type="button" class="tl-btn tl-btn-ghost" data-dl="' + esc(r.download_path) + '" data-dl-name="' + esc(r.original_name || "cv.pdf") + '">' + esc(t.download) + " CV</button></p>";
               }).join("") || "");
           });
           else if (route.name === "interviews") p = unwrap(api.request("/interviews")).then(function (rows) { return renderInterviews(rows); });

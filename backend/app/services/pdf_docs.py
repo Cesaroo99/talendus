@@ -661,7 +661,14 @@ def invoice_pdf(row: Invoice) -> bytes:
     return _pdf_objects([stream])
 
 
-def _signature_block(title: str, signatures: list, party: str) -> list[str]:
+def _signature_block(
+    title: str,
+    signatures: list,
+    party: str,
+    *,
+    signed_at=None,
+    signer_name: str | None = None,
+) -> list[str]:
     match = None
     for item in signatures or []:
         if (getattr(item, "party", None) or PARTY_CLIENT).upper() == party:
@@ -675,6 +682,13 @@ def _signature_block(title: str, signatures: list, party: str) -> list[str]:
             f"Le : {signed}",
             "Empreinte SHA-256 :",
             (match.document_hash or "")[:64],
+            "Signature electronique interne Talendus (sans DocuSign ni Adobe Sign).",
+        ]
+    elif signed_at:
+        stamp = signed_at.isoformat() if hasattr(signed_at, "isoformat") else str(signed_at)
+        lines += [
+            f"Signe par : {signer_name or ('Talendus' if party == PARTY_TALENDUS else 'le client')}",
+            f"Le : {stamp}",
             "Signature electronique interne Talendus (sans DocuSign ni Adobe Sign).",
         ]
     else:
@@ -715,8 +729,19 @@ def contract_pdf(row: Contract) -> bytes:
         "----------",
     ]
     lines.extend(_wrap(row.terms or ""))
-    lines += _signature_block("Signature Talendus", row.signatures, PARTY_TALENDUS)
-    lines += _signature_block("Signature du client", row.signatures, PARTY_CLIENT)
+    lines += _signature_block(
+        "Signature Talendus",
+        row.signatures,
+        PARTY_TALENDUS,
+        signed_at=getattr(row, "talendus_signed_at", None),
+        signer_name="Talendus",
+    )
+    lines += _signature_block(
+        "Signature du client",
+        row.signatures,
+        PARTY_CLIENT,
+        signed_at=getattr(row, "client_signed_at", None),
+    )
     lines += ["", "Document emis par Talendus · info@talendus.ca · 263 558 5225"]
     body: list[str] = []
     for line in lines:

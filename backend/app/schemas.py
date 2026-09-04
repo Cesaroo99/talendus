@@ -414,6 +414,13 @@ class ApplicationCreateIn(BaseModel):
     resume_id: str | None = None
 
 
+class StaffApplicationIn(BaseModel):
+    candidate_id: str
+    job_id: str
+    cover_note: str | None = None
+    resume_id: str | None = None
+
+
 class PublicApplyIn(BaseModel):
     job_slug: str
     first_name: str

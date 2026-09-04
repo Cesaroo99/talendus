@@ -307,6 +307,14 @@ def _job(j: JobOffer, applications: list[Application]) -> dict:
     }
 
 
+def _candidate_cv_summary(c: Candidate) -> str:
+    from app.services.resume_parse import summary_from_storage
+
+    resumes = list(c.resumes or [])
+    primary = next((row for row in resumes if row.is_primary), None) or (resumes[0] if resumes else None)
+    return summary_from_storage(primary.parse_json) if primary else ""
+
+
 def _candidate(c: Candidate) -> dict:
     user = c.user
     apps = sorted(c.applications or [], key=lambda a: a.created_at or utcnow(), reverse=True)
@@ -347,6 +355,7 @@ def _candidate(c: Candidate) -> dict:
         "jobSearchStatus": c.job_search_status.value if c.job_search_status else "",
         "workPreferences": c.work_preferences or "",
         "educationLevel": c.education_level or "",
+        "cvSummary": _candidate_cv_summary(c),
         "lastLoginAt": user.last_login_at.isoformat() if user and user.last_login_at else "",
         "emailVerified": bool(user.is_email_verified) if user else False,
         "accountActive": bool(user.is_active) if user else True,
@@ -539,9 +548,12 @@ def _size_label(n: int | None) -> str:
 
 
 def _documents(candidates: list[Candidate], portal_docs: list[PortalDocument]) -> list[dict]:
+    from app.services.resume_parse import is_previewable, summary_from_storage
+
     docs = []
     for cand in candidates:
         for resume in cand.resumes or []:
+            mime = resume.mime_type or ""
             docs.append(
                 {
                     "id": resume.id,
@@ -550,10 +562,14 @@ def _documents(candidates: list[Candidate], portal_docs: list[PortalDocument]) -
                     "entityId": cand.id,
                     "size": _size_label(resume.size_bytes),
                     "kind": "resume",
+                    "mimeType": mime,
+                    "summary": summary_from_storage(resume.parse_json),
+                    "previewable": is_previewable(mime, resume.original_name),
                     "url": f"/api/candidates/resumes/{resume.id}/file",
                 }
             )
     for row in portal_docs:
+        mime = row.mime_type or ""
         docs.append(
             {
                 "id": row.id,
@@ -562,6 +578,9 @@ def _documents(candidates: list[Candidate], portal_docs: list[PortalDocument]) -
                 "entityId": row.owner_id,
                 "size": _size_label(row.size_bytes),
                 "kind": row.kind,
+                "mimeType": mime,
+                "summary": "",
+                "previewable": is_previewable(mime, row.original_name),
                 "url": f"/api/documents/{row.id}/file",
             }
         )
@@ -601,6 +620,7 @@ def _application(a: Application) -> dict:
         "status": APP_STATUS.get(a.status, "nouveau"),
         "statusKey": a.status.value if a.status else "",
         "stage": stage_for(a.status) or "",
+        "matchScore": a.match_score,
         "createdAt": a.created_at.strftime("%Y-%m-%d") if a.created_at else "",
     }
 

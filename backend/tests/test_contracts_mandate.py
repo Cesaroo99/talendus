@@ -9,12 +9,13 @@ def _prepare_send(client, admin_h, company_id, extra=None):
     assert created.status_code == 200, created.text
     body = created.json()["data"]
     cid = body["id"]
-    signed = client.post(
-        f"/api/contracts/{cid}/sign-talendus",
-        headers=admin_h,
-        json={"signer_name": "Lea Super", "accepted": True},
-    )
-    assert signed.status_code == 200, signed.text
+    if not body.get("talendus_signed"):
+        signed = client.post(
+            f"/api/contracts/{cid}/sign-talendus",
+            headers=admin_h,
+            json={"signer_name": "Lea Super", "accepted": True},
+        )
+        assert signed.status_code == 200, signed.text
     sent = client.post(f"/api/contracts/{cid}/send", headers=admin_h)
     assert sent.status_code == 200, sent.text
     return sent.json()["data"]
@@ -56,28 +57,25 @@ def test_admin_prepares_filled_mandate_and_employer_signs(client):
     assert "Talendus" in body["terms"]
     assert "Soudeur" in body["terms"]
     assert "ARTICLE 8" in body["terms"]
+    assert "ARTICLE 19" in body["terms"]
     assert not body["signed"]
+    assert body["talendus_signed"] is True
     assert body["client_status"] == "not_sent"
-    assert body["lifecycle"] == "draft"
+    assert body["lifecycle"] == "awaiting_send"
+    assert body["can_edit"] is True
     cid = body["id"]
 
-    blocked_send = client.post(f"/api/contracts/{cid}/send", headers=admin_h)
-    assert blocked_send.status_code == 409
-    assert blocked_send.json()["code"] == "TALENDUS_NOT_SIGNED"
-
-    hidden = client.get("/api/contracts", headers=auth_header(emp))
-    assert hidden.status_code == 200
-    assert hidden.json()["data"] == []
-
-    agency = client.post(
+    already = client.post(
         f"/api/contracts/{cid}/sign-talendus",
         headers=admin_h,
         json={"signer_name": "Lea Super", "accepted": True},
     )
-    assert agency.status_code == 200, agency.text
-    assert agency.json()["data"]["talendus_signed"] is True
-    assert agency.json()["data"]["lifecycle"] == "awaiting_send"
-    assert agency.json()["data"]["client_status"] == "not_sent"
+    assert already.status_code == 409
+    assert already.json()["code"] == "ALREADY_SIGNED"
+
+    hidden = client.get("/api/contracts", headers=auth_header(emp))
+    assert hidden.status_code == 200
+    assert hidden.json()["data"] == []
 
     sent = client.post(f"/api/contracts/{cid}/send", headers=admin_h)
     assert sent.status_code == 200, sent.text
@@ -226,11 +224,14 @@ def test_preview_and_save_follow_chosen_dates(client):
     assert "pour 180 jours" in updated["terms"]
     assert "2026-04-01" in updated["terms"]
 
-    client.post(
+    already = client.post(
         f"/api/contracts/{cid}/sign-talendus",
         headers=admin_h,
         json={"signer_name": "Lea Super", "accepted": True},
     )
+    assert already.status_code == 409
+    sent = client.post(f"/api/contracts/{cid}/send", headers=admin_h)
+    assert sent.status_code == 200, sent.text
     blocked = client.patch(
         f"/api/contracts/{cid}",
         headers=admin_h,
@@ -311,6 +312,41 @@ def test_admin_ui_sends_mandate_for_signature():
     assert "Reçu" in js
     assert "Ouvert" in js
     assert "Complet" in js
+    assert "Correspondances" in js
+    assert "Lier à l’offre" in js
+    assert "previewFile" in (root / "assets" / "js" / "api.js").read_text(encoding="utf-8")
+    assert "tl-file-preview" in (root / "assets" / "js" / "api.js").read_text(encoding="utf-8")
     account = (root / "assets" / "js" / "account.js").read_text(encoding="utf-8")
     assert "tl-mandate-read" in account
     assert "max-height:220px" not in account
+    assert "viewFile" in account
+    assert "data-preview" in account
+
+
+def test_created_mandate_pdf_is_complete_and_signed_by_talendus(client):
+    emp = register(client, "pdf-emp@example.com", "EMPLOYER")
+    company_id = company_id_for(client, emp)
+    admin = promote_admin(client, "pdf-admin@example.com")
+    admin_h = auth_header(admin)
+    created = client.post(
+        "/api/contracts",
+        headers=admin_h,
+        json={"company_id": company_id, "role": "Soudeur"},
+    )
+    assert created.status_code == 200, created.text
+    cid = created.json()["data"]["id"]
+    assert created.json()["data"]["talendus_signed"] is True
+    pdf = client.get(f"/api/contracts/{cid}/pdf", headers=admin_h)
+    assert pdf.status_code == 200
+    raw = pdf.content
+    assert raw.startswith(b"%PDF")
+    text = raw.decode("latin-1", "replace")
+    assert "ARTICLE 1" in text
+    assert "ARTICLE 19" in text
+    assert "Signe par" in text
+    assert "En attente de la signature de Talendus" not in text
+    count = 0
+    for token in text.split("/Count "):
+        if token and token[0].isdigit():
+            count = max(count, int(token.split()[0]))
+    assert count >= 4, text[:400]

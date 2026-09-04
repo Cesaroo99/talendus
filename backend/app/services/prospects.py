@@ -892,7 +892,16 @@ class SendRequest:
     force: bool = False
 
 
-def _attachments_for(db: Session, row: Prospect, invoice_ids: list[str] | None, contract_ids: list[str] | None) -> list[EmailAttachment]:
+def _attachments_for(
+    db: Session,
+    row: Prospect,
+    invoice_ids: list[str] | None,
+    contract_ids: list[str] | None,
+    actor: User | None = None,
+) -> list[EmailAttachment]:
+    from sqlalchemy.orm import joinedload, selectinload
+
+    from app.services.contracts import ensure_talendus_signed
     from app.services.pdf_docs import contract_pdf, invoice_pdf
 
     files: list[EmailAttachment] = []
@@ -912,11 +921,23 @@ def _attachments_for(db: Session, row: Prospect, invoice_ids: list[str] | None, 
             )
         )
     for contract_id in contract_ids or []:
-        contract = db.get(Contract, contract_id)
+        contract = db.scalar(
+            select(Contract)
+            .options(selectinload(Contract.signatures), joinedload(Contract.company))
+            .where(Contract.id == contract_id)
+        )
         if not contract:
             raise AppError(404, "Contrat introuvable.", "NOT_FOUND")
         if row.company_id and contract.company_id and contract.company_id != row.company_id:
             raise AppError(403, "Ce contrat n’appartient pas à ce prospect.", "FORBIDDEN")
+        if actor:
+            ensure_talendus_signed(db, contract, actor)
+            db.flush()
+            db.refresh(contract)
+        elif not contract.talendus_signed_at and not any(
+            (getattr(sig, "party", "") or "").upper() == "TALENDUS" for sig in (contract.signatures or [])
+        ):
+            raise AppError(409, "Ce mandat n’est pas encore signé par Talendus.", "TALENDUS_NOT_SIGNED")
         files.append(
             EmailAttachment(
                 filename=f"mandat-{(contract.company.name if contract.company else 'talendus')}.pdf",
@@ -1027,7 +1048,7 @@ def send_to_prospect(db: Session, actor: User, row: Prospect, req: SendRequest) 
             f"{display_name(row)} a déjà reçu ce message ({existing.subject}). Choisissez un autre modèle, ou forcez l’envoi.",
             "ALREADY_SENT",
         )
-    attachments = _attachments_for(db, row, req.invoice_ids, req.contract_ids)
+    attachments = _attachments_for(db, row, req.invoice_ids, req.contract_ids, actor)
     body = append_attachment_note(body, attachments, ctx)
     log = send_composed_email(
         db,
