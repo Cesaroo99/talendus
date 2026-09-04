@@ -773,6 +773,7 @@ table.data .check { width: 36px; cursor: default; }
 .int-card b { display: block; font-size: 13px; }
 .int-card span { color: var(--steel); font-size: 12px; display: block; margin: 4px 0; }
 .int-card .int-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.int-card .int-actions .int-call-help { flex: 1 1 100%; color: var(--steel); font-size: 12px; line-height: 1.35; }
 
 .team-row { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
 

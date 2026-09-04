@@ -31,6 +31,11 @@ def test_invoice_applies_quebec_taxes_and_pdf_mentions(client):
     pdf = client.get(f"/api/invoices/{data['id']}/pdf", headers=admin_h)
     assert pdf.status_code == 200
     assert pdf.content.startswith(b"%PDF")
+    hidden = client.get("/api/invoices", headers=auth_header(emp))
+    assert hidden.status_code == 200
+    assert hidden.json()["data"] == []
+    blocked = client.get(f"/api/invoices/{data['id']}/pdf", headers=auth_header(emp))
+    assert blocked.status_code in {403, 404}
     body = pdf.content
     assert b"TALENDUS" in body
     assert b"TPS" in body

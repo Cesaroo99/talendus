@@ -62,6 +62,8 @@ def test_invoice_and_contract_pdf_and_internal_mail(client):
     inv_pdf = client.get(f"/api/invoices/{iid}/pdf", headers=emp_h)
     assert inv_pdf.status_code == 200
     assert inv_pdf.content.startswith(b"%PDF")
+    assert b"BROUILLON" not in inv_pdf.content
+    assert b"A PAYER" in inv_pdf.content
 
     from sqlalchemy import select
 

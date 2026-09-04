@@ -491,6 +491,29 @@ def _pdf_objects(page_streams: list[bytes]) -> bytes:
     return bytes(out)
 
 
+def invoice_status_key(row) -> str:
+    raw = getattr(row, "status", None)
+    if raw is None:
+        return ""
+    if hasattr(raw, "value"):
+        raw = raw.value
+    key = str(raw).strip().upper().replace(" ", "_").replace("-", "_")
+    aliases = {
+        "BROUILLON": "DRAFT",
+        "ENVOYEE": "SENT",
+        "ENVOYÉE": "SENT",
+        "EN_ATTENTE": "PENDING",
+        "PAYEE": "PAID",
+        "PAYÉE": "PAID",
+        "EN_RETARD": "OVERDUE",
+        "ANNULEE": "CANCELLED",
+        "ANNULÉE": "CANCELLED",
+        "REMBOURSEE": "REFUNDED",
+        "REMBOURSÉE": "REFUNDED",
+    }
+    return aliases.get(key, key)
+
+
 def invoice_pdf(row: Invoice) -> bytes:
     issuer = billing_identity()
     company = row.company
@@ -498,9 +521,11 @@ def invoice_pdf(row: Invoice) -> bytes:
     tax = int(row.tax_amount or 0)
     total = row.amount_total if row.amount_total is not None else row.amount
     gst, qst = qc_tax_split(int(ht or 0), tax)
-    status_key = row.status.value if row.status else ""
+    status_key = invoice_status_key(row)
     status_label = INVOICE_STATUS_FR.get(status_key, status_key)
     stamp = INVOICE_STAMP.get(status_key)
+    if status_key != "DRAFT" and stamp and stamp[0] == "BROUILLON":
+        stamp = INVOICE_STAMP.get("SENT")
 
     client_lines = [
         company.name if company else "",

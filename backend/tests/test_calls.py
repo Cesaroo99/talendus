@@ -96,6 +96,10 @@ def test_phone_interview_defaults_to_audio(client):
     assert interview["call_video"] is False
     opened = client.post(f"/api/calls/{interview['id']}/open", headers=admin_h)
     assert opened.status_code == 200, opened.text
+    waiting = client.post(f"/api/calls/{interview['id']}/join", headers=cand_h, json={})
+    assert waiting.status_code == 409
+    staff = client.post(f"/api/calls/{interview['id']}/join", headers=admin_h, json={})
+    assert staff.status_code == 200, staff.text
     joined = client.post(f"/api/calls/{interview['id']}/join", headers=cand_h, json={})
     assert joined.status_code == 200, joined.text
     assert joined.json()["data"]["video"] is False
@@ -159,6 +163,9 @@ def test_admin_shell_can_join_in_app_call():
     assert "function callButtons" in js
     assert "candidate_can_start" in js
     assert "data-open-call" in js
+    assert "Lancer visio" in js
+    assert "Lancer audio" in js
+    assert 'var open = i.call_open ? "Rejoindre" : "Lancer"' not in js
 
 
 def test_call_restarts_after_hangup_without_stale_signals(client):
@@ -186,6 +193,10 @@ def test_call_restarts_after_hangup_without_stale_signals(client):
     leftover = client.get(f"/api/calls/{iid}/signals", headers=admin_h).json()["data"]
     assert leftover["signals"] == []
     assert leftover["peers"] == []
+    waiting = client.get(f"/api/interviews/{iid}", headers=cand_h).json()["data"]
+    assert waiting["can_join_call"] is False
+    assert waiting["host_in_call"] is False
+    assert client.post(f"/api/calls/{iid}/join", headers=cand_h, json={"video": True}).status_code == 409
 
     again = client.post(f"/api/calls/{iid}/join", headers=admin_h, json={"video": True})
     assert again.status_code == 200, again.text
@@ -227,7 +238,14 @@ def test_open_room_clears_idle_signaling(client):
     assert opened.status_code == 200, opened.text
     lobby = client.get(f"/api/calls/{iid}/lobby", headers=cand_h).json()["data"]
     assert lobby["call_open"] is True
-    assert lobby["can_join"] is True
+    assert lobby["can_join"] is False
+    assert client.post(f"/api/calls/{iid}/join", headers=cand_h, json={"video": True}).status_code == 409
+    staff = client.post(f"/api/calls/{iid}/join", headers=admin_h, json={"video": True})
+    assert staff.status_code == 200, staff.text
+    ready = client.get(f"/api/interviews/{iid}", headers=cand_h).json()["data"]
+    assert ready["can_join_call"] is True
+    assert ready["host_in_call"] is True
+    assert ready["call_step"] == "join"
     joined = client.post(f"/api/calls/{iid}/join", headers=cand_h, json={"video": True})
     assert joined.status_code == 200, joined.text
     signals = client.get(f"/api/calls/{iid}/signals", headers=cand_h).json()["data"]["signals"]
@@ -246,6 +264,9 @@ def test_candidate_shell_loads_call_engine():
     assert "native ? 12 : 4" in engine
     assert "interviewStepsLead" in account
     assert "can_start_call" in account
+    assert "Rejoindre n’apparaît que lorsque le conseiller a lancé" in account
+    assert "t.startCallAudio" in account
+    assert "t.joinCallAudio" in account
     assert "tl-profile-stack" in account
     assert "notifGroupInterviews" in account
     css = (ROOT / "assets" / "css" / "talendus.css").read_text(encoding="utf-8")

@@ -1,11 +1,12 @@
 from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import select
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, joinedload, object_session
 
 from app.errors import AppError
 from app.models import Application, Candidate, Company, Interview, JobOffer, User
-from app.models.enums import EmailType, InterviewStatus, InterviewType, NotificationType, UserRole
+from app.models.calls import CallPeer
+from app.models.enums import EmailType, InterviewStatus, InterviewType, NotificationType, UserRole, utcnow
 from app.rbac import ADMINS, INTERNAL
 from app.schemas import InterviewIn, InterviewPatchIn
 from app.services.access import company_ids_for_employer
@@ -50,8 +51,29 @@ def is_staff(user: User | None) -> bool:
     return bool(user and user.role in {UserRole.RECRUITER} | ADMINS | INTERNAL)
 
 
+HOST_PEER_TTL = timedelta(seconds=25)
+
+
 def call_is_open(row: Interview) -> bool:
     return bool(getattr(row, "call_opened_at", None))
+
+
+def host_in_call(row: Interview) -> bool:
+    """Le conseiller est réellement dans la salle (pair encore vivant)."""
+    db = object_session(row)
+    if db is None:
+        return False
+    cutoff = utcnow() - HOST_PEER_TTL
+    peers = list(
+        db.scalars(
+            select(CallPeer).where(CallPeer.interview_id == row.id, CallPeer.last_seen >= cutoff)
+        ).all()
+    )
+    for peer in peers:
+        user = db.get(User, peer.user_id)
+        if is_staff(user):
+            return True
+    return False
 
 
 def viewer_can_start_call(row: Interview, viewer: User | None) -> bool:
@@ -72,9 +94,9 @@ def viewer_can_join_call(row: Interview, viewer: User | None) -> bool:
     if viewer and viewer.role == UserRole.CANDIDATE:
         if getattr(row, "candidate_can_start", False):
             return True
-        return call_is_open(row)
+        return host_in_call(row)
     if viewer and viewer.role == UserRole.EMPLOYER:
-        return call_is_open(row)
+        return host_in_call(row)
     return False
 
 
@@ -126,6 +148,7 @@ def serialize_interview(row: Interview, viewer: User | None = None) -> dict:
         "call_video": row.type != InterviewType.PHONE,
         "candidate_can_start": bool(getattr(row, "candidate_can_start", False)),
         "call_open": call_is_open(row),
+        "host_in_call": host_in_call(row),
         "can_start_call": viewer_can_start_call(row, viewer),
         "can_join_call": viewer_can_join_call(row, viewer),
         "call_step": call_step(row, viewer),

@@ -144,12 +144,12 @@
       noBilling: "Billing is not available for this access.",
       startCallAudio: "Start audio", startCallVideo: "Start video",
       joinCallAudio: "Join audio", joinCallVideo: "Join video",
-      waitHost: "Waiting for your consultant to open the call.",
-      callReady: "The room is open. You can join.",
+      waitHost: "Waiting for your consultant to start the call.",
+      callReady: "The consultant has started the call. You can join.",
       stepConfirm: "Confirm you will attend",
-      stepWait: "Wait for the consultant to open the room",
+      stepWait: "Wait for the consultant to start the call",
       stepStart: "Start the call at the scheduled time",
-      stepJoin: "Join the call",
+      stepJoin: "Join the call when the consultant has started it",
       emptyExp: "No experience added yet.", emptyEdu: "No education added yet.", emptyCert: "No certification added yet.",
       profileIdentity: "Photo and identity", profileContact: "Contact details",
       profilePro: "Professional profile", profilePrefs: "Availability and preferences",
@@ -158,7 +158,7 @@
       notifGroupInterviews: "Interviews and calls", notifGroupApps: "Applications",
       notifGroupMsgs: "Messages", notifGroupJobs: "Roles that may fit",
       notifGroupFile: "Your file", notifGroupAccount: "Account", notifGroupHiring: "Hiring",
-      interviewStepsLead: "Follow the steps in order. Your consultant opens the room, unless they have authorized you to start the call."
+      interviewStepsLead: "Follow the steps. Confirm your attendance, then wait: Join appears only after your consultant starts the call."
     } : {
       login: "Connexion", register: "Créer un compte", email: "Courriel", password: "Mot de passe",
       first: "Prénom", last: "Nom", submitLogin: "Me connecter", submitRegister: "Créer mon compte",
@@ -185,12 +185,12 @@
       confirm: "Confirmer", cancel: "Annuler", callAudio: "Appel audio", callVideo: "Appel vidéo",
       startCallAudio: "Lancer l’audio", startCallVideo: "Lancer la visio",
       joinCallAudio: "Rejoindre en audio", joinCallVideo: "Rejoindre en visio",
-      waitHost: "En attente que le conseiller ouvre l’appel.",
-      callReady: "La salle est ouverte. Vous pouvez rejoindre.",
+      waitHost: "En attente que le conseiller lance l’appel.",
+      callReady: "Le conseiller a lancé l’appel. Vous pouvez rejoindre.",
       stepConfirm: "Confirmez votre présence",
-      stepWait: "Attendez que le conseiller ouvre la salle",
+      stepWait: "Attendez que le conseiller lance l’appel",
       stepStart: "Lancez l’appel à l’heure prévue",
-      stepJoin: "Rejoignez l’appel",
+      stepJoin: "Rejoignez l’appel une fois qu’il est lancé",
       emptyExp: "Aucune expérience ajoutée.", emptyEdu: "Aucune formation ajoutée.", emptyCert: "Aucune certification ajoutée.",
       profileIdentity: "Photo et identité", profileContact: "Coordonnées",
       profilePro: "Profil professionnel", profilePrefs: "Disponibilités et préférences",
@@ -199,7 +199,7 @@
       notifGroupInterviews: "Entretiens et appels", notifGroupApps: "Candidatures",
       notifGroupMsgs: "Messages", notifGroupJobs: "Offres qui peuvent convenir",
       notifGroupFile: "Votre dossier", notifGroupAccount: "Compte", notifGroupHiring: "Recrutement",
-      interviewStepsLead: "Suivez les étapes dans l’ordre. Le conseiller ouvre la salle, sauf s’il vous a autorisé à lancer l’appel.",
+      interviewStepsLead: "Suivez les étapes. Confirmez votre présence, puis attendez : Rejoindre n’apparaît que lorsque le conseiller a lancé l’appel.",
       to: "Destinataire", write: "Votre message", score: "Score",
       welcomeEmployer: "Votre espace employeur", guestEmployer: "Connectez-vous pour suivre les profils que Talendus vous présente.",
       registerEmployer: "Créer un compte employeur", company: "Entreprise", inbox: "Candidatures",
@@ -1915,16 +1915,18 @@
       if (!i || !i.in_app_call) return "";
       var canStart = !!i.can_start_call;
       var canJoin = !!i.can_join_call;
-      if (!canStart && !canJoin) {
+      if (canStart) {
+        return "<p><button type=\"button\" class=\"tl-btn tl-btn-ghost\" data-join-call=\"" + esc(i.id) + '" data-video="0">' + esc(t.startCallAudio) + "</button> " +
+          (i.call_video !== false ? '<button type="button" class="tl-btn" data-join-call="' + esc(i.id) + '" data-video="1">' + esc(t.startCallVideo) + "</button>" : "") +
+          "</p>";
+      }
+      if (!canJoin) {
         return '<p class="tl-int-wait">' + esc(t.waitHost) + "</p>";
       }
-      var audioL = canStart && !i.call_open ? t.startCallAudio : t.joinCallAudio;
-      var videoL = canStart && !i.call_open ? t.startCallVideo : t.joinCallVideo;
-      var html = "";
-      if (i.call_open && !canStart) html += '<p class="tl-int-wait">' + esc(t.callReady) + "</p>";
-      html += "<p><button type=\"button\" class=\"tl-btn tl-btn-ghost\" data-join-call=\"" + esc(i.id) + '" data-video="0">' + esc(audioL) + "</button> ";
+      var html = '<p class="tl-int-wait">' + esc(t.callReady) + "</p>";
+      html += "<p><button type=\"button\" class=\"tl-btn tl-btn-ghost\" data-join-call=\"" + esc(i.id) + '" data-video="0">' + esc(t.joinCallAudio) + "</button> ";
       if (i.call_video !== false) {
-        html += '<button type="button" class="tl-btn" data-join-call="' + esc(i.id) + '" data-video="1">' + esc(videoL) + "</button>";
+        html += '<button type="button" class="tl-btn" data-join-call="' + esc(i.id) + '" data-video="1">' + esc(t.joinCallVideo) + "</button>";
       }
       return html + "</p>";
     }
@@ -1949,7 +1951,7 @@
           actions += '<p><button type="button" class="tl-btn tl-btn-ghost" data-int-status="CONFIRMED" data-int-id="' + esc(i.id) + '">' + esc(t.confirm) +
             '</button> <button type="button" class="tl-btn tl-btn-ghost" data-int-status="CANCELLED" data-int-id="' + esc(i.id) + '">' + esc(t.cancel) + "</button></p>";
         }
-        var ready = i.call_open || i.can_start_call;
+        var ready = i.host_in_call || i.can_start_call;
         return '<article class="tl-int-card' + (ready ? " is-ready" : "") + '"><b>' + esc(i.type_label || i.type) + " · " + esc(statusLabel(i.status)) + "</b><p>" +
           esc(fmtDate(i.scheduled_at)) + " · " + esc(i.location || "") + (i.job_title ? " · " + esc(i.job_title) : "") +
           (i.candidate_name ? " · " + esc(i.candidate_name) : "") + "</p>" +

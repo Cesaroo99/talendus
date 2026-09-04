@@ -775,6 +775,8 @@ def test_stripe_checkout_and_webhook_without_keys(client):
     )
     assert invoice.status_code == 200
     inv_id = invoice.json()["data"]["id"]
+    sent = client.post(f"/api/invoices/{inv_id}/send", headers=admin_h)
+    assert sent.status_code == 200, sent.text
     checkout = client.post(f"/api/invoices/{inv_id}/checkout", headers=emp_h)
     assert checkout.status_code == 503
     assert checkout.json()["code"] == "STRIPE_NOT_CONFIGURED"

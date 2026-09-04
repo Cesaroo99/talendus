@@ -94,6 +94,19 @@ def test_invoice_pdf_has_branding_and_no_overlap():
     assert hits == [], hits[:6]
 
 
+def test_sent_invoice_is_not_stamped_draft():
+    data = invoice_pdf(_invoice(InvoiceStatus.SENT))
+    raw = _plain(data)
+    assert "BROUILLON" not in raw
+    assert "A PAYER" in raw
+    assert "Statut : Envoyee" in raw
+
+
+def test_draft_invoice_keeps_internal_stamp():
+    data = invoice_pdf(_invoice(InvoiceStatus.DRAFT))
+    assert "BROUILLON" in _plain(data)
+
+
 def test_paid_invoice_gets_paid_stamp():
     data = invoice_pdf(_invoice(InvoiceStatus.PAID))
     raw = _plain(data)
