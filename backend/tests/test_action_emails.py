@@ -57,7 +57,79 @@ def test_smtp_settings_persist_and_mask_password(client):
     stored = db.scalar(select(SystemSetting).where(SystemSetting.key == "smtp.password"))
     assert stored is not None
     assert stored.value == "super-secret-smtp"
+    spaced = client.patch(
+        "/api/admin/settings",
+        headers=admin_h,
+        json={"key": "smtp.password", "value": "abcd efgh ijkl mnop"},
+    )
+    assert spaced.status_code == 200
+    user = client.patch(
+        "/api/admin/settings",
+        headers=admin_h,
+        json={"key": "smtp.username", "value": "Talendus <Info@Talendus.CA>"},
+    )
+    assert user.status_code == 200
+    db = SessionLocal()
+    stored = db.scalar(select(SystemSetting).where(SystemSetting.key == "smtp.password"))
+    assert stored.value == "abcdefghijklmnop"
+    named = db.scalar(select(SystemSetting).where(SystemSetting.key == "smtp.username"))
+    assert named.value == "info@talendus.ca"
     db.close()
+
+
+def test_runtime_strips_app_password_spaces(client):
+    from app.database import SessionLocal
+    from app.models import SystemSetting
+    from app.services.email import (
+        is_smtp_bad_credentials,
+        normalize_smtp_password,
+        normalize_smtp_username,
+        runtime_email_config,
+    )
+
+    assert normalize_smtp_password("abcd efgh ijkl mnop") == "abcdefghijklmnop"
+    assert normalize_smtp_username("Talendus <Info@Talendus.CA>") == "info@talendus.ca"
+    assert is_smtp_bad_credentials(
+        "(535, b'5.7.8 Username and Password not accepted. For more information, go to\\n5.7.8 https://support.google.com/mail/?p=BadCredentials')"
+    )
+
+    db = SessionLocal()
+    db.add(SystemSetting(key="smtp.username", value="  Info@Talendus.CA "))
+    db.add(SystemSetting(key="smtp.password", value="abcd efgh ijkl mnop"))
+    db.commit()
+    cfg = runtime_email_config(db)
+    db.close()
+    assert cfg.username == "info@talendus.ca"
+    assert cfg.password == "abcdefghijklmnop"
+
+
+def test_smtp_test_maps_gmail_535(client, monkeypatch):
+    import smtplib
+
+    admin = promote_admin(client, "smtp-535-admin@example.com")
+    admin_h = auth_header(admin)
+    for key, value in (
+        ("smtp.enabled", "oui"),
+        ("smtp.host", "smtp.gmail.com"),
+        ("smtp.username", "info@talendus.ca"),
+        ("smtp.password", "abcd efgh ijkl mnop"),
+    ):
+        saved = client.patch("/api/admin/settings", headers=admin_h, json={"key": key, "value": value})
+        assert saved.status_code == 200
+
+    def boom(*_args, **_kwargs):
+        raise smtplib.SMTPAuthenticationError(
+            535,
+            b"5.7.8 Username and Password not accepted. For more information, go to\n5.7.8 https://support.google.com/mail/?p=BadCredentials",
+        )
+
+    monkeypatch.setattr("app.services.email._smtp_send", boom)
+    sent = client.post("/api/admin/settings/test-email", headers=admin_h, json={})
+    assert sent.status_code == 502, sent.text
+    body = sent.json()
+    assert body["code"] == "SMTP_BAD_CREDENTIALS"
+    assert "535" in body["message"]
+    assert "info@talendus.ca" in body["message"]
 
 
 def test_smtp_test_email_is_logged(client):
@@ -177,3 +249,5 @@ def test_admin_ui_explains_smtp_steps():
     assert "adm-smtp-form" in js
     assert "Envoyer un test" in js
     assert "cesarmemoli1@gmail.com" in js
+    assert "535" in js
+    assert "16 lettres" in js

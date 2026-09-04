@@ -69,6 +69,16 @@ def upsert_setting(db: Session, user: User, key: str, value: str, label: str | N
     row = db.scalar(select(SystemSetting).where(SystemSetting.key == key))
     old = row.value if row else None
     incoming = value if value is not None else ""
+    if key == "smtp.username":
+        from app.services.email import normalize_smtp_username
+
+        incoming = normalize_smtp_username(incoming)
+        value = incoming
+    if key == "smtp.password" and incoming.strip() and incoming.strip() != SECRET_MASK:
+        from app.services.email import normalize_smtp_password
+
+        incoming = normalize_smtp_password(incoming)
+        value = incoming
     if key in SMTP_SECRET_KEYS and row and (not incoming.strip() or incoming.strip() == SECRET_MASK):
         value = row.value or ""
     if row:
