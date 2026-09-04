@@ -6,5 +6,3 @@ Une offre correspond à votre profil : « {{job_title}} » ({{location}}).
 
 Voir l’offre et postuler :
 {{link}}
-
-Talendus · info@talendus.ca

@@ -7,5 +7,3 @@ Votre facture {{number}} d'un montant de {{amount}} CAD est disponible dans votr
 Télécharger le PDF : {{link}}
 
 Paiement par virement ou chèque à l'ordre de Talendus. Aucun service de paiement externe n'est requis : notre équipe enregistre l'encaissement.
-
-Talendus · info@talendus.ca · 514 555-0199

@@ -5,5 +5,3 @@ La facture {{number}} ({{amount}} CAD) est échue depuis le {{due}}.
 
 Merci de régler par virement ou chèque. Télécharger le PDF :
 {{link}}
-
-Talendus · info@talendus.ca · 514 555-0199

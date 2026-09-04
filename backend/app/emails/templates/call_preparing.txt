@@ -6,5 +6,3 @@ Les boutons Rejoindre apparaîtront dès qu’il l’aura lancé.
 
 Ouvrir votre espace :
 {{link}}
-
-Talendus · info@talendus.ca

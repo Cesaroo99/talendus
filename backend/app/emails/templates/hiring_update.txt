@@ -5,5 +5,3 @@ Subject: {{title}}
 
 Ouvrir le suivi :
 {{link}}
-
-Talendus · info@talendus.ca

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import html
 import logging
 import queue
 import re
@@ -20,7 +21,21 @@ from app.models import EmailLog
 from app.models.enums import EmailStatus, EmailType, utcnow
 
 logger = logging.getLogger("talendus.email")
-TEMPLATE_DIR = Path(__file__).resolve().parents[1] / "emails" / "templates"
+EMAIL_DIR = Path(__file__).resolve().parents[1] / "emails"
+TEMPLATE_DIR = EMAIL_DIR / "templates"
+SIGNATURE_IMAGE = EMAIL_DIR / "assets" / "signature.jpg"
+SIGNATURE_CID = "talendus-signature@talendus.ca"
+SIGNATURE_TEXT = (
+    "\n\n—\n"
+    "Talendus\n"
+    "Votre partenaire stratégique en recrutement au Québec.\n"
+    "info@talendus.ca · 263 558 5225 · talendus.ca\n"
+)
+_LEGACY_FOOTER = re.compile(
+    r"(?:\r?\n)+Talendus\s*·\s*info@talendus\.ca(?:\s*·\s*[^\n]+)?\s*$",
+    re.IGNORECASE,
+)
+_URL_RE = re.compile(r"(https?://[^\s<]+)")
 
 _queue: queue.Queue[str] = queue.Queue()
 _worker_lock = threading.Lock()
@@ -124,14 +139,88 @@ def _render(template_name: str, **ctx: str) -> tuple[str, str]:
     return subject, body
 
 
-def _smtp_send(cfg: SmtpRuntime, to_email: str, subject: str, body: str) -> None:
+def strip_legacy_footer(body: str) -> str:
+    text = _LEGACY_FOOTER.sub("", body or "")
+    marker = "\n—\nTalendus\n"
+    if marker in text:
+        text = text[: text.rfind(marker)]
+    return text.rstrip()
+
+
+def signed_plain(body: str) -> str:
+    core = strip_legacy_footer(body)
+    if not core:
+        return SIGNATURE_TEXT.lstrip()
+    return f"{core}{SIGNATURE_TEXT}"
+
+
+def _text_to_html_blocks(core: str) -> str:
+    escaped = html.escape(core or "")
+    blocks = []
+    for block in re.split(r"\n\s*\n", escaped):
+        block = block.strip()
+        if not block:
+            continue
+        block = block.replace("\n", "<br>\n")
+        block = _URL_RE.sub(
+            r'<a href="\1" style="color:#2563eb;text-decoration:underline;">\1</a>',
+            block,
+        )
+        blocks.append(f'<p style="margin:0 0 14px;">{block}</p>')
+    return "".join(blocks) or '<p style="margin:0;"></p>'
+
+
+def signed_html(body: str) -> str:
+    core = strip_legacy_footer(body)
+    inner = _text_to_html_blocks(core)
+    return (
+        "<!DOCTYPE html><html lang=\"fr-CA\"><head><meta charset=\"utf-8\"></head>"
+        '<body style="margin:0;padding:0;background:#f3f5f8;">'
+        '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f3f5f8;">'
+        '<tr><td align="center" style="padding:24px 12px;">'
+        '<table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width:600px;width:100%;background:#ffffff;">'
+        f'<tr><td style="padding:28px 24px 8px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.55;color:#1a2332;">{inner}</td></tr>'
+        '<tr><td style="padding:8px 16px 20px;">'
+        f'<img src="cid:{SIGNATURE_CID}" width="600" alt="Talendus — Votre partenaire stratégique en recrutement au Québec. info@talendus.ca · 263 558 5225 · talendus.ca" style="display:block;width:100%;max-width:600px;height:auto;border:0;">'
+        "</td></tr></table></td></tr></table></body></html>"
+    )
+
+
+def build_email_message(cfg: SmtpRuntime, to_email: str, subject: str, body: str) -> EmailMessage:
+    plain = signed_plain(body)
     msg = EmailMessage()
     msg["From"] = cfg.from_addr
     msg["To"] = to_email
     msg["Subject"] = subject
     if cfg.reply_to:
         msg["Reply-To"] = cfg.reply_to
-    msg.set_content(body)
+    msg.set_content(plain, charset="utf-8")
+    msg.add_alternative(signed_html(body), subtype="html", charset="utf-8")
+    image = SIGNATURE_IMAGE.read_bytes() if SIGNATURE_IMAGE.is_file() else b""
+    if image:
+        for part in msg.iter_parts():
+            if part.get_content_type() == "text/html":
+                part.add_related(
+                    image,
+                    maintype="image",
+                    subtype="jpeg",
+                    cid=SIGNATURE_CID,
+                    filename="talendus-signature.jpg",
+                )
+                for child in part.iter_parts():
+                    if child.get_content_type() != "image/jpeg":
+                        continue
+                    child.replace_header("Content-ID", f"<{SIGNATURE_CID}>")
+                    child.replace_header(
+                        "Content-Disposition",
+                        'inline; filename="talendus-signature.jpg"',
+                    )
+                break
+    return msg
+
+
+def _smtp_send(cfg: SmtpRuntime, to_email: str, subject: str, body: str) -> None:
+    msg = build_email_message(cfg, to_email, subject, body)
     with smtplib.SMTP(cfg.host, cfg.port, timeout=15) as smtp:
         if cfg.use_tls:
             smtp.starttls()
@@ -164,6 +253,7 @@ def send_email(
     **ctx: str,
 ) -> EmailLog:
     subject, body = _render(template, **ctx)
+    body = signed_plain(body)
     log = EmailLog(
         to_email=to_email,
         type=email_type,
