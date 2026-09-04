@@ -68,6 +68,14 @@ def test_smtp_test_email_is_logged(client):
     assert sent.json()["data"]["to_email"] == "smtp-test-admin@example.com"
     logs = _emails_to(client, admin_h, "smtp-test-admin@example.com")
     assert any("test" in (row.get("subject") or "").lower() for row in logs)
+    real = client.post(
+        "/api/admin/settings/test-email",
+        headers=admin_h,
+        json={"to_email": "cesarmemoli1@gmail.com"},
+    )
+    assert real.status_code == 200, real.text
+    assert real.json()["data"]["to_email"] == "cesarmemoli1@gmail.com"
+    assert _emails_to(client, admin_h, "cesarmemoli1@gmail.com")
 
 
 def test_interview_actions_email_and_thread(client):
@@ -169,3 +177,4 @@ def test_admin_ui_explains_smtp_steps():
     assert "info@talendus.ca" in js
     assert "adm-smtp-form" in js
     assert "Envoyer un test" in js
+    assert "cesarmemoli1@gmail.com" in js

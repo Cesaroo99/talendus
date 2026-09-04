@@ -101,7 +101,45 @@ def _render(template_name: str, **ctx: str) -> tuple[str, str]:
     return subject, body
 
 
-def send_email(db: Session, to_email: str, email_type: EmailType, template: str, **ctx: str) -> EmailLog:
+def _smtp_send(cfg: SmtpRuntime, to_email: str, subject: str, body: str) -> None:
+    msg = EmailMessage()
+    msg["From"] = cfg.from_addr
+    msg["To"] = to_email
+    msg["Subject"] = subject
+    if cfg.reply_to:
+        msg["Reply-To"] = cfg.reply_to
+    msg.set_content(body)
+    with smtplib.SMTP(cfg.host, cfg.port, timeout=15) as smtp:
+        if cfg.use_tls:
+            smtp.starttls()
+        if cfg.username:
+            smtp.login(cfg.username, cfg.password)
+        smtp.send_message(msg)
+
+
+def _record_smtp_result(log: EmailLog, cfg: SmtpRuntime, *, fail_fast: bool = False) -> None:
+    try:
+        _smtp_send(cfg, log.to_email, log.subject, log.body or "")
+        log.status = EmailStatus.SENT
+        log.error = None
+        log.sent_at = utcnow()
+        log.attempts = (log.attempts or 0) + 1
+    except Exception as exc:  # noqa: BLE001
+        log.attempts = (log.attempts or 0) + 1
+        log.error = str(exc)[:2000]
+        log.status = EmailStatus.FAILED if fail_fast or log.attempts >= 5 else EmailStatus.QUEUED
+        logger.warning("email failed to=%s attempt=%s: %s", log.to_email, log.attempts, exc)
+
+
+def send_email(
+    db: Session,
+    to_email: str,
+    email_type: EmailType,
+    template: str,
+    *,
+    sync: bool = False,
+    **ctx: str,
+) -> EmailLog:
     subject, body = _render(template, **ctx)
     log = EmailLog(
         to_email=to_email,
@@ -118,6 +156,9 @@ def send_email(db: Session, to_email: str, email_type: EmailType, template: str,
         log.status = EmailStatus.SENT
         log.sent_at = utcnow()
         logger.info("email[dev] to=%s type=%s subject=%s", to_email, email_type, subject)
+        return log
+    if sync:
+        _record_smtp_result(log, cfg, fail_fast=True)
         return log
     _queue.put(log.id)
     start_worker()
@@ -180,36 +221,8 @@ def _deliver(session_factory, log_id: str) -> None:
                 continue
             if log.status == EmailStatus.SENT:
                 return
-            to_email = log.to_email
-            subject = log.subject
-            body = log.body or ""
             cfg = runtime_email_config(db)
-            try:
-                msg = EmailMessage()
-                msg["From"] = cfg.from_addr
-                msg["To"] = to_email
-                msg["Subject"] = subject
-                if cfg.reply_to:
-                    msg["Reply-To"] = cfg.reply_to
-                msg.set_content(body)
-                with smtplib.SMTP(cfg.host, cfg.port, timeout=10) as smtp:
-                    if cfg.use_tls:
-                        smtp.starttls()
-                    if cfg.username:
-                        smtp.login(cfg.username, cfg.password)
-                    smtp.send_message(msg)
-                log.status = EmailStatus.SENT
-                log.error = None
-                log.sent_at = utcnow()
-                log.attempts = (log.attempts or 0) + 1
-            except Exception as exc:  # noqa: BLE001
-                log.attempts = (log.attempts or 0) + 1
-                log.error = str(exc)[:2000]
-                if log.attempts >= 5:
-                    log.status = EmailStatus.FAILED
-                else:
-                    log.status = EmailStatus.QUEUED
-                logger.warning("email failed to=%s attempt=%s: %s", to_email, log.attempts, exc)
+            _record_smtp_result(log, cfg, fail_fast=False)
             db.commit()
             return
         finally:

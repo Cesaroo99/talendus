@@ -2840,6 +2840,8 @@
           '<option value="oui"' + (val("smtp.use_tls", "oui") !== "non" ? " selected" : "") + ">oui</option>" +
           '<option value="non"' + (val("smtp.use_tls") === "non" ? " selected" : "") + ">non</option>" +
           "</select>" +
+          '<label>Envoyer le test à une vraie boîte</label><input id="adm-smtp-test-to" type="email" value="cesarmemoli1@gmail.com" placeholder="cesarmemoli1@gmail.com">' +
+          '<p class="sub">Ne pas utiliser lea.super@talendus.ca : ce compte n’a pas de vraie boîte. Le test part vers Gmail ci-dessus.</p>' +
           '<p style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">' +
           '<button class="btn btn-orange" type="submit">Enregistrer le courriel</button>' +
           '<button class="btn btn-ghost" type="button" id="adm-smtp-test">Envoyer un test</button>' +
@@ -2856,11 +2858,23 @@
         };
         var testBtn = document.getElementById("adm-smtp-test");
         if (testBtn) testBtn.onclick = function () {
-          api().request("/admin/settings/test-email", { method: "POST", body: {} }).then(function (json) {
-            var to = json && json.data && json.data.to_email;
-            U.toast(to ? "Test envoyé vers " + to + "." : "Test journalisé.", "ok");
+          var toInput = document.getElementById("adm-smtp-test-to");
+          var toEmail = (toInput && toInput.value ? toInput.value : "cesarmemoli1@gmail.com").trim();
+          var fd = sf ? U.formData(sf) : {};
+          var saveKeys = Object.keys(fd).filter(function (key) { return key.indexOf("smtp.") === 0; });
+          var save = saveKeys.length ? Promise.all(saveKeys.map(function (key) {
+            return api().request("/admin/settings", { method: "PATCH", body: { key: key, value: fd[key] } });
+          })) : Promise.resolve();
+          save.then(function () {
+            return api().request("/admin/settings/test-email", { method: "POST", body: { to_email: toEmail } });
+          }).then(function (json) {
+            var to = (json && json.data && json.data.to_email) || toEmail;
+            U.toast("Test envoyé vers " + to + ". Vérifiez Gmail (et les spams).", "ok");
             loadEmailLog();
-          }).catch(function (err) { U.toast((err && err.message) || "Test impossible.", "err"); });
+          }).catch(function (err) {
+            U.toast((err && err.message) || "Test impossible.", "err");
+            loadEmailLog();
+          });
         };
       }).catch(function () { smtpBox.innerHTML = "<p class='sub'>Réservé aux administrateurs connectés à l’API.</p>"; });
     }
@@ -2873,10 +2887,11 @@
           logBox.innerHTML = "<p class='sub'>Aucun e-mail pour l’instant. Les actions recruteur / candidat apparaîtront ici.</p>";
           return;
         }
-        logBox.innerHTML = '<div class="table-wrap"><table class="data"><thead><tr><th>Date</th><th>Destinataire</th><th>Sujet</th><th>Statut</th></tr></thead><tbody>' +
+        logBox.innerHTML = '<div class="table-wrap"><table class="data"><thead><tr><th>Date</th><th>Destinataire</th><th>Sujet</th><th>Statut</th><th>Erreur</th></tr></thead><tbody>' +
           rows.map(function (r) {
             return "<tr><td>" + U.esc((r.created_at || "").replace("T", " ").slice(0, 16)) + "</td><td>" +
-              U.esc(r.to_email || "") + "</td><td>" + U.esc(r.subject || "") + "</td><td>" + U.esc(r.status || "") + "</td></tr>";
+              U.esc(r.to_email || "") + "</td><td>" + U.esc(r.subject || "") + "</td><td>" + U.esc(r.status || "") +
+              "</td><td>" + U.esc(r.error || "—") + "</td></tr>";
           }).join("") + "</tbody></table></div>";
       }).catch(function () { logBox.innerHTML = "<p class='sub'>Journal indisponible.</p>"; });
     }
