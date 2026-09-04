@@ -292,9 +292,25 @@ SITE_JOB_TRAITS = {
 }
 
 
+def _narrative(slug: str) -> dict:
+    try:
+        from pathlib import Path
+        import sys
+
+        scripts = str(Path(__file__).resolve().parents[2] / "scripts")
+        if scripts not in sys.path:
+            sys.path.insert(0, scripts)
+        from job_copy import catalog_db_fields
+
+        return catalog_db_fields(slug) or {}
+    except Exception:
+        return {}
+
+
 def _catalog_spec(spec: dict) -> dict:
     merged = dict(spec)
     merged.update(SITE_JOB_TRAITS.get(spec["slug"], {}))
+    merged.update({k: v for k, v in _narrative(spec["slug"]).items() if v})
     merged.setdefault("schedule", "Temps plein")
     merged.setdefault("work_mode", "Sur place")
     merged.setdefault("languages", "Français")
@@ -358,7 +374,8 @@ def _create_catalog_job(db: Session, spec: dict) -> JobOffer:
         recruiter_id=staff.id if staff else None,
         slug=spec["slug"],
         title=spec["title"],
-        description=f"Poste de {spec['title']} à {spec['location']}. Recrutement Talendus.",
+        description=spec.get("description") or f"Poste de {spec['title']} à {spec['location']}. Recrutement Talendus.",
+        responsibilities=spec.get("responsibilities"),
         qualifications=spec["qualifications"],
         location=spec["location"],
         sector=spec["sector"],
@@ -394,13 +411,29 @@ def _create_catalog_job(db: Session, spec: dict) -> JobOffer:
     return _job_with_company(db, spec["slug"]) or job
 
 
+def _refresh_catalog_copy(job: JobOffer, spec: dict) -> None:
+    """Met à jour le texte d’une offre catalogue déjà en base, sans toucher au statut."""
+    spec = _catalog_spec(spec)
+    if spec.get("description"):
+        job.description = spec["description"]
+    if spec.get("responsibilities"):
+        job.responsibilities = spec["responsibilities"]
+    if spec.get("qualifications"):
+        job.qualifications = spec["qualifications"]
+    if spec.get("benefits"):
+        job.benefits = spec["benefits"]
+    if spec.get("skills"):
+        job.skills = spec["skills"]
+
+
 def ensure_catalog_job(db: Session, slug: str) -> JobOffer | None:
-    """Crée l'offre du site si elle n'existe pas encore. Ne touche pas une offre déjà en base."""
+    """Crée l'offre du site si elle n'existe pas encore. Rafraîchit le texte d’une offre catalogue."""
     spec = SITE_JOBS_BY_SLUG.get(slug or "")
     if not spec:
         return None
     job = _job_with_company(db, slug)
     if job:
+        _refresh_catalog_copy(job, spec)
         return job
     return _create_catalog_job(db, spec)
 

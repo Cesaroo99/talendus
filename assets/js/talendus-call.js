@@ -1,19 +1,30 @@
 (function (global) {
   var STYLE_ID = "tn-call-css";
-  var CSS = "#tn-call-overlay{display:none;position:fixed;inset:0;z-index:200;background:#071422;color:#fff;font-family:inherit}" +
+  var CSS = "#tn-call-overlay{display:none;position:fixed;inset:0;z-index:240;background:radial-gradient(120% 80% at 50% 0%,#16365f 0%,#0b1f3a 46%,#06111f 100%);color:#fff;font-family:inherit}" +
     "#tn-call-overlay.is-on{display:flex;flex-direction:column}" +
-    "#tn-call-overlay .tn-call-stage{flex:1;position:relative;background:#04101c;overflow:hidden}" +
+    "#tn-call-overlay .tn-call-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px 8px;padding-top:calc(16px + env(safe-area-inset-top))}" +
+    "#tn-call-overlay .tn-call-brand{display:flex;align-items:center;gap:10px;min-width:0}" +
+    "#tn-call-overlay .tn-call-mark{width:36px;height:36px;border-radius:10px;background:#e87024;display:inline-flex;align-items:center;justify-content:center;font-weight:800}" +
+    "#tn-call-overlay .tn-call-brand strong{display:block;font-size:15px}" +
+    "#tn-call-overlay .tn-call-brand span{display:block;font-size:12px;opacity:.72}" +
+    "#tn-call-overlay .tn-call-pill{border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:6px 12px;font-size:12px;font-weight:700;letter-spacing:.02em;background:rgba(255,255,255,.08)}" +
+    "#tn-call-overlay .tn-call-stage{flex:1;position:relative;margin:8px 16px 0;border-radius:24px;overflow:hidden;background:#04101c;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}" +
     "#tn-call-overlay video{object-fit:cover;background:#000}" +
     "#tn-call-overlay .tn-call-remote{width:100%;height:100%}" +
-    "#tn-call-overlay .tn-call-local{position:absolute;right:14px;top:14px;width:28%;max-width:140px;aspect-ratio:3/4;border-radius:16px;border:2px solid rgba(255,255,255,.4);z-index:2}" +
+    "#tn-call-overlay .tn-call-local{position:absolute;right:14px;top:14px;width:28%;max-width:148px;aspect-ratio:3/4;border-radius:16px;border:2px solid rgba(255,255,255,.45);z-index:2;box-shadow:0 10px 24px rgba(0,0,0,.35)}" +
     "#tn-call-overlay.is-audio .tn-call-local{display:none}" +
-    "#tn-call-overlay .tn-call-status{position:absolute;left:16px;right:16px;bottom:18px;text-align:center;z-index:2;font-weight:700}" +
-    "#tn-call-overlay .tn-call-bar{display:flex;gap:12px;justify-content:center;align-items:center;padding:18px 16px calc(18px + env(safe-area-inset-bottom));background:#0b1f3a}" +
-    "#tn-call-overlay .tn-call-btn{width:56px;height:56px;border:0;border-radius:50%;color:#fff;font-weight:800;cursor:pointer}" +
+    "#tn-call-overlay .tn-call-wait{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:24px;z-index:1}" +
+    "#tn-call-overlay .tn-call-orb{width:112px;height:112px;border-radius:50%;background:linear-gradient(160deg,#e87024,#c45312);display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:800;box-shadow:0 0 0 12px rgba(232,112,36,.18)}" +
+    "#tn-call-overlay.is-live .tn-call-wait{display:none}" +
+    "#tn-call-overlay .tn-call-status{margin:0;font-weight:700;font-size:18px}" +
+    "#tn-call-overlay .tn-call-hint{margin:0;opacity:.72;font-size:14px;max-width:320px}" +
+    "#tn-call-overlay .tn-call-bar{display:flex;gap:14px;justify-content:center;align-items:flex-end;padding:18px 16px calc(22px + env(safe-area-inset-bottom))}" +
+    "#tn-call-overlay .tn-call-btn{width:58px;height:58px;border:0;border-radius:50%;color:#fff;font-weight:800;cursor:pointer;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:10px;letter-spacing:.02em}" +
+    "#tn-call-overlay .tn-call-btn i{font-size:18px}" +
     "#tn-call-overlay .tn-call-btn.is-mute{background:#3d4f66}" +
     "#tn-call-overlay .tn-call-btn.is-cam{background:#16365f}" +
-    "#tn-call-overlay .tn-call-btn.is-hang{background:#c62828;min-width:120px;border-radius:28px;width:auto;padding:0 18px}" +
-    "#tn-call-overlay .tn-call-err{padding:24px;text-align:center}";
+    "#tn-call-overlay .tn-call-btn.is-hang{background:#c62828;min-width:132px;border-radius:29px;width:auto;padding:0 22px;flex-direction:row;gap:8px;font-size:14px}" +
+    "#tn-call-overlay .tn-call-err{padding:48px 24px 12px;text-align:center;font-size:18px;font-weight:700;max-width:420px;margin:auto}";
 
   var live = null;
 
@@ -58,7 +69,10 @@
       camera: "Camera",
       hangup: "Hang up",
       micDenied: "Allow the microphone (and camera for video) to join the interview.",
-      unsupported: "This device cannot place an in-app call."
+      unsupported: "This device cannot place an in-app call.",
+      waitHost: "The consultant has not opened the room yet.",
+      brand: "Talendus interview",
+      audioHint: "Audio only. Stay on this screen — the consultant will join here."
     } : {
       connecting: "Connexion…",
       waiting: "En attente de l’autre personne…",
@@ -69,7 +83,10 @@
       camera: "Caméra",
       hangup: "Raccrocher",
       micDenied: "Autorisez le micro (et la caméra en visio) pour rejoindre l’entretien.",
-      unsupported: "Cet appareil ne peut pas passer d’appel dans l’appli."
+      unsupported: "Cet appareil ne peut pas passer d’appel dans l’appli.",
+      waitHost: "Le conseiller n’a pas encore ouvert la salle.",
+      brand: "Entretien Talendus",
+      audioHint: "Audio seulement. Restez sur cet écran — le conseiller vous rejoint ici."
     };
   }
 
@@ -138,11 +155,15 @@
     pc.ontrack = function (ev) {
       live.remoteStream = ev.streams[0] || (ev.track ? new MediaStream([ev.track]) : null);
       attachVideos();
+      overlay().classList.add("is-live");
       setStatus(labels().live);
     };
     pc.onconnectionstatechange = function () {
       if (!live) return;
-      if (pc.connectionState === "connected") setStatus(labels().live);
+      if (pc.connectionState === "connected") {
+        overlay().classList.add("is-live");
+        setStatus(labels().live);
+      }
       if (pc.connectionState === "disconnected" || pc.connectionState === "failed") setStatus(labels().ended);
     };
     if (live.localStream) {
@@ -228,25 +249,35 @@
     injectCss();
     var el = overlay();
     var t = labels();
+    var mode = live && live.video ? (t.camera) : "Audio";
     el.innerHTML =
+      '<div class="tn-call-top">' +
+        '<div class="tn-call-brand"><span class="tn-call-mark" aria-hidden="true">T</span><div><strong>' + t.brand + "</strong><span>" + mode + "</span></div></div>" +
+        '<span class="tn-call-pill">' + (title || t.connecting) + "</span>" +
+      "</div>" +
       '<div class="tn-call-stage">' +
         '<video class="tn-call-remote" autoplay playsinline></video>' +
         '<video class="tn-call-local" autoplay muted playsinline></video>' +
-        '<p class="tn-call-status">' + (title || t.connecting) + "</p>" +
+        '<div class="tn-call-wait">' +
+          '<div class="tn-call-orb" aria-hidden="true">T</div>' +
+          '<p class="tn-call-status">' + (title || t.connecting) + "</p>" +
+          '<p class="tn-call-hint">' + (live && live.video ? t.waiting : t.audioHint) + "</p>" +
+        "</div>" +
       "</div>" +
       '<div class="tn-call-bar">' +
-        '<button type="button" class="tn-call-btn is-mute" data-call-mute>' + t.mute + "</button>" +
-        (live && live.video ? '<button type="button" class="tn-call-btn is-cam" data-call-cam>' + t.camera + "</button>" : "") +
-        '<button type="button" class="tn-call-btn is-hang" data-call-hang>' + t.hangup + "</button>" +
+        '<button type="button" class="tn-call-btn is-mute" data-call-mute><i class="fa-solid fa-microphone" aria-hidden="true"></i>' + t.mute + "</button>" +
+        (live && live.video ? '<button type="button" class="tn-call-btn is-cam" data-call-cam><i class="fa-solid fa-video" aria-hidden="true"></i>' + t.camera + "</button>" : "") +
+        '<button type="button" class="tn-call-btn is-hang" data-call-hang><i class="fa-solid fa-phone-slash" aria-hidden="true"></i>' + t.hangup + "</button>" +
       "</div>";
     el.classList.add("is-on");
+    el.classList.remove("is-live");
     el.classList.toggle("is-audio", !(live && live.video));
     el.removeAttribute("hidden");
     el.querySelector("[data-call-mute]").onclick = function () {
       if (!live || !live.localStream) return;
       live.localStream.getAudioTracks().forEach(function (track) { track.enabled = !track.enabled; });
       var on = live.localStream.getAudioTracks().some(function (track) { return track.enabled; });
-      el.querySelector("[data-call-mute]").textContent = on ? t.mute : t.unmute;
+      el.querySelector("[data-call-mute]").innerHTML = '<i class="fa-solid ' + (on ? "fa-microphone" : "fa-microphone-slash") + '" aria-hidden="true"></i>' + (on ? t.mute : t.unmute);
     };
     var cam = el.querySelector("[data-call-cam]");
     if (cam) {
@@ -365,7 +396,13 @@
         live.beatTimer = setInterval(heartbeat, 8000);
         poll();
         return true;
-      }).catch(function () {
+      }).catch(function (err) {
+        var code = err && (err.code || err.error || "");
+        var msg = (err && err.message) || "";
+        if (code === "CALL_WAITING_FOR_HOST" || /ouvert/.test(msg)) {
+          showCallError(labels().waitHost);
+          return false;
+        }
         mediaError();
         return false;
       });

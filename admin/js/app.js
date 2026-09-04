@@ -100,10 +100,18 @@
 
   function callButtons(i) {
     if (!i || !i.in_app_call) return "";
-    var html = ' <button type="button" class="btn btn-ghost btn-sm" data-join-call="' + U.esc(i.id) + '" data-video="0">Audio</button>';
-    if (i.call_video !== false) {
-      html += ' <button type="button" class="btn btn-sm btn-orange" data-join-call="' + U.esc(i.id) + '" data-video="1">Vidéo</button>';
+    var open = i.call_open ? "Rejoindre" : "Lancer";
+    var html = "";
+    if (!i.call_open) {
+      html += ' <button type="button" class="btn btn-ghost btn-sm" data-open-call="' + U.esc(i.id) + '">Ouvrir la salle</button>';
     }
+    html += ' <button type="button" class="btn btn-ghost btn-sm" data-join-call="' + U.esc(i.id) + '" data-video="0">' + open + " audio</button>";
+    if (i.call_video !== false) {
+      html += ' <button type="button" class="btn btn-sm btn-orange" data-join-call="' + U.esc(i.id) + '" data-video="1">' + open + " visio</button>";
+    }
+    html += i.candidate_can_start
+      ? ' <button type="button" class="btn btn-ghost btn-sm" data-call-perm="' + U.esc(i.id) + '" data-allow="0">Candidat : lancer retiré</button>'
+      : ' <button type="button" class="btn btn-ghost btn-sm" data-call-perm="' + U.esc(i.id) + '" data-allow="1">Autoriser le candidat à lancer</button>';
     return html;
   }
 
@@ -1674,6 +1682,8 @@
         U.field("Date et heure", "scheduled_at", now.toISOString().slice(0, 16), "datetime-local") +
         U.field("Type", "type", { options: [{ v: "TALENDUS", l: "Visio Talendus" }, { v: "VIDEO", l: "Visio" }, { v: "PHONE", l: "Téléphone" }, { v: "CLIENT", l: "Chez le client" }, { v: "ONSITE", l: "Sur place" }], selected: "TALENDUS" }, "select") +
         U.field("Lieu / précisions", "location", "Visio Talendus") +
+        '<label class="check" style="grid-column:1/-1"><input type="checkbox" name="candidate_can_start"> Autoriser le candidat à lancer l’appel</label>' +
+        "<p class=\"sub\" style=\"grid-column:1/-1\">Sans cette case, le candidat peut seulement rejoindre une fois que vous avez ouvert la salle.</p>" +
         "</form>";
     } else {
       if (!S().clients.length) { U.toast("Créez d’abord une entreprise cliente.", "err"); return; }
@@ -1763,7 +1773,8 @@
                 candidate_id: d.candidate_id,
                 scheduled_at: d.scheduled_at,
                 location: d.location,
-                type: d.type
+                type: d.type,
+                candidate_can_start: !!(box.querySelector("[name=candidate_can_start]") && box.querySelector("[name=candidate_can_start]").checked)
               });
               await TLStore.hydrateFromApi();
               close();
@@ -1910,8 +1921,39 @@
         window.TalendusCall.start({
           interviewId: joinCall.getAttribute("data-join-call"),
           video: joinCall.getAttribute("data-video") !== "0",
-          onHangup: function () {}
+          onHangup: function () { refreshLive().then(render); }
         });
+        return;
+      }
+      var openCall = t.closest("[data-open-call]");
+      if (openCall) {
+        (async function () {
+          try {
+            await window.TalendusAPI.request("/calls/" + openCall.getAttribute("data-open-call") + "/open", { method: "POST" });
+            await refreshLive();
+            U.toast("Salle ouverte. Le candidat peut rejoindre.", "ok");
+            render();
+          } catch (err) {
+            U.toast((err && err.message) || "Ouverture impossible.", "err");
+          }
+        })();
+        return;
+      }
+      var perm = t.closest("[data-call-perm]");
+      if (perm) {
+        (async function () {
+          try {
+            await window.TalendusAPI.request("/interviews/" + perm.getAttribute("data-call-perm"), {
+              method: "PATCH",
+              body: { candidate_can_start: perm.getAttribute("data-allow") === "1" }
+            });
+            await refreshLive();
+            U.toast(perm.getAttribute("data-allow") === "1" ? "Le candidat peut lancer l’appel." : "Le candidat ne peut plus que rejoindre.", "ok");
+            render();
+          } catch (err) {
+            U.toast((err && err.message) || "Mise à jour impossible.", "err");
+          }
+        })();
         return;
       }
       var goEl = t.closest("[data-go]");
@@ -2316,6 +2358,8 @@
             U.field("Date et heure", "scheduled_at", new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16), "datetime-local") +
             U.field("Lieu", "location", "Visio Talendus") +
             U.field("Type", "type", { options: [{ v: "TALENDUS", l: "Visio Talendus" }, { v: "VIDEO", l: "Visio" }, { v: "PHONE", l: "Téléphone" }, { v: "CLIENT", l: "Chez le client" }, { v: "ONSITE", l: "Sur place" }], selected: "TALENDUS" }, "select") +
+            '<label class="check"><input type="checkbox" name="candidate_can_start"> Autoriser le candidat à lancer l’appel</label>' +
+            "<p class=\"sub\">Sans cette case, le candidat rejoint seulement après que vous ayez ouvert la salle.</p>" +
             "</form>",
           footer: '<button class="btn btn-ghost" data-close>Annuler</button><button class="btn btn-orange" id="save">Planifier</button>',
           onMount: function (box, close) {
@@ -2327,7 +2371,8 @@
                     candidate_id: cid,
                     scheduled_at: d.scheduled_at,
                     location: d.location,
-                    type: d.type
+                    type: d.type,
+                    candidate_can_start: !!(box.querySelector("[name=candidate_can_start]") && box.querySelector("[name=candidate_can_start]").checked)
                   });
                   await TLStore.hydrateFromApi();
                   close();

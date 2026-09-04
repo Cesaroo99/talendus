@@ -122,10 +122,33 @@ def _queue_external_channels(
         logger.info("notify channel=push failed user=%s type=%s err=%s", user.id, ntype, exc)
 
 
+def notification_group(ntype: NotificationType | str) -> str:
+    key = ntype.value if isinstance(ntype, NotificationType) else str(ntype or "")
+    if key == "INTERVIEW_INVITE":
+        return "interviews"
+    if key in {
+        "APPLICATION_NEW",
+        "APPLICATION_STATUS",
+        "APPLICATION_ACCEPTED",
+        "APPLICATION_REJECTED",
+    }:
+        return "applications"
+    if key == "MESSAGE":
+        return "messages"
+    if key == "JOB_MATCH":
+        return "jobs"
+    if key in {"DOCUMENT_ADDED", "DOCUMENT_MISSING", "RESUME_UPDATED", "PROFILE_INCOMPLETE"}:
+        return "dossier"
+    if key == "HIRING_REQUEST":
+        return "hiring"
+    return "account"
+
+
 def serialize_notification(row: Notification) -> dict:
     return {
         "id": row.id,
         "type": row.type.value,
+        "group": notification_group(row.type),
         "title": row.title,
         "message": row.message,
         "href": row.href,

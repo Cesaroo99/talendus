@@ -33,6 +33,19 @@ def test_in_app_call_signals_between_candidate_and_staff(client):
     interview = _interview(client, admin_h, cand, applied, "VIDEO")
     assert interview["in_app_call"] is True
     assert interview["call_video"] is True
+    assert interview["candidate_can_start"] is False
+    assert interview["can_start_call"] is True
+    mine = client.get(f"/api/interviews/{interview['id']}", headers=cand_h).json()["data"]
+    assert mine["can_join_call"] is False
+    assert mine["call_step"] in {"confirm", "wait_host"}
+
+    blocked = client.post(f"/api/calls/{interview['id']}/join", headers=cand_h, json={"video": True})
+    assert blocked.status_code == 409
+    assert blocked.json()["code"] == "CALL_WAITING_FOR_HOST"
+
+    staff = client.post(f"/api/calls/{interview['id']}/join", headers=admin_h, json={"video": True})
+    assert staff.status_code == 200, staff.text
+    assert staff.json()["data"]["call_open"] is True
 
     join = client.post(f"/api/calls/{interview['id']}/join", headers=cand_h, json={"video": True})
     assert join.status_code == 200, join.text
@@ -41,9 +54,9 @@ def test_in_app_call_signals_between_candidate_and_staff(client):
     assert body["ice_servers"]
     assert any("stun:" in (item.get("urls") or "") for item in body["ice_servers"])
 
-    staff = client.post(f"/api/calls/{interview['id']}/join", headers=admin_h, json={"video": True})
-    assert staff.status_code == 200, staff.text
-    assert any(p["user_id"] == cand["user"]["id"] for p in staff.json()["data"]["peers"])
+    peers = client.get(f"/api/calls/{interview['id']}/signals", headers=admin_h)
+    assert peers.status_code == 200, peers.text
+    assert any(p["user_id"] == cand["user"]["id"] for p in peers.json()["data"]["peers"])
 
     offer = client.post(
         f"/api/calls/{interview['id']}/signal",
@@ -78,6 +91,8 @@ def test_phone_interview_defaults_to_audio(client):
     interview = _interview(client, admin_h, cand, applied, "PHONE")
     assert interview["in_app_call"] is True
     assert interview["call_video"] is False
+    opened = client.post(f"/api/calls/{interview['id']}/open", headers=admin_h)
+    assert opened.status_code == 200, opened.text
     joined = client.post(f"/api/calls/{interview['id']}/join", headers=cand_h, json={})
     assert joined.status_code == 200, joined.text
     assert joined.json()["data"]["video"] is False
@@ -102,6 +117,36 @@ def test_admin_bootstrap_exposes_in_app_call(client):
     assert phone_row["call_video"] is False
 
 
+def test_candidate_can_start_when_admin_allows(client):
+    admin = promote_admin(client, "call-start-admin@example.com")
+    admin_h = auth_header(admin)
+    emp = register(client, "call-start-emp@example.com", "EMPLOYER")
+    job = staff_publish_job(client, emp, admin, slug="call-start", title="Cariste")
+    cand = register(client, "call-start-cand@example.com")
+    cand_h = auth_header(cand)
+    applied = client.post("/api/applications", headers=cand_h, json={"job_id": job["id"]}).json()["data"]
+    created = client.post(
+        "/api/interviews",
+        headers=admin_h,
+        json={
+            "candidate_id": client.get("/api/candidates/me", headers=cand_h).json()["data"]["id"],
+            "application_id": applied["id"],
+            "scheduled_at": "2026-08-20T10:00:00+00:00",
+            "type": "VIDEO",
+            "candidate_can_start": True,
+        },
+    )
+    assert created.status_code == 200, created.text
+    interview = created.json()["data"]
+    assert interview["candidate_can_start"] is True
+    assert interview["can_start_call"] is True
+    mine = client.get(f"/api/interviews/{interview['id']}", headers=cand_h).json()["data"]
+    assert mine["can_start_call"] is True
+    assert mine["can_join_call"] is True
+    join = client.post(f"/api/calls/{interview['id']}/join", headers=cand_h, json={"video": True})
+    assert join.status_code == 200, join.text
+
+
 def test_admin_shell_can_join_in_app_call():
     html = (ROOT / "admin" / "index.html").read_text(encoding="utf-8")
     assert "talendus-call.js" in html
@@ -109,3 +154,18 @@ def test_admin_shell_can_join_in_app_call():
     assert "data-join-call" in js
     assert "TalendusCall" in js
     assert "function callButtons" in js
+    assert "candidate_can_start" in js
+    assert "data-open-call" in js
+
+
+def test_candidate_shell_loads_call_engine():
+    html = (ROOT / "espace.html").read_text(encoding="utf-8")
+    assert "talendus-call.js" in html
+    account = (ROOT / "assets" / "js" / "account.js").read_text(encoding="utf-8")
+    assert "interviewStepsLead" in account
+    assert "can_start_call" in account
+    assert "tl-profile-stack" in account
+    assert "notifGroupInterviews" in account
+    css = (ROOT / "assets" / "css" / "talendus.css").read_text(encoding="utf-8")
+    assert ".tl-session-menu-copy" in css
+    assert ".tl-avatar.is-menu" in css

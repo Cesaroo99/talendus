@@ -19,6 +19,22 @@ def _run(conn, sql: str) -> None:
         logger.info("schema skip: %s (%s)", sql.split("\n")[0][:80], exc)
 
 
+def ensure_interviews_schema(engine: Engine) -> None:
+    """Ajoute les droits d’appel (lancer / rejoindre) sur interviews. Idempotent."""
+    try:
+        inspector = inspect(engine)
+        if "interviews" not in inspector.get_table_names():
+            return
+        existing = {col["name"] for col in inspector.get_columns("interviews")}
+        with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
+            if "candidate_can_start" not in existing:
+                _run(conn, "ALTER TABLE interviews ADD COLUMN candidate_can_start BOOLEAN NOT NULL DEFAULT FALSE")
+            if "call_opened_at" not in existing:
+                _run(conn, "ALTER TABLE interviews ADD COLUMN call_opened_at TIMESTAMPTZ")
+    except Exception:
+        logger.exception("Réparation du schéma entretiens incomplète")
+
+
 def ensure_contracts_schema(engine: Engine) -> None:
     """Ajoute DRAFT, élargit le type, stocke le statut en texte. Idempotent."""
     global _DONE

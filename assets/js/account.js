@@ -17,6 +17,7 @@
         }).catch(function () {})
       : Promise.resolve();
 
+    var intPoll = null;
     var t = isEn ? {
       login: "Sign in", register: "Create an account", email: "Email", password: "Password",
       first: "First name", last: "Last name", submitLogin: "Sign in", submitRegister: "Create my account",
@@ -140,7 +141,24 @@
       roleHintMember: "Limited access to the company workspace.",
       alreadyApplied: "Talendus already has this request.",
       viewApp: "Follow this application",
-      noBilling: "Billing is not available for this access."
+      noBilling: "Billing is not available for this access.",
+      startCallAudio: "Start audio", startCallVideo: "Start video",
+      joinCallAudio: "Join audio", joinCallVideo: "Join video",
+      waitHost: "Waiting for your consultant to open the call.",
+      callReady: "The room is open. You can join.",
+      stepConfirm: "Confirm you will attend",
+      stepWait: "Wait for the consultant to open the room",
+      stepStart: "Start the call at the scheduled time",
+      stepJoin: "Join the call",
+      emptyExp: "No experience added yet.", emptyEdu: "No education added yet.", emptyCert: "No certification added yet.",
+      profileIdentity: "Photo and identity", profileContact: "Contact details",
+      profilePro: "Professional profile", profilePrefs: "Availability and preferences",
+      profilePath: "Experience and education",
+      photoHint: "A clear photo helps your consultant present you.",
+      notifGroupInterviews: "Interviews and calls", notifGroupApps: "Applications",
+      notifGroupMsgs: "Messages", notifGroupJobs: "Roles that may fit",
+      notifGroupFile: "Your file", notifGroupAccount: "Account", notifGroupHiring: "Hiring",
+      interviewStepsLead: "Follow the steps in order. Your consultant opens the room, unless they have authorized you to start the call."
     } : {
       login: "Connexion", register: "Créer un compte", email: "Courriel", password: "Mot de passe",
       first: "Prénom", last: "Nom", submitLogin: "Me connecter", submitRegister: "Créer mon compte",
@@ -164,7 +182,25 @@
       haveAccount: "Déjà un compte ?",
       noAccount: "Pas encore de compte ?",
       err: "Une erreur s’est produite.", saved: "Enregistré.", uploaded: "Fichier enregistré.", send: "Envoyer",
-      confirm: "Confirmer", cancel: "Annuler", callAudio: "Appel audio", callVideo: "Appel vidéo", to: "Destinataire", write: "Votre message", score: "Score",
+      confirm: "Confirmer", cancel: "Annuler", callAudio: "Appel audio", callVideo: "Appel vidéo",
+      startCallAudio: "Lancer l’audio", startCallVideo: "Lancer la visio",
+      joinCallAudio: "Rejoindre en audio", joinCallVideo: "Rejoindre en visio",
+      waitHost: "En attente que le conseiller ouvre l’appel.",
+      callReady: "La salle est ouverte. Vous pouvez rejoindre.",
+      stepConfirm: "Confirmez votre présence",
+      stepWait: "Attendez que le conseiller ouvre la salle",
+      stepStart: "Lancez l’appel à l’heure prévue",
+      stepJoin: "Rejoignez l’appel",
+      emptyExp: "Aucune expérience ajoutée.", emptyEdu: "Aucune formation ajoutée.", emptyCert: "Aucune certification ajoutée.",
+      profileIdentity: "Photo et identité", profileContact: "Coordonnées",
+      profilePro: "Profil professionnel", profilePrefs: "Disponibilités et préférences",
+      profilePath: "Parcours",
+      photoHint: "Une photo nette aide votre conseiller à vous présenter.",
+      notifGroupInterviews: "Entretiens et appels", notifGroupApps: "Candidatures",
+      notifGroupMsgs: "Messages", notifGroupJobs: "Offres qui peuvent convenir",
+      notifGroupFile: "Votre dossier", notifGroupAccount: "Compte", notifGroupHiring: "Recrutement",
+      interviewStepsLead: "Suivez les étapes dans l’ordre. Le conseiller ouvre la salle, sauf s’il vous a autorisé à lancer l’appel.",
+      to: "Destinataire", write: "Votre message", score: "Score",
       welcomeEmployer: "Votre espace employeur", guestEmployer: "Connectez-vous pour suivre les profils que Talendus vous présente.",
       registerEmployer: "Créer un compte employeur", company: "Entreprise", inbox: "Candidatures",
       candidates: "Dossiers présentés", invoices: "Factures", publish: "Publier", pause: "Mettre en pause",
@@ -784,26 +820,35 @@
     function profileForm(user, profile) {
       profile = profile || {};
       var exp = (profile.experiences || []).map(function (e) {
-        return "<li>" + esc(e.role) + ", " + esc(e.company) + ' <button type="button" class="tl-btn tl-btn-ghost" data-del-exp="' + esc(e.id) + '">' + esc(t.remove) + "</button></li>";
-      }).join("") || "<li>" + esc(t.emptyDocs) + "</li>";
+        return "<li><span>" + esc(e.role) + " · " + esc(e.company) + '</span> <button type="button" class="tl-btn tl-btn-ghost" data-del-exp="' + esc(e.id) + '">' + esc(t.remove) + "</button></li>";
+      }).join("") || "<li><span>" + esc(t.emptyExp) + "</span></li>";
       var edu = (profile.education || []).map(function (e) {
-        return "<li>" + esc(e.diploma || "") + ", " + esc(e.school) + ' <button type="button" class="tl-btn tl-btn-ghost" data-del-edu="' + esc(e.id) + '">' + esc(t.remove) + "</button></li>";
-      }).join("") || "<li>" + esc(t.emptyDocs) + "</li>";
+        return "<li><span>" + esc(e.diploma || "") + " · " + esc(e.school) + '</span> <button type="button" class="tl-btn tl-btn-ghost" data-del-edu="' + esc(e.id) + '">' + esc(t.remove) + "</button></li>";
+      }).join("") || "<li><span>" + esc(t.emptyEdu) + "</span></li>";
       var certs = (profile.certifications || []).map(function (e) {
-        return "<li>" + esc(e.name) + ' <button type="button" class="tl-btn tl-btn-ghost" data-del-cert="' + esc(e.id) + '">' + esc(t.remove) + "</button></li>";
-      }).join("") || "<li>" + esc(t.emptyDocs) + "</li>";
+        return "<li><span>" + esc(e.name) + '</span> <button type="button" class="tl-btn tl-btn-ghost" data-del-cert="' + esc(e.id) + '">' + esc(t.remove) + "</button></li>";
+      }).join("") || "<li><span>" + esc(t.emptyCert) + "</span></li>";
+      var photo = window.__tlAvatarUrl
+        ? '<span class="tl-avatar"><img src="' + esc(window.__tlAvatarUrl) + '" alt=""></span>'
+        : '<span class="tl-avatar" aria-hidden="true">' + esc(((user.first_name || "?") + "").charAt(0).toUpperCase()) + "</span>";
       return '<p class="tl-meta">' + esc(t.updated) + " : " + esc(fmtDate(profile.updated_at)) + "</p>" +
+        '<div class="tl-profile-stack">' +
+        '<section class="tl-profile-card"><h3>' + esc(t.profileIdentity) + "</h3>" +
+        '<p class="tl-profile-lead">' + esc(t.photoHint) + "</p>" +
+        '<div class="tl-profile-photo">' + photo + "<div><strong>" + esc((user.first_name || "") + " " + (user.last_name || "")) + "</strong><p>" + esc(user.email || "") + "</p></div></div>" +
         '<form class="tl-form" id="acc-avatar"><label>' + esc(t.photo) + '</label><input name="file" type="file" accept="image/jpeg,image/png,image/webp,image/*">' +
         '<button class="tl-btn tl-btn-ghost" type="submit">' + esc(t.save) + '</button><div class="tl-success"></div></form>' +
         '<form class="tl-form" id="acc-profile"><div class="tl-row-2"><div><label>' + esc(t.first) + '</label><input name="first_name" value="' + esc(user.first_name || "") + '"></div>' +
-        "<div><label>" + esc(t.last) + '</label><input name="last_name" value="' + esc(user.last_name || "") + '"></div></div>' +
+        "<div><label>" + esc(t.last) + '</label><input name="last_name" value="' + esc(user.last_name || "") + '"></div></div></section>' +
+        '<section class="tl-profile-card"><h3>' + esc(t.profileContact) + "</h3>" +
         "<label>" + esc(t.email) + '</label><input value="' + esc(user.email || "") + '" disabled class="tl-disabled">' +
         "<label>" + esc(t.phone) + '</label><input name="phone" value="' + esc(user.phone || "") + '">' +
         "<label>" + esc(t.address) + '</label><input name="address" value="' + esc(profile.address || "") + '">' +
         '<div class="tl-row-2"><div><label>' + esc(t.city) + '</label>' + choiceSelect("city", (jobOptions || {}).locations, profile.city, t.pick) + '</div>' +
         "<div><label>" + esc(t.province) + '</label>' + choiceSelect("province", (jobOptions || {}).provinces, profile.province || "Québec", t.pick) + "</div></div>" +
         '<div class="tl-row-2"><div><label>' + esc(t.country) + '</label>' + choiceSelect("country", (jobOptions || {}).countries, profile.country || "Canada", t.pick) + '</div>' +
-        "<div><label>" + esc(t.birth) + '</label><input name="birth_date" type="date" value="' + esc(profile.birth_date || "") + '"></div></div>' +
+        "<div><label>" + esc(t.birth) + '</label><input name="birth_date" type="date" value="' + esc(profile.birth_date || "") + '"></div></div></section>' +
+        '<section class="tl-profile-card"><h3>' + esc(t.profilePro) + "</h3>" +
         '<div class="tl-row-2"><div><label>' + esc(t.title) + '</label>' + choiceSelect("title", (jobOptions || {}).occupations, profile.title, t.pick) + '</div>' +
         "<div><label>" + esc(t.experience) + '</label><input name="years_experience" type="number" min="0" value="' + esc(profile.years_experience || "") + '"></div></div>' +
         "<label>" + esc(t.workStatus) + '</label>' + choiceSelect("work_status", (jobOptions || {}).work_statuses, profile.work_status, t.pick) +
@@ -811,20 +856,23 @@
         "<label>" + esc(t.bio) + '</label><textarea name="bio" rows="4">' + esc(profile.bio || "") + "</textarea>" +
         "<label>" + esc(t.skills) + '</label><input name="skills" value="' + esc(profile.skills || "") + '">' +
         choiceGroup("languages", (jobOptions || {}).language_choices || (jobOptions || {}).languages, profile.languages, t.languages) +
+        "</section>" +
+        '<section class="tl-profile-card"><h3>' + esc(t.profilePrefs) + "</h3>" +
         '<div class="tl-row-2"><div><label>' + esc(t.availability) + '</label>' + choiceSelect("availability", (jobOptions || {}).availability, profile.availability, t.pick) + '</div></div>' +
         choiceGroup("contract_type", (jobOptions || {}).contract_types, profile.contract_type, t.contract) +
         choiceGroup("shift_preference", (jobOptions || {}).shifts, profile.shift_preference, t.shiftLabel) +
         "<label>" + esc(t.mobility) + '</label>' + choiceSelect("mobility", (jobOptions || {}).mobility, profile.mobility, t.pick) +
         '<div class="tl-row-2"><div><label>' + esc(t.desiredSalary) + '</label><input name="desired_salary_min" type="number" value="' + esc(profile.desired_salary_min || "") + '"></div><div></div></div>' +
-        '<button class="tl-btn" type="submit">' + esc(t.save) + '</button><div class="tl-success"></div></form>' +
-        "<h3>" + (isEn ? "Experience" : "Expériences") + "</h3><ul>" + exp + "</ul>" +
+        '<button class="tl-btn" type="submit">' + esc(t.save) + '</button><div class="tl-success"></div></form></section>' +
+        '<section class="tl-profile-card"><h3>' + esc(t.profilePath) + "</h3>" +
+        "<h4>" + (isEn ? "Experience" : "Expériences") + "</h4><ul class=\"tl-profile-list\">" + exp + "</ul>" +
         '<form class="tl-form" id="acc-exp"><div class="tl-row-2"><input name="company" placeholder="' + esc(t.company) + '" required><input name="role" placeholder="' + esc(t.title) + '" required></div>' +
         '<button class="tl-btn tl-btn-ghost" type="submit">' + esc(t.add) + "</button></form>" +
-        "<h3>" + (isEn ? "Education" : "Formations") + "</h3><ul>" + edu + "</ul>" +
-        '<form class="tl-form" id="acc-edu"><div class="tl-row-2"><input name="school" required><input name="diploma"></div>' +
+        "<h4>" + (isEn ? "Education" : "Formations") + "</h4><ul class=\"tl-profile-list\">" + edu + "</ul>" +
+        '<form class="tl-form" id="acc-edu"><div class="tl-row-2"><input name="school" required placeholder="' + (isEn ? "School" : "Établissement") + '"><input name="diploma" placeholder="' + (isEn ? "Diploma" : "Diplôme") + '"></div>' +
         '<button class="tl-btn tl-btn-ghost" type="submit">' + esc(t.add) + "</button></form>" +
-        "<h3>" + esc(t.certs) + "</h3><ul>" + certs + "</ul>" +
-        '<form class="tl-form" id="acc-cert"><input name="name" required><button class="tl-btn tl-btn-ghost" type="submit">' + esc(t.add) + "</button></form>";
+        "<h4>" + esc(t.certs) + "</h4><ul class=\"tl-profile-list\">" + certs + "</ul>" +
+        '<form class="tl-form" id="acc-cert"><input name="name" required placeholder="' + esc(t.certs) + '"><button class="tl-btn tl-btn-ghost" type="submit">' + esc(t.add) + "</button></form></section></div>";
     }
 
     function bindFileForm(form, send) {
@@ -1065,14 +1113,36 @@
         timeline(a) + (canWithdraw ? '<p><button type="button" class="tl-btn tl-btn-ghost" id="acc-withdraw">' + esc(t.withdraw) + "</button></p>" : "");
     }
 
+    function notifGroupLabel(group) {
+      return ({
+        interviews: t.notifGroupInterviews,
+        applications: t.notifGroupApps,
+        messages: t.notifGroupMsgs,
+        jobs: t.notifGroupJobs,
+        dossier: t.notifGroupFile,
+        hiring: t.notifGroupHiring,
+        account: t.notifGroupAccount
+      })[group] || t.notifGroupAccount;
+    }
+    function notifCard(n) {
+      var href = localizeHref(n.href);
+      return '<div class="tl-account-notif' + (n.is_read ? "" : " is-unread") + (href ? " is-clickable" : "") + '" data-open-notif="' + esc(n.id) + '" data-href="' + esc(href) + '">' +
+        '<div class="tl-notif-head"><div><span class="tl-notif-type">' + esc(notifGroupLabel(n.group)) + "</span><b>" + esc(n.title) + "</b></div></div>" +
+        "<p>" + esc(n.message) + "</p><p class=\"tl-meta\">" + esc(fmtDate(n.created_at)) +
+        (n.is_read ? "" : ' · <button type="button" class="tl-btn tl-btn-ghost" data-read="' + esc(n.id) + '">' + esc(t.markRead) + "</button>") + "</p></div>";
+    }
     function renderNotifs(notifs) {
       if (!notifs || !notifs.length) return empty(t.emptyNotifs);
-      return '<p><button type="button" class="tl-btn tl-btn-ghost" id="acc-readall">' + esc(t.markAll) + "</button></p><div class=\"tl-account-notifs\">" +
-        notifs.map(function (n) {
-          var href = localizeHref(n.href);
-          return '<div class="tl-account-notif' + (n.is_read ? "" : " is-unread") + (href ? " is-clickable" : "") + '" data-open-notif="' + esc(n.id) + '" data-href="' + esc(href) + '"><b>' + esc(n.title) + "</b><p>" + esc(n.message) +
-            "</p><p class=\"tl-meta\">" + esc(fmtDate(n.created_at)) + (n.is_read ? "" : ' · <button type="button" class="tl-btn tl-btn-ghost" data-read="' + esc(n.id) + '">' + esc(t.markRead) + "</button>") + "</p></div>";
-        }).join("") + "</div>";
+      var order = ["interviews", "applications", "messages", "jobs", "dossier", "hiring", "account"];
+      var groups = {};
+      notifs.forEach(function (n) {
+        var g = n.group || "account";
+        (groups[g] = groups[g] || []).push(n);
+      });
+      var body = order.filter(function (g) { return groups[g] && groups[g].length; }).map(function (g) {
+        return '<section class="tl-notif-group"><h3>' + esc(notifGroupLabel(g)) + "</h3>" + groups[g].map(notifCard).join("") + "</section>";
+      }).join("");
+      return '<p><button type="button" class="tl-btn tl-btn-ghost" id="acc-readall">' + esc(t.markAll) + '</button></p><div class="tl-notif-groups">' + body + "</div>";
     }
 
     function renderMessages(threads, directory, thread) {
@@ -1729,14 +1799,48 @@
       });
       root.querySelectorAll("[data-join-call]").forEach(function (btn) {
         btn.onclick = function () {
-          if (!window.TalendusCall) return;
+          if (!window.TalendusCall) {
+            window.alert(t.err);
+            return;
+          }
           window.TalendusCall.start({
             interviewId: btn.getAttribute("data-join-call"),
             video: btn.getAttribute("data-video") !== "0",
-            onHangup: function () {}
+            onHangup: function () { if (currentRoute().name === "interviews") go("interviews"); }
           });
         };
       });
+      if (intPoll) { clearInterval(intPoll); intPoll = null; }
+      if (currentRoute().name === "interviews") {
+        intPoll = setInterval(function () {
+          if (currentRoute().name !== "interviews") { clearInterval(intPoll); intPoll = null; return; }
+          api.request("/interviews").then(function (j) {
+            var box = document.getElementById("acc-ints");
+            if (!box) return;
+            var fresh = renderInterviews(j.data || []);
+            var next = document.createElement("div");
+            next.innerHTML = fresh;
+            var cards = next.querySelector("#acc-ints");
+            if (cards) box.innerHTML = cards.innerHTML;
+            box.querySelectorAll("[data-join-call]").forEach(function (btn) {
+              btn.onclick = function () {
+                if (!window.TalendusCall) return;
+                window.TalendusCall.start({
+                  interviewId: btn.getAttribute("data-join-call"),
+                  video: btn.getAttribute("data-video") !== "0",
+                  onHangup: function () { if (currentRoute().name === "interviews") go("interviews"); }
+                });
+              };
+            });
+            box.querySelectorAll("[data-int-status]").forEach(function (btn) {
+              btn.onclick = function () {
+                api.request("/interviews/" + btn.getAttribute("data-int-id") + "/status", { method: "POST", body: { status: btn.getAttribute("data-int-status") } })
+                  .then(function () { go("interviews"); });
+              };
+            });
+          }).catch(function () {});
+        }, 8000);
+      }
       var apply = document.getElementById("acc-apply");
       if (apply && state.job) apply.onclick = function () {
         var cover = ((document.getElementById("acc-cover") || {}).value || "").trim();
@@ -1807,25 +1911,51 @@
       });
     }
 
+    function interviewCallButtons(i) {
+      if (!i || !i.in_app_call) return "";
+      var canStart = !!i.can_start_call;
+      var canJoin = !!i.can_join_call;
+      if (!canStart && !canJoin) {
+        return '<p class="tl-int-wait">' + esc(t.waitHost) + "</p>";
+      }
+      var audioL = canStart && !i.call_open ? t.startCallAudio : t.joinCallAudio;
+      var videoL = canStart && !i.call_open ? t.startCallVideo : t.joinCallVideo;
+      var html = "";
+      if (i.call_open && !canStart) html += '<p class="tl-int-wait">' + esc(t.callReady) + "</p>";
+      html += "<p><button type=\"button\" class=\"tl-btn tl-btn-ghost\" data-join-call=\"" + esc(i.id) + '" data-video="0">' + esc(audioL) + "</button> ";
+      if (i.call_video !== false) {
+        html += '<button type="button" class="tl-btn" data-join-call="' + esc(i.id) + '" data-video="1">' + esc(videoL) + "</button>";
+      }
+      return html + "</p>";
+    }
+    function interviewSteps(i) {
+      var step = i.call_step || "wait_host";
+      var rows = [
+        ["confirm", t.stepConfirm],
+        [i.can_start_call ? "start" : "wait_host", i.can_start_call ? t.stepStart : t.stepWait],
+        ["join", t.stepJoin]
+      ];
+      var rank = { confirm: 0, wait_host: 1, start: 1, join: 2, done: 3, cancelled: -1, missed: -1, onsite: 3 };
+      var current = rank[step] == null ? 1 : rank[step];
+      return '<ol class="tl-int-steps">' + rows.map(function (row, idx) {
+        var cls = idx < current ? "is-done" : (idx === current ? "is-current" : "");
+        return '<li class="' + cls + '"><span class="tl-int-step-n">' + (idx + 1) + "</span><div>" + esc(row[1]) + "</div></li>";
+      }).join("") + "</ol>";
+    }
     function renderInterviews(items) {
-      var list = (!items || !items.length) ? empty(t.emptyInts) : items.map(function (i) {
-        var actions = "";
-        if (i.in_app_call) {
-          actions += '<p><button type="button" class="tl-btn tl-btn-ghost" data-join-call="' + esc(i.id) + '" data-video="0">' + esc(t.callAudio) + "</button> ";
-          if (i.call_video !== false) {
-            actions += '<button type="button" class="tl-btn" data-join-call="' + esc(i.id) + '" data-video="1">' + esc(t.callVideo) + "</button>";
-          }
-          actions += "</p>";
-        }
+      var list = (!items || !items.length) ? empty(t.emptyInts) : '<div id="acc-ints">' + items.map(function (i) {
+        var actions = interviewCallButtons(i);
         if (i.status === "SCHEDULED" && !isEmployerSpace()) {
           actions += '<p><button type="button" class="tl-btn tl-btn-ghost" data-int-status="CONFIRMED" data-int-id="' + esc(i.id) + '">' + esc(t.confirm) +
             '</button> <button type="button" class="tl-btn tl-btn-ghost" data-int-status="CANCELLED" data-int-id="' + esc(i.id) + '">' + esc(t.cancel) + "</button></p>";
         }
-        return '<div class="tl-account-notif"><b>' + esc(i.type_label || i.type) + " · " + esc(statusLabel(i.status)) + "</b><p>" +
+        var ready = i.call_open || i.can_start_call;
+        return '<article class="tl-int-card' + (ready ? " is-ready" : "") + '"><b>' + esc(i.type_label || i.type) + " · " + esc(statusLabel(i.status)) + "</b><p>" +
           esc(fmtDate(i.scheduled_at)) + " · " + esc(i.location || "") + (i.job_title ? " · " + esc(i.job_title) : "") +
-          (i.candidate_name ? " · " + esc(i.candidate_name) : "") + "</p>" + actions + "</div>";
-      }).join("");
-      var lead = '<p class="tl-lead">' + esc(isEmployerSpace() ? t.scheduleLeadEmployer : t.scheduleLeadCandidate) + "</p>";
+          (i.candidate_name ? " · " + esc(i.candidate_name) : "") + "</p>" +
+          (i.in_app_call && !isEmployerSpace() ? interviewSteps(i) : "") + actions + "</article>";
+      }).join("") + "</div>";
+      var lead = '<p class="tl-lead">' + esc(isEmployerSpace() ? t.scheduleLeadEmployer : t.interviewStepsLead) + "</p>";
       return (isEmployerSpace() ? mediateNote() : "") + lead + list;
     }
 
