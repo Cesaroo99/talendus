@@ -19,16 +19,33 @@ def test_register_creates_prospects(client):
     assert emp.status_code == 200, emp.text
     admin = promote_admin(client, "crm-admin@example.com")
     admin_h = auth_header(admin)
+    missing_side = client.get("/api/admin/prospects", headers=admin_h)
+    assert missing_side.status_code == 422
     cands = client.get("/api/admin/prospects?side=candidate", headers=admin_h)
     assert cands.status_code == 200, cands.text
     emails = {row["email"] for row in cands.json()["data"]}
     assert "cand-p@example.com" in emails
+    assert "emp-p@example.com" not in emails
     hugo = next(row for row in cands.json()["data"] if row["email"] == "cand-p@example.com")
     assert hugo["first_name"] == "Hugo"
     assert hugo["source"] == "inscription"
+    assert hugo["side"] == "candidate"
     emps = client.get("/api/admin/prospects?side=employer", headers=admin_h).json()["data"]
+    emp_emails = {row["email"] for row in emps}
+    assert "emp-p@example.com" in emp_emails
+    assert "cand-p@example.com" not in emp_emails
     metal = next(row for row in emps if row["email"] == "emp-p@example.com")
     assert metal["company_name"] == "Métalco"
+    assert metal["side"] == "employer"
+    assert cands.json()["meta"]["side"] == "candidate"
+    catalog_trap = client.get("/api/admin/prospects/catalog", headers=admin_h)
+    assert catalog_trap.status_code == 404
+    assert "Prospect introuvable" not in catalog_trap.text
+    templates = client.get("/api/admin/prospects/templates?side=candidate", headers=admin_h)
+    assert templates.status_code == 200, templates.text
+    keys = {row["key"] for row in templates.json()["data"]}
+    assert "cand_first_contact" in keys
+    assert "emp_first_contact" not in keys
 
 
 def test_contact_and_manual_prospect(client):
@@ -52,7 +69,7 @@ def test_contact_and_manual_prospect(client):
     created = client.post(
         "/api/admin/prospects",
         headers=admin_h,
-        json={"side": "candidate", "email": "karine.prospect@example.com", "first_name": "Karine", "title": "Cariste"},
+        json={"side": "candidate", "email": "karine.prospect@example.com", "first_name": "Karine", "title": "Cariste", "city": "Trois-Rivières"},
     )
     assert created.status_code == 200, created.text
     again = client.post(
@@ -61,6 +78,18 @@ def test_contact_and_manual_prospect(client):
         json={"side": "candidate", "email": "karine.prospect@example.com", "first_name": "Karine"},
     )
     assert again.status_code == 409
+    filtered = client.get("/api/admin/prospects?side=candidate&city=Trois-Rivières", headers=admin_h)
+    assert filtered.status_code == 200
+    assert any(row["email"] == "karine.prospect@example.com" for row in filtered.json()["data"])
+    assert "Trois-Rivières" in filtered.json()["meta"]["cities"]
+    patched = client.patch(
+        f"/api/admin/prospects/p/{created.json()['data']['id']}",
+        headers=admin_h,
+        json={"stage": "qualifie", "phone": "5145550101"},
+    )
+    assert patched.status_code == 200, patched.text
+    assert patched.json()["data"]["stage"] == "qualifie"
+    assert patched.json()["data"]["phone"] == "5145550101"
 
 
 def test_personalized_send_dedup_and_isolation(client):
@@ -76,26 +105,38 @@ def test_personalized_send_dedup_and_isolation(client):
         headers=admin_h,
         json={"side": "candidate", "email": "b.talent@example.com", "first_name": "Benoit", "title": "Soudeur"},
     ).json()["data"]
-    proposals = client.get(f"/api/admin/prospects/{a['id']}/proposals", headers=admin_h)
+    emp = client.post(
+        "/api/admin/prospects",
+        headers=admin_h,
+        json={"side": "employer", "email": "usine@example.com", "first_name": "Marc", "company_name": "Usine Nord"},
+    ).json()["data"]
+    proposals = client.get(f"/api/admin/prospects/p/{a['id']}/proposals", headers=admin_h)
     assert proposals.status_code == 200
     keys = {row["key"] for row in proposals.json()["data"]}
     assert "cand_first_contact" in keys
+    assert "emp_first_contact" not in keys
     assert any("Aline" in row["subject"] for row in proposals.json()["data"])
     first = client.post(
-        f"/api/admin/prospects/{a['id']}/send",
+        f"/api/admin/prospects/p/{a['id']}/send",
         headers=admin_h,
         json={"template_key": "cand_first_contact"},
     )
     assert first.status_code == 200, first.text
     assert first.json()["data"]["to_email"] == "a.talent@example.com"
     dup = client.post(
-        f"/api/admin/prospects/{a['id']}/send",
+        f"/api/admin/prospects/p/{a['id']}/send",
         headers=admin_h,
         json={"template_key": "cand_first_contact"},
     )
     assert dup.status_code == 409
+    mixed = client.post(
+        "/api/admin/prospects/broadcast",
+        headers=admin_h,
+        json={"ids": [a["id"], emp["id"]], "template_key": "cand_first_contact"},
+    )
+    assert mixed.status_code == 400
     bulk = client.post(
-        "/api/admin/prospects/send-bulk",
+        "/api/admin/prospects/broadcast",
         headers=admin_h,
         json={"ids": [a["id"], b["id"]], "template_key": "cand_first_contact"},
     )
@@ -112,6 +153,12 @@ def test_personalized_send_dedup_and_isolation(client):
     assert all("a.talent@example.com" not in (row.get("body") or "") for row in to_b)
     assert any("Aline" in (row.get("body") or "") or "Aline" in (row.get("subject") or "") for row in to_a)
     assert any("Benoit" in (row.get("body") or "") or "Benoit" in (row.get("subject") or "") for row in to_b)
+    detail = client.get(f"/api/admin/prospects/p/{a['id']}", headers=admin_h)
+    assert detail.status_code == 200
+    assert detail.json()["data"]["email"] == "a.talent@example.com"
+    missing = client.get("/api/admin/prospects/p/inconnu", headers=admin_h)
+    assert missing.status_code == 404
+    assert "Prospect introuvable" in missing.text
 
 
 def test_attachment_stays_on_one_message():
@@ -136,8 +183,15 @@ def test_admin_ui_has_prospects_module():
 
     js = (Path(__file__).resolve().parents[2] / "admin" / "js" / "app.js").read_text(encoding="utf-8")
     store = (Path(__file__).resolve().parents[2] / "admin" / "js" / "store.js").read_text(encoding="utf-8")
+    css = (Path(__file__).resolve().parents[2] / "admin" / "css" / "admin.css").read_text(encoding="utf-8")
     assert '["prospects", "Prospects"' in js
-    assert "prospect-kanban" in js
+    assert "prospect-kanban" not in js
+    assert "prospect-kanban" not in css
+    assert "prospect-list" in js
+    assert "data-pcheck" in js
+    assert "Prospects candidats" in js
+    assert "/admin/prospects/p/" in js
+    assert "/admin/prospects/broadcast" in js
     assert "cand_first_contact" not in js
     assert '"prospects"' in store
     assert "lea.super@talendus.ca" not in js

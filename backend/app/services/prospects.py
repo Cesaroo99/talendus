@@ -43,6 +43,14 @@ EMPLOYER_STAGES = (
 )
 
 SOURCES = ("inscription", "site", "talent", "contact", "prospection", "referral")
+SOURCE_LABELS = (
+    ("inscription", "Inscription"),
+    ("site", "Site"),
+    ("talent", "Profil talent"),
+    ("contact", "Formulaire"),
+    ("prospection", "Prospection"),
+    ("referral", "Référence"),
+)
 
 ESPACE = "https://talendus.ca/espace.html"
 EMPLOYEUR = "https://talendus.ca/employeur.html"
@@ -457,13 +465,27 @@ def sync_known_people(db: Session) -> int:
     return added
 
 
-def list_prospects(db: Session, *, side: str | None = None, stage: str | None = None, q: str | None = None) -> list[Prospect]:
+def list_prospects(
+    db: Session,
+    *,
+    side: str,
+    stage: str | None = None,
+    q: str | None = None,
+    source: str | None = None,
+    city: str | None = None,
+    sector: str | None = None,
+) -> list[Prospect]:
     sync_known_people(db)
-    stmt = select(Prospect).order_by(Prospect.updated_at.desc())
-    if side:
-        stmt = stmt.where(Prospect.side == normalize_side(side))
+    wanted = normalize_side(side)
+    stmt = select(Prospect).where(Prospect.side == wanted).order_by(Prospect.updated_at.desc())
     if stage:
         stmt = stmt.where(Prospect.stage == stage)
+    if source:
+        stmt = stmt.where(Prospect.source == source)
+    if city:
+        stmt = stmt.where(Prospect.city.ilike(city.strip()))
+    if sector:
+        stmt = stmt.where(Prospect.sector.ilike(sector.strip()))
     if q:
         like = f"%{q.strip()}%"
         stmt = stmt.where(
@@ -473,9 +495,28 @@ def list_prospects(db: Session, *, side: str | None = None, stage: str | None = 
                 Prospect.last_name.ilike(like),
                 Prospect.company_name.ilike(like),
                 Prospect.title.ilike(like),
+                Prospect.phone.ilike(like),
             )
         )
     return list(db.scalars(stmt).all())
+
+
+def filter_options(db: Session, side: str) -> dict[str, list[str]]:
+    wanted = normalize_side(side)
+    cities = [
+        value
+        for value in db.scalars(select(Prospect.city).where(Prospect.side == wanted, Prospect.city != "").distinct()).all()
+        if value
+    ]
+    sectors = [
+        value
+        for value in db.scalars(select(Prospect.sector).where(Prospect.side == wanted, Prospect.sector != "").distinct()).all()
+        if value
+    ]
+    return {
+        "cities": sorted(cities, key=str.casefold),
+        "sectors": sorted(sectors, key=str.casefold),
+    }
 
 
 def sent_keys_map(db: Session, prospect_ids: list[str]) -> dict[str, list[str]]:
@@ -690,8 +731,11 @@ def send_bulk(db: Session, actor: User, ids: list[str], req: SendRequest) -> dic
     if len(ids) > 80:
         raise AppError(400, "Maximum 80 destinataires à la fois.", "VALIDATION_ERROR")
     sent, skipped, failed = [], [], []
-    for prospect_id in ids:
-        row = db.get(Prospect, prospect_id)
+    found = [db.get(Prospect, prospect_id) for prospect_id in ids]
+    sides = {row.side for row in found if row}
+    if len(sides) > 1:
+        raise AppError(400, "Impossible d’envoyer aux deux bases en même temps.", "SIDE_MIXED")
+    for prospect_id, row in zip(ids, found):
         if not row:
             failed.append({"id": prospect_id, "reason": "introuvable"})
             continue

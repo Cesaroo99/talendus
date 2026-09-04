@@ -249,7 +249,8 @@
           }).length;
           if (pending) count = '<span class="count">' + pending + "</span>";
         }
-        return '<a class="nav-item' + active + '" href="#/' + i[0] + '"><i class="' + i[2] + '"></i>' + i[1] + count + "</a>";
+        var href = i[0] === "prospects" ? "prospects/candidates" : i[0];
+        return '<a class="nav-item' + active + '" href="#/' + href + '"><i class="' + i[2] + '"></i>' + i[1] + count + "</a>";
       }).join("") + "</div>";
     }).join("");
 
@@ -1491,125 +1492,191 @@
     }
   }
 
-  var prospectSide = "candidate";
+  var prospectFilters = { q: "", stage: "", source: "", city: "", sector: "" };
+  var prospectMeta = { stages: [], catalog: [], sources: [], cities: [], sectors: [] };
   var prospectCache = [];
 
-  function viewProspects() {
-    return `
-      <div class="page-head">
-        <div>
-          <h1>Prospects</h1>
-          <p>Deux bases : candidats et recruteurs / employeurs. Chaque fiche a ses étapes, ses modèles de courriel personnalisés, et un historique pour ne jamais renvoyer le même message.</p>
-        </div>
-        <div class="page-actions">
-          <button type="button" class="btn btn-orange" id="prospect-new">Ajouter un prospect</button>
-        </div>
-      </div>
-      <div class="tabs" id="prospect-sides">
-        <button type="button" class="tab${prospectSide === "candidate" ? " is-on" : ""}" data-pside="candidate">Candidats</button>
-        <button type="button" class="tab${prospectSide === "employer" ? " is-on" : ""}" data-pside="employer">Recruteurs / employeurs</button>
-      </div>
-      <div id="prospects-root"><p class="sub">Chargement des pipelines…</p></div>`;
+  function prospectSide() {
+    var id = (route().id || "candidates").toLowerCase();
+    return id === "employers" || id === "employer" ? "employer" : "candidate";
   }
 
   function prospectLabel(row) {
     return row.display_name || ((row.first_name || "") + " " + (row.last_name || "")).trim() || row.email;
   }
 
+  function sourceLabel(key) {
+    var found = (prospectMeta.sources || []).filter(function (s) { return s.key === key; })[0];
+    return found ? found.label : (key || "—");
+  }
+
+  function viewProspects() {
+    var side = prospectSide();
+    if (viewProspects._side !== side) {
+      viewProspects._side = side;
+      prospectFilters = { q: "", stage: "", source: "", city: "", sector: "" };
+    }
+    var employer = side === "employer";
+    return `
+      <div class="page-head">
+        <div>
+          <h1>${employer ? "Prospects employeurs" : "Prospects candidats"}</h1>
+          <p id="prospect-lead">${employer ? "Base recruteurs / entreprises uniquement. Les candidats sont dans l’autre onglet." : "Base candidats uniquement. Les employeurs sont dans l’autre onglet."}</p>
+        </div>
+        <div class="actions">
+          <button type="button" class="btn btn-ghost" id="prospect-bulk">Écrire aux sélectionnés</button>
+          <button type="button" class="btn btn-orange" id="prospect-new">Ajouter</button>
+        </div>
+      </div>
+      <div class="tabs" id="prospect-sides">
+        <a class="tab${employer ? "" : " is-on"}" href="#/prospects/candidates">Candidats</a>
+        <a class="tab${employer ? " is-on" : ""}" href="#/prospects/employers">Recruteurs / employeurs</a>
+      </div>
+      <div class="filters" id="prospect-filters"></div>
+      <div id="prospects-root"><p class="sub">Chargement…</p></div>`;
+  }
+
+  function prospectQuery() {
+    var side = prospectSide();
+    var parts = ["side=" + encodeURIComponent(side)];
+    if (prospectFilters.q) parts.push("q=" + encodeURIComponent(prospectFilters.q));
+    if (prospectFilters.stage) parts.push("stage=" + encodeURIComponent(prospectFilters.stage));
+    if (prospectFilters.source) parts.push("source=" + encodeURIComponent(prospectFilters.source));
+    if (prospectFilters.city) parts.push("city=" + encodeURIComponent(prospectFilters.city));
+    if (prospectFilters.sector) parts.push("sector=" + encodeURIComponent(prospectFilters.sector));
+    return parts.join("&");
+  }
+
+  function renderProspectFilters() {
+    var box = document.getElementById("prospect-filters");
+    if (!box) return;
+    var stages = prospectMeta.stages || [];
+    var sources = prospectMeta.sources || [];
+    var cities = prospectMeta.cities || [];
+    var sectors = prospectMeta.sectors || [];
+    box.innerHTML =
+      '<input id="pf-q" placeholder="Nom, courriel, téléphone, entreprise" value="' + U.esc(prospectFilters.q || "") + '">' +
+      '<select id="pf-stage"><option value="">Tous les statuts</option>' + stages.map(function (s) {
+        return '<option value="' + U.esc(s.key) + '"' + (prospectFilters.stage === s.key ? " selected" : "") + ">" + U.esc(s.label) + "</option>";
+      }).join("") + "</select>" +
+      '<select id="pf-source"><option value="">Toutes les sources</option>' + sources.map(function (s) {
+        return '<option value="' + U.esc(s.key) + '"' + (prospectFilters.source === s.key ? " selected" : "") + ">" + U.esc(s.label) + "</option>";
+      }).join("") + "</select>" +
+      '<select id="pf-city"><option value="">Toutes les villes</option>' + cities.map(function (c) {
+        return '<option value="' + U.esc(c) + '"' + (prospectFilters.city === c ? " selected" : "") + ">" + U.esc(c) + "</option>";
+      }).join("") + "</select>" +
+      '<select id="pf-sector"><option value="">Tous les secteurs</option>' + sectors.map(function (c) {
+        return '<option value="' + U.esc(c) + '"' + (prospectFilters.sector === c ? " selected" : "") + ">" + U.esc(c) + "</option>";
+      }).join("") + "</select>" +
+      '<button type="button" class="btn btn-ghost" id="pf-clear">Effacer</button>';
+    ["pf-q", "pf-stage", "pf-source", "pf-city", "pf-sector"].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      el.onchange = function () { applyProspectFilters(); };
+      if (id === "pf-q") el.onkeydown = function (e) { if (e.key === "Enter") applyProspectFilters(); };
+    });
+    var clear = document.getElementById("pf-clear");
+    if (clear) clear.onclick = function () {
+      prospectFilters = { q: "", stage: "", source: "", city: "", sector: "" };
+      hydrateProspects();
+    };
+  }
+
+  function applyProspectFilters() {
+    prospectFilters.q = (document.getElementById("pf-q") || {}).value || "";
+    prospectFilters.stage = (document.getElementById("pf-stage") || {}).value || "";
+    prospectFilters.source = (document.getElementById("pf-source") || {}).value || "";
+    prospectFilters.city = (document.getElementById("pf-city") || {}).value || "";
+    prospectFilters.sector = (document.getElementById("pf-sector") || {}).value || "";
+    hydrateProspects();
+  }
+
   async function hydrateProspects() {
     var root = document.getElementById("prospects-root");
-    if (!root || !api()) return;
+    if (!root) return;
+    if (!api()) {
+      root.innerHTML = "<p class='sub'>Connectez-vous à l’API pour ouvrir les bases prospects.</p>";
+      return;
+    }
     try {
-      var json = await api().request("/admin/prospects?side=" + encodeURIComponent(prospectSide));
+      var json = await api().request("/admin/prospects?" + prospectQuery());
       var rows = (json && json.data) || [];
-      var meta = (json && json.meta) || {};
+      prospectMeta = (json && json.meta) || prospectMeta;
       prospectCache = rows;
-      var stages = prospectSide === "employer" ? (meta.employer_stages || []) : (meta.candidate_stages || []);
-      var cols = stages.map(function (st) {
-        var cards = rows.filter(function (r) { return r.stage === st.key; });
-        return '<div class="kanban-col" data-pstage="' + U.esc(st.key) + '"><h4>' + U.esc(st.label) + " <span>" + cards.length + "</span></h4>" +
-          cards.map(function (r) {
-            return '<article class="kanban-card" draggable="true" data-pid="' + U.esc(r.id) + '">' +
-              '<label class="check"><input type="checkbox" data-pcheck="' + U.esc(r.id) + '"> Sélection</label>' +
-              "<b>" + U.esc(prospectLabel(r)) + "</b>" +
-              "<span>" + U.esc(r.email) + "</span>" +
-              (r.company_name ? "<span>" + U.esc(r.company_name) + "</span>" : "") +
-              (r.title ? "<span>" + U.esc(r.title) + "</span>" : "") +
-              "<span>" + U.esc(r.source || "") + (r.sent_templates && r.sent_templates.length ? " · " + r.sent_templates.length + " envoi(s)" : "") + "</span>" +
-              '<button type="button" class="btn btn-ghost btn-sm" data-pmail="' + U.esc(r.id) + '">Écrire</button>' +
-              "</article>";
-          }).join("") + "</div>";
+      if (prospectMeta.side && prospectMeta.side !== prospectSide()) {
+        root.innerHTML = "<p class='sub'>Les deux bases ne doivent pas être mélangées. Rechargez l’onglet.</p>";
+        return;
+      }
+      renderProspectFilters();
+      var employer = prospectSide() === "employer";
+      var lead = document.getElementById("prospect-lead");
+      if (lead) {
+        lead.textContent = rows.length + " fiche" + (rows.length > 1 ? "s" : "") + " dans cette base" +
+          (employer ? " employeur." : " candidat.") + " L’autre base reste à part.";
+      }
+      var stages = prospectMeta.stages || [];
+      var body = rows.map(function (r) {
+        var stageOpts = stages.map(function (s) {
+          return '<option value="' + U.esc(s.key) + '"' + (r.stage === s.key ? " selected" : "") + ">" + U.esc(s.label) + "</option>";
+        }).join("");
+        var lieu = [r.city, r.sector].filter(Boolean).join(" · ") || "—";
+        var envois = r.sent_templates && r.sent_templates.length ? r.sent_templates.length + " envoi(s)" : "Aucun";
+        return "<tr>" +
+          '<td class="check"><input type="checkbox" data-pcheck="' + U.esc(r.id) + '"></td>' +
+          "<td class='person-cell'><b>" + U.esc(prospectLabel(r)) + "</b><div class='sub'>" + U.esc(r.title || r.company_name || "") + "</div></td>" +
+          "<td>" + U.esc(r.email) + (r.phone ? "<div class='sub'>" + U.esc(r.phone) + "</div>" : "") + "</td>" +
+          "<td>" + U.esc(employer ? (r.company_name || "—") : (r.title || "—")) + "</td>" +
+          "<td>" + U.esc(lieu) + "</td>" +
+          "<td>" + U.esc(sourceLabel(r.source)) + "</td>" +
+          '<td class="prospect-stage">' + U.badge(r.stage) + '<select data-pstage="' + U.esc(r.id) + '">' + stageOpts + "</select></td>" +
+          "<td>" + U.esc(envois) + "<div class='sub'>" + (r.last_contacted_at ? "Contact " + U.dateFr(r.last_contacted_at) : "Jamais contacté") + "</div></td>" +
+          '<td class="prospect-actions"><button type="button" class="btn btn-ghost btn-sm" data-pfiche="' + U.esc(r.id) + '">Fiche</button><button type="button" class="btn btn-orange btn-sm" data-pmail="' + U.esc(r.id) + '">Écrire</button></td>' +
+          "</tr>";
       }).join("");
-      root.innerHTML =
-        '<div class="prospect-toolbar">' +
-        '<input id="prospect-q" placeholder="Rechercher nom, courriel, entreprise">' +
-        '<button type="button" class="btn btn-orange" id="prospect-bulk">Envoyer aux sélectionnés</button>' +
-        "</div>" +
-        '<div class="kanban prospect-kanban">' + cols + "</div>";
-      bindProspectBoard(root, stages, meta);
+      root.innerHTML = '<div class="card prospect-list"><div class="table-wrap"><table class="data">' +
+        "<thead><tr><th></th><th>Personne</th><th>Coordonnées</th><th>" + (employer ? "Entreprise" : "Métier") + "</th><th>Lieu</th><th>Source</th><th>Statut</th><th>Envois</th><th></th></tr></thead>" +
+        "<tbody>" + (body || '<tr><td colspan="9">' + U.empty("Aucun prospect", "Ajoutez une fiche ou attendez une inscription / un formulaire.") + "</td></tr>") + "</tbody></table></div></div>";
+      bindProspectList(root);
     } catch (err) {
-      root.innerHTML = "<p class='sub'>" + U.esc((err && err.message) || "Impossible de charger les prospects.") + "</p>";
+      root.innerHTML = "<p class='sub'>" + U.esc((err && err.message) || "Impossible de charger cette base.") + "</p>";
     }
   }
 
-  function bindProspectBoard(root) {
-    var sides = document.getElementById("prospect-sides");
-    if (sides) sides.onclick = function (e) {
-      var btn = e.target.closest("[data-pside]");
-      if (!btn) return;
-      prospectSide = btn.getAttribute("data-pside");
-      Array.from(sides.querySelectorAll(".tab")).forEach(function (t) {
-        t.classList.toggle("is-on", t.getAttribute("data-pside") === prospectSide);
-      });
-      hydrateProspects();
-    };
+  function bindProspectList(root) {
     var addBtn = document.getElementById("prospect-new");
     if (addBtn) addBtn.onclick = function () { openProspectCreate(); };
     var bulk = document.getElementById("prospect-bulk");
     if (bulk) bulk.onclick = function () {
       var ids = Array.from(root.querySelectorAll("[data-pcheck]:checked")).map(function (el) { return el.getAttribute("data-pcheck"); });
-      if (!ids.length) { U.toast("Cochez au moins un prospect.", "err"); return; }
+      if (!ids.length) { U.toast("Cochez au moins une ligne.", "err"); return; }
       openProspectComposer(ids);
     };
-    var search = document.getElementById("prospect-q");
-    if (search) search.oninput = function () {
-      var q = search.value.toLowerCase();
-      Array.from(root.querySelectorAll(".kanban-card")).forEach(function (card) {
-        card.style.display = card.textContent.toLowerCase().indexOf(q) >= 0 ? "" : "none";
-      });
-    };
     Array.from(root.querySelectorAll("[data-pmail]")).forEach(function (btn) {
-      btn.onclick = function (e) { e.stopPropagation(); openProspectComposer([btn.getAttribute("data-pmail")]); };
+      btn.onclick = function () { openProspectComposer([btn.getAttribute("data-pmail")]); };
     });
-    Array.from(root.querySelectorAll(".kanban-card")).forEach(function (card) {
-      card.ondragstart = function (e) { e.dataTransfer.setData("text/plain", card.getAttribute("data-pid")); };
+    Array.from(root.querySelectorAll("[data-pfiche]")).forEach(function (btn) {
+      btn.onclick = function () { openProspectFiche(btn.getAttribute("data-pfiche")); };
     });
-    Array.from(root.querySelectorAll(".kanban-col")).forEach(function (col) {
-      col.ondragover = function (e) { e.preventDefault(); col.classList.add("drag-over"); };
-      col.ondragleave = function () { col.classList.remove("drag-over"); };
-      col.ondrop = function (e) {
-        e.preventDefault();
-        col.classList.remove("drag-over");
-        var id = e.dataTransfer.getData("text/plain");
-        var stage = col.getAttribute("data-pstage");
-        if (!id || !stage) return;
-        api().request("/admin/prospects/" + id, { method: "PATCH", body: { stage: stage } })
-          .then(function () { hydrateProspects(); })
-          .catch(function (err) { U.toast((err && err.message) || "Étape non enregistrée.", "err"); });
+    Array.from(root.querySelectorAll("[data-pstage]")).forEach(function (sel) {
+      sel.onchange = function () {
+        api().request("/admin/prospects/p/" + sel.getAttribute("data-pstage"), { method: "PATCH", body: { stage: sel.value } })
+          .then(function () { U.toast("Statut enregistré.", "ok"); hydrateProspects(); })
+          .catch(function (err) { U.toast((err && err.message) || "Statut non enregistré.", "err"); hydrateProspects(); });
       };
     });
   }
 
   function openProspectCreate() {
+    var side = prospectSide();
     U.modal({
-      title: "Nouveau prospect",
+      title: side === "employer" ? "Nouveau prospect employeur" : "Nouveau prospect candidat",
       body: '<form id="pf-new" class="form-grid">' +
-        '<label>Côté</label><select name="side"><option value="candidate"' + (prospectSide === "candidate" ? " selected" : "") + ">Candidat</option><option value=\"employer\"" + (prospectSide === "employer" ? " selected" : "") + ">Recruteur / employeur</option></select>" +
+        '<input type="hidden" name="side" value="' + side + '">' +
         U.field("Courriel", "email", "", "email") +
         U.field("Prénom", "first_name") +
         U.field("Nom", "last_name") +
-        U.field("Entreprise", "company_name") +
-        U.field("Poste / métier", "title") +
+        (side === "employer" ? U.field("Entreprise", "company_name") : "") +
+        U.field(side === "employer" ? "Poste du contact" : "Métier", "title") +
         U.field("Ville", "city") +
         U.field("Secteur", "sector") +
         U.field("Téléphone", "phone") +
@@ -1618,6 +1685,8 @@
       onMount: function (box, close) {
         box.querySelector("#pf-save").onclick = function () {
           var d = U.formData(box.querySelector("#pf-new"));
+          d.side = side;
+          d.source = "prospection";
           api().request("/admin/prospects", { method: "POST", body: d }).then(function () {
             U.toast("Prospect ajouté.", "ok");
             close();
@@ -1628,20 +1697,71 @@
     });
   }
 
+  function openProspectFiche(id) {
+    if (!api() || !id) return;
+    api().request("/admin/prospects/p/" + id).then(function (json) {
+      var d = (json && json.data) || {};
+      if (d.side && d.side !== prospectSide()) {
+        U.toast("Cette fiche n’appartient pas à cette base.", "err");
+        return;
+      }
+      var employer = d.side === "employer";
+      var sends = d.sends || [];
+      var histo = sends.length
+        ? sends.map(function (s) {
+          return "<p><b>" + U.esc(s.subject) + "</b><br><span class='sub'>" + U.esc(s.to_email) + " · " + U.dateFr(s.created_at) + (s.attachment_names && s.attachment_names.length ? " · " + U.esc(s.attachment_names.join(", ")) : "") + "</span></p>";
+        }).join("")
+        : "<p class='sub'>Aucun envoi pour l’instant.</p>";
+      U.modal({
+        title: prospectLabel(d),
+        wide: true,
+        body: '<form id="pf-edit" class="form-grid">' +
+          U.field("Prénom", "first_name", d.first_name || "") +
+          U.field("Nom", "last_name", d.last_name || "") +
+          (employer ? U.field("Entreprise", "company_name", d.company_name || "") : "") +
+          U.field(employer ? "Poste du contact" : "Métier", "title", d.title || "") +
+          U.field("Ville", "city", d.city || "") +
+          U.field("Secteur", "sector", d.sector || "") +
+          U.field("Téléphone", "phone", d.phone || "") +
+          U.field("Note / besoin", "message", d.message || "", "textarea", "full") +
+          "</form>" +
+          "<p class='sub'>" + U.esc(d.email) + " · " + U.esc(sourceLabel(d.source)) + (d.last_contacted_at ? " · contacté le " + U.dateFr(d.last_contacted_at) : " · jamais contacté") + "</p>" +
+          "<h3>Envois</h3>" + histo,
+        footer: '<button class="btn btn-ghost" data-close>Fermer</button><button class="btn btn-ghost" id="pf-write">Écrire</button><button class="btn btn-orange" id="pf-update">Enregistrer</button>',
+        onMount: function (box, close) {
+          box.querySelector("#pf-update").onclick = function () {
+            var payload = U.formData(box.querySelector("#pf-edit"));
+            api().request("/admin/prospects/p/" + id, { method: "PATCH", body: payload }).then(function () {
+              U.toast("Fiche enregistrée.", "ok");
+              close();
+              hydrateProspects();
+            }).catch(function (err) { U.toast((err && err.message) || "Enregistrement impossible.", "err"); });
+          };
+          box.querySelector("#pf-write").onclick = function () {
+            close();
+            openProspectComposer([id]);
+          };
+        }
+      });
+    }).catch(function (err) {
+      U.toast((err && err.message) || "Fiche introuvable.", "err");
+    });
+  }
+
   function openProspectComposer(ids) {
-    if (!api()) return;
+    if (!api() || !ids.length) return;
     var firstId = ids[0];
-    Promise.all([
-      api().request("/admin/prospects/" + firstId),
-      api().request("/admin/prospects/catalog?side=" + encodeURIComponent(prospectSide))
-    ]).then(function (pair) {
-      var detail = (pair[0] && pair[0].data) || {};
+    api().request("/admin/prospects/p/" + firstId).then(function (json) {
+      var detail = (json && json.data) || {};
+      if (detail.side && detail.side !== prospectSide()) {
+        U.toast("Ce prospect n’appartient pas à cette base.", "err");
+        return;
+      }
       var proposals = detail.proposals || [];
-      var attachments = detail.attachments || { invoices: [], contracts: [] };
+      var attachments = ids.length === 1 ? (detail.attachments || { invoices: [], contracts: [] }) : { invoices: [], contracts: [] };
       var others = ids.length - 1;
       var opts = proposals.map(function (p) {
-        return '<option value="' + U.esc(p.key) + '"' + (p.already_sent ? " data-sent=1" : "") + ">" +
-          U.esc(p.label) + (p.already_sent ? " — déjà envoyé" : "") + "</option>";
+        return '<option value="' + U.esc(p.key) + '">' + U.esc(p.label) + (p.already_sent ? " — déjà envoyé" : "") + "</option>";
       }).join("");
       var inv = (attachments.invoices || []).map(function (i) {
         return '<label class="check"><input type="checkbox" data-inv="' + U.esc(i.id) + '"> Facture ' + U.esc(i.label) + "</label>";
@@ -1650,17 +1770,16 @@
         return '<label class="check"><input type="checkbox" data-ct="' + U.esc(c.id) + '"> ' + U.esc(c.label) + "</label>";
       }).join("");
       U.modal({
-        title: ids.length > 1 ? "Envoyer à " + ids.length + " prospects" : "Écrire à " + prospectLabel(detail),
+        title: ids.length > 1 ? "Envoyer à " + ids.length + " fiches" : "Écrire à " + prospectLabel(detail),
         wide: true,
         body: '<div class="prospect-composer">' +
-          (others > 0 ? "<p class='sub'>Chaque destinataire reçoit son propre courriel, personnalisé. Personne ne voit les autres adresses.</p>" : "") +
-          "<p class='sub'>Modèle proposé selon le profil. Vous pouvez modifier le texte avant l’envoi.</p>" +
+          (others > 0 ? "<p class='sub'>Un courriel distinct par personne, personnalisé. Personne ne voit les autres adresses. Les deux bases restent séparées.</p>" : "") +
           '<label>Modèle</label><select id="pc-tpl">' + opts + '<option value="custom">Message libre</option></select>' +
           '<p class="sub" id="pc-intent"></p>' +
           '<label>Sujet</label><input id="pc-subject">' +
-          '<label>Message</label><textarea id="pc-body" rows="10"></textarea>' +
-          (inv || cts ? "<p class='sub'>Pièces jointes (facture, mandat) — uniquement pour ce destinataire.</p>" + inv + cts : "") +
-          '<label class="check"><input type="checkbox" id="pc-force"> Renvoyer même si ce modèle a déjà été envoyé</label>' +
+          '<label>Message</label><textarea id="pc-body" rows="8"></textarea>' +
+          (inv || cts ? "<p class='sub'>Pièces jointes pour ce destinataire.</p>" + inv + cts : "") +
+          '<label class="check"><input type="checkbox" id="pc-force"> Renvoyer ce modèle même s’il a déjà été envoyé</label>' +
           "</div>",
         footer: '<button class="btn btn-ghost" data-close>Annuler</button><button class="btn btn-orange" id="pc-send">Envoyer</button>',
         onMount: function (box, close) {
@@ -1686,8 +1805,8 @@
               force: !!(box.querySelector("#pc-force") && box.querySelector("#pc-force").checked)
             };
             var req = ids.length === 1
-              ? api().request("/admin/prospects/" + firstId + "/send", { method: "POST", body: payload })
-              : api().request("/admin/prospects/send-bulk", { method: "POST", body: Object.assign({ ids: ids }, payload) });
+              ? api().request("/admin/prospects/p/" + firstId + "/send", { method: "POST", body: payload })
+              : api().request("/admin/prospects/broadcast", { method: "POST", body: Object.assign({ ids: ids }, payload) });
             req.then(function (res) {
               U.toast((res && res.message) || "Envoyé.", "ok");
               close();
@@ -1697,7 +1816,7 @@
         }
       });
     }).catch(function (err) {
-      U.toast((err && err.message) || "Impossible d’ouvrir le composer.", "err");
+      U.toast((err && err.message) || "Impossible d’ouvrir le message.", "err");
     });
   }
 
