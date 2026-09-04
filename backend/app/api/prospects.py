@@ -1,11 +1,13 @@
 from fastapi import APIRouter, Depends
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.deps import require_roles
-from app.errors import ok
+from app.errors import AppError, ok
 from app.models import User
 from app.models.enums import UserRole
+from app.models.prospect import ProspectSend
 from app.schemas import ProspectBulkSendIn, ProspectIn, ProspectPatchIn, ProspectSendIn
 from app.services import prospects as svc
 
@@ -27,38 +29,69 @@ def _req(payload: ProspectSendIn) -> svc.SendRequest:
     )
 
 
+def _row_sends(db: Session, prospect_id: str) -> list[ProspectSend]:
+    return list(
+        db.scalars(
+            select(ProspectSend).where(ProspectSend.prospect_id == prospect_id).order_by(ProspectSend.created_at.desc())
+        ).all()
+    )
+
+
+def _detail(db: Session, staff: User, prospect_id: str) -> dict:
+    row = svc.get_prospect(db, prospect_id)
+    sent = svc.sent_keys_map(db, [row.id])
+    return {
+        **svc.serialize_prospect(row, sent.get(row.id, [])),
+        "proposals": svc.proposals_for(db, row, staff),
+        "attachments": svc.available_attachments(db, row),
+        "sends": [svc.serialize_send(item) for item in _row_sends(db, row.id)],
+    }
+
+
 @router.get("")
+@router.get("/")
 def list_prospects(
-    side: str | None = None,
+    side: str,
     stage: str | None = None,
     q: str | None = None,
+    source: str | None = None,
+    city: str | None = None,
+    sector: str | None = None,
     db: Session = Depends(get_db),
     _staff_user: User = Depends(_staff),
 ):
-    rows = svc.list_prospects(db, side=side, stage=stage, q=q)
+    side = svc.normalize_side(side)
+    rows = svc.list_prospects(db, side=side, stage=stage, q=q, source=source, city=city, sector=sector)
+    if any(row.side != side for row in rows):
+        raise AppError(500, "Les deux bases ne doivent pas être mélangées.", "SIDE_MIXED")
     sent = svc.sent_keys_map(db, [row.id for row in rows])
+    options = svc.filter_options(db, side)
     return ok(
         [svc.serialize_prospect(row, sent.get(row.id, [])) for row in rows],
         meta={
-            "candidate_stages": [{"key": k, "label": l} for k, l in svc.CANDIDATE_STAGES],
-            "employer_stages": [{"key": k, "label": l} for k, l in svc.EMPLOYER_STAGES],
-            "catalog": svc.catalog(side) if side else svc.catalog(),
+            "side": side,
+            "stages": [{"key": k, "label": l} for k, l in svc.stages_for(side)],
+            "catalog": svc.catalog(side),
+            "sources": [{"key": k, "label": l} for k, l in svc.SOURCE_LABELS],
+            "cities": options["cities"],
+            "sectors": options["sectors"],
         },
     )
 
 
-@router.get("/catalog")
-def catalog(side: str | None = None, _staff_user: User = Depends(_staff)):
+@router.get("/templates")
+def templates(side: str, _staff_user: User = Depends(_staff)):
     return ok(svc.catalog(side))
 
 
-@router.post("/send-bulk")
-def send_bulk(payload: ProspectBulkSendIn, db: Session = Depends(get_db), staff: User = Depends(_staff)):
+@router.post("/broadcast")
+def broadcast(payload: ProspectBulkSendIn, db: Session = Depends(get_db), staff: User = Depends(_staff)):
     result = svc.send_bulk(db, staff, payload.ids, _req(payload))
     db.commit()
-    sent_n = len(result["sent"])
-    skip_n = len(result["skipped"])
-    return ok(result, message=f"{sent_n} envoyé(s), {skip_n} déjà contacté(s) pour ce message.")
+    return ok(
+        result,
+        message=f"{len(result['sent'])} envoyé(s), {len(result['skipped'])} déjà contacté(s) pour ce message.",
+    )
 
 
 @router.post("")
@@ -69,28 +102,12 @@ def create_prospect(payload: ProspectIn, db: Session = Depends(get_db), staff: U
     return ok(svc.serialize_prospect(row), message="Prospect ajouté.")
 
 
-@router.get("/{prospect_id}")
+@router.get("/p/{prospect_id}")
 def get_prospect(prospect_id: str, db: Session = Depends(get_db), staff: User = Depends(_staff)):
-    row = svc.get_prospect(db, prospect_id)
-    sent = svc.sent_keys_map(db, [row.id])
-    return ok(
-        {
-            **svc.serialize_prospect(row, sent.get(row.id, [])),
-            "proposals": svc.proposals_for(db, row, staff),
-            "attachments": svc.available_attachments(db, row),
-            "sends": [svc.serialize_send(s) for s in row_sends(db, row.id)],
-        }
-    )
+    return ok(_detail(db, staff, prospect_id))
 
 
-def row_sends(db: Session, prospect_id: str):
-    from sqlalchemy import select
-    from app.models.prospect import ProspectSend
-
-    return list(db.scalars(select(ProspectSend).where(ProspectSend.prospect_id == prospect_id).order_by(ProspectSend.created_at.desc())).all())
-
-
-@router.patch("/{prospect_id}")
+@router.patch("/p/{prospect_id}")
 def patch_prospect(prospect_id: str, payload: ProspectPatchIn, db: Session = Depends(get_db), _staff_user: User = Depends(_staff)):
     row = svc.patch_prospect(db, prospect_id, payload.model_dump(exclude_unset=True))
     db.commit()
@@ -98,13 +115,13 @@ def patch_prospect(prospect_id: str, payload: ProspectPatchIn, db: Session = Dep
     return ok(svc.serialize_prospect(row), message="Prospect mis à jour.")
 
 
-@router.get("/{prospect_id}/proposals")
+@router.get("/p/{prospect_id}/proposals")
 def proposals(prospect_id: str, db: Session = Depends(get_db), staff: User = Depends(_staff)):
     row = svc.get_prospect(db, prospect_id)
     return ok(svc.proposals_for(db, row, staff))
 
 
-@router.post("/{prospect_id}/send")
+@router.post("/p/{prospect_id}/send")
 def send_one(prospect_id: str, payload: ProspectSendIn, db: Session = Depends(get_db), staff: User = Depends(_staff)):
     row = svc.get_prospect(db, prospect_id)
     result = svc.send_to_prospect(db, staff, row, _req(payload))

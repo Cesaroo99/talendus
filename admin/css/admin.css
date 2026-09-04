@@ -396,12 +396,17 @@ table.data .check { width: 36px; cursor: default; }
 .kanban-card b { display: block; font-size: 13px; }
 .kanban-card span { color: var(--steel); font-size: 12px; }
 .kanban-col.drag-over { outline: 2px dashed var(--electric); }
-.prospect-kanban { grid-template-columns: repeat(5, minmax(200px, 1fr)); }
 .prospect-toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin: 0 0 14px; }
 .prospect-toolbar input { flex: 1; min-width: 200px; }
 .prospect-composer label { display: block; font-size: 12px; font-weight: 800; margin: 12px 0 6px; }
 .prospect-composer input, .prospect-composer select, .prospect-composer textarea { width: 100%; }
-.kanban-card .btn-sm { margin-top: 8px; width: 100%; }
+.prospect-list table.data th, .prospect-list table.data td { padding: 8px 10px; }
+.prospect-list table.data tbody tr { cursor: default; }
+.prospect-list .person-cell b { display: block; }
+.prospect-stage { display: flex; flex-direction: column; gap: 6px; min-width: 148px; }
+.prospect-stage select { height: 32px; min-width: 148px; }
+.prospect-actions { display: flex; gap: 6px; white-space: nowrap; }
+a.tab { text-decoration: none; display: inline-block; }
 
 /* ----- Tabs / detail ----- */
 .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin-bottom: 18px; overflow: auto; }
