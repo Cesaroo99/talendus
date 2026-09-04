@@ -1,0 +1,10 @@
+Subject: L’appel est lancé — rejoignez maintenant
+{{name}},
+
+Le recruteur a lancé l’entretien « {{job_title}} ».
+Vous pouvez rejoindre l’appel maintenant.
+
+Rejoindre :
+{{link}}
+
+Talendus · info@talendus.ca

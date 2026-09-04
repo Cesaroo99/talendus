@@ -1,3 +1,8 @@
 Subject: Nouvelle candidature — {{job_title}}
 Une nouvelle candidature a été déposée pour « {{job_title}} » :
 {{candidate_name}} ({{candidate_email}})
+
+Ouvrir le dossier :
+{{link}}
+
+Talendus · info@talendus.ca

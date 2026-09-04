@@ -1,0 +1,9 @@
+Subject: {{title}}
+{{name}},
+
+{{detail}}
+
+Ouvrir le suivi :
+{{link}}
+
+Talendus · info@talendus.ca

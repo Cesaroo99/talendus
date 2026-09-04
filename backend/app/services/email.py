@@ -7,6 +7,7 @@ import queue
 import smtplib
 import threading
 import time
+from dataclasses import dataclass
 from email.message import EmailMessage
 from pathlib import Path
 
@@ -18,12 +19,72 @@ from app.models import EmailLog
 from app.models.enums import EmailStatus, EmailType, utcnow
 
 logger = logging.getLogger("talendus.email")
-settings = get_settings()
 TEMPLATE_DIR = Path(__file__).resolve().parents[1] / "emails" / "templates"
 
 _queue: queue.Queue[str] = queue.Queue()
 _worker_lock = threading.Lock()
 _worker_started = False
+
+
+@dataclass(frozen=True)
+class SmtpRuntime:
+    enabled: bool
+    host: str
+    port: int
+    username: str
+    password: str
+    from_addr: str
+    use_tls: bool
+    reply_to: str
+
+
+def _truthy(value: str | None) -> bool | None:
+    raw = (value or "").strip().lower()
+    if raw in {"1", "true", "oui", "on", "yes"}:
+        return True
+    if raw in {"0", "false", "non", "off", "no"}:
+        return False
+    return None
+
+
+def load_smtp_overrides(db: Session | None) -> dict[str, str]:
+    if db is None:
+        return {}
+    try:
+        from app.models import SystemSetting
+
+        rows = db.scalars(select(SystemSetting).where(SystemSetting.key.like("smtp.%"))).all()
+        return {row.key: (row.value or "") for row in rows}
+    except Exception:  # noqa: BLE001
+        return {}
+
+
+def runtime_email_config(db: Session | None = None) -> SmtpRuntime:
+    env = get_settings()
+    stored = load_smtp_overrides(db)
+    enabled_ov = _truthy(stored.get("smtp.enabled"))
+    tls_ov = _truthy(stored.get("smtp.use_tls"))
+    port_raw = (stored.get("smtp.port") or "").strip()
+    try:
+        port = int(port_raw) if port_raw else int(env.email_port)
+    except ValueError:
+        port = int(env.email_port)
+    password = (stored.get("smtp.password") or "").strip() or (env.email_password or "")
+    from_addr = (
+        (stored.get("smtp.from") or "").strip()
+        or (env.email_from or "").strip()
+        or "Talendus <info@talendus.ca>"
+    )
+    return SmtpRuntime(
+        enabled=env.email_enabled if enabled_ov is None else enabled_ov,
+        host=(stored.get("smtp.host") or "").strip() or env.email_server,
+        port=port,
+        username=(stored.get("smtp.username") or "").strip() or env.email_username,
+        password=password,
+        from_addr=from_addr,
+        use_tls=env.email_use_tls if tls_ov is None else tls_ov,
+        reply_to=(env.public_email or "info@talendus.ca").strip(),
+    )
 
 
 def _render(template_name: str, **ctx: str) -> tuple[str, str]:
@@ -52,7 +113,8 @@ def send_email(db: Session, to_email: str, email_type: EmailType, template: str,
     )
     db.add(log)
     db.flush()
-    if not settings.email_enabled:
+    cfg = runtime_email_config(db)
+    if not cfg.enabled:
         log.status = EmailStatus.SENT
         log.sent_at = utcnow()
         logger.info("email[dev] to=%s type=%s subject=%s", to_email, email_type, subject)
@@ -121,17 +183,20 @@ def _deliver(session_factory, log_id: str) -> None:
             to_email = log.to_email
             subject = log.subject
             body = log.body or ""
+            cfg = runtime_email_config(db)
             try:
                 msg = EmailMessage()
-                msg["From"] = settings.email_from
+                msg["From"] = cfg.from_addr
                 msg["To"] = to_email
                 msg["Subject"] = subject
+                if cfg.reply_to:
+                    msg["Reply-To"] = cfg.reply_to
                 msg.set_content(body)
-                with smtplib.SMTP(settings.email_server, settings.email_port, timeout=10) as smtp:
-                    if settings.email_use_tls:
+                with smtplib.SMTP(cfg.host, cfg.port, timeout=10) as smtp:
+                    if cfg.use_tls:
                         smtp.starttls()
-                    if settings.email_username:
-                        smtp.login(settings.email_username, settings.email_password)
+                    if cfg.username:
+                        smtp.login(cfg.username, cfg.password)
                     smtp.send_message(msg)
                 log.status = EmailStatus.SENT
                 log.error = None

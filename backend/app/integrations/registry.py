@@ -40,9 +40,9 @@ PROVIDERS: tuple[ProviderSpec, ...] = (
         label="E-mail SMTP",
         env_vars=("email_username", "email_password"),
         optional_env=("email_server", "email_from"),
-        description="File d'e-mails persistée. Envoi réel seulement si EMAIL_ENABLED=true.",
+        description="File d’e-mails persistée. Expéditeur info@talendus.ca. Envoi réel si SMTP est activé (admin → Paramètres → Courriel, ou EMAIL_ENABLED=true).",
         implemented=True,
-        notes="Déjà branché via app.services.email.",
+        notes="Réglages SMTP aussi dans l’admin (Paramètres → Courriel).",
     ),
     ProviderSpec(
         name="s3",

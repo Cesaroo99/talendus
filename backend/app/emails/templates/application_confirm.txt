@@ -2,6 +2,9 @@ Subject: Candidature reçue — {{job_title}}
 {{name}},
 
 Nous avons bien reçu votre candidature pour le poste « {{job_title}} ».
-Un conseiller Talendus vous rejoint si le profil correspond.
+Un recruteur Talendus vous rejoint si le profil correspond.
 
-Les talents qui font tourner l'industrie.
+Suivre votre candidature :
+{{link}}
+
+Talendus · info@talendus.ca

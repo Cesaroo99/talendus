@@ -644,7 +644,6 @@ def sign_contract(db: Session, user: User, contract_id: str, data: ContractSignI
     if user.role == UserRole.EMPLOYER and not row.opened_at:
         row.opened_at = now
     audit(db, "contract.sign", user, "contract", row.id, ip, {"hash": sig.document_hash, "party": PARTY_CLIENT})
-    from app.services.notifications import notify
     from app.services.ops_notify import frontend, notify_company
 
     company_name = row.company.name if row.company else "l'entreprise"
@@ -675,15 +674,27 @@ def sign_contract(db: Session, user: User, contract_id: str, data: ContractSignI
                 select(User).where(User.role.in_(ADMINS), User.is_active.is_(True)).order_by(User.created_at.asc())
             )
         )
-    for person in recipients:
-        notify(
-            db,
-            person,
-            NotificationType.ADMIN,
-            "Mandat signé par le client",
-            f"{name} a signé le mandat de {company_name}. La recherche peut commencer.",
-            href=f"/admin/#/clients/{row.company_id}",
-        )
+    from app.models.enums import EmailType
+    from app.services.ops_notify import notify_people
+
+    notify_people(
+        db,
+        recipients,
+        actor=user,
+        ntype=NotificationType.ADMIN,
+        title="Mandat signé par le client",
+        message=f"{name} a signé le mandat de {company_name}. La recherche peut commencer.",
+        section="clients",
+        item_id=row.company_id,
+        template="contract_signed",
+        email_type=EmailType.ADMIN,
+        ctx={
+            "name": company_name,
+            "company": company_name,
+            "signer": name,
+            "link": f"{frontend()}/admin/#/clients/{row.company_id}",
+        },
+    )
     db.commit()
     db.expire_all()
     return get_contract(db, user, row.id)

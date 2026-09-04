@@ -1,0 +1,10 @@
+Subject: Offre correspondant à votre profil — {{job_title}}
+{{name}},
+
+Une offre correspond à votre profil : « {{job_title}} » ({{location}}).
+{{detail}}
+
+Voir l’offre et postuler :
+{{link}}
+
+Talendus · info@talendus.ca

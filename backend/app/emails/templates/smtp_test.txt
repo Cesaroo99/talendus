@@ -1,0 +1,10 @@
+Subject: Test SMTP Talendus — info@talendus.ca
+{{name}},
+
+Ceci est un e-mail de test envoyé depuis l’administration Talendus.
+Si vous le recevez, l’expéditeur info@talendus.ca est opérationnel.
+
+Ouvrir les paramètres :
+{{link}}
+
+Talendus · info@talendus.ca

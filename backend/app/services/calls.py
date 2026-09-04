@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from app.errors import AppError
 from app.models import Interview, User
 from app.models.calls import CallPeer, CallSignal
-from app.models.enums import InterviewStatus, InterviewType, NotificationType, utcnow
+from app.models.enums import EmailType, InterviewStatus, InterviewType, NotificationType, utcnow
 from app.services.interviews import (
     get_interview,
     is_staff,
@@ -17,7 +17,7 @@ from app.services.interviews import (
     viewer_can_join_call,
     viewer_can_start_call,
 )
-from app.services.notifications import notify, portal_href
+from app.services.ops_notify import notify_people
 
 CALL_TYPES = {
     InterviewType.TALENDUS,
@@ -177,13 +177,22 @@ def _open_room(db: Session, interview: Interview, user: User, *, notify_candidat
         return True
     cand_user = interview.candidate.user if interview.candidate else None
     if cand_user and cand_user.id != user.id:
-        notify(
+        notify_people(
             db,
             cand_user,
-            NotificationType.INTERVIEW_INVITE,
-            "L’entretien se prépare",
-            "Le recruteur prépare l’appel. Les boutons Rejoindre apparaîtront dès qu’il l’aura lancé.",
-            href=portal_href(cand_user, "interviews"),
+            actor=user,
+            ntype=NotificationType.INTERVIEW_INVITE,
+            title="L’entretien se prépare",
+            message="Le recruteur prépare l’appel. Les boutons Rejoindre apparaîtront dès qu’il l’aura lancé.",
+            section="interviews",
+            item_id=interview.id,
+            template="call_preparing",
+            email_type=EmailType.INTERVIEW_INVITE,
+            ctx={
+                "name": cand_user.first_name or "",
+                "job_title": interview.job.title if interview.job else "Talendus",
+            },
+            application_id=interview.application_id,
         )
     return True
 
@@ -239,13 +248,22 @@ def join(db: Session, user: User, interview_id: str, video: bool | None = None) 
     if arriving and is_staff(user):
         cand_user = interview.candidate.user if interview.candidate else None
         if cand_user and cand_user.id != user.id:
-            notify(
+            notify_people(
                 db,
                 cand_user,
-                NotificationType.INTERVIEW_INVITE,
-                "L’appel est lancé",
-                "Le recruteur a lancé l’entretien. Vous pouvez rejoindre maintenant.",
-                href=portal_href(cand_user, "interviews"),
+                actor=user,
+                ntype=NotificationType.INTERVIEW_INVITE,
+                title="L’appel est lancé",
+                message="Le recruteur a lancé l’entretien. Vous pouvez rejoindre maintenant.",
+                section="interviews",
+                item_id=interview.id,
+                template="call_ready",
+                email_type=EmailType.INTERVIEW_INVITE,
+                ctx={
+                    "name": cand_user.first_name or "",
+                    "job_title": interview.job.title if interview.job else "Talendus",
+                },
+                application_id=interview.application_id,
             )
     db.commit()
     return {

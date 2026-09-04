@@ -23,6 +23,7 @@ from app.rbac import PERMISSIONS
 from app.schemas import (
     AdminCandidateIn,
     AdminCandidatePatchIn,
+    EmailTestIn,
     SiteContentIn,
     StaffUserIn,
     StaffUserPatchIn,
@@ -238,6 +239,18 @@ def create_staff(
     ensure_preferences(db, user)
     if user.role == UserRole.RECRUITER:
         db.add(Recruiter(user_id=user.id))
+    from app.models.enums import EmailType
+    from app.services.email import send_email
+    from app.services.ops_notify import frontend
+
+    send_email(
+        db,
+        user.email,
+        EmailType.WELCOME,
+        "welcome",
+        name=user.first_name,
+        link=f"{frontend()}/admin/",
+    )
     audit(db, "admin.user_create", admin, "user", user.id, metadata={"role": user.role.value})
     db.commit()
     db.refresh(user)
@@ -345,3 +358,26 @@ def patch_setting(
 ):
     row = upsert_setting(db, admin, payload.key, payload.value, payload.label)
     return ok(serialize_setting(row))
+
+
+@router.post("/settings/test-email")
+def send_test_email(
+    payload: EmailTestIn,
+    db: Session = Depends(get_db),
+    admin: User = Depends(_admin_user),
+):
+    from app.models.enums import EmailType
+    from app.services.email import send_email
+    from app.services.ops_notify import frontend
+
+    to_email = str(payload.to_email or admin.email).lower()
+    send_email(
+        db,
+        to_email,
+        EmailType.ADMIN,
+        "smtp_test",
+        name=admin.first_name or "Admin",
+        link=f"{frontend()}/admin/#/settings",
+    )
+    db.commit()
+    return ok({"to_email": to_email}, message="E-mail de test journalisé. S’il est configuré, SMTP l’envoie depuis info@talendus.ca.")

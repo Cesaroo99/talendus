@@ -1,0 +1,9 @@
+Subject: Un document a été ajouté à votre dossier
+{{name}},
+
+Talendus a déposé un document dans votre dossier : {{document}}.
+
+Ouvrir vos documents :
+{{link}}
+
+Talendus · info@talendus.ca

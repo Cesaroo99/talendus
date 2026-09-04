@@ -189,8 +189,8 @@ def staff_candidate_jobs(db: Session, user: User, candidate_id: str, limit: int 
 def notify_job_matches(db: Session, job: JobOffer, limit: int = 40) -> int:
     """Alerte les candidats actifs dont le score dépasse le seuil (appelé à la publication)."""
     from app.config import get_settings
-    from app.models.enums import JobSearchStatus, NotificationType
-    from app.services.notifications import notify
+    from app.models.enums import EmailType, JobSearchStatus, NotificationType
+    from app.services.ops_notify import first_staff, frontend, notify_people
 
     min_score = get_settings().job_match_min_score or 50
     candidates = list(
@@ -212,13 +212,24 @@ def notify_job_matches(db: Session, job: JobOffer, limit: int = 40) -> int:
     where = job.location or "Québec"
     for score, candidate, reasons in ranked[:limit]:
         detail = " · ".join(reasons[:2])
-        notify(
+        notify_people(
             db,
             candidate.user,
-            NotificationType.JOB_MATCH,
-            "Offre correspondant à votre profil",
-            f"{job.title} ({where}) — score {score} %." + (f" {detail}" if detail else ""),
-            href=href,
+            actor=first_staff(db),
+            ntype=NotificationType.JOB_MATCH,
+            title="Offre correspondant à votre profil",
+            message=f"{job.title} ({where}) — score {score} %." + (f" {detail}" if detail else ""),
+            section="jobs",
+            template="job_match",
+            email_type=EmailType.ADMIN,
+            ctx={
+                "name": candidate.user.first_name or "",
+                "job_title": job.title,
+                "location": where,
+                "detail": detail,
+                "link": f"{frontend()}{href}",
+            },
+            thread=True,
         )
         notified_users.add(candidate.user.id)
         sent += 1
@@ -234,13 +245,24 @@ def notify_job_matches(db: Session, job: JobOffer, limit: int = 40) -> int:
             continue
         if not alert_matches_job(alert, job):
             continue
-        notify(
+        notify_people(
             db,
             user,
-            NotificationType.JOB_MATCH,
-            "Nouvelle offre selon votre alerte",
-            f"{job.title} ({where})" + (f" — {alert.keywords}" if alert.keywords else ""),
-            href=href,
+            actor=first_staff(db),
+            ntype=NotificationType.JOB_MATCH,
+            title="Nouvelle offre selon votre alerte",
+            message=f"{job.title} ({where})" + (f" — {alert.keywords}" if alert.keywords else ""),
+            section="jobs",
+            template="job_match",
+            email_type=EmailType.ADMIN,
+            ctx={
+                "name": user.first_name or "",
+                "job_title": job.title,
+                "location": where,
+                "detail": alert.keywords or "",
+                "link": f"{frontend()}{href}",
+            },
+            thread=True,
         )
         notified_users.add(user.id)
         sent += 1

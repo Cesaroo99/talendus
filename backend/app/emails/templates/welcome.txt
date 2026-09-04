@@ -3,4 +3,7 @@ Subject: Bienvenue chez Talendus
 
 Votre compte Talendus a été créé. Les talents qui font tourner l'industrie.
 
-Connectez-vous : {{link}}
+Connectez-vous :
+{{link}}
+
+Talendus · info@talendus.ca

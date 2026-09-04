@@ -534,8 +534,15 @@ table.data .check { width: 36px; cursor: default; }
 .settings-tab.is-active { background: var(--navy); color: #fff; border-color: var(--navy); }
 .settings-panel .card + .card { margin-top: 16px; }
 .settings-panel label.check { display: flex; gap: 8px; align-items: center; font-weight: 600; }
-#adm-platform-form label { display: block; font-weight: 700; margin: 10px 0 4px; }
-#adm-platform-form input { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; }
+#adm-platform-form label,
+#adm-smtp-form label { display: block; font-weight: 700; margin: 10px 0 4px; }
+#adm-platform-form input,
+#adm-smtp-form input,
+#adm-smtp-form select { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; }
+.smtp-guide h4 { margin: 18px 0 8px; font-size: 15px; }
+.smtp-guide ol { margin: 0 0 8px; padding-left: 1.25rem; }
+.smtp-guide li { margin: 0 0 6px; line-height: 1.45; }
+.smtp-log { max-height: 360px; overflow: auto; }
 
 @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes pop { from { transform: translateY(8px) scale(.98); opacity: 0; } to { transform: none; opacity: 1; } }

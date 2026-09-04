@@ -1,0 +1,11 @@
+Subject: Nouveau message de {{sender_name}}
+{{name}},
+
+{{sender_name}} vous a écrit sur Talendus :
+
+{{preview}}
+
+Répondre dans votre espace :
+{{link}}
+
+Talendus · info@talendus.ca

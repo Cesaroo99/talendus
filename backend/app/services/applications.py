@@ -18,7 +18,7 @@ from app.services.auth import ensure_candidate
 from app.services.email import send_email
 from app.services.jobs import assert_job_open, get_public_job
 from app.services.labels import application_status_label
-from app.services.notifications import notify, portal_href
+from app.services.ops_notify import first_staff, frontend, notify_people
 from app.site_jobs import open_site_job_for_apply
 from app.services.pipeline import stage_for, tracker_for
 
@@ -45,13 +45,42 @@ def _notify_new_application(db: Session, job: JobOffer, applicant: User) -> None
     for person in recipients:
         if not person or person.id in seen:
             continue
-        notify(
+        notify_people(
             db,
             person,
-            NotificationType.APPLICATION_NEW,
-            "Nouvelle candidature",
-            f"{applicant.full_name} a postulé pour {job.title}.",
-            href=portal_href(person, "jobs", job.id),
+            actor=applicant,
+            ntype=NotificationType.APPLICATION_NEW,
+            title="Nouvelle candidature",
+            message=f"{applicant.full_name} a postulé pour {job.title}.",
+            section="jobs",
+            item_id=job.id,
+            template="new_application",
+            email_type=EmailType.NEW_APPLICATION_RECRUITER,
+            ctx={
+                "job_title": job.title,
+                "candidate_name": applicant.full_name,
+                "candidate_email": applicant.email,
+            },
+        )
+        seen.add(person.id)
+    extras = [person for person in _talendus_staff(db) if person.id not in seen]
+    for person in extras:
+        notify_people(
+            db,
+            person,
+            actor=applicant,
+            ntype=NotificationType.APPLICATION_NEW,
+            title="Nouvelle candidature",
+            message=f"{applicant.full_name} a postulé pour {job.title}.",
+            section="jobs",
+            item_id=job.id,
+            template="new_application",
+            email_type=EmailType.NEW_APPLICATION_RECRUITER,
+            ctx={
+                "job_title": job.title,
+                "candidate_name": applicant.full_name,
+                "candidate_email": applicant.email,
+            },
         )
         seen.add(person.id)
 
@@ -114,14 +143,19 @@ def apply(db: Session, user: User, data: ApplicationCreateIn, ip: str | None = N
     _history(db, application, None, ApplicationStatus.SUBMITTED.value, user)
     staff = db.get(User, job.recruiter_id) if job.recruiter_id else None
     _notify_new_application(db, job, user)
-    if staff:
-        send_email(
-            db, staff.email, EmailType.NEW_APPLICATION_RECRUITER, "new_application",
-            job_title=job.title, candidate_name=user.full_name, candidate_email=user.email,
-        )
-    send_email(
-        db, user.email, EmailType.APPLICATION_CONFIRMATION, "application_confirm",
-        name=user.first_name, job_title=job.title,
+    notify_people(
+        db,
+        user,
+        actor=staff or first_staff(db),
+        ntype=NotificationType.APPLICATION_NEW,
+        title="Candidature envoyée",
+        message=f"Votre candidature pour {job.title} a été transmise.",
+        section="apps",
+        item_id=application.id,
+        template="application_confirm",
+        email_type=EmailType.APPLICATION_CONFIRMATION,
+        ctx={"name": user.first_name or "", "job_title": job.title},
+        application_id=application.id,
     )
     from app.integrations.hooks import maybe_send_whatsapp
 
@@ -136,14 +170,6 @@ def apply(db: Session, user: User, data: ApplicationCreateIn, ip: str | None = N
             template="employer_notice",
             variables={"candidate": user.full_name, "job": job.title},
         )
-    notify(
-        db,
-        user,
-        NotificationType.APPLICATION_NEW,
-        "Candidature envoyée",
-        f"Votre candidature pour {job.title} a été transmise.",
-        href=portal_href(user, "apps"),
-    )
     audit(db, "application.create", user, "application", application.id, ip, {"job_id": job.id})
     db.commit()
     db.refresh(application)
@@ -187,7 +213,14 @@ def apply_public(
 
         db.add(UserPreference(user_id=user.id))
         db.add(Candidate(user_id=user.id, city=None, title=None))
-        send_email(db, user.email, EmailType.WELCOME, "welcome", name=user.first_name, link=f"{job.title}")
+        send_email(
+            db,
+            user.email,
+            EmailType.WELCOME,
+            "welcome",
+            name=user.first_name,
+            link=f"{frontend()}/espace.html",
+        )
     resume_id = None
     if cv_file and cv_filename:
         from app.services.candidates import upload_cv
@@ -264,18 +297,25 @@ def change_status(db: Session, user: User, application_id: str, status: Applicat
     elif status == ApplicationStatus.INTERVIEW:
         ntype = NotificationType.INTERVIEW_INVITE
     shown = application_status_label(status, candidate_user)
-    notify(
-        db, candidate_user, ntype,
-        "Mise à jour de candidature",
-        f"{application.job.title} : {shown}",
-        href=portal_href(candidate_user, "application", application.id),
-    )
     template = "interview" if status == ApplicationStatus.INTERVIEW else "application_status"
-    send_email(
-        db, candidate_user.email,
-        EmailType.INTERVIEW_INVITE if status == ApplicationStatus.INTERVIEW else EmailType.APPLICATION_STATUS,
-        template,
-        name=candidate_user.first_name, job_title=application.job.title, status=shown, comment=comment or "",
+    notify_people(
+        db,
+        candidate_user,
+        actor=user,
+        ntype=ntype,
+        title="Mise à jour de candidature",
+        message=f"{application.job.title} : {shown}",
+        section="application",
+        item_id=application.id,
+        template=template,
+        email_type=EmailType.INTERVIEW_INVITE if status == ApplicationStatus.INTERVIEW else EmailType.APPLICATION_STATUS,
+        ctx={
+            "name": candidate_user.first_name or "",
+            "job_title": application.job.title,
+            "status": shown,
+            "comment": comment or "",
+        },
+        application_id=application.id,
     )
     from app.integrations.hooks import maybe_send_whatsapp
 

@@ -1567,6 +1567,7 @@
         <button type="button" class="settings-tab" data-stab="security">Sécurité</button>
         <button type="button" class="settings-tab" data-stab="access">Niveaux d’accès</button>
         ${admin ? '<button type="button" class="settings-tab" data-stab="team">Équipe</button>' : ""}
+        ${admin ? '<button type="button" class="settings-tab" data-stab="email">Courriel</button>' : ""}
         ${admin ? '<button type="button" class="settings-tab" data-stab="platform">Plateforme</button>' : ""}
       </div>
       <div class="settings-panel" data-spanel="account">
@@ -1621,6 +1622,45 @@
           </form>
         </div>
         <div class="card card-pad" id="adm-team-list" style="margin-top:16px"><p class="sub">Chargement de l’équipe…</p></div>
+      </div>` : ""}
+      ${admin ? `<div class="settings-panel" data-spanel="email" hidden>
+        <div class="card card-pad smtp-guide">
+          <div class="card-head"><h3>Courriel opérationnel</h3></div>
+          <p class="sub">Tous les e-mails destinés aux recruteurs et aux candidats partent de <b>info@talendus.ca</b> et apparaissent aussi dans le fil de messages. Un clic admin ou recruteur suffit : le message est rédigé automatiquement, avec le lien vers l’action.</p>
+          <h4>Étapes pour activer l’envoi</h4>
+          <ol>
+            <li>Ouvrez la boîte <b>info@talendus.ca</b> chez votre hébergeur (Google Workspace, OVH, Microsoft 365…).</li>
+            <li>Autorisez SMTP : mot de passe d’application ou relais SMTP. Ne mettez jamais le mot de passe du compte dans le code, seulement ici ou dans les variables d’environnement du serveur.</li>
+            <li>Remplissez le formulaire ci-dessous, enregistrez, puis cliquez sur <b>Envoyer un test</b>.</li>
+            <li>Vérifiez la boîte info@ (et les spams). Le journal sous le formulaire doit passer à « envoyé ».</li>
+          </ol>
+          <h4>Google Workspace (Gmail professionnel)</h4>
+          <ol>
+            <li>Compte Google de <code>info@talendus.ca</code> → Sécurité → Validation en 2 étapes → Mots de passe d’application.</li>
+            <li>Serveur <code>smtp.gmail.com</code>, port <code>587</code>, TLS = oui, identifiant = <code>info@talendus.ca</code>, mot de passe = le mot de passe d’application (16 caractères).</li>
+            <li>Expéditeur : <code>Talendus &lt;info@talendus.ca&gt;</code>.</li>
+          </ol>
+          <h4>OVH / hébergeur MX</h4>
+          <ol>
+            <li>Espace client OVH → E-mails → <code>info@talendus.ca</code>.</li>
+            <li>Serveur souvent <code>ssl0.ovh.net</code> (ou celui indiqué dans l’aide OVH), port <code>587</code>, TLS = oui.</li>
+            <li>Identifiant = l’adresse complète, mot de passe = celui de la boîte.</li>
+          </ol>
+          <h4>Autre SMTP</h4>
+          <ol>
+            <li>Demandez à l’hébergeur : hôte, port (587 STARTTLS ou 465), identifiant, mot de passe.</li>
+            <li>L’expéditeur doit être une adresse autorisée du domaine <code>talendus.ca</code>, idéalement <code>info@talendus.ca</code>.</li>
+          </ol>
+          <p class="sub">Variante serveur : les mêmes valeurs existent en variables <code>EMAIL_*</code> (Render, etc.). Si un champ admin est rempli, il prime sur la variable. Laisser « Activer l’envoi » vide conserve le réglage du serveur.</p>
+        </div>
+        <div class="card card-pad" style="margin-top:16px">
+          <div class="card-head"><h3>Réglages SMTP</h3></div>
+          <div id="adm-smtp"><p class="sub">Chargement…</p></div>
+        </div>
+        <div class="card card-pad" style="margin-top:16px">
+          <div class="card-head"><h3>Journal des e-mails</h3></div>
+          <div id="adm-email-log" class="smtp-log"><p class="sub">Chargement…</p></div>
+        </div>
       </div>` : ""}
       ${admin ? `<div class="settings-panel" data-spanel="platform" hidden>
         <div class="card card-pad">
@@ -2756,7 +2796,9 @@
     var platform = document.getElementById("adm-platform");
     if (platform && api()) {
       api().request("/admin/settings").then(function (json) {
-        var rows = (json && json.data) || [];
+        var rows = ((json && json.data) || []).filter(function (s) {
+          return String(s.key || "").indexOf("smtp.") !== 0;
+        });
         platform.innerHTML = '<form id="adm-platform-form">' + rows.map(function (s) {
           return '<label>' + U.esc(s.label || s.key) + '</label><input name="' + U.esc(s.key) + '" value="' + U.esc(s.value || "") + '">';
         }).join("") + (rows.length ? '<button class="btn btn-orange" type="submit">Enregistrer la plateforme</button>' : "<p class='sub'>Aucun réglage plateforme.</p>") + "</form>";
@@ -2772,6 +2814,72 @@
         };
       }).catch(function () { platform.innerHTML = "<p class='sub'>Réservé aux administrateurs connectés à l’API.</p>"; });
     }
+    var smtpBox = document.getElementById("adm-smtp");
+    if (smtpBox && api()) {
+      api().request("/admin/settings").then(function (json) {
+        var all = (json && json.data) || [];
+        var byKey = {};
+        all.forEach(function (s) { byKey[s.key] = s; });
+        var val = function (key, fallback) {
+          return (byKey[key] && byKey[key].value) || fallback || "";
+        };
+        smtpBox.innerHTML =
+          '<form id="adm-smtp-form">' +
+          '<label>Activer l’envoi</label><select name="smtp.enabled">' +
+          '<option value="">Utiliser le réglage serveur (EMAIL_ENABLED)</option>' +
+          '<option value="oui"' + (val("smtp.enabled") === "oui" ? " selected" : "") + ">Oui — envoyer vraiment</option>" +
+          '<option value="non"' + (val("smtp.enabled") === "non" ? " selected" : "") + ">Non — journaliser seulement</option>" +
+          "</select>" +
+          '<label>Serveur SMTP</label><input name="smtp.host" placeholder="smtp.gmail.com" value="' + U.esc(val("smtp.host")) + '">' +
+          '<label>Port</label><input name="smtp.port" placeholder="587" value="' + U.esc(val("smtp.port", "587")) + '">' +
+          '<label>Identifiant</label><input name="smtp.username" placeholder="info@talendus.ca" value="' + U.esc(val("smtp.username")) + '" autocomplete="off">' +
+          '<label>Mot de passe SMTP</label><input name="smtp.password" type="password" value="' + U.esc(val("smtp.password")) + '" autocomplete="new-password" placeholder="Laisser vide pour conserver">' +
+          '<label>Expéditeur (From)</label><input name="smtp.from" value="' + U.esc(val("smtp.from", "Talendus <info@talendus.ca>")) + '">' +
+          '<label>TLS (STARTTLS)</label><select name="smtp.use_tls">' +
+          '<option value="oui"' + (val("smtp.use_tls", "oui") !== "non" ? " selected" : "") + ">oui</option>" +
+          '<option value="non"' + (val("smtp.use_tls") === "non" ? " selected" : "") + ">non</option>" +
+          "</select>" +
+          '<p style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">' +
+          '<button class="btn btn-orange" type="submit">Enregistrer le courriel</button>' +
+          '<button class="btn btn-ghost" type="button" id="adm-smtp-test">Envoyer un test</button>' +
+          "</p></form>";
+        var sf = document.getElementById("adm-smtp-form");
+        if (sf) sf.onsubmit = function (e) {
+          e.preventDefault();
+          var fd = U.formData(sf);
+          var tasks = Object.keys(fd).map(function (key) {
+            return api().request("/admin/settings", { method: "PATCH", body: { key: key, value: fd[key] } });
+          });
+          Promise.all(tasks).then(function () { U.toast("Réglages courriel enregistrés.", "ok"); })
+            .catch(function (err) { U.toast((err && err.message) || "Impossible d’enregistrer.", "err"); });
+        };
+        var testBtn = document.getElementById("adm-smtp-test");
+        if (testBtn) testBtn.onclick = function () {
+          api().request("/admin/settings/test-email", { method: "POST", body: {} }).then(function (json) {
+            var to = json && json.data && json.data.to_email;
+            U.toast(to ? "Test envoyé vers " + to + "." : "Test journalisé.", "ok");
+            loadEmailLog();
+          }).catch(function (err) { U.toast((err && err.message) || "Test impossible.", "err"); });
+        };
+      }).catch(function () { smtpBox.innerHTML = "<p class='sub'>Réservé aux administrateurs connectés à l’API.</p>"; });
+    }
+    function loadEmailLog() {
+      var logBox = document.getElementById("adm-email-log");
+      if (!logBox || !api()) return;
+      api().request("/emails?limit=30").then(function (json) {
+        var rows = (json && json.data) || [];
+        if (!rows.length) {
+          logBox.innerHTML = "<p class='sub'>Aucun e-mail pour l’instant. Les actions recruteur / candidat apparaîtront ici.</p>";
+          return;
+        }
+        logBox.innerHTML = '<div class="table-wrap"><table class="data"><thead><tr><th>Date</th><th>Destinataire</th><th>Sujet</th><th>Statut</th></tr></thead><tbody>' +
+          rows.map(function (r) {
+            return "<tr><td>" + U.esc((r.created_at || "").replace("T", " ").slice(0, 16)) + "</td><td>" +
+              U.esc(r.to_email || "") + "</td><td>" + U.esc(r.subject || "") + "</td><td>" + U.esc(r.status || "") + "</td></tr>";
+          }).join("") + "</tbody></table></div>";
+      }).catch(function () { logBox.innerHTML = "<p class='sub'>Journal indisponible.</p>"; });
+    }
+    if (document.getElementById("adm-email-log")) loadEmailLog();
     bindKanban();
   }
 
