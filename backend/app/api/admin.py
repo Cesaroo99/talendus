@@ -403,13 +403,21 @@ def send_test_email(
     db.commit()
     status = log.status.value if log.status else EmailStatus.QUEUED.value
     if log.status == EmailStatus.FAILED:
-        from app.services.email import is_smtp_bad_credentials
+        from app.services.email import is_smtp_bad_credentials, runtime_email_config
 
         raw = log.error or "erreur SMTP"
         if is_smtp_bad_credentials(raw):
+            cfg = runtime_email_config(db)
+            who = cfg.username or "(identifiant vide)"
             raise AppError(
                 502,
-                "Google a refusé l’identifiant ou le mot de passe (535). Identifiant = info@talendus.ca, mot de passe = mot de passe d’application de cette boîte (16 lettres). Pas le mot de passe de connexion Gmail, ni un mot de passe généré sur un autre compte.",
+                (
+                    f"Google a refusé le login SMTP (535) pour « {who} » "
+                    f"({len(cfg.password)} caractères, {cfg.host}:{cfg.port}). "
+                    "L’identifiant doit être l’adresse principale du compte Google qui a créé le mot de passe d’application. "
+                    "Si info@talendus.ca est un alias, mettez l’adresse principale. "
+                    "From peut rester Talendus <info@talendus.ca>."
+                ),
                 "SMTP_BAD_CREDENTIALS",
             )
         raise AppError(
