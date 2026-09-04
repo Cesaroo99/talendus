@@ -1983,7 +1983,7 @@
         return '<label class="check"><input type="checkbox" data-inv="' + U.esc(i.id) + '" data-filename="' + U.esc(attFilename(i.label, "facture")) + '"> Facture ' + U.esc(i.label) + "</label>";
       }).join("");
       var cts = (attachments.contracts || []).map(function (c) {
-        return '<label class="check"><input type="checkbox" data-ct="' + U.esc(c.id) + '" data-filename="' + U.esc(attFilename("mandat-" + (c.label || "talendus"), "mandat")) + '"> ' + U.esc(c.label) + "</label>";
+        return '<label class="check"><input type="checkbox" data-ct="' + U.esc(c.id) + '" data-filename="' + U.esc(attFilename("mandat-" + (detail.company_name || c.label || "talendus"), "mandat")) + '"> ' + U.esc(c.label) + "</label>";
       }).join("");
       U.modal({
         title: ids.length > 1 ? "Envoyer à " + ids.length + " fiches" : "Écrire à " + prospectLabel(detail),
@@ -1993,7 +1993,7 @@
           '<label>Modèle</label><select id="pc-tpl">' + opts + '<option value="custom">Message libre</option></select>' +
           '<p class="sub" id="pc-intent"></p>' +
           '<label>Sujet</label><input id="pc-subject">' +
-          '<label>Message</label><textarea id="pc-body" rows="8"></textarea>' +
+          '<label>Message</label><textarea id="pc-body" rows="14"></textarea>' +
           (inv || cts ? "<p class='sub'>Cochez une pièce jointe : le message dira ce qui est joint, quoi en faire, et comment (connexion ou création de compte).</p>" + inv + cts : "") +
           '<label class="check"><input type="checkbox" id="pc-force"> Renvoyer ce modèle même s’il a déjà été envoyé</label>' +
           "</div>",
