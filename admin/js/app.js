@@ -1642,8 +1642,8 @@
                 <li>Activer l’envoi : <b>Oui — envoyer vraiment</b></li>
                 <li>Serveur : <code>smtp.gmail.com</code></li>
                 <li>Port : <code>587</code></li>
-                <li>Identifiant : <code>info@talendus.ca</code></li>
-                <li>Mot de passe : les 16 lettres du mot de passe d’application</li>
+                <li>Identifiant : l’adresse <b>principale</b> du compte Google ouvert à l’étape 7 (souvent <code>info@talendus.ca</code>). Si info@ est un alias, mettez l’adresse principale, pas l’alias.</li>
+                <li>Mot de passe : les 16 lettres du mot de passe d’application créé sur <b>ce même compte</b></li>
                 <li>Expéditeur : <code>Talendus &lt;info@talendus.ca&gt;</code></li>
                 <li>TLS : <b>oui</b></li>
               </ul>
@@ -1651,7 +1651,7 @@
             <li>Cliquez <b>Enregistrer le courriel</b>, puis <b>Envoyer un test</b>.</li>
             <li>Ouvrez Gmail <code>cesarmemoli1@gmail.com</code> (et les spams). Le journal sous le formulaire doit passer à « SENT ». Les réponses des candidats arriveront dans <code>info@talendus.ca</code>.</li>
           </ol>
-          <p class="sub">Erreur <code>535 5.7.8 Username and Password not accepted</code> : Google refuse le couple identifiant / mot de passe. Ce n’est pas le destinataire. Recréez un mot de passe d’application <b>en étant connecté à info@talendus.ca</b> (pas le Gmail perso), identifiant = <code>info@talendus.ca</code>, collez les 16 lettres, Enregistrer, puis renvoyer le test.</p>
+          <p class="sub">Erreur <code>535 5.7.8</code> : Google refuse le login. Le formulaire Talendus est correct ; le couple identifiant + mot de passe n’est pas accepté par Gmail. Vérifiez dans <code>admin.google.com</code> → Annuaire → Utilisateurs que <code>info@talendus.ca</code> est un <b>utilisateur</b> (pas un groupe ni un simple alias). Recréez le mot de passe d’application sur <b>ce compte-là</b>, puis mettez la même adresse en identifiant.</p>
           <p class="sub">Si « Mots de passe d’application » n’apparaît pas : la validation en 2 étapes n’est pas encore active sur info@, ou l’admin Workspace ne l’a pas autorisée. Les deux doivent être ouvertes avant de réessayer le lien <code>myaccount.google.com/apppasswords</code>.</p>
           <p class="sub">Variante serveur (Render) : les mêmes valeurs existent en variables <code>EMAIL_*</code>. Un champ rempli ici prime sur la variable.</p>
         </div>

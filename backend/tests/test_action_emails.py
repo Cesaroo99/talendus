@@ -130,6 +130,8 @@ def test_smtp_test_maps_gmail_535(client, monkeypatch):
     assert body["code"] == "SMTP_BAD_CREDENTIALS"
     assert "535" in body["message"]
     assert "info@talendus.ca" in body["message"]
+    assert "16 caractères" in body["message"]
+    assert "smtp.gmail.com:587" in body["message"]
 
 
 def test_smtp_test_email_is_logged(client):
