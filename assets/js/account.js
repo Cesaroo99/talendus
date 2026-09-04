@@ -24,7 +24,7 @@
       logout: "Sign out", dashboard: "Dashboard", profile: "Profile", apps: "Applications",
       notifs: "Notifications", documents: "Documents", jobs: "Jobs", hiring: "My hiring", messages: "Messages",
       interviews: "Interviews", settings: "Settings", save: "Save", city: "City", title: "Job title",
-      sector: "Sector", skills: "Skills", phone: "Phone", upload: "Upload a PDF, Word or image file (PNG, JPG)",
+      sector: "Sector", skills: "Skills", phone: "Phone", upload: "Upload a PDF, Word, TXT, RTF or image file (PNG, JPG)",
       emptyApps: "No applications yet.", emptyNotifs: "No notifications.", emptyJobs: "No matching roles yet.",
       emptyMsgs: "No messages yet.", emptyInts: "No interviews scheduled.", emptyDocs: "No documents yet.",
       emptySaved: "No saved jobs.", jobUnavailable: "This job is no longer available.", markAll: "Mark all as read", markRead: "Mark as read",
@@ -167,7 +167,7 @@
       logout: "Déconnexion", dashboard: "Tableau de bord", profile: "Profil", apps: "Candidatures",
       notifs: "Notifications", documents: "Documents", jobs: "Offres", hiring: "Mes recrutements", messages: "Messages",
       interviews: "Entretiens", settings: "Paramètres", save: "Enregistrer", city: "Ville", title: "Titre professionnel",
-      sector: "Secteur", skills: "Compétences", phone: "Téléphone", upload: "Téléverser un PDF, Word ou une image (PNG, JPG)",
+      sector: "Secteur", skills: "Compétences", phone: "Téléphone", upload: "Téléverser un PDF, Word, TXT, RTF ou une image (PNG, JPG)",
       emptyApps: "Aucune candidature pour le moment.", emptyNotifs: "Aucune notification.",
       emptyJobs: "Aucune offre ne correspond encore à votre recherche.", emptyMsgs: "Aucun message pour le moment.",
       emptyInts: "Aucun entretien planifié.", emptyDocs: "Aucun document pour le moment.",
@@ -880,7 +880,7 @@
         '<button type="button" class="tl-btn" data-nav="jobs">' + esc(t.quickSearch) + "</button>" +
         '<button type="button" class="tl-btn tl-btn-ghost" data-nav="profile">' + esc(t.quickProfile) + "</button>" +
         (primary ? (
-          (primary.previewable !== false ? '<button type="button" class="tl-btn tl-btn-ghost" data-preview="' + esc(primary.download_path) + '" data-preview-name="' + esc(primary.original_name || "cv.pdf") + '">' + esc(t.viewFile) + "</button> " : "") +
+          (primary.previewable !== false ? '<button type="button" class="tl-btn tl-btn-ghost" data-preview="' + esc(primary.download_path) + '" data-preview-name="' + esc(primary.original_name || "cv.pdf") + '" data-preview-html="' + esc(primary.preview_path || "") + '" data-preview-mime="' + esc(primary.mime_type || "") + '">' + esc(t.viewFile) + "</button> " : "") +
           '<button type="button" class="tl-btn tl-btn-ghost" data-dl="' + esc(primary.download_path) + '" data-dl-name="' + esc(primary.original_name || "cv.pdf") + '">' + esc(t.quickCv) + "</button>"
         ) : "") +
         '<button type="button" class="tl-btn tl-btn-ghost" data-nav="apps">' + esc(t.quickApps) + "</button></div>";
@@ -1270,29 +1270,34 @@
       });
     }
 
-    function filePreviewBtn(path, name, previewable) {
+    function filePreviewBtn(path, name, previewable, previewPath, mime) {
       if (previewable === false || !path) return "";
-      return ' <button type="button" class="tl-btn tl-btn-ghost" data-preview="' + esc(path) + '" data-preview-name="' + esc(name || "document") + '">' + esc(t.viewFile) + "</button>";
+      return ' <button type="button" class="tl-btn tl-btn-ghost" data-preview="' + esc(path) +
+        '" data-preview-name="' + esc(name || "document") +
+        '" data-preview-html="' + esc(previewPath || "") +
+        '" data-preview-mime="' + esc(mime || "") + '">' + esc(t.viewFile) + "</button>";
     }
 
     function renderDocs(docs, resumes) {
       var list = (docs || []).map(function (d) {
         return "<li>" + esc(d.original_name) + " · " + esc(d.kind) +
-          filePreviewBtn(d.download_path, d.original_name, d.previewable) +
+          filePreviewBtn(d.download_path, d.original_name, d.previewable, d.preview_path, d.mime_type) +
           ' <button type="button" class="tl-btn tl-btn-ghost" data-dl="' + esc(d.download_path) + '" data-dl-name="' + esc(d.original_name) + '">' + esc(t.download) +
           '</button> <button type="button" class="tl-btn tl-btn-ghost" data-del-doc="' + esc(d.id) + '">' + esc(t.remove) + "</button></li>";
       }).join("") || "<li>" + esc(t.emptyDocs) + "</li>";
+      var primaryCv = (resumes || []).filter(function (r) { return r.is_primary; })[0] || (resumes || [])[0];
       var cvs = (resumes || []).map(function (r) {
         return "<li>" + esc(r.original_name) + (r.is_primary ? " · CV" : "") +
-          (r.summary ? '<p class="tl-hint">' + esc(r.summary) + "</p>" : "") +
-          filePreviewBtn(r.download_path, r.original_name, r.previewable) +
+          filePreviewBtn(r.download_path, r.original_name, r.previewable, r.preview_path, r.mime_type) +
           ' <button type="button" class="tl-btn tl-btn-ghost" data-dl="' + esc(r.download_path) + '" data-dl-name="' + esc(r.original_name) + '">' + esc(t.download) + "</button>" +
           ' <button type="button" class="tl-btn tl-btn-ghost" data-del-cv="' + esc(r.id) + '">' + esc(t.remove) + "</button></li>";
       }).join("") || "<li>" + esc(t.emptyDocs) + "</li>";
-      return "<h3>CV</h3><ul>" + cvs + '</ul><form class="tl-form" id="acc-cv"><label>' + esc(t.upload) +
-        '</label><input name="file" type="file" accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png,image/webp" required><button class="tl-btn" type="submit">' +
+      return "<h3>CV</h3>" +
+        (primaryCv && primaryCv.summary ? "<p>" + esc(primaryCv.summary) + "</p>" : "") +
+        "<ul>" + cvs + '</ul><form class="tl-form" id="acc-cv"><label>' + esc(t.upload) +
+        '</label><input name="file" type="file" accept=".pdf,.doc,.docx,.txt,.rtf,.md,.text,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,application/rtf,text/markdown,image/jpeg,image/png,image/webp" required><button class="tl-btn" type="submit">' +
         esc(t.replace) + '</button><div class="tl-success"></div></form><h3>' + esc(t.otherDocs) + "</h3><ul>" + list +
-        '</ul><form class="tl-form" id="acc-doc"><label>' + esc(t.upload) + '</label><input name="file" type="file" accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png,image/webp" required>' +
+        '</ul><form class="tl-form" id="acc-doc"><label>' + esc(t.upload) + '</label><input name="file" type="file" accept=".pdf,.doc,.docx,.txt,.rtf,.md,.text,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,application/rtf,text/markdown,image/jpeg,image/png,image/webp" required>' +
         '<select name="kind"><option value="cover_letter">' + esc(t.cover) + '</option><option value="certification">' +
         esc(t.certs) + '</option><option value="other">' + esc(t.otherDocs) + "</option></select>" +
         '<button class="tl-btn" type="submit">' + esc(t.add) + '</button><div class="tl-success"></div></form>';
@@ -2000,7 +2005,10 @@
       root.querySelectorAll("[data-preview]").forEach(function (b) {
         b.onclick = function () {
           if (window.TalendusAPI && typeof window.TalendusAPI.previewFile === "function") {
-            window.TalendusAPI.previewFile(b.getAttribute("data-preview"), b.getAttribute("data-preview-name") || "document")
+            window.TalendusAPI.previewFile(b.getAttribute("data-preview"), b.getAttribute("data-preview-name") || "document", {
+              previewPath: b.getAttribute("data-preview-html") || "",
+              mime: b.getAttribute("data-preview-mime") || ""
+            })
               .catch(function () { window.alert(t.err); });
           }
         };
@@ -2116,8 +2124,7 @@
               "</p><p>" + esc(c.skills || "") + "</p>" +
               (c.cv_summary ? "<p>" + esc(c.cv_summary) + "</p>" : "") +
               ((c.resumes || []).map(function (r) {
-                return (r.summary && r.summary !== c.cv_summary ? "<p>" + esc(r.summary) + "</p>" : "") +
-                  "<p>" + filePreviewBtn(r.download_path, r.original_name || "cv.pdf", r.previewable) +
+                return "<p>" + filePreviewBtn(r.download_path, r.original_name || "cv.pdf", r.previewable, r.preview_path, r.mime_type) +
                   ' <button type="button" class="tl-btn tl-btn-ghost" data-dl="' + esc(r.download_path) + '" data-dl-name="' + esc(r.original_name || "cv.pdf") + '">' + esc(t.download) + " CV</button></p>";
               }).join("") || "");
           });

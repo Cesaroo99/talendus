@@ -9,7 +9,15 @@ from app.errors import AppError
 
 logger = logging.getLogger("talendus.storage")
 
-ALLOWED_EXT = {".pdf": "application/pdf", ".doc": "application/msword", ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"}
+ALLOWED_EXT = {
+    ".pdf": "application/pdf",
+    ".doc": "application/msword",
+    ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ".txt": "text/plain",
+    ".text": "text/plain",
+    ".rtf": "application/rtf",
+    ".md": "text/markdown",
+}
 ALLOWED_IMAGE_EXT = {
     ".jpg": "image/jpeg",
     ".jpeg": "image/jpeg",
@@ -30,6 +38,9 @@ MIME_TO_EXT = {
     "application/pdf": ".pdf",
     "application/msword": ".doc",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
+    "text/plain": ".txt",
+    "application/rtf": ".rtf",
+    "text/markdown": ".md",
     "image/jpeg": ".jpg",
     "image/png": ".png",
     "image/webp": ".webp",
@@ -66,7 +77,12 @@ def ensure_upload_filename(data: bytes, filename: str) -> str:
 def detect_mime(data: bytes, filename: str) -> str:
     ext = Path(filename).suffix.lower()
     if ext not in ALLOWED_EXT:
-        raise AppError(400, "Formats autorisés : PDF, DOC, DOCX.", "INVALID_FILE_TYPE")
+        raise AppError(400, "Formats autorisés : PDF, DOC, DOCX, TXT, RTF.", "INVALID_FILE_TYPE")
+    if ext in {".txt", ".text", ".md", ".rtf"}:
+        sample = data[:2048]
+        if b"\x00" in sample:
+            raise AppError(400, "Le fichier ne correspond pas à son extension.", "INVALID_FILE_TYPE")
+        return ALLOWED_EXT[ext]
     for magic, mime in MAGIC.items():
         if data.startswith(magic):
             if ext == ".doc" and magic == b"PK":
@@ -83,7 +99,7 @@ def detect_resume_mime(data: bytes, filename: str) -> str:
         return detect_mime(data, filename)
     if ext in ALLOWED_IMAGE_EXT:
         return detect_image_mime(data, filename)
-    raise AppError(400, "Formats de CV autorisés : PDF, DOC, DOCX, PNG, JPG, WEBP.", "INVALID_FILE_TYPE")
+    raise AppError(400, "Formats de CV autorisés : PDF, DOC, DOCX, TXT, RTF, PNG, JPG, WEBP.", "INVALID_FILE_TYPE")
 
 
 def detect_image_mime(data: bytes, filename: str) -> str:
@@ -223,3 +239,15 @@ def resume_path(stored_name: str) -> Path:
 def open_resume(stored_name: str, storage_url: str | None) -> tuple[str | None, Path | None]:
     """Retourne (url_presignee, chemin_local). L'un des deux est défini."""
     return open_stored(stored_name, storage_url, "resumes")
+
+
+def read_stored_bytes(stored_name: str, storage_url: str | None, category: str = "resumes") -> bytes:
+    url, path = open_stored(stored_name, storage_url, category)
+    if path is not None:
+        return path.read_bytes()
+    if url:
+        from urllib.request import urlopen
+
+        with urlopen(url, timeout=20) as resp:  # noqa: S310
+            return resp.read()
+    raise AppError(404, "Fichier introuvable.", "FILE_NOT_FOUND")

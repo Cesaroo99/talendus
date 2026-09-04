@@ -17,7 +17,9 @@ from app.services.audit import audit
 from app.services.auth import ensure_candidate
 from app.services.notifications import notify
 from app.services.resume_parse import (
+    build_cv_summary,
     is_previewable,
+    parsed_from_storage,
     parse_json_dump,
     parse_resume_bytes,
     summary_from_storage,
@@ -386,7 +388,7 @@ def submit_public_talent(
     return {"id": profile.id, "resume_id": resume.id if resume else None, "created": created}
 
 
-def serialize_resume(row: Resume) -> dict:
+def serialize_resume(row: Resume, profile: Candidate | None = None) -> dict:
     mime = row.mime_type or ""
     return {
         "id": row.id,
@@ -395,18 +397,19 @@ def serialize_resume(row: Resume) -> dict:
         "size_bytes": row.size_bytes,
         "mime_type": mime,
         "parse_status": row.parse_status,
-        "summary": summary_from_storage(row.parse_json),
+        "summary": build_cv_summary(parsed_from_storage(row.parse_json), profile=profile),
         "previewable": is_previewable(mime, row.original_name),
         "kind": "cv" if row.is_primary else "document",
         "created_at": row.created_at.isoformat() if row.created_at else None,
         "download_path": f"/api/candidates/resumes/{row.id}/file",
+        "preview_path": f"/api/candidates/resumes/{row.id}/preview",
     }
 
 
 def _primary_cv_summary(profile: Candidate) -> str:
     resumes = list(profile.resumes or [])
     primary = next((row for row in resumes if row.is_primary), None) or (resumes[0] if resumes else None)
-    return summary_from_storage(primary.parse_json) if primary else ""
+    return summary_from_storage(primary.parse_json, profile=profile) if primary else ""
 
 
 def serialize_candidate(profile: Candidate, include_private: bool = True) -> dict:
@@ -437,7 +440,7 @@ def serialize_candidate(profile: Candidate, include_private: bool = True) -> dic
             {"id": c.id, "name": c.name, "issuer": c.issuer, "year": c.year}
             for c in (profile.certifications or [])
         ],
-        "resumes": [serialize_resume(r) for r in (profile.resumes or [])],
+        "resumes": [serialize_resume(r, profile) for r in (profile.resumes or [])],
         "cv_summary": _primary_cv_summary(profile),
     }
     if not include_private:

@@ -312,7 +312,7 @@ def _candidate_cv_summary(c: Candidate) -> str:
 
     resumes = list(c.resumes or [])
     primary = next((row for row in resumes if row.is_primary), None) or (resumes[0] if resumes else None)
-    return summary_from_storage(primary.parse_json) if primary else ""
+    return summary_from_storage(primary.parse_json, profile=c) if primary else ""
 
 
 def _candidate(c: Candidate) -> dict:
@@ -563,9 +563,10 @@ def _documents(candidates: list[Candidate], portal_docs: list[PortalDocument]) -
                     "size": _size_label(resume.size_bytes),
                     "kind": "resume",
                     "mimeType": mime,
-                    "summary": summary_from_storage(resume.parse_json),
+                    "summary": summary_from_storage(resume.parse_json, profile=cand),
                     "previewable": is_previewable(mime, resume.original_name),
                     "url": f"/api/candidates/resumes/{resume.id}/file",
+                    "previewUrl": f"/api/candidates/resumes/{resume.id}/preview",
                 }
             )
     for row in portal_docs:
@@ -582,6 +583,7 @@ def _documents(candidates: list[Candidate], portal_docs: list[PortalDocument]) -
                 "summary": "",
                 "previewable": is_previewable(mime, row.original_name),
                 "url": f"/api/documents/{row.id}/file",
+                "previewUrl": f"/api/documents/{row.id}/preview",
             }
         )
     return docs

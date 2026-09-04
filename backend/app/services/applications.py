@@ -2,12 +2,14 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
 from app.errors import AppError
-from app.models import Application, ApplicationStatusHistory, Candidate, JobOffer, Resume, User
+from app.models import Application, ApplicationStatusHistory, Candidate, InternalNote, JobOffer, RecruitmentMission, Resume, User
+from app.models.company import mission_jobs
 from app.rbac import ADMINS
 from app.models.enums import (
     ApplicationStatus,
     EmailType,
     JobStatus,
+    MissionStatus,
     NotificationType,
     UserRole,
 )
@@ -180,7 +182,11 @@ def apply_staff(db: Session, actor: User, data: StaffApplicationIn, ip: str | No
     if actor.role not in {UserRole.RECRUITER} | ADMINS:
         raise AppError(403, "Seul le personnel Talendus peut lier un candidat à une offre.", "FORBIDDEN")
     job = db.scalar(select(JobOffer).options(joinedload(JobOffer.company)).where(JobOffer.id == data.job_id))
-    candidate = db.get(Candidate, data.candidate_id)
+    candidate = db.scalar(
+        select(Candidate)
+        .options(joinedload(Candidate.user), joinedload(Candidate.resumes))
+        .where(Candidate.id == data.candidate_id)
+    )
     if not job:
         raise AppError(404, "Offre introuvable.", "JOB_NOT_FOUND")
     if not candidate:
@@ -194,8 +200,9 @@ def apply_staff(db: Session, actor: User, data: StaffApplicationIn, ip: str | No
         raise AppError(409, "Ce candidat est déjà lié à cette offre.", "APPLICATION_ALREADY_EXISTS")
     resume = _primary_resume(db, candidate, data.resume_id)
     from app.services.matching import score_pair
+    from app.services.resume_parse import summary_from_storage
 
-    score, _reasons = score_pair(candidate, job)
+    score, reasons = score_pair(candidate, job)
     application = Application(
         candidate_id=candidate.id,
         job_id=job.id,
@@ -207,7 +214,93 @@ def apply_staff(db: Session, actor: User, data: StaffApplicationIn, ip: str | No
     )
     db.add(application)
     db.flush()
-    _history(db, application, None, ApplicationStatus.UNDER_REVIEW.value, actor)
+    _history(db, application, None, ApplicationStatus.UNDER_REVIEW.value, actor, "Liaison interne Talendus")
+    if not candidate.pipeline_status or candidate.pipeline_status in {"nouveau", "inactif"}:
+        candidate.pipeline_status = "a-contacter"
+    if not candidate.assigned_recruiter_id:
+        candidate.assigned_recruiter_id = job.recruiter_id or actor.id
+    mission = db.scalar(
+        select(RecruitmentMission).where(RecruitmentMission.job_id == job.id).order_by(RecruitmentMission.created_at.desc())
+    )
+    if not mission:
+        mission = db.scalar(
+            select(RecruitmentMission)
+            .join(mission_jobs, mission_jobs.c.mission_id == RecruitmentMission.id)
+            .where(mission_jobs.c.job_id == job.id)
+            .order_by(RecruitmentMission.created_at.desc())
+        )
+    if not mission and job.company_id:
+        mission = RecruitmentMission(
+            company_id=job.company_id,
+            job_id=job.id,
+            recruiter_id=job.recruiter_id or actor.id,
+            title=job.title,
+            seats=max(1, job.openings or 1),
+            status=MissionStatus.SCREENING,
+            location=job.location,
+            sector=job.sector,
+            skills=job.skills,
+            contract_type=job.contract_type,
+        )
+        db.add(mission)
+        db.flush()
+    company_name = job.company.name if job.company else ""
+    cand_name = candidate.user.full_name if candidate.user else "Candidat"
+    db.add(
+        InternalNote(
+            entity_type="candidate",
+            entity_id=candidate.id,
+            author_id=actor.id,
+            text=(
+                f"Dossier ouvert sur « {job.title} »"
+                + (f" ({company_name})" if company_name else "")
+                + f". Score {score} %. "
+                + (" · ".join(reasons[:3]) if reasons else "Correspondance à valider.")
+            ),
+        )
+    )
+    staff_targets = [actor]
+    if job.recruiter_id:
+        recruiter = db.get(User, job.recruiter_id)
+        if recruiter:
+            staff_targets.append(recruiter)
+    notify_people(
+        db,
+        staff_targets,
+        actor=actor,
+        ntype=NotificationType.APPLICATION_NEW,
+        title="Dossier ouvert",
+        message=f"{cand_name} est maintenant suivi pour {job.title}.",
+        section="jobs",
+        item_id=job.id,
+        template="new_application",
+        email_type=EmailType.NEW_APPLICATION_RECRUITER,
+        ctx={
+            "job_title": job.title,
+            "candidate_name": cand_name,
+            "candidate_email": candidate.user.email if candidate.user else "",
+        },
+        application_id=application.id,
+    )
+    if candidate.user:
+        notify_people(
+            db,
+            candidate.user,
+            actor=actor,
+            ntype=NotificationType.APPLICATION_STATUS,
+            title="Talendus étudie un poste pour vous",
+            message=f"Votre conseiller a ouvert un suivi pour {job.title}.",
+            section="apps",
+            template="application_status",
+            email_type=EmailType.APPLICATION_STATUS,
+            ctx={
+                "name": candidate.user.first_name or "",
+                "job_title": job.title,
+                "status": "À l’étude",
+                "comment": "",
+            },
+            application_id=application.id,
+        )
     audit(
         db,
         "application.staff_link",
@@ -215,10 +308,36 @@ def apply_staff(db: Session, actor: User, data: StaffApplicationIn, ip: str | No
         "application",
         application.id,
         ip,
-        {"job_id": job.id, "candidate_id": candidate.id},
+        {"job_id": job.id, "candidate_id": candidate.id, "mission_id": mission.id if mission else None},
     )
     db.commit()
-    return get_application(db, actor, application.id)
+    row = get_application(db, actor, application.id)
+    cv_summary = summary_from_storage(resume.parse_json, profile=candidate) if resume else ""
+    row.dossier = {
+        "score": score,
+        "reasons": reasons,
+        "cv_summary": cv_summary,
+        "candidate_id": candidate.id,
+        "candidate_name": cand_name,
+        "job_id": job.id,
+        "job_title": job.title,
+        "company_name": company_name,
+        "mission_id": mission.id if mission else None,
+        "application_id": row.id,
+        "resume_id": resume.id if resume else None,
+        "preview_path": f"/api/candidates/resumes/{resume.id}/preview" if resume else None,
+        "download_path": f"/api/candidates/resumes/{resume.id}/file" if resume else None,
+        "pipeline_status": candidate.pipeline_status,
+        "stage": stage_for(row.status),
+        "tracker": tracker_for(row),
+        "next_steps": [
+            {"key": "cv", "label": "Lire le CV"},
+            {"key": "interview", "label": "Planifier l’entretien Talendus"},
+            {"key": "present", "label": "Présenter le dossier à l’employeur"},
+            {"key": "mission", "label": "Suivre dans le kanban"} if mission else {"key": "apps", "label": "Ouvrir le suivi de candidature"},
+        ],
+    }
+    return row
 
 
 def apply_public(

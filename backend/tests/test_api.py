@@ -449,6 +449,13 @@ def test_matching_scores_and_job_board(client):
     assert linked.status_code == 200, linked.text
     assert linked.json()["data"]["source"] == "staff"
     assert linked.json()["data"]["status"] == "UNDER_REVIEW"
+    dossier = linked.json()["data"]["dossier"]
+    assert dossier["application_id"] == linked.json()["data"]["id"]
+    assert dossier["candidate_id"] == cand_id
+    assert dossier["job_id"] == job["id"]
+    assert dossier["mission_id"]
+    assert dossier["tracker"]["status"] == "UNDER_REVIEW"
+    assert any(step["key"] == "interview" for step in dossier["next_steps"])
     again = client.post(
         "/api/applications/staff",
         headers=auth_header(staff),
@@ -726,6 +733,57 @@ def test_resume_parse_status_on_upload(client):
     assert me["resumes"][0]["summary"]
     assert "previewable" in me["resumes"][0]
     assert "cv_summary" in me
+
+
+def test_resume_preview_opens_txt_and_docx(client):
+    import io
+    import zipfile
+
+    cand = register(client, "preview-cv@example.com", first_name="Karine")
+    headers = auth_header(cand)
+    txt = client.post(
+        "/api/candidates/me/resume",
+        headers=headers,
+        files={"file": ("notes.txt", b"Karine Tremblay cariste Laval cinq ans WMS chariot elevateur.", "text/plain")},
+    )
+    assert txt.status_code == 200, txt.text
+    rid = txt.json()["data"]["id"]
+    preview = client.get(f"/api/candidates/resumes/{rid}/preview", headers=headers)
+    assert preview.status_code == 200
+    assert "text/html" in preview.headers.get("content-type", "")
+    assert "Karine Tremblay" in preview.text
+    me = client.get("/api/candidates/me", headers=headers).json()["data"]
+    assert me["resumes"][0]["previewable"] is True
+    assert me["resumes"][0]["preview_path"].endswith("/preview")
+    assert "vise un poste" in (me["cv_summary"] or "")
+    assert "Karine" in (me["cv_summary"] or "")
+    assert (me["cv_summary"] or "").count("Karine") == 1
+
+    buf = io.BytesIO()
+    xml = (
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+        "<w:body><w:p><w:r><w:t>Karine Tremblay</w:t></w:r></w:p>"
+        "<w:p><w:r><w:t>Cariste a Laval</w:t></w:r></w:p></w:body></w:document>"
+    )
+    with zipfile.ZipFile(buf, "w") as zf:
+        zf.writestr("[Content_Types].xml", '<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"></Types>')
+        zf.writestr("word/document.xml", xml)
+    docx = client.post(
+        "/api/candidates/me/resume",
+        headers=headers,
+        files={
+            "file": (
+                "cv.docx",
+                buf.getvalue(),
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            )
+        },
+    )
+    assert docx.status_code == 200, docx.text
+    docx_preview = client.get(f"/api/candidates/resumes/{docx.json()['data']['id']}/preview", headers=headers)
+    assert docx_preview.status_code == 200
+    assert "Karine Tremblay" in docx_preview.text
 
 
 def test_job_match_notification_on_publish(client):

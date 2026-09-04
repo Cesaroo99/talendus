@@ -314,13 +314,18 @@ def test_admin_ui_sends_mandate_for_signature():
     assert "Complet" in js
     assert "Correspondances" in js
     assert "Lier à l’offre" in js
+    assert "openDossier360" in js
+    assert "Dossier 360" in js
+    assert "planInterview" in js
     assert "previewFile" in (root / "assets" / "js" / "api.js").read_text(encoding="utf-8")
     assert "tl-file-preview" in (root / "assets" / "js" / "api.js").read_text(encoding="utf-8")
+    assert "/preview" in (root / "assets" / "js" / "api.js").read_text(encoding="utf-8")
     account = (root / "assets" / "js" / "account.js").read_text(encoding="utf-8")
     assert "tl-mandate-read" in account
     assert "max-height:220px" not in account
     assert "viewFile" in account
     assert "data-preview" in account
+    assert "data-preview-html" in account
 
 
 def test_created_mandate_pdf_is_complete_and_signed_by_talendus(client):

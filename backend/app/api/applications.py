@@ -84,7 +84,11 @@ def apply_staff(
     user: User = Depends(require_roles(UserRole.RECRUITER, UserRole.ADMIN)),
 ):
     application = applications_service.apply_staff(db, user, payload, client_ip(request))
-    return ok(applications_service.serialize_application(application, user), message="Candidat lié à l’offre.")
+    payload_out = applications_service.serialize_application(application, user)
+    dossier = getattr(application, "dossier", None)
+    if dossier:
+        payload_out["dossier"] = dossier
+    return ok(payload_out, message="Dossier ouvert : le suivi ATS est lancé.")
 
 
 @router.get("/me")
