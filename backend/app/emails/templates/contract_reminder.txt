@@ -4,7 +4,6 @@ Subject: Rappel — mandat Talendus à signer — {{company}}
 Un mandat de recrutement Talendus attend toujours votre lecture et votre signature pour {{company}}.
 
 Type : {{type}}
-Honoraires : {{percent}} %
 
-Ouvrez votre espace, lisez le mandat, puis signez :
+Ouvrez votre espace, lisez le mandat (les conditions y sont écrites), puis signez :
 {{link}}

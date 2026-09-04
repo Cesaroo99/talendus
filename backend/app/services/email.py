@@ -209,7 +209,8 @@ def _text_to_html_blocks(core: str) -> str:
             continue
         lines = [ln.strip() for ln in block.split("\n") if ln.strip()]
         is_list = len(lines) > 1 and all(re.match(r"^(?:[-•]|\d+[.)])\s+", ln) for ln in lines)
-        is_attach = block.lower().startswith("pièce jointe")
+        low = block.lower()
+        is_attach = low.startswith("pièce jointe") or "trouverez ceci en pièce jointe" in low
         if is_list:
             html_block = _html_list(lines)
         else:

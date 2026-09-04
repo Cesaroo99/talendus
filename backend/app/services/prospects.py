@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import re
 from dataclasses import dataclass
+from urllib.parse import quote
 
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
@@ -53,9 +54,10 @@ SOURCE_LABELS = (
 )
 
 ESPACE = "https://talendus.ca/espace.html"
-EMPLOYEUR = "https://talendus.ca/employeur.html"
+EMPLOYEUR = "https://talendus.ca/espace-employeur.html"
 INFO = "info@talendus.ca"
 PHONE = "263 558 5225"
+ATTACHMENT_HOOK = "Vous trouverez ceci en pièce jointe"
 
 TEMPLATES: tuple[dict, ...] = (
     {
@@ -65,7 +67,7 @@ TEMPLATES: tuple[dict, ...] = (
         "label": "1. Premier contact",
         "intent": "Étape Nouveau / à contacter — présenter le cabinet et obtenir un oui, sans frais pour le talent.",
         "subject": "{{who_lead}}Talendus peut vous placer — sans frais pour vous",
-        "body": "{{hello}}\n\nJe vous écris de Talendus, cabinet de recrutement au Québec. Nous travaillons avec des usines, entrepôts et ateliers qui cherchent des profils {{title_or_metier}}{{city_bit}}.\n\nVous n’avez rien à débourser : nos honoraires (16 % du salaire annuel) sont payés par l’employeur, à l’embauche.\n\nSi vous êtes ouvert à voir des mandats concrets, répondez simplement « oui » à ce courriel. Je ne vous enverrai que des postes qui tiennent la route.\n\nVous pouvez aussi déposer votre CV ici :\n{{candidate_link}}\n\n{{recruiter_name}}",
+        "body": "{{hello}}\n\nJe vous écris de Talendus, cabinet de recrutement au Québec. Nous travaillons avec des usines, entrepôts et ateliers qui cherchent des profils {{title_or_metier}}{{city_bit}}.\n\nVous n’avez rien à débourser : c’est l’employeur qui nous mandate, pas vous.\n\nSi vous êtes ouvert à voir des mandats concrets, répondez simplement « oui » à ce courriel. Je ne vous enverrai que des postes qui tiennent la route.\n\nVous pouvez aussi déposer votre CV ici :\n{{candidate_link}}\n\n{{recruiter_name}}",
     },
     {
         "key": "cand_followup",
@@ -144,9 +146,9 @@ TEMPLATES: tuple[dict, ...] = (
         "side": "employer",
         "stage": "nouveau",
         "label": "1. Premier contact",
-        "intent": "Étape Nouveau / à contacter — présenter le cabinet, les 16 %, et demander le poste ouvert.",
-        "subject": "{{company_lead}}recruter sans perdre de semaines — honoraires 16 %",
-        "body": "{{hello}}\n\nJe vous contacte{{about_company}}. Talendus préqualifie des talents d’usine, d’entrepôt et de maintenance, puis ne vous présente que les profils qui tiennent.\n\nHonoraires : 16 % du salaire annuel, payés à l’embauche. Pas de logiciel à acheter, pas de mise de fonds.\n\nS’il vous manque un poste{{title_bit}}, répondez avec le métier et le quart : je vous dis ensuite si on peut le pourvoir.\n\nVous pouvez aussi déposer le besoin ici :\n{{employer_link}}\n\n{{recruiter_name}}",
+        "intent": "Étape Nouveau / à contacter — présenter le cabinet et demander le poste ouvert, sans honoraires ni paiement.",
+        "subject": "{{company_lead}}recruter sans perdre de semaines",
+        "body": "{{hello}}\n\nJe vous contacte{{about_company}}. Talendus préqualifie des talents d’usine, d’entrepôt et de maintenance, puis ne vous présente que les profils qui tiennent.\n\nS’il vous manque un poste{{title_bit}}, répondez avec le métier et le quart : je vous dis ensuite si on peut le pourvoir.\n\nVous pouvez aussi déposer le besoin ici :\n{{employer_link}}\n\n{{recruiter_name}}",
     },
     {
         "key": "emp_followup",
@@ -171,9 +173,9 @@ TEMPLATES: tuple[dict, ...] = (
         "side": "employer",
         "stage": "proposition",
         "label": "4. Mandat à signer",
-        "intent": "Étape Proposition — envoyer le mandat 16 % et expliquer quoi faire s’il est joint.",
+        "intent": "Étape Proposition — envoyer le mandat à lire et signer. Le pourcentage reste dans le contrat, pas dans le courriel.",
         "subject": "{{company_lead}}mandat Talendus à lire et signer",
-        "body": "{{hello}}\n\nVoici la suite{{about_company}} : le mandat de recrutement Talendus (honoraires 16 %, payés à l’embauche).\n\nLisez-le, signez-le dans votre espace, et on lance la recherche. Rien n’est dû avant une embauche.\n\n{{employer_link}}\n\n{{recruiter_name}}",
+        "body": "{{hello}}\n\nVoici la suite{{about_company}} : le mandat de recrutement Talendus.\n\nLisez-le, signez-le dans votre espace, et on lance la recherche.\n\n{{employer_link}}\n\n{{recruiter_name}}",
     },
     {
         "key": "emp_search_start",
@@ -198,9 +200,9 @@ TEMPLATES: tuple[dict, ...] = (
         "side": "employer",
         "stage": "client",
         "label": "7. Facture",
-        "intent": "Après embauche — transmettre la facture et dire comment payer.",
-        "subject": "{{company_lead}}facture Talendus — modalités de paiement",
-        "body": "{{hello}}\n\nLa facture Talendus{{about_company}} est prête, selon le mandat (honoraires 16 %, à l’embauche).\n\nPaiement par virement ou chèque, aux conditions prévues. Une question sur le montant ou l’échéance : répondez à ce courriel.\n\nVous pouvez aussi la télécharger ici :\n{{employer_link}}\n\n{{recruiter_name}}",
+        "intent": "Après embauche — transmettre la facture et dire comment payer, sans rappeler un pourcentage.",
+        "subject": "{{company_lead}}facture Talendus",
+        "body": "{{hello}}\n\nLa facture Talendus{{about_company}} est prête, selon le mandat signé.\n\nPaiement par virement ou chèque, aux conditions prévues. Une question sur le montant ou l’échéance : répondez à ce courriel.\n\nVous pouvez aussi la télécharger ici :\n{{employer_link}}\n\n{{recruiter_name}}",
     },
     {
         "key": "emp_reactivate",
@@ -252,6 +254,19 @@ def display_name(row: Prospect) -> str:
     return name or row.company_name or row.email
 
 
+def account_links_for(email: str | None, side: str | None) -> dict[str, str]:
+    encoded = quote((email or "").strip().lower(), safe="")
+    portal = EMPLOYEUR if (side or "") == "employer" else ESPACE
+    role = "EMPLOYER" if (side or "") == "employer" else "CANDIDATE"
+    return {
+        "portal_link": portal,
+        "login_link": f"{portal}#/login?email={encoded}",
+        "register_link": f"{portal}#/register?email={encoded}&role={role}",
+        "candidate_link": ESPACE,
+        "employer_link": EMPLOYEUR,
+    }
+
+
 def context_for(row: Prospect, actor: User | None = None) -> dict[str, str]:
     first = (row.first_name or "").strip()
     last = (row.last_name or "").strip()
@@ -263,7 +278,7 @@ def context_for(row: Prospect, actor: User | None = None) -> dict[str, str]:
     if actor:
         recruiter = f"{actor.first_name} {actor.last_name}".strip()
     hello = f"Bonjour {first}," if first else "Bonjour,"
-    return {
+    ctx = {
         "first_name": first or company or "bonjour",
         "last_name": last,
         "name": display_name(row),
@@ -283,10 +298,10 @@ def context_for(row: Prospect, actor: User | None = None) -> dict[str, str]:
         "sector_or_industrie": sector or "industriels",
         "phone": PHONE,
         "info": INFO,
-        "candidate_link": ESPACE,
-        "employer_link": EMPLOYEUR,
         "recruiter_name": recruiter or "L’équipe Talendus",
     }
+    ctx.update(account_links_for(row.email, row.side))
+    return ctx
 
 
 def fill_tokens(text: str, ctx: dict[str, str]) -> str:
@@ -342,6 +357,7 @@ def serialize_prospect(row: Prospect, sent_keys: list[str] | None = None) -> dic
         "created_at": row.created_at.isoformat() if row.created_at else None,
         "display_name": display_name(row),
         "sent_templates": sent_keys or [],
+        **account_links_for(row.email, row.side),
     }
 
 
@@ -912,44 +928,61 @@ def _attachments_for(db: Session, row: Prospect, invoice_ids: list[str] | None, 
     return files
 
 
+def _account_howto(ctx: dict[str, str]) -> str:
+    login = ctx.get("login_link") or f"{EMPLOYEUR}#/login"
+    register = ctx.get("register_link") or f"{EMPLOYEUR}#/register?role=EMPLOYER"
+    return (
+        "Comment faire :\n"
+        "- Si vous avez déjà un compte Talendus, connectez-vous ici :\n"
+        f"{login}\n"
+        "- Si vous n’avez pas encore créé de compte, ouvrez ce lien : il préremplit votre courriel et crée votre accès :\n"
+        f"{register}"
+    )
+
+
 def attachment_note(attachments: list[EmailAttachment], ctx: dict[str, str]) -> str:
     blocks = []
     for att in attachments:
         name = att.filename or "document.pdf"
         kind = (att.kind or "").lower()
+        hook = f"{ATTACHMENT_HOOK} : {name}"
+        howto = _account_howto(ctx)
         if kind == "invoice" or name.lower().startswith("f-") or "facture" in name.lower():
             blocks.append(
-                "Pièce jointe — facture\n"
-                f"Le fichier {name} est joint à ce courriel.\n\n"
+                f"{hook}\n\n"
                 "À faire :\n"
                 "- ouvrir le PDF et vérifier le montant\n"
-                "- régler par virement ou chèque, selon le mandat (honoraires 16 %, à l’embauche)\n"
+                "- régler par virement ou chèque, selon les conditions du mandat signé\n"
                 f"- écrire à {ctx.get('info') or INFO} si une ligne vous interroge\n\n"
-                f"Vous pouvez aussi la télécharger ici :\n{ctx.get('employer_link') or EMPLOYEUR}"
+                f"{howto}"
             )
         elif kind == "contract" or "mandat" in name.lower() or "contrat" in name.lower():
             blocks.append(
-                "Pièce jointe — mandat / contrat\n"
-                f"Le fichier {name} est joint à ce courriel.\n\n"
+                f"{hook}\n\n"
                 "À faire :\n"
-                "- ouvrir le PDF et lire les honoraires (16 %) et les délais\n"
-                "- signer dans votre espace (plus simple que d’imprimer)\n"
+                "- ouvrir le PDF et le lire en entier\n"
+                "- le signer dans votre espace (plus simple que d’imprimer)\n"
                 "- nous répondre « signé » une fois c’est fait\n\n"
-                f"Signature électronique :\n{ctx.get('employer_link') or EMPLOYEUR}\n\n"
-                "Dès réception de la signature, on lance la recherche. Aucun logiciel à acheter."
+                f"{howto}"
             )
         else:
             blocks.append(
-                "Pièce jointe\n"
-                f"Le fichier {name} est joint à ce courriel. Ouvrez-le, puis répondez si une suite est demandée."
+                f"{hook}\n\n"
+                "À faire : ouvrez le fichier, puis répondez si une suite est demandée.\n\n"
+                f"{howto}"
             )
     return "\n\n".join(blocks)
+
+
+def _body_has_attachment_note(body: str) -> bool:
+    low = (body or "").lower()
+    return "trouverez ceci en pièce jointe" in low or "pièce jointe —" in low or "pièce jointe\n" in low
 
 
 def append_attachment_note(body: str, attachments: list[EmailAttachment], ctx: dict[str, str]) -> str:
     if not attachments:
         return body
-    if "Pièce jointe —" in (body or "") or "Pièce jointe\n" in (body or ""):
+    if _body_has_attachment_note(body):
         return body
     return f"{(body or '').rstrip()}\n\n{attachment_note(attachments, ctx)}"
 
