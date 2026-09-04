@@ -9,8 +9,15 @@ from sqlalchemy.orm import Session
 from app.errors import AppError
 from app.models import Interview, User
 from app.models.calls import CallPeer, CallSignal
-from app.models.enums import InterviewStatus, InterviewType, utcnow
-from app.services.interviews import get_interview, serialize_interview
+from app.models.enums import InterviewStatus, InterviewType, NotificationType, utcnow
+from app.services.interviews import (
+    get_interview,
+    is_staff,
+    serialize_interview,
+    viewer_can_join_call,
+    viewer_can_start_call,
+)
+from app.services.notifications import notify, portal_href
 
 CALL_TYPES = {
     InterviewType.TALENDUS,
@@ -84,10 +91,60 @@ def _serialize_signal(row: CallSignal) -> dict:
     }
 
 
+def _open_room(db: Session, interview: Interview, user: User, *, notify_candidate: bool) -> bool:
+    if interview.call_opened_at:
+        return False
+    interview.call_opened_at = utcnow()
+    if not notify_candidate:
+        return True
+    cand_user = interview.candidate.user if interview.candidate else None
+    if cand_user and cand_user.id != user.id:
+        notify(
+            db,
+            cand_user,
+            NotificationType.INTERVIEW_INVITE,
+            "L’appel est ouvert",
+            "Le conseiller a ouvert la salle. Vous pouvez rejoindre l’entretien maintenant.",
+            href=portal_href(cand_user, "interviews"),
+        )
+    return True
+
+
+def lobby(db: Session, user: User, interview_id: str) -> dict:
+    interview = get_interview(db, user, interview_id)
+    return {
+        "interview": serialize_interview(interview, user),
+        "peers": _peers(db, interview, user),
+        "self_id": user.id,
+        "call_open": bool(interview.call_opened_at),
+        "can_start": viewer_can_start_call(interview, user),
+        "can_join": viewer_can_join_call(interview, user),
+    }
+
+
+def open_room(db: Session, user: User, interview_id: str) -> dict:
+    interview = get_interview(db, user, interview_id)
+    if not can_join_call(interview):
+        raise AppError(409, "Cet entretien ne peut pas se faire en appel dans l'appli.", "CALL_NOT_AVAILABLE")
+    if not is_staff(user) and not viewer_can_start_call(interview, user):
+        raise AppError(403, "Vous ne pouvez pas ouvrir cet appel.", "CALL_CANNOT_START")
+    _open_room(db, interview, user, notify_candidate=True)
+    db.commit()
+    return lobby(db, user, interview_id)
+
+
 def join(db: Session, user: User, interview_id: str, video: bool | None = None) -> dict:
     interview = get_interview(db, user, interview_id)
     if not can_join_call(interview):
         raise AppError(409, "Cet entretien ne peut pas se faire en appel dans l'appli.", "CALL_NOT_AVAILABLE")
+    if not viewer_can_join_call(interview, user) and not viewer_can_start_call(interview, user):
+        raise AppError(
+            409,
+            "Le conseiller n’a pas encore ouvert l’appel. Vous pourrez rejoindre dès qu’il sera lancé.",
+            "CALL_WAITING_FOR_HOST",
+        )
+    if is_staff(user) or viewer_can_start_call(interview, user):
+        _open_room(db, interview, user, notify_candidate=is_staff(user))
     want_video = default_video(interview) if video is None else bool(video)
     peer = db.scalar(
         select(CallPeer).where(CallPeer.interview_id == interview.id, CallPeer.user_id == user.id)
@@ -106,6 +163,9 @@ def join(db: Session, user: User, interview_id: str, video: bool | None = None) 
         "self_id": user.id,
         "peers": _peers(db, interview, user),
         "in_app_call": True,
+        "call_open": True,
+        "can_start": viewer_can_start_call(interview, user),
+        "can_join": True,
     }
 
 

@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.errors import AppError
 from app.models import Application, Candidate, Company, Interview, JobOffer, User
 from app.models.enums import EmailType, InterviewStatus, InterviewType, NotificationType, UserRole
-from app.rbac import ADMINS
+from app.rbac import ADMINS, INTERNAL
 from app.schemas import InterviewIn, InterviewPatchIn
 from app.services.access import company_ids_for_employer
 from app.services.audit import audit
@@ -46,10 +46,61 @@ def _parse_when(value: str) -> datetime:
     return dt
 
 
+def is_staff(user: User | None) -> bool:
+    return bool(user and user.role in {UserRole.RECRUITER} | ADMINS | INTERNAL)
+
+
+def call_is_open(row: Interview) -> bool:
+    return bool(getattr(row, "call_opened_at", None))
+
+
+def viewer_can_start_call(row: Interview, viewer: User | None) -> bool:
+    if not (row.type in CALL_TYPES and row.status in LIVE_CALL_STATUSES):
+        return False
+    if is_staff(viewer):
+        return True
+    if viewer and viewer.role == UserRole.CANDIDATE:
+        return bool(getattr(row, "candidate_can_start", False))
+    return False
+
+
+def viewer_can_join_call(row: Interview, viewer: User | None) -> bool:
+    if not (row.type in CALL_TYPES and row.status in LIVE_CALL_STATUSES):
+        return False
+    if is_staff(viewer):
+        return True
+    if viewer and viewer.role == UserRole.CANDIDATE:
+        if getattr(row, "candidate_can_start", False):
+            return True
+        return call_is_open(row)
+    if viewer and viewer.role == UserRole.EMPLOYER:
+        return call_is_open(row)
+    return False
+
+
+def call_step(row: Interview, viewer: User | None) -> str:
+    if row.status == InterviewStatus.CANCELLED:
+        return "cancelled"
+    if row.status == InterviewStatus.COMPLETED:
+        return "done"
+    if row.status == InterviewStatus.NO_SHOW:
+        return "missed"
+    if row.type not in CALL_TYPES:
+        return "onsite"
+    if viewer and viewer.role == UserRole.CANDIDATE and row.status == InterviewStatus.SCHEDULED:
+        return "confirm"
+    if viewer_can_start_call(row, viewer) and not call_is_open(row):
+        return "start"
+    if viewer_can_join_call(row, viewer):
+        return "join"
+    return "wait_host"
+
+
 def serialize_interview(row: Interview, viewer: User | None = None) -> dict:
     candidate = row.candidate
     user = candidate.user if candidate else None
     hide_notes = viewer is not None and viewer.role in {UserRole.CANDIDATE, UserRole.EMPLOYER}
+    live = row.type in CALL_TYPES and row.status in LIVE_CALL_STATUSES
     return {
         "id": row.id,
         "candidate_id": row.candidate_id,
@@ -71,8 +122,13 @@ def serialize_interview(row: Interview, viewer: User | None = None) -> dict:
         "candidate_name": user.full_name if user else None,
         "job_title": row.job.title if row.job else None,
         "company_name": row.company.name if row.company else None,
-        "in_app_call": row.type in CALL_TYPES and row.status in LIVE_CALL_STATUSES,
+        "in_app_call": live,
         "call_video": row.type != InterviewType.PHONE,
+        "candidate_can_start": bool(getattr(row, "candidate_can_start", False)),
+        "call_open": call_is_open(row),
+        "can_start_call": viewer_can_start_call(row, viewer),
+        "can_join_call": viewer_can_join_call(row, viewer),
+        "call_step": call_step(row, viewer),
     }
 
 
@@ -169,17 +225,27 @@ def create_interview(db: Session, user: User, data: InterviewIn, ip: str | None)
         type=data.type or InterviewType.TALENDUS,
         notes=data.notes,
         status=InterviewStatus.SCHEDULED,
+        candidate_can_start=bool(getattr(data, "candidate_can_start", False)),
     )
     db.add(row)
     db.flush()
     cand_user = candidate.user
     when_label = when.strftime("%Y-%m-%d %H:%M")
+    if row.type in CALL_TYPES:
+        next_step = (
+            "Confirmez votre présence. Vous pourrez lancer l’appel au moment convenu."
+            if row.candidate_can_start
+            else "Confirmez votre présence. Vous rejoindrez l’appel lorsque le conseiller l’aura ouvert."
+        )
+        invite_msg = f"{TYPE_LABEL.get(row.type, row.type.value)} le {when_label} — {row.location or ''}. {next_step}".strip()
+    else:
+        invite_msg = f"{TYPE_LABEL.get(row.type, row.type.value)} le {when_label} — {row.location or ''}".strip()
     notify(
         db,
         cand_user,
         NotificationType.INTERVIEW_INVITE,
         "Entretien planifié",
-        f"{TYPE_LABEL.get(row.type, row.type.value)} le {when_label} — {row.location or ''}".strip(),
+        invite_msg,
         href=portal_href(cand_user, "interviews"),
     )
     if cand_user:
@@ -217,10 +283,13 @@ def patch_interview(db: Session, user: User, interview_id: str, data: InterviewP
         raise AppError(403, "Modification non autorisée.", "FORBIDDEN")
     payload = data.model_dump(exclude_unset=True)
     rescheduled = False
+    granted_start = False
     if "scheduled_at" in payload and payload["scheduled_at"]:
         row.scheduled_at = _parse_when(payload.pop("scheduled_at"))
         row.reminder_sent_at = None
         rescheduled = True
+    if "candidate_can_start" in payload:
+        granted_start = bool(payload["candidate_can_start"]) and not bool(row.candidate_can_start)
     for key, value in payload.items():
         setattr(row, key, value)
     audit(db, "interview.update", user, "interview", row.id)
@@ -244,6 +313,17 @@ def patch_interview(db: Session, user: User, interview_id: str, data: InterviewP
                 recipient=cand_user.phone,
                 template="interview_invite",
                 variables={"name": cand_user.first_name or "", "when": when_label, "location": row.location or ""},
+            )
+    if granted_start:
+        cand_user = row.candidate.user if row.candidate else None
+        if cand_user:
+            notify(
+                db,
+                cand_user,
+                NotificationType.INTERVIEW_INVITE,
+                "Vous pouvez lancer l’appel",
+                "Le conseiller vous autorise à ouvrir la salle. Confirmez votre présence, puis lancez l’appel au moment convenu.",
+                href=portal_href(cand_user, "interviews"),
             )
     db.commit()
     return get_interview(db, user, row.id)

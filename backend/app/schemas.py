@@ -559,6 +559,7 @@ class InterviewIn(BaseModel):
     notes: str | None = None
     meeting_url: str | None = Field(default=None, max_length=500)
     meeting_provider: str | None = Field(default=None, max_length=40)
+    candidate_can_start: bool | None = None
 
 
 class InterviewPatchIn(BaseModel):
@@ -570,6 +571,7 @@ class InterviewPatchIn(BaseModel):
     meeting_url: str | None = Field(default=None, max_length=500)
     meeting_provider: str | None = Field(default=None, max_length=40)
     status: InterviewStatus | None = None
+    candidate_can_start: bool | None = None
 
 
 class InterviewStatusIn(BaseModel):

@@ -126,7 +126,7 @@
     function avatarHtml(user, cls) {
       var url = window.__tlAvatarUrl;
       if (url) {
-        return '<span class="tl-avatar ' + (cls || "") + '"><img src="' + esc(url) + '" alt=""></span>';
+        return '<span class="tl-avatar ' + (cls || "") + '"><img src="' + esc(url) + '" alt="' + esc(displayName(user)) + '"></span>';
       }
       return '<span class="tl-avatar ' + (cls || "") + '" aria-hidden="true">' + esc(initials(user)) + "</span>";
     }
@@ -579,15 +579,15 @@
       var badge = unread ? '<span class="tl-session-badge">' + (unread > 9 ? "9+" : unread) + "</span>" : "";
       var menu =
         '<div class="tl-session-menu" role="menu">' +
-          '<div class="tl-session-menu-id">' + avatarHtml(user, "is-lg") +
-            "<div><strong>" + esc(displayName(user)) + "</strong><span>" + esc(roleLabel(user.role)) + "</span></div></div>" +
+          '<div class="tl-session-menu-id">' + avatarHtml(user, "is-menu") +
+            '<div class="tl-session-menu-copy"><strong>' + esc(displayName(user)) + "</strong><span>" + esc(roleLabel(user.role)) + "</span></div></div>" +
           '<a role="menuitem" href="' + esc(space) + '"><i class="fa-solid fa-table-columns" aria-hidden="true"></i>' + esc(t.workspace) + "</a>" +
           '<a role="menuitem" href="' + esc(portalHref(user.role, "#/settings")) + '"><i class="fa-solid fa-gear" aria-hidden="true"></i>' + esc(t.settings) + "</a>" +
           '<button type="button" role="menuitem" data-auth-logout><i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>' + esc(t.logout) + "</button>" +
         "</div>";
       if (kind === "offcanvas") {
-        return '<div class="tl-session-offcanvas-user">' + avatarHtml(user, "is-lg") +
-          "<div><strong>" + esc(displayName(user)) + "</strong><span>" + esc(roleLabel(user.role)) + "</span></div></div>" +
+        return '<div class="tl-session-offcanvas-user">' + avatarHtml(user, "is-menu") +
+          '<div class="tl-session-menu-copy"><strong>' + esc(displayName(user)) + "</strong><span>" + esc(roleLabel(user.role)) + "</span></div></div>" +
           '<a class="tl-btn" href="' + esc(space) + '">' + esc(t.workspace) + "</a>" +
           '<a class="tl-btn tl-btn-ghost" href="' + esc(portalHref(user.role, "#/settings")) + '">' + esc(t.settings) + "</a>" +
           '<button type="button" class="tl-btn tl-btn-ghost" data-auth-logout>' + esc(t.logout) + "</button>";

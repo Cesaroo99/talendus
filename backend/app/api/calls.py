@@ -20,6 +20,24 @@ class CallSignalIn(BaseModel):
     payload: dict = Field(default_factory=dict)
 
 
+@router.get("/{interview_id}/lobby")
+def call_lobby(
+    interview_id: str,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    return ok(calls_service.lobby(db, user, interview_id))
+
+
+@router.post("/{interview_id}/open")
+def open_call(
+    interview_id: str,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    return ok(calls_service.open_room(db, user, interview_id), message="Salle d’appel ouverte.")
+
+
 @router.post("/{interview_id}/join")
 def join_call(
     interview_id: str,

@@ -48,7 +48,8 @@ def get_db() -> Generator[Session, None, None]:
 
 def init_db() -> None:
     from app import models  # noqa: F401 — enregistre les métadonnées
-    from app.schema_repair import ensure_contracts_schema
+    from app.schema_repair import ensure_contracts_schema, ensure_interviews_schema
 
     Base.metadata.create_all(bind=engine)
     ensure_contracts_schema(engine)
+    ensure_interviews_schema(engine)

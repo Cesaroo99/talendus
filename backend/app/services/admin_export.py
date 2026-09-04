@@ -472,6 +472,8 @@ def _interview(i: Interview) -> dict:
         "candidateName": (i.candidate.user.full_name if i.candidate and i.candidate.user else ""),
         "in_app_call": i.type in CALL_TYPES and i.status in LIVE_CALL_STATUSES,
         "call_video": i.type != InterviewType.PHONE,
+        "candidate_can_start": bool(getattr(i, "candidate_can_start", False)),
+        "call_open": bool(getattr(i, "call_opened_at", None)),
     }
 
 

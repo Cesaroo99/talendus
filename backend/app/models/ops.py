@@ -88,6 +88,8 @@ class Interview(Base):
     status: Mapped[InterviewStatus] = mapped_column(Enum(InterviewStatus), default=InterviewStatus.SCHEDULED, index=True)
     notes: Mapped[str | None] = mapped_column(Text)
     reminder_sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    candidate_can_start: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    call_opened_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
 

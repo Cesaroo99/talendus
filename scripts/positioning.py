@@ -1828,7 +1828,11 @@ def _job_href(slug, lang="fr"):
 
 
 def job_card_html(job, lang="fr"):
+    from job_copy import job_story
+
     slug, title, city, cat, typ, sal, shift, req, sector, skills, exp = job
+    story = job_story(slug, lang)
+    excerpt = (story.get("profile") or [req])[0] if story else req
     traits = job_offer_traits(slug, lang)
     quart = traits["shift"]
     horaire = traits["schedule"]
@@ -1868,7 +1872,7 @@ def job_card_html(job, lang="fr"):
           <li><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>{quart}</span></li>
         </ul>
         <p class="tl-job-excerpt-label">{profile_l}</p>
-        <p class="tl-job-excerpt">{req}</p>
+        <p class="tl-job-excerpt">{excerpt}</p>
         {chips}
       </div>
       <span class="tl-job-card-cta">{cta}</span>
@@ -1959,6 +1963,8 @@ def _apply_form_html(slug, lang="fr"):
 
 
 def job_detail_html(job, related_html, lang="fr"):
+    from job_copy import job_prose_html, job_story
+
     slug, title, city, cat, typ, sal, shift, req, sector, skills, exp = job
     traits = job_offer_traits(slug, lang)
     quart = traits["shift"]
@@ -1971,6 +1977,16 @@ def job_detail_html(job, related_html, lang="fr"):
     icon = _job_icon(cat)
     chips = _skill_chips(skills)
     form = _apply_form_html(slug, lang)
+    story = job_story(slug, lang)
+    prose = job_prose_html(slug, title, city, sector_label, skills, req, chips, lang)
+    if lang == "en":
+        hero_lead = story.get("lead") or (
+            f"Talendus is recruiting this {title.lower()} role for an employer in {city}. Apply here: a consultant reviews your file and calls you."
+        )
+    else:
+        hero_lead = story.get("lead") or (
+            f"Talendus recrute ce poste de {title.lower()} pour un employeur à {city}. Postulez ici : un conseiller étudie votre dossier et vous rappelle."
+        )
     if lang == "en":
         listing = "jobs.html"
         talent = "candidates.html"
@@ -1986,7 +2002,7 @@ def job_detail_html(job, related_html, lang="fr"):
           <h1>{title}</h1>
         </div>
       </div>
-      <p class="tl-job-hero-lead">Talendus is recruiting this {title.lower()} role for an employer in {city}. Apply here: a consultant reviews your file and calls you. The simplest way to move forward.</p>
+      <p class="tl-job-hero-lead">{hero_lead}</p>
       <ul class="tl-job-hero-tags">
         <li>{typ}</li>
         <li>{exp_label}</li>
@@ -2009,25 +2025,7 @@ def job_detail_html(job, related_html, lang="fr"):
           <li><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>Category</span><strong>{cat_label}</strong></li>
         </ul>
         <div class="tl-job-prose">
-          <h2>The role</h2>
-          <p>A {title.lower()} mandate in {city}, in {sector_label}. Skills in focus: {skills}.</p>
-          <h2>Profile we look for</h2>
-          <p>{req}</p>
-          {chips}
-          <h2>What the mandate includes</h2>
-          <ul>
-            <li>{typ} role, {horaire.lower()}, {quart.lower()}</li>
-            <li>Pay: {sal}</li>
-            <li>A Talendus consultant screens your file and calls you</li>
-            <li>If it fits, we present you and stay with you through the next steps</li>
-          </ul>
-          <h2>How applying works</h2>
-          <ol class="tl-job-steps">
-            <li><span class="tl-job-step-n">1</span><div><strong>You apply here with your resume.</strong><p>PDF, Word or image. Your file reaches Talendus.</p></div></li>
-            <li><span class="tl-job-step-n">2</span><div><strong>A consultant reviews it.</strong><p>We check the fit with the mandate before anything is shared.</p></div></li>
-            <li><span class="tl-job-step-n">3</span><div><strong>If it holds, we present you.</strong><p>We speak to the employer on your behalf.</p></div></li>
-            <li><span class="tl-job-step-n">4</span><div><strong>You follow the next steps with us.</strong><p>Interviews and updates go through Talendus.</p></div></li>
-          </ol>
+          {prose}
         </div>
         <p class="tl-job-alt"><a href="{listing}">Browse other openings</a> · <a href="{talent}">Create a talent profile</a></p>
       </div>
@@ -2062,7 +2060,7 @@ def job_detail_html(job, related_html, lang="fr"):
           <h1>{title}</h1>
         </div>
       </div>
-      <p class="tl-job-hero-lead">Talendus recrute ce poste de {title.lower()} pour un employeur à {city}. Postulez ici : un conseiller étudie votre dossier et vous rappelle. Le plus simple pour avancer.</p>
+      <p class="tl-job-hero-lead">{hero_lead}</p>
       <ul class="tl-job-hero-tags">
         <li>{typ}</li>
         <li>{exp_label}</li>
@@ -2085,25 +2083,7 @@ def job_detail_html(job, related_html, lang="fr"):
           <li><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>Catégorie</span><strong>{cat_label}</strong></li>
         </ul>
         <div class="tl-job-prose">
-          <h2>Le poste</h2>
-          <p>Un mandat de {title.lower()} à {city}, en {sector_label}. Compétences visées : {skills}.</p>
-          <h2>Profil recherché</h2>
-          <p>{req}</p>
-          {chips}
-          <h2>Ce que comprend le mandat</h2>
-          <ul>
-            <li>Poste {typ.lower()}, {horaire.lower()}, {quart.lower()}</li>
-            <li>Rémunération : {sal}</li>
-            <li>Un conseiller Talendus étudie votre dossier et vous rappelle</li>
-            <li>Si ça colle, nous vous présentons et restons avec vous pour la suite</li>
-          </ul>
-          <h2>Comment postuler</h2>
-          <ol class="tl-job-steps">
-            <li><span class="tl-job-step-n">1</span><div><strong>Vous postulez ici avec votre CV.</strong><p>PDF, Word ou image. Votre dossier arrive chez Talendus.</p></div></li>
-            <li><span class="tl-job-step-n">2</span><div><strong>Un conseiller l'étudie.</strong><p>Nous vérifions la correspondance avec le mandat avant tout partage.</p></div></li>
-            <li><span class="tl-job-step-n">3</span><div><strong>Si ça colle, nous vous présentons.</strong><p>Nous parlons à l'employeur pour vous.</p></div></li>
-            <li><span class="tl-job-step-n">4</span><div><strong>Vous suivez la suite avec nous.</strong><p>Entretiens et nouvelles passent par Talendus.</p></div></li>
-          </ol>
+          {prose}
         </div>
         <p class="tl-job-alt"><a href="{listing}">Voir les autres offres</a> · <a href="{talent}">Créer un profil talent</a></p>
       </div>
