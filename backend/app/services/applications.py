@@ -151,7 +151,6 @@ def apply(db: Session, user: User, data: ApplicationCreateIn, ip: str | None = N
         title="Candidature envoyée",
         message=f"Votre candidature pour {job.title} a été transmise.",
         section="apps",
-        item_id=application.id,
         template="application_confirm",
         email_type=EmailType.APPLICATION_CONFIRMATION,
         ctx={"name": user.first_name or "", "job_title": job.title},
