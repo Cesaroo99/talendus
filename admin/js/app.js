@@ -129,6 +129,7 @@
     ["Ops", [
       ["dashboard", "Tableau de bord", "fa-solid fa-grip"],
       ["hiring", "Besoins", "fa-solid fa-clipboard-list"],
+      ["prospects", "Prospects", "fa-solid fa-address-book"],
       ["candidates", "Candidats", "fa-solid fa-users"],
       ["clients", "Clients", "fa-solid fa-industry"],
       ["jobs", "Offres d’emploi", "fa-solid fa-briefcase"],
@@ -1488,6 +1489,216 @@
     } catch (err) {
       list.innerHTML = "<p class='sub'>Impossible de charger l’équipe.</p>";
     }
+  }
+
+  var prospectSide = "candidate";
+  var prospectCache = [];
+
+  function viewProspects() {
+    return `
+      <div class="page-head">
+        <div>
+          <h1>Prospects</h1>
+          <p>Deux bases : candidats et recruteurs / employeurs. Chaque fiche a ses étapes, ses modèles de courriel personnalisés, et un historique pour ne jamais renvoyer le même message.</p>
+        </div>
+        <div class="page-actions">
+          <button type="button" class="btn btn-orange" id="prospect-new">Ajouter un prospect</button>
+        </div>
+      </div>
+      <div class="tabs" id="prospect-sides">
+        <button type="button" class="tab${prospectSide === "candidate" ? " is-on" : ""}" data-pside="candidate">Candidats</button>
+        <button type="button" class="tab${prospectSide === "employer" ? " is-on" : ""}" data-pside="employer">Recruteurs / employeurs</button>
+      </div>
+      <div id="prospects-root"><p class="sub">Chargement des pipelines…</p></div>`;
+  }
+
+  function prospectLabel(row) {
+    return row.display_name || ((row.first_name || "") + " " + (row.last_name || "")).trim() || row.email;
+  }
+
+  async function hydrateProspects() {
+    var root = document.getElementById("prospects-root");
+    if (!root || !api()) return;
+    try {
+      var json = await api().request("/admin/prospects?side=" + encodeURIComponent(prospectSide));
+      var rows = (json && json.data) || [];
+      var meta = (json && json.meta) || {};
+      prospectCache = rows;
+      var stages = prospectSide === "employer" ? (meta.employer_stages || []) : (meta.candidate_stages || []);
+      var cols = stages.map(function (st) {
+        var cards = rows.filter(function (r) { return r.stage === st.key; });
+        return '<div class="kanban-col" data-pstage="' + U.esc(st.key) + '"><h4>' + U.esc(st.label) + " <span>" + cards.length + "</span></h4>" +
+          cards.map(function (r) {
+            return '<article class="kanban-card" draggable="true" data-pid="' + U.esc(r.id) + '">' +
+              '<label class="check"><input type="checkbox" data-pcheck="' + U.esc(r.id) + '"> Sélection</label>' +
+              "<b>" + U.esc(prospectLabel(r)) + "</b>" +
+              "<span>" + U.esc(r.email) + "</span>" +
+              (r.company_name ? "<span>" + U.esc(r.company_name) + "</span>" : "") +
+              (r.title ? "<span>" + U.esc(r.title) + "</span>" : "") +
+              "<span>" + U.esc(r.source || "") + (r.sent_templates && r.sent_templates.length ? " · " + r.sent_templates.length + " envoi(s)" : "") + "</span>" +
+              '<button type="button" class="btn btn-ghost btn-sm" data-pmail="' + U.esc(r.id) + '">Écrire</button>' +
+              "</article>";
+          }).join("") + "</div>";
+      }).join("");
+      root.innerHTML =
+        '<div class="prospect-toolbar">' +
+        '<input id="prospect-q" placeholder="Rechercher nom, courriel, entreprise">' +
+        '<button type="button" class="btn btn-orange" id="prospect-bulk">Envoyer aux sélectionnés</button>' +
+        "</div>" +
+        '<div class="kanban prospect-kanban">' + cols + "</div>";
+      bindProspectBoard(root, stages, meta);
+    } catch (err) {
+      root.innerHTML = "<p class='sub'>" + U.esc((err && err.message) || "Impossible de charger les prospects.") + "</p>";
+    }
+  }
+
+  function bindProspectBoard(root) {
+    var sides = document.getElementById("prospect-sides");
+    if (sides) sides.onclick = function (e) {
+      var btn = e.target.closest("[data-pside]");
+      if (!btn) return;
+      prospectSide = btn.getAttribute("data-pside");
+      Array.from(sides.querySelectorAll(".tab")).forEach(function (t) {
+        t.classList.toggle("is-on", t.getAttribute("data-pside") === prospectSide);
+      });
+      hydrateProspects();
+    };
+    var addBtn = document.getElementById("prospect-new");
+    if (addBtn) addBtn.onclick = function () { openProspectCreate(); };
+    var bulk = document.getElementById("prospect-bulk");
+    if (bulk) bulk.onclick = function () {
+      var ids = Array.from(root.querySelectorAll("[data-pcheck]:checked")).map(function (el) { return el.getAttribute("data-pcheck"); });
+      if (!ids.length) { U.toast("Cochez au moins un prospect.", "err"); return; }
+      openProspectComposer(ids);
+    };
+    var search = document.getElementById("prospect-q");
+    if (search) search.oninput = function () {
+      var q = search.value.toLowerCase();
+      Array.from(root.querySelectorAll(".kanban-card")).forEach(function (card) {
+        card.style.display = card.textContent.toLowerCase().indexOf(q) >= 0 ? "" : "none";
+      });
+    };
+    Array.from(root.querySelectorAll("[data-pmail]")).forEach(function (btn) {
+      btn.onclick = function (e) { e.stopPropagation(); openProspectComposer([btn.getAttribute("data-pmail")]); };
+    });
+    Array.from(root.querySelectorAll(".kanban-card")).forEach(function (card) {
+      card.ondragstart = function (e) { e.dataTransfer.setData("text/plain", card.getAttribute("data-pid")); };
+    });
+    Array.from(root.querySelectorAll(".kanban-col")).forEach(function (col) {
+      col.ondragover = function (e) { e.preventDefault(); col.classList.add("drag-over"); };
+      col.ondragleave = function () { col.classList.remove("drag-over"); };
+      col.ondrop = function (e) {
+        e.preventDefault();
+        col.classList.remove("drag-over");
+        var id = e.dataTransfer.getData("text/plain");
+        var stage = col.getAttribute("data-pstage");
+        if (!id || !stage) return;
+        api().request("/admin/prospects/" + id, { method: "PATCH", body: { stage: stage } })
+          .then(function () { hydrateProspects(); })
+          .catch(function (err) { U.toast((err && err.message) || "Étape non enregistrée.", "err"); });
+      };
+    });
+  }
+
+  function openProspectCreate() {
+    U.modal({
+      title: "Nouveau prospect",
+      body: '<form id="pf-new" class="form-grid">' +
+        '<label>Côté</label><select name="side"><option value="candidate"' + (prospectSide === "candidate" ? " selected" : "") + ">Candidat</option><option value=\"employer\"" + (prospectSide === "employer" ? " selected" : "") + ">Recruteur / employeur</option></select>" +
+        U.field("Courriel", "email", "", "email") +
+        U.field("Prénom", "first_name") +
+        U.field("Nom", "last_name") +
+        U.field("Entreprise", "company_name") +
+        U.field("Poste / métier", "title") +
+        U.field("Ville", "city") +
+        U.field("Secteur", "sector") +
+        U.field("Téléphone", "phone") +
+        "</form>",
+      footer: '<button class="btn btn-ghost" data-close>Annuler</button><button class="btn btn-orange" id="pf-save">Enregistrer</button>',
+      onMount: function (box, close) {
+        box.querySelector("#pf-save").onclick = function () {
+          var d = U.formData(box.querySelector("#pf-new"));
+          api().request("/admin/prospects", { method: "POST", body: d }).then(function () {
+            U.toast("Prospect ajouté.", "ok");
+            close();
+            hydrateProspects();
+          }).catch(function (err) { U.toast((err && err.message) || "Enregistrement impossible.", "err"); });
+        };
+      }
+    });
+  }
+
+  function openProspectComposer(ids) {
+    if (!api()) return;
+    var firstId = ids[0];
+    Promise.all([
+      api().request("/admin/prospects/" + firstId),
+      api().request("/admin/prospects/catalog?side=" + encodeURIComponent(prospectSide))
+    ]).then(function (pair) {
+      var detail = (pair[0] && pair[0].data) || {};
+      var proposals = detail.proposals || [];
+      var attachments = detail.attachments || { invoices: [], contracts: [] };
+      var others = ids.length - 1;
+      var opts = proposals.map(function (p) {
+        return '<option value="' + U.esc(p.key) + '"' + (p.already_sent ? " data-sent=1" : "") + ">" +
+          U.esc(p.label) + (p.already_sent ? " — déjà envoyé" : "") + "</option>";
+      }).join("");
+      var inv = (attachments.invoices || []).map(function (i) {
+        return '<label class="check"><input type="checkbox" data-inv="' + U.esc(i.id) + '"> Facture ' + U.esc(i.label) + "</label>";
+      }).join("");
+      var cts = (attachments.contracts || []).map(function (c) {
+        return '<label class="check"><input type="checkbox" data-ct="' + U.esc(c.id) + '"> ' + U.esc(c.label) + "</label>";
+      }).join("");
+      U.modal({
+        title: ids.length > 1 ? "Envoyer à " + ids.length + " prospects" : "Écrire à " + prospectLabel(detail),
+        wide: true,
+        body: '<div class="prospect-composer">' +
+          (others > 0 ? "<p class='sub'>Chaque destinataire reçoit son propre courriel, personnalisé. Personne ne voit les autres adresses.</p>" : "") +
+          "<p class='sub'>Modèle proposé selon le profil. Vous pouvez modifier le texte avant l’envoi.</p>" +
+          '<label>Modèle</label><select id="pc-tpl">' + opts + '<option value="custom">Message libre</option></select>' +
+          '<p class="sub" id="pc-intent"></p>' +
+          '<label>Sujet</label><input id="pc-subject">' +
+          '<label>Message</label><textarea id="pc-body" rows="10"></textarea>' +
+          (inv || cts ? "<p class='sub'>Pièces jointes (facture, mandat) — uniquement pour ce destinataire.</p>" + inv + cts : "") +
+          '<label class="check"><input type="checkbox" id="pc-force"> Renvoyer même si ce modèle a déjà été envoyé</label>' +
+          "</div>",
+        footer: '<button class="btn btn-ghost" data-close>Annuler</button><button class="btn btn-orange" id="pc-send">Envoyer</button>',
+        onMount: function (box, close) {
+          var tpl = box.querySelector("#pc-tpl");
+          var apply = function () {
+            var found = proposals.filter(function (p) { return p.key === tpl.value; })[0];
+            box.querySelector("#pc-intent").textContent = found ? found.intent : "Rédigez un message unique. Le même sujet ne pourra pas être renvoyé à la même personne.";
+            if (found) {
+              box.querySelector("#pc-subject").value = found.subject;
+              box.querySelector("#pc-body").value = found.body;
+            }
+          };
+          tpl.onchange = apply;
+          apply();
+          box.querySelector("#pc-send").onclick = function () {
+            var key = tpl.value;
+            var payload = {
+              template_key: key === "custom" ? "" : key,
+              subject: (ids.length > 1 && key !== "custom") ? "" : box.querySelector("#pc-subject").value,
+              body: (ids.length > 1 && key !== "custom") ? "" : box.querySelector("#pc-body").value,
+              invoice_ids: Array.from(box.querySelectorAll("[data-inv]:checked")).map(function (el) { return el.getAttribute("data-inv"); }),
+              contract_ids: Array.from(box.querySelectorAll("[data-ct]:checked")).map(function (el) { return el.getAttribute("data-ct"); }),
+              force: !!(box.querySelector("#pc-force") && box.querySelector("#pc-force").checked)
+            };
+            var req = ids.length === 1
+              ? api().request("/admin/prospects/" + firstId + "/send", { method: "POST", body: payload })
+              : api().request("/admin/prospects/send-bulk", { method: "POST", body: Object.assign({ ids: ids }, payload) });
+            req.then(function (res) {
+              U.toast((res && res.message) || "Envoyé.", "ok");
+              close();
+              hydrateProspects();
+            }).catch(function (err) { U.toast((err && err.message) || "Envoi impossible.", "err"); });
+          };
+        }
+      });
+    }).catch(function (err) {
+      U.toast((err && err.message) || "Impossible d’ouvrir le composer.", "err");
+    });
   }
 
   function viewServices() {
@@ -2966,6 +3177,7 @@
         else if (r.name === "missions") inner = viewMissions();
         else if (r.name === "hiring" && r.id) inner = viewHiringDetail(r.id);
         else if (r.name === "hiring") inner = viewHiring();
+        else if (r.name === "prospects") inner = viewProspects();
         else if (r.name === "interviews") inner = viewInterviews();
         else if (r.name === "messages") inner = viewMessages();
         else if (r.name === "content") inner = viewContent();
@@ -2988,6 +3200,7 @@
       if (r.name === "services") hydrateServices();
       if (r.name === "analytics") hydrateAnalytics();
       if (r.name === "settings") hydrateTeam();
+      if (r.name === "prospects") hydrateProspects();
     }, 180);
   }
 

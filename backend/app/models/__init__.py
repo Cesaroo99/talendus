@@ -29,6 +29,7 @@ from app.models.portal import JobAlert, LoginEvent, PortalDocument, SavedJob
 from app.models.push import PushSubscription
 from app.models.calls import CallPeer, CallSignal
 from app.models.analytics import SiteEvent
+from app.models.prospect import Prospect, ProspectSend
 
 __all__ = [
     "User",
@@ -73,4 +74,6 @@ __all__ = [
     "CallPeer",
     "CallSignal",
     "SiteEvent",
+    "Prospect",
+    "ProspectSend",
 ]

@@ -85,6 +85,28 @@ def contact(payload: ContactIn, request: Request, db: Session = Depends(get_db))
         client_ip(request),
         {"email": payload.email, "subject": payload.subject or payload.title or payload.company},
     )
+    from app.services.prospects import upsert_prospect
+
+    hiring = bool(payload.title or payload.company)
+    first, last = (payload.name or "").strip(), ""
+    parts = [p for p in (payload.name or "").split() if p]
+    if parts:
+        first, last = parts[0], " ".join(parts[1:])
+    upsert_prospect(
+        db,
+        side="employer" if hiring else "candidate",
+        email=payload.email,
+        source="contact",
+        first_name=first,
+        last_name=last,
+        phone=payload.phone or "",
+        company_name=payload.company or "",
+        title=payload.title or "",
+        city=payload.location or "",
+        sector=payload.sector or "",
+        source_detail=payload.subject or "Formulaire contact",
+        message=payload.message or "",
+    )
     db.commit()
     hiring = bool(payload.title or payload.company)
     message = (

@@ -6,6 +6,11 @@
   const STATUS = {
     nouveau: ["Nouveau", "info"],
     "a-contacter": ["À contacter", "warn"],
+    contacte: ["Contacté", "info"],
+    discussion: ["En discussion", "warn"],
+    proposition: ["Proposition", "orange"],
+    client: ["Client", "ok"],
+    perdu: ["Perdu", "danger"],
     qualifie: ["Qualifié", "ok"],
     entretien: ["Entretien", "info"],
     presente: ["Présenté au client", "orange"],
