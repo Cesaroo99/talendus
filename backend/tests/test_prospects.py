@@ -193,6 +193,70 @@ def test_personalized_send_dedup_and_isolation(client):
     assert "Prospect introuvable" in missing.text
 
 
+def test_greeting_without_person_name_and_attachment_note(client):
+    from app.models.prospect import Prospect
+    from app.services.prospects import attachment_note, context_for, fill_tokens, get_template
+
+    admin = promote_admin(client, "crm-copy@example.com")
+    admin_h = auth_header(admin)
+    emp = client.post(
+        "/api/admin/prospects",
+        headers=admin_h,
+        json={"side": "employer", "email": "info.usine@example.com", "company_name": "Usine Nord"},
+    ).json()["data"]
+    assert not emp.get("first_name")
+    proposals = client.get(f"/api/admin/prospects/p/{emp['id']}/proposals", headers=admin_h).json()["data"]
+    keys = [row["key"] for row in proposals]
+    assert keys == [
+        "emp_first_contact",
+        "emp_followup",
+        "emp_discovery",
+        "emp_mandate",
+        "emp_search_start",
+        "emp_talent_ready",
+        "emp_invoice",
+        "emp_reactivate",
+    ]
+    first = next(row for row in proposals if row["key"] == "emp_first_contact")
+    assert first["subject"].startswith("Usine Nord")
+    assert first["body"].startswith("Bonjour,")
+    assert "Bonjour Usine Nord" not in first["body"]
+    assert "honoraires" in first["body"].lower() or "16 %" in first["body"]
+    cand = client.post(
+        "/api/admin/prospects",
+        headers=admin_h,
+        json={"side": "candidate", "email": "anonyme@example.com", "title": "Cariste"},
+    ).json()["data"]
+    cand_props = client.get(f"/api/admin/prospects/p/{cand['id']}/proposals", headers=admin_h).json()["data"]
+    assert [row["key"] for row in cand_props][0] == "cand_first_contact"
+    opener = next(row for row in cand_props if row["key"] == "cand_first_contact")
+    assert opener["body"].startswith("Bonjour,")
+    assert opener["subject"].startswith("Talendus")
+    assert "sans frais" in opener["subject"]
+    note = attachment_note(
+        [EmailAttachment(filename="mandat-usine-nord.pdf", data=b"%PDF", mime="application/pdf", kind="contract")],
+        {"employer_link": "https://talendus.ca/employeur.html", "info": "info@talendus.ca"},
+    )
+    assert note.startswith("Pièce jointe — mandat")
+    assert "signer" in note.lower()
+    assert "16 %" in note
+    tpl = get_template("emp_mandate")
+    ctx = context_for(
+        Prospect(side="employer", email="x@y.z", company_name="Usine Nord", first_name=""),
+        None,
+    )
+    body = fill_tokens(tpl["body"], ctx)
+    assert body.startswith("Bonjour,")
+    assert "au sujet de Usine Nord" in body
+    from app.services.email import signed_html
+
+    html = signed_html("Bonjour,\n\nPièce jointe — facture\nLe fichier F-2026-014.pdf est joint.")
+    assert "#0b1f3a" in html
+    assert "#ff6b00" in html
+    assert "Pièce jointe" in html
+    assert "cid:talendus-signature@talendus.ca" in html
+
+
 def test_attachment_stays_on_one_message():
     cfg = runtime_email_config()
     msg = build_email_message(

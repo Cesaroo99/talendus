@@ -1782,7 +1782,7 @@
           '<p class="sub" id="pc-intent"></p>' +
           '<label>Sujet</label><input id="pc-subject">' +
           '<label>Message</label><textarea id="pc-body" rows="8"></textarea>' +
-          (inv || cts ? "<p class='sub'>Pièces jointes pour ce destinataire.</p>" + inv + cts : "") +
+          (inv || cts ? "<p class='sub'>Pièces jointes pour ce destinataire. Le courriel expliquera quoi faire avec (lire, signer ou payer).</p>" + inv + cts : "") +
           '<label class="check"><input type="checkbox" id="pc-force"> Renvoyer ce modèle même s’il a déjà été envoyé</label>' +
           "</div>",
         footer: '<button class="btn btn-ghost" data-close>Annuler</button><button class="btn btn-orange" id="pc-send">Envoyer</button>',

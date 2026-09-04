@@ -39,6 +39,9 @@ def test_every_template_gets_talendus_signature():
     html = signed_html(plain)
     assert f'cid:{SIGNATURE_CID}' in html
     assert "Bonjour Hugo" in html
+    assert "#0b1f3a" in html
+    assert "#ff6b00" in html
+    assert "Cabinet de recrutement" in html
     assert "514 555-0199" not in html
     cfg = runtime_email_config()
     msg = build_email_message(cfg, "cesarmemoli1@gmail.com", "Test signature", plain)
