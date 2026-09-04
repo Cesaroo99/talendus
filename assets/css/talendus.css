@@ -2886,7 +2886,7 @@ body.tl-persona-entreprise .tl-settings-tab.is-active {
 .tl-space-sheet {
   position: fixed;
   inset: 0;
-  z-index: 80;
+  z-index: 120;
 }
 .tl-space-sheet.is-open { display: block; }
 .tl-space-sheet-backdrop {
