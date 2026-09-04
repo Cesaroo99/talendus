@@ -107,6 +107,26 @@
     return escapeHtml(value).replace(/`/g, "&#96;");
   }
 
+  function showPreviewOverlay(title, inner, onClose) {
+    var overlay = document.createElement("div");
+    overlay.className = "tl-file-preview";
+    overlay.setAttribute("role", "dialog");
+    overlay.setAttribute("aria-modal", "true");
+    overlay.innerHTML = '<div class="tl-file-preview-box"><div class="tl-file-preview-bar"><h2>' +
+      escapeHtml(title) + '</h2><button type="button" class="tl-file-preview-close">' +
+      (pageIsEn() ? "Close" : "Fermer") + "</button></div>" + inner + "</div>";
+    function close() {
+      if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+      document.removeEventListener("keydown", onKey);
+      if (onClose) onClose();
+    }
+    function onKey(ev) { if (ev.key === "Escape") close(); }
+    overlay.addEventListener("click", function (ev) { if (ev.target === overlay) close(); });
+    overlay.querySelector(".tl-file-preview-close").addEventListener("click", close);
+    document.addEventListener("keydown", onKey);
+    document.body.appendChild(overlay);
+  }
+
   function ensurePreviewChrome() {
     if (document.getElementById("tl-file-preview-style")) return;
     var style = document.createElement("style");
@@ -273,47 +293,38 @@
     previewContract: function (query) { return request("/contracts/preview" + (query || "")); },
     sendContract: function (id) { return request("/contracts/" + id + "/send", { method: "POST" }); },
     openContract: function (id) { return request("/contracts/" + id + "/open", { method: "POST" }); },
-    previewFile: function (path, filename) {
+    previewFile: function (path, filename, opts) {
       ensurePreviewChrome();
+      opts = opts || {};
       var token = getAccess();
-      var rel = String(path || "").replace(/^\/api/, "");
+      var title = filename || (pageIsEn() ? "Document" : "Document");
+      var mimeHint = String(opts.mime || "");
+      var office = /word|officedocument|rtf|msword|text\//i.test(mimeHint) || /\.(docx?|rtf|txt|md|text|csv)$/i.test(title);
+      var native = !office && (mimeHint.indexOf("pdf") >= 0 || /\.pdf$/i.test(title) || mimeHint.indexOf("image/") === 0 || /\.(png|jpe?g|webp)$/i.test(title));
+      var rel = String((native ? path : (opts.previewPath || String(path || "").replace(/\/file\/?$/, "/preview"))) || "").replace(/^\/api/, "");
       var abs = apiRoot() + rel;
       if (abs.indexOf("http") !== 0) abs = (location.origin || "") + abs;
-      var headers = { "Accept": "*/*" };
+      var headers = { "Accept": native ? "*/*" : "text/html,*/*" };
       if (token) headers.Authorization = "Bearer " + token;
-      var title = filename || (pageIsEn() ? "Document" : "Document");
       return fetch(abs, { headers: headers, credentials: "same-origin" }).then(function (res) {
         if (!res.ok) throw new Error(pageIsEn() ? "Unable to open the file." : "Impossible d’ouvrir le fichier.");
-        return res.blob().then(function (blob) {
-          var url = URL.createObjectURL(blob);
-          var mime = blob.type || "";
-          var overlay = document.createElement("div");
-          overlay.className = "tl-file-preview";
-          overlay.setAttribute("role", "dialog");
-          overlay.setAttribute("aria-modal", "true");
-          var inner;
-          if (mime.indexOf("pdf") >= 0 || /\.pdf$/i.test(title)) {
-            inner = '<iframe class="tl-file-preview-frame" title="' + escapeAttr(title) + '" src="' + url + '"></iframe>';
-          } else if (mime.indexOf("image/") === 0) {
-            inner = '<img class="tl-file-preview-img" alt="' + escapeAttr(title) + '" src="' + url + '">';
-          } else {
-            inner = '<p class="tl-file-preview-empty">' +
-              (pageIsEn() ? "Preview is not available for this format. Use Download." : "Aperçu indisponible pour ce format. Utilisez Télécharger.") +
-              "</p>";
-          }
-          overlay.innerHTML = '<div class="tl-file-preview-box"><div class="tl-file-preview-bar"><h2>' +
-            escapeHtml(title) + '</h2><button type="button" class="tl-file-preview-close">' +
-            (pageIsEn() ? "Close" : "Fermer") + "</button></div>" + inner + "</div>";
-          function close() {
-            if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-            URL.revokeObjectURL(url);
-            document.removeEventListener("keydown", onKey);
-          }
-          function onKey(ev) { if (ev.key === "Escape") close(); }
-          overlay.addEventListener("click", function (ev) { if (ev.target === overlay) close(); });
-          overlay.querySelector(".tl-file-preview-close").addEventListener("click", close);
-          document.addEventListener("keydown", onKey);
-          document.body.appendChild(overlay);
+        if (native) {
+          return res.blob().then(function (blob) {
+            var url = URL.createObjectURL(blob);
+            var mime = blob.type || mimeHint;
+            var inner;
+            if (mime.indexOf("pdf") >= 0 || /\.pdf$/i.test(title)) {
+              inner = '<iframe class="tl-file-preview-frame" title="' + escapeAttr(title) + '" src="' + url + '"></iframe>';
+            } else {
+              inner = '<img class="tl-file-preview-img" alt="' + escapeAttr(title) + '" src="' + url + '">';
+            }
+            showPreviewOverlay(title, inner, function () { URL.revokeObjectURL(url); });
+          });
+        }
+        return res.text().then(function (html) {
+          var url = URL.createObjectURL(new Blob([html], { type: "text/html" }));
+          var inner = '<iframe class="tl-file-preview-frame" title="' + escapeAttr(title) + '" src="' + url + '"></iframe>';
+          showPreviewOverlay(title, inner, function () { URL.revokeObjectURL(url); });
         });
       });
     },

@@ -245,6 +245,8 @@ def saved_job_ids(db: Session, user: User, job_ids: list[str]) -> set[str]:
 
 
 def serialize_document(row: PortalDocument) -> dict:
+    from app.services.resume_parse import is_previewable
+
     return {
         "id": row.id,
         "kind": row.kind,
@@ -252,7 +254,9 @@ def serialize_document(row: PortalDocument) -> dict:
         "mime_type": row.mime_type,
         "size_bytes": row.size_bytes,
         "created_at": row.created_at.isoformat() if row.created_at else None,
+        "previewable": is_previewable(row.mime_type, row.original_name),
         "download_path": f"/api/documents/{row.id}/file",
+        "preview_path": f"/api/documents/{row.id}/preview",
     }
 
 
