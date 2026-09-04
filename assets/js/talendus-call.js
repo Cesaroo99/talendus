@@ -396,11 +396,12 @@
     return navigator.mediaDevices.getUserMedia(constraints).catch(function (err) {
       var native = false;
       try { native = !!(global.TalendusNative && global.TalendusNative.requestMedia); } catch (e) {}
-      if (!native || attempt >= 12) throw err;
+      var max = native ? 12 : 4;
+      if (attempt >= max) throw err;
       return new Promise(function (resolve, reject) {
         setTimeout(function () {
           getMedia(constraints, attempt + 1).then(resolve, reject);
-        }, 350);
+        }, native ? 350 : 220 * (attempt + 1));
       });
     });
   }
@@ -462,7 +463,9 @@
       };
       renderShell(labels().connecting);
       var constraints = { audio: true, video: live.video ? { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } } : false };
-      return getMedia(constraints).catch(function () {
+      return new Promise(function (resolve) { setTimeout(resolve, 180); }).then(function () {
+        return getMedia(constraints);
+      }).catch(function () {
         if (!live || !live.video) throw new Error("media");
         live.video = false;
         overlay().classList.add("is-audio");
