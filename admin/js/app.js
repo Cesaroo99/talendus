@@ -2841,7 +2841,7 @@
           '<option value="non"' + (val("smtp.use_tls") === "non" ? " selected" : "") + ">non</option>" +
           "</select>" +
           '<label>Envoyer le test à une vraie boîte</label><input id="adm-smtp-test-to" type="email" value="cesarmemoli1@gmail.com" readonly>' +
-          '<p class="sub">Le test va uniquement à cesarmemoli1@gmail.com. lea.super@talendus.ca n’est jamais utilisé.</p>' +
+          '<p class="sub">Le test va uniquement à cesarmemoli1@gmail.com. Les comptes admin de démo ne sont jamais utilisés.</p>' +
           '<p style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">' +
           '<button class="btn btn-orange" type="submit">Enregistrer le courriel</button>' +
           '<button class="btn btn-ghost" type="button" id="adm-smtp-test">Envoyer un test</button>' +
