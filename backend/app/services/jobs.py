@@ -393,8 +393,24 @@ def set_job_status(db: Session, user: User, job_id: str, status: JobStatus) -> J
     if status == JobStatus.PUBLISHED:
         job.published_at = job.published_at or utcnow()
         from app.services.matching import notify_job_matches
+        from app.services.ops_notify import notify_company
 
         notify_job_matches(db, job)
+        if job.company_id:
+            notify_company(
+                db,
+                job.company_id,
+                title="Recherche lancée",
+                message=f"L’offre « {job.title} » est en ligne. Talendus sélectionne maintenant des profils.",
+                section="jobs",
+                template="hiring_update",
+                ctx={
+                    "name": "",
+                    "title": "Recherche lancée",
+                    "detail": f"L’offre « {job.title} » est en ligne. Talendus sélectionne maintenant des profils.",
+                },
+                item_id=job.id,
+            )
     audit(db, f"job.{status.value.lower()}", user, "job", job.id)
     db.commit()
     db.refresh(job)

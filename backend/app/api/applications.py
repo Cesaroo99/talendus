@@ -8,7 +8,7 @@ from app.deps import client_ip, get_current_user, require_roles
 from app.errors import ok
 from app.models import User
 from app.models.enums import ApplicationStatus, UserRole
-from app.schemas import ApplicationCreateIn, PublicApplyIn, StaffApplicationIn, StatusChangeIn
+from app.schemas import ApplicationCreateIn, ClientFeedbackIn, PublicApplyIn, StaffApplicationIn, StatusChangeIn
 from app.services import applications as applications_service
 from app.services.spam import reject_honeypot
 
@@ -129,6 +129,19 @@ def change_status(
 ):
     application = applications_service.change_status(db, user, application_id, payload.status, payload.comment)
     return ok(applications_service.serialize_application(application, user))
+
+
+@router.post("/{application_id}/client-feedback")
+def client_feedback(
+    application_id: str,
+    payload: ClientFeedbackIn,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_roles(UserRole.EMPLOYER)),
+):
+    application = applications_service.record_client_feedback(
+        db, user, application_id, payload.action, payload.comment
+    )
+    return ok(applications_service.serialize_application(application, user), message="Retour transmis à Talendus.")
 
 
 @router.post("/{application_id}/withdraw")

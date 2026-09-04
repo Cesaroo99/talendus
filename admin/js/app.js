@@ -18,7 +18,7 @@
   const CAND_STATUS_TO_APP = {
     nouveau: "SUBMITTED",
     "a-contacter": "UNDER_REVIEW",
-    qualifie: "SHORTLISTED",
+    qualifie: "UNDER_REVIEW",
     entretien: "INTERVIEW",
     presente: "SHORTLISTED",
     "entretien-client": "SECOND_INTERVIEW",
@@ -50,8 +50,8 @@
   const APP_STATUSES = [
     ["SUBMITTED", "Reçue"],
     ["RECEIVED", "Reçue"],
-    ["UNDER_REVIEW", "En étude"],
-    ["SHORTLISTED", "Présélection"],
+    ["UNDER_REVIEW", "Présélection Talendus"],
+    ["SHORTLISTED", "Présenté à l’employeur"],
     ["INTERVIEW", "Entretien Talendus"],
     ["SECOND_INTERVIEW", "Entretien client"],
     ["OFFER_SENT", "Offre envoyée"],
@@ -703,7 +703,7 @@
         '<button class="btn btn-orange" type="submit">Ajouter un document</button></form></div>';
     } else if (detailTab === "ats") {
       body = '<div class="card card-pad"><h3>Correspondance directe avec les offres</h3>' +
-        "<p class='hint'>Lier un candidat ouvre le dossier 360 : suivi ATS, note interne, kanban, puis entretien ou présentation à l’employeur.</p>" +
+        "<p class='hint'>Une seule suite : présélection Talendus → entretien interne → présentation à l’employeur. L’entreprise n’est informée qu’à la présentation.</p>" +
         '<div id="cand-matches-live"><p class="hint">Chargement des correspondances…</p></div></div>';
     } else if (detailTab === "histo") {
       var apps = c.applications || [];
@@ -1210,9 +1210,9 @@
     d = d || {};
     var stepLabels = {
       SUBMITTED: "Réception",
-      UNDER_REVIEW: "Présélection",
-      SHORTLISTED: "Présentation",
+      UNDER_REVIEW: "Présélection Talendus",
       INTERVIEW: "Entretien Talendus",
+      SHORTLISTED: "Présenté à l’employeur",
       SECOND_INTERVIEW: "Entretien client",
       OFFER_SENT: "Offre",
       HIRED: "Placement"
@@ -1319,7 +1319,7 @@
       <div class="page-head"><div><h1>${U.esc(m.title)}</h1><p>${U.esc((TLStore.client(m.clientId) || {}).name || "—")} · ${m.seats} poste(s) · échéance ${U.dateFr(m.due)} · ${U.badge(m.status)}</p></div>
         <div class="actions"><span class="badge orange">Valeur ${U.money(m.value)}</span><span class="badge info">Commission ${U.money(m.commission)}</span></div></div>
       <div class="kanban" data-mission="${m.id}">${cols}</div>
-      <p style="color:var(--steel);margin-top:12px">Glissez les candidats d’une colonne à l’autre. Le statut est enregistré tout de suite.</p>`;
+      <p style="color:var(--steel);margin-top:12px">Une colonne = une étape. L’employeur n’est informé qu’à « Présentation client ».</p>`;
   }
 
   function hiringList() {
@@ -1340,6 +1340,12 @@
         salary_display: m.salary
       };
     });
+  }
+
+  function _hiringNextStep(h, job) {
+    if (!h.job_id) return "Prochaine étape : créer l’offre (brouillon), puis la publier.";
+    if (job && job.status !== "publiee") return "Prochaine étape : publier l’offre pour lancer la recherche.";
+    return "Prochaine étape : lier des candidats, les rencontrer chez Talendus, puis présenter le dossier à l’employeur.";
   }
 
   function viewHiring() {
@@ -1369,7 +1375,9 @@
           ${h.job_id ? "" : '<button class="btn btn-orange" data-hire-convert="' + h.id + '">Créer l’offre (brouillon)</button>'}
           ${job && job.status !== "publiee" && job.id ? '<button class="btn btn-electric" data-job-act="publiee:' + job.id + '" data-hire-id="' + h.id + '">Publier sur le site</button>' : ""}
           ${job && job.slug ? '<a class="btn btn-ghost" href="' + U.esc(job.url || ("/emploi-" + job.slug + ".html")) + '" target="_blank" rel="noopener">Voir sur le site</a>' : ""}
+          ${job && job.status === "publiee" ? '<a class="btn btn-orange" href="#/jobs/' + job.id + '">Lier des candidats</a>' : ""}
         </div></div>
+      <p class="hint">${U.esc(_hiringNextStep(h, job))}</p>
       <div class="grid grid-2">
         <div class="card card-pad">
           <h3>Brief entreprise</h3>

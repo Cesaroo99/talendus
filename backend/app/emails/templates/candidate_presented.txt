@@ -1,0 +1,9 @@
+Subject: Talendus vous présente un dossier — {{job_title}}
+{{name}},
+
+Talendus vous présente {{candidate_name}} pour le poste « {{job_title}} ».
+
+Le dossier est maintenant dans votre espace. Donnez une suite à votre conseiller : intéressé, entretien, ou non retenu.
+
+Ouvrir le dossier :
+{{link}}

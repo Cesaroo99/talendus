@@ -226,6 +226,24 @@ def test_application_notifies_employer_inbox_and_candidate_apps(client):
         json={"status": "SHORTLISTED"},
     )
     assert denied.status_code == 403
+    admin = promote_admin(client, "notify-present-admin@example.com")
+    client.post(
+        f"/api/applications/{app_id}/status",
+        headers=auth_header(admin),
+        json={"status": "INTERVIEW"},
+    )
+    still_hidden = client.get("/api/applications", headers=auth_header(emp)).json()["data"]
+    assert still_hidden == []
+    client.post(
+        f"/api/applications/{app_id}/status",
+        headers=auth_header(admin),
+        json={"status": "SHORTLISTED"},
+    )
+    emp_after = client.get("/api/notifications", headers=auth_header(emp)).json()["data"]
+    assert any("présenté" in ((n.get("title") or "") + (n.get("message") or "")).lower() for n in emp_after)
+    assert any("/espace-employeur.html#/inbox" in (n.get("href") or "") for n in emp_after)
+    inbox = client.get("/api/applications", headers=auth_header(emp)).json()["data"]
+    assert any(item["id"] == app_id for item in inbox)
 
 
 def test_no_direct_link_between_employer_and_candidate(client):

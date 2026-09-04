@@ -29,6 +29,8 @@ _CANDIDATE_ROUTES = {
 _EMPLOYER_ROUTES = {
     "applications": "inbox",
     "inbox": "inbox",
+    "candidate": "candidate",
+    "hiring": "hiring",
     "interviews": "interviews",
     "messages": "messages",
     "invoices": "invoices",
