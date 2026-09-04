@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, File, Form, UploadFile
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -67,6 +67,20 @@ def download(
     if url:
         return RedirectResponse(url)
     return FileResponse(path, media_type=row.mime_type, filename=row.original_name)
+
+
+@router.get("/{document_id}/preview")
+def preview_document(
+    document_id: str,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    from app.services.resume_parse import preview_html
+    from app.services.storage import read_stored_bytes
+
+    row = get_document_for_user(db, user, document_id)
+    data = read_stored_bytes(row.stored_name, row.storage_url, "documents")
+    return HTMLResponse(preview_html(data, row.mime_type, row.original_name))
 
 
 @router.delete("/{document_id}")

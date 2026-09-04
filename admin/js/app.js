@@ -12,6 +12,8 @@
   let contentTab = "pages";
   let financeTab = "factures";
   let detailTab = "profil";
+  let pendingDetailTab = "";
+  let pendingInterview = null;
 
   const CAND_STATUS_TO_APP = {
     nouveau: "SUBMITTED",
@@ -176,6 +178,71 @@
   }
 
   function go(hash) { location.hash = hash; }
+
+  function goToCandidate(id, tab) {
+    var hash = "#/candidates/" + id;
+    pendingDetailTab = tab || "";
+    if ((location.hash || "") === hash) {
+      detailTab = pendingDetailTab || "profil";
+      pendingDetailTab = "";
+      render();
+      return;
+    }
+    go(hash);
+  }
+
+  function planInterview(candidateId, applicationId) {
+    if (!candidateId) return;
+    U.modal({
+      title: "Planifier un entretien",
+      body: '<form id="int-form" class="form-grid">' +
+        U.field("Date et heure", "scheduled_at", new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16), "datetime-local") +
+        U.field("Lieu", "location", "Visio Talendus") +
+        U.field("Type", "type", { options: [{ v: "TALENDUS", l: "Visio Talendus" }, { v: "VIDEO", l: "Visio" }, { v: "PHONE", l: "Téléphone" }, { v: "CLIENT", l: "Chez le client" }, { v: "ONSITE", l: "Sur place" }], selected: "TALENDUS" }, "select") +
+        '<label class="check"><input type="checkbox" name="candidate_can_start"> Autoriser le candidat à lancer l’appel</label>' +
+        "<p class=\"sub\">Sans cette case, le candidat rejoint seulement après que vous ayez ouvert la salle.</p>" +
+        "</form>",
+      footer: '<button class="btn btn-ghost" data-close>Annuler</button><button class="btn btn-orange" id="save">Planifier</button>',
+      onMount: function (box, close) {
+        box.querySelector("#save").onclick = async function () {
+          var d = U.formData(box.querySelector("#int-form"));
+          try {
+            if (live()) {
+              var payload = {
+                candidate_id: candidateId,
+                scheduled_at: d.scheduled_at,
+                location: d.location,
+                type: d.type,
+                candidate_can_start: !!(box.querySelector("[name=candidate_can_start]") && box.querySelector("[name=candidate_can_start]").checked)
+              };
+              if (applicationId) payload.application_id = applicationId;
+              await window.TalendusAPI.createInterview(payload);
+              if (applicationId) {
+                await window.TalendusAPI.request("/applications/" + applicationId + "/status", {
+                  method: "POST",
+                  body: { status: "INTERVIEW", comment: "Entretien planifié depuis le dossier 360." }
+                });
+              }
+              await TLStore.hydrateFromApi();
+              close();
+              U.toast(applicationId ? "Entretien planifié. Le dossier passe en entretien Talendus." : "Entretien enregistré.", "ok");
+              render();
+              return;
+            }
+          } catch (err) {
+            U.toast((err && err.message) || "Planification impossible.", "err");
+            if (live()) return;
+          }
+          TLStore.update(function (st) {
+            st.interviews.push({ id: TLStore.nid("i"), candidateId: candidateId, clientId: "", type: "Talendus", at: d.scheduled_at || "2026-08-20 10:00", location: d.location || "Visio", recruiterId: TLStore.me().id });
+          });
+          close();
+          U.toast("Entretien planifié.", "ok");
+          render();
+        };
+      }
+    });
+  }
 
   function allowedNav() {
     return NAV.map(function (g) {
@@ -616,28 +683,27 @@
         </div>
         <div class="card card-pad"><h3>Expériences</h3>${(c.experiences || []).map(function (e) { return "<p><b>" + U.esc(e.role) + "</b> — " + U.esc(e.company) + "<br><span style='color:var(--steel)'>" + U.esc(e.years) + "</span></p>"; }).join("") || "<p>—</p>"}</div>
         <div class="card card-pad"><h3>Formations</h3>${(c.education || []).map(function (e) { return "<p><b>" + U.esc(e.diploma) + "</b> — " + U.esc(e.school) + " (" + e.year + ")</p>"; }).join("") || "<p>—</p>"}</div>
-        <div class="card card-pad full"><h3>Résumé du CV</h3>
-          <p>${U.esc(c.cvSummary || (docs[0] && docs[0].summary) || "Aucun CV analysé pour le moment.")}</p>
+        <div class="card card-pad full"><h3>Lecture du CV</h3>
+          <p>${U.esc(c.cvSummary || "Aucun CV analysé pour le moment.")}</p>
         </div>
       </div>`;
     } else if (detailTab === "cv") {
       var docRows = docs.map(function (d) {
         var href = d.url || "";
-        var canSee = d.previewable !== false && href;
+        var canSee = href && d.previewable !== false;
         return "<div class='manage-row'><div><i class='fa-regular fa-file'></i> " + U.esc(d.name) + " · " + U.esc(d.size || "") +
-          (d.summary ? "<div class='sub'>" + U.esc(d.summary) + "</div>" : "") + "</div><div>" +
-          (canSee ? " <button class='btn btn-ghost btn-sm' data-preview-doc='" + U.esc(href) + "' data-preview-name='" + U.esc(d.name) + "'>Voir</button>" : "") +
+          "</div><div>" +
+          (canSee ? " <button class='btn btn-ghost btn-sm' data-preview-doc='" + U.esc(href) + "' data-preview-name='" + U.esc(d.name) + "' data-preview-mime='" + U.esc(d.mimeType || "") + "' data-preview-html='" + U.esc(d.previewUrl || "") + "'>Voir</button>" : "") +
           (href ? " <button class='btn btn-ghost btn-sm' data-dl-doc='" + U.esc(href) + "' data-dl-name='" + U.esc(d.name) + "'>Télécharger</button>" : "") +
           "</div></div>";
       }).join("");
       body = '<div class="card card-pad"><h3>Documents</h3>' +
-        (c.cvSummary ? "<p>" + U.esc(c.cvSummary) + "</p>" : "") +
         (docRows || "<p>Aucun document dans le dossier.</p>") +
-        '<form id="cand-upload" style="margin-top:12px"><input type="file" name="file" accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png,image/webp" required> ' +
+        '<form id="cand-upload" style="margin-top:12px"><input type="file" name="file" accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,application/rtf,image/jpeg,image/png,image/webp" required> ' +
         '<button class="btn btn-orange" type="submit">Ajouter un document</button></form></div>';
     } else if (detailTab === "ats") {
       body = '<div class="card card-pad"><h3>Correspondance directe avec les offres</h3>' +
-        "<p class='hint'>Score déterministe (compétences, ville, secteur, expérience, salaire). Lier un candidat crée une candidature interne, sans que l’employeur voie le vivier.</p>" +
+        "<p class='hint'>Lier un candidat ouvre le dossier 360 : suivi ATS, note interne, kanban, puis entretien ou présentation à l’employeur.</p>" +
         '<div id="cand-matches-live"><p class="hint">Chargement des correspondances…</p></div></div>';
     } else if (detailTab === "histo") {
       var apps = c.applications || [];
@@ -681,8 +747,7 @@
           <div class="row"><span>Inscription</span><b>${U.dateFr(c.createdAt)}</b></div>
           <div class="row"><span>Dernière activité</span><b>${U.dateFr(c.lastActivity)}</b></div>
           <div class="row"><span>CV</span><b>${docs.length ? docs[0].name : "Non déposé"}</b></div>
-          ${c.cvSummary ? '<p class="hint" style="margin-top:10px">' + U.esc(c.cvSummary) + "</p>" : ""}
-          ${docs[0] && docs[0].url ? '<p><button class="btn btn-ghost btn-sm" data-preview-doc="' + U.esc(docs[0].url) + '" data-preview-name="' + U.esc(docs[0].name) + '">Voir le CV</button></p>' : ""}
+          ${docs[0] && docs[0].url ? '<p><button class="btn btn-ghost btn-sm" data-preview-doc="' + U.esc(docs[0].url) + '" data-preview-name="' + U.esc(docs[0].name) + '" data-preview-mime="' + U.esc(docs[0].mimeType || "") + '" data-preview-html="' + U.esc(docs[0].previewUrl || "") + '">Voir le CV</button></p>' : ""}
         </div>
         <div>
           <div class="tabs">${Object.keys(tabs).map(function (k) { return '<button class="tab' + (detailTab === k ? " is-on" : "") + '" data-dtab="' + k + '">' + tabs[k] + "</button>"; }).join("")}</div>
@@ -1058,7 +1123,7 @@
         </div>
       </div>
       <div class="card card-pad" style="margin-top:16px"><h3>Candidats correspondants</h3>
-        <p class="hint">Score déterministe. Liez un profil pour créer une candidature interne — l’employeur ne voit le dossier qu’après présentation.</p>
+        <p class="hint">Lier un profil ouvre le dossier 360 et lance le suivi. L’employeur ne le voit qu’après présentation.</p>
         <div id="job-matches-live"><p class="hint">Chargement des correspondances…</p></div>
       </div>`;
   }
@@ -1128,14 +1193,90 @@
   async function linkCandidateToJob(candidateId, jobId) {
     if (!api() || !candidateId || !jobId) return;
     try {
-      await api().request("/applications/staff", { method: "POST", body: { candidate_id: candidateId, job_id: jobId } });
+      var res = await api().request("/applications/staff", { method: "POST", body: { candidate_id: candidateId, job_id: jobId } });
       if (typeof refreshLive === "function") await refreshLive();
-      U.toast("Candidat lié à l’offre.", "ok");
-      loadAtsPanels();
-      render();
+      U.toast((res && res.message) || "Dossier ouvert.", "ok");
+      openDossier360((res && res.data && res.data.dossier) || {
+        candidate_id: candidateId,
+        job_id: jobId,
+        application_id: res && res.data && res.data.id
+      });
     } catch (err) {
       U.toast((err && err.message) || "Liaison impossible.", "err");
     }
+  }
+
+  function openDossier360(d) {
+    d = d || {};
+    var stepLabels = {
+      SUBMITTED: "Réception",
+      UNDER_REVIEW: "Présélection",
+      SHORTLISTED: "Présentation",
+      INTERVIEW: "Entretien Talendus",
+      SECOND_INTERVIEW: "Entretien client",
+      OFFER_SENT: "Offre",
+      HIRED: "Placement"
+    };
+    var track = ((d.tracker && d.tracker.steps) || []).map(function (s) {
+      var label = stepLabels[s.key] || s.key;
+      var mark = s.state === "current" ? " · en cours" : (s.state === "done" ? " · fait" : "");
+      return "<span class='badge'>" + U.esc(label + mark) + "</span>";
+    }).join(" ");
+    var steps = (d.next_steps || []).map(function (s) {
+      var cls = s.key === "interview" || s.key === "present" ? "btn btn-orange btn-sm" : "btn btn-ghost btn-sm";
+      return '<button class="' + cls + '" data-360="' + U.esc(s.key) + '">' + U.esc(s.label) + "</button>";
+    }).join(" ");
+    U.modal({
+      wide: true,
+      title: "Dossier 360 — " + (d.candidate_name || "Candidat") + " × " + (d.job_title || "Offre"),
+      body: "<p><b>Score " + U.esc(String(d.score != null ? d.score : "—")) + " %</b>" +
+        (d.company_name ? " · " + U.esc(d.company_name) : "") +
+        (d.pipeline_status ? " · vivier " + U.esc(d.pipeline_status) : "") + "</p>" +
+        (track ? "<p>" + track + "</p>" : "") +
+        (d.reasons && d.reasons.length ? "<p>" + U.esc(d.reasons.slice(0, 3).join(" · ")) + "</p>" : "") +
+        (d.cv_summary ? "<p>" + U.esc(d.cv_summary) + "</p>" : "") +
+        "<p class='hint'>Le suivi ATS est lancé. L’employeur ne voit le dossier qu’après présentation.</p>" +
+        "<div class='mandate-actions'>" + steps + "</div>",
+      footer: '<button class="btn btn-ghost" data-close>Fermer</button>',
+      onMount: function (box, close) {
+        box.querySelectorAll("[data-360]").forEach(function (btn) {
+          btn.addEventListener("click", async function () {
+            var key = btn.getAttribute("data-360");
+            if (key === "cv" && d.download_path && api()) {
+              api().previewFile(d.download_path, d.candidate_name || "cv", { previewPath: d.preview_path, mime: "" }).catch(function (err) {
+                U.toast((err && err.message) || "Ouverture impossible.", "err");
+              });
+              return;
+            }
+            if (key === "interview") {
+              close();
+              pendingInterview = { candidateId: d.candidate_id, applicationId: d.application_id };
+              goToCandidate(d.candidate_id, "entretiens");
+              return;
+            }
+            if (key === "present" && d.application_id && api()) {
+              try {
+                await api().request("/applications/" + d.application_id + "/status", { method: "POST", body: { status: "SHORTLISTED", comment: "Présentation au client depuis le dossier 360." } });
+                if (typeof refreshLive === "function") await refreshLive();
+                U.toast("Dossier présenté à l’employeur.", "ok");
+                close();
+                render();
+              } catch (err) {
+                U.toast((err && err.message) || "Présentation impossible.", "err");
+              }
+              return;
+            }
+            if (key === "mission" && d.mission_id) {
+              close();
+              go("#/missions/" + d.mission_id);
+              return;
+            }
+            close();
+            goToCandidate(d.candidate_id, "histo");
+          });
+        });
+      }
+    });
   }
 
   /* ---------- Missions / pipeline ---------- */
@@ -3068,7 +3209,10 @@
       }
       var preview = t.closest("[data-preview-doc]");
       if (preview && api()) {
-        api().previewFile(preview.getAttribute("data-preview-doc"), preview.getAttribute("data-preview-name") || "document").catch(function (err) {
+        api().previewFile(preview.getAttribute("data-preview-doc"), preview.getAttribute("data-preview-name") || "document", {
+          mime: preview.getAttribute("data-preview-mime") || "",
+          previewPath: preview.getAttribute("data-preview-html") || ""
+        }).catch(function (err) {
           U.toast((err && err.message) || "Ouverture impossible.", "err");
         });
         return;
@@ -3188,48 +3332,7 @@
       }
       var addInt = t.closest("[data-add-int]");
       if (addInt) {
-        var cid = addInt.getAttribute("data-add-int");
-        U.modal({
-          title: "Planifier un entretien",
-          body: '<form id="int-form" class="form-grid">' +
-            U.field("Date et heure", "scheduled_at", new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16), "datetime-local") +
-            U.field("Lieu", "location", "Visio Talendus") +
-            U.field("Type", "type", { options: [{ v: "TALENDUS", l: "Visio Talendus" }, { v: "VIDEO", l: "Visio" }, { v: "PHONE", l: "Téléphone" }, { v: "CLIENT", l: "Chez le client" }, { v: "ONSITE", l: "Sur place" }], selected: "TALENDUS" }, "select") +
-            '<label class="check"><input type="checkbox" name="candidate_can_start"> Autoriser le candidat à lancer l’appel</label>' +
-            "<p class=\"sub\">Sans cette case, le candidat rejoint seulement après que vous ayez ouvert la salle.</p>" +
-            "</form>",
-          footer: '<button class="btn btn-ghost" data-close>Annuler</button><button class="btn btn-orange" id="save">Planifier</button>',
-          onMount: function (box, close) {
-            box.querySelector("#save").onclick = async function () {
-              var d = U.formData(box.querySelector("#int-form"));
-              try {
-                if (live()) {
-                  await window.TalendusAPI.createInterview({
-                    candidate_id: cid,
-                    scheduled_at: d.scheduled_at,
-                    location: d.location,
-                    type: d.type,
-                    candidate_can_start: !!(box.querySelector("[name=candidate_can_start]") && box.querySelector("[name=candidate_can_start]").checked)
-                  });
-                  await TLStore.hydrateFromApi();
-                  close();
-                  U.toast("Entretien enregistré.", "ok");
-                  render();
-                  return;
-                }
-              } catch (err) {
-                U.toast((err && err.message) || "Planification impossible.", "err");
-                if (live()) return;
-              }
-              TLStore.update(function (st) {
-                st.interviews.push({ id: TLStore.nid("i"), candidateId: cid, clientId: "", type: "Talendus", at: d.scheduled_at || "2026-08-20 10:00", location: d.location || "Visio", recruiterId: TLStore.me().id });
-              });
-              close();
-              U.toast("Entretien planifié.", "ok");
-              render();
-            };
-          }
-        });
+        planInterview(addInt.getAttribute("data-add-int"));
         return;
       }
       var signAgency = t.closest("[data-sign-talendus]");
@@ -3807,11 +3910,16 @@
       else if (r.name === "prospects") hydrateProspects();
       if (r.name === "journal") hydrateJournal();
       loadAtsPanels();
+      if (pendingInterview) {
+        var nextInt = pendingInterview;
+        pendingInterview = null;
+        setTimeout(function () { planInterview(nextInt.candidateId, nextInt.applicationId); }, 40);
+      }
     }, 180);
   }
 
   window.addEventListener("hashchange", function () {
-    page = 1; selected = new Set(); detailTab = "profil"; filters = {};
+    page = 1; selected = new Set(); detailTab = pendingDetailTab || "profil"; pendingDetailTab = ""; filters = {};
     render();
   });
   (async function boot() {

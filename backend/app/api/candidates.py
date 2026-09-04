@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, File, UploadFile
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import select
 
@@ -146,6 +146,16 @@ def download_resume(resume_id: str, user: User = Depends(get_current_user), db: 
     if url:
         return RedirectResponse(url)
     return FileResponse(path, media_type=resume.mime_type, filename=resume.original_name)
+
+
+@router.get("/resumes/{resume_id}/preview")
+def preview_resume(resume_id: str, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    from app.services.resume_parse import preview_html
+    from app.services.storage import read_stored_bytes
+
+    resume = cand_svc.get_resume_for_user(db, user, resume_id)
+    data = read_stored_bytes(resume.stored_name, resume.storage_url, "resumes")
+    return HTMLResponse(preview_html(data, resume.mime_type, resume.original_name))
 
 
 @router.get("/{candidate_id}")
