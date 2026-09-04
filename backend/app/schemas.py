@@ -680,3 +680,47 @@ class SystemSettingIn(BaseModel):
 
 class EmailTestIn(BaseModel):
     to_email: EmailStr | None = None
+
+
+class ProspectIn(BaseModel):
+    side: str
+    email: EmailStr
+    first_name: str | None = None
+    last_name: str | None = None
+    phone: str | None = None
+    company_name: str | None = None
+    title: str | None = None
+    city: str | None = None
+    sector: str | None = None
+    source: str | None = None
+    source_detail: str | None = None
+    message: str | None = None
+    stage: str | None = None
+    assigned_recruiter_id: str | None = None
+
+
+class ProspectPatchIn(BaseModel):
+    stage: str | None = None
+    first_name: str | None = None
+    last_name: str | None = None
+    phone: str | None = None
+    company_name: str | None = None
+    title: str | None = None
+    city: str | None = None
+    sector: str | None = None
+    source_detail: str | None = None
+    message: str | None = None
+    assigned_recruiter_id: str | None = None
+
+
+class ProspectSendIn(BaseModel):
+    template_key: str | None = None
+    subject: str | None = Field(default=None, max_length=180)
+    body: str | None = Field(default=None, max_length=8000)
+    invoice_ids: list[str] | None = None
+    contract_ids: list[str] | None = None
+    force: bool = False
+
+
+class ProspectBulkSendIn(ProspectSendIn):
+    ids: list[str] = Field(min_length=1, max_length=80)

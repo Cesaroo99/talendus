@@ -43,6 +43,13 @@ _worker_started = False
 
 
 @dataclass(frozen=True)
+class EmailAttachment:
+    filename: str
+    data: bytes
+    mime: str = "application/octet-stream"
+
+
+@dataclass(frozen=True)
 class SmtpRuntime:
     enabled: bool
     host: str
@@ -186,7 +193,25 @@ def signed_html(body: str) -> str:
     )
 
 
-def build_email_message(cfg: SmtpRuntime, to_email: str, subject: str, body: str) -> EmailMessage:
+def _attach_files(msg: EmailMessage, attachments: list[EmailAttachment] | None) -> None:
+    for att in attachments or []:
+        raw = att.mime or "application/octet-stream"
+        main, _, sub = raw.partition("/")
+        msg.add_attachment(
+            att.data,
+            maintype=main or "application",
+            subtype=sub or "octet-stream",
+            filename=att.filename,
+        )
+
+
+def build_email_message(
+    cfg: SmtpRuntime,
+    to_email: str,
+    subject: str,
+    body: str,
+    attachments: list[EmailAttachment] | None = None,
+) -> EmailMessage:
     plain = signed_plain(body)
     msg = EmailMessage()
     msg["From"] = cfg.from_addr
@@ -216,11 +241,18 @@ def build_email_message(cfg: SmtpRuntime, to_email: str, subject: str, body: str
                         'inline; filename="talendus-signature.jpg"',
                     )
                 break
+    _attach_files(msg, attachments)
     return msg
 
 
-def _smtp_send(cfg: SmtpRuntime, to_email: str, subject: str, body: str) -> None:
-    msg = build_email_message(cfg, to_email, subject, body)
+def _smtp_send(
+    cfg: SmtpRuntime,
+    to_email: str,
+    subject: str,
+    body: str,
+    attachments: list[EmailAttachment] | None = None,
+) -> None:
+    msg = build_email_message(cfg, to_email, subject, body, attachments)
     with smtplib.SMTP(cfg.host, cfg.port, timeout=15) as smtp:
         if cfg.use_tls:
             smtp.starttls()
@@ -229,9 +261,15 @@ def _smtp_send(cfg: SmtpRuntime, to_email: str, subject: str, body: str) -> None
         smtp.send_message(msg)
 
 
-def _record_smtp_result(log: EmailLog, cfg: SmtpRuntime, *, fail_fast: bool = False) -> None:
+def _record_smtp_result(
+    log: EmailLog,
+    cfg: SmtpRuntime,
+    *,
+    fail_fast: bool = False,
+    attachments: list[EmailAttachment] | None = None,
+) -> None:
     try:
-        _smtp_send(cfg, log.to_email, log.subject, log.body or "")
+        _smtp_send(cfg, log.to_email, log.subject, log.body or "", attachments)
         log.status = EmailStatus.SENT
         log.error = None
         log.sent_at = utcnow()
@@ -272,6 +310,43 @@ def send_email(
         return log
     if sync:
         _record_smtp_result(log, cfg, fail_fast=True)
+        return log
+    _queue.put(log.id)
+    start_worker()
+    return log
+
+
+def send_composed_email(
+    db: Session,
+    to_email: str,
+    subject: str,
+    body: str,
+    *,
+    email_type: EmailType = EmailType.ADMIN,
+    sync: bool = True,
+    attachments: list[EmailAttachment] | None = None,
+) -> EmailLog:
+    body = signed_plain(body)
+    log = EmailLog(
+        to_email=to_email,
+        type=email_type,
+        subject=(subject or "Talendus")[:180],
+        body=body,
+        status=EmailStatus.QUEUED,
+        attempts=0,
+    )
+    db.add(log)
+    db.flush()
+    cfg = runtime_email_config(db)
+    if not cfg.enabled:
+        log.status = EmailStatus.SENT
+        log.sent_at = utcnow()
+        logger.info("email[composed] to=%s subject=%s", to_email, subject)
+        return log
+    if attachments and not sync:
+        sync = True
+    if sync:
+        _record_smtp_result(log, cfg, fail_fast=True, attachments=attachments)
         return log
     _queue.put(log.id)
     start_worker()

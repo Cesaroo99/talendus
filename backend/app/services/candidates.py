@@ -360,6 +360,23 @@ def submit_public_talent(
         ip,
         {"email": user.email, "resume": bool(resume), "created": created},
     )
+    from app.services.prospects import upsert_prospect
+
+    upsert_prospect(
+        db,
+        side="candidate",
+        email=user.email,
+        source="talent",
+        first_name=user.first_name or "",
+        last_name=user.last_name or "",
+        phone=user.phone or "",
+        title=profile.title or "",
+        city=profile.city or "",
+        sector=profile.sector or "",
+        user_id=user.id,
+        candidate_id=profile.id,
+        source_detail="Profil talent public",
+    )
     db.commit()
     return {"id": profile.id, "resume_id": resume.id if resume else None, "created": created}
 

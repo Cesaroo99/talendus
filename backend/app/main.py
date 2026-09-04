@@ -101,6 +101,7 @@ def create_app() -> FastAPI:
         matching,
         messages,
         notifications,
+        prospects,
         public,
         push,
         recruiters,
@@ -133,6 +134,7 @@ def create_app() -> FastAPI:
     application.include_router(integrations.router, prefix="/api")
     application.include_router(blog.router, prefix="/api")
     application.include_router(blog.admin_router, prefix="/api")
+    application.include_router(prospects.router, prefix="/api")
     application.include_router(admin.router, prefix="/api")
     application.include_router(webhooks.router, prefix="/api")
     application.include_router(site.router)

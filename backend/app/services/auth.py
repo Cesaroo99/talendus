@@ -147,6 +147,10 @@ def register(db: Session, data: RegisterIn, ip: str | None = None, user_agent: s
     )
     notify(db, user, NotificationType.ACCOUNT_CREATED, "Compte créé", "Bienvenue chez Talendus.")
     audit(db, "account.register", user, "user", user.id, ip)
+    from app.services.prospects import touch_from_user
+
+    db.flush()
+    touch_from_user(db, user, source="inscription", company_name=data.company_name or "")
     tokens = _issue_tokens(db, user)
     _log_login(db, user.email, True, user, ip, user_agent)
     db.commit()
@@ -341,6 +345,10 @@ def login_with_identity(
         )
         notify(db, user, NotificationType.ACCOUNT_CREATED, "Compte créé", "Bienvenue chez Talendus.")
         audit(db, f"account.oauth.{provider}", user, "user", user.id, ip)
+        from app.services.prospects import touch_from_user
+
+        db.flush()
+        touch_from_user(db, user, source="inscription", company_name=company_name or "")
     if not user.is_active or user.account_status in {AccountStatus.SUSPENDED, AccountStatus.DEACTIVATED}:
         raise AppError(403, "Ce compte est désactivé.", "ACCOUNT_DISABLED")
     user.is_email_verified = True
