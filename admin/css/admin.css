@@ -407,6 +407,21 @@ table.data .check { width: 36px; cursor: default; }
 .prospect-stage select { height: 32px; min-width: 148px; }
 .prospect-actions { display: flex; gap: 6px; white-space: nowrap; }
 a.tab { text-decoration: none; display: inline-block; }
+.fiche-kpis {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px; margin: 0 0 16px;
+}
+.fiche-kpi {
+  background: #fff; border: 1px solid var(--line); border-radius: 12px;
+  padding: 12px 14px;
+}
+.fiche-kpi span { display: block; color: var(--steel); font-size: 12px; font-weight: 700; }
+.fiche-kpi b { display: block; margin-top: 4px; font-size: 15px; }
+.manage-row {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line);
+}
+.manage-row select { min-width: 168px; height: 34px; }
 
 /* ----- Tabs / detail ----- */
 .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin-bottom: 18px; overflow: auto; }

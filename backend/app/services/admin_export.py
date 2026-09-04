@@ -116,7 +116,7 @@ SITE_PAGES = [
 
 def bootstrap(db: Session, user: User | None = None) -> dict:
     users = db.scalars(select(User).order_by(User.created_at.asc())).all()
-    companies = db.scalars(select(Company).order_by(Company.name.asc())).all()
+    companies = db.scalars(select(Company).options(joinedload(Company.owner)).order_by(Company.name.asc())).unique().all()
     jobs = db.scalars(select(JobOffer).options(joinedload(JobOffer.company)).order_by(JobOffer.created_at.desc())).unique().all()
     candidates = db.scalars(
         select(Candidate).options(
@@ -252,6 +252,7 @@ def _user(u: User) -> dict:
 
 
 def _company(c: Company) -> dict:
+    owner = c.owner
     return {
         "id": c.id,
         "name": c.name,
@@ -268,6 +269,13 @@ def _company(c: Company) -> dict:
         "recruiterId": c.assigned_recruiter_id or "",
         "employees": c.employees or 0,
         "website": c.website or "",
+        "description": c.description or "",
+        "sizeLabel": c.size_label or "",
+        "ownerUserId": c.owner_user_id or "",
+        "ownerEmail": owner.email if owner else (c.email or ""),
+        "lastLoginAt": owner.last_login_at.isoformat() if owner and owner.last_login_at else "",
+        "emailVerified": bool(owner.is_email_verified) if owner else False,
+        "accountActive": bool(owner.is_active) if owner else True,
         "since": c.created_at.strftime("%Y-%m-%d") if c.created_at else "",
     }
 
@@ -331,6 +339,17 @@ def _candidate(c: Candidate) -> dict:
         "education": [{"school": e.school, "diploma": e.diploma or "", "year": e.year or ""} for e in c.education],
         "experiences": [{"company": e.company, "role": e.role, "years": e.years or ""} for e in c.experiences],
         "bio": c.bio or "",
+        "address": c.address or "",
+        "province": c.province or "Québec",
+        "mobility": c.mobility or "",
+        "contractType": c.contract_type or "",
+        "workStatus": c.work_status or "",
+        "jobSearchStatus": c.job_search_status.value if c.job_search_status else "",
+        "workPreferences": c.work_preferences or "",
+        "educationLevel": c.education_level or "",
+        "lastLoginAt": user.last_login_at.isoformat() if user and user.last_login_at else "",
+        "emailVerified": bool(user.is_email_verified) if user else False,
+        "accountActive": bool(user.is_active) if user else True,
         "jobId": app.job_id if app else "",
         "applicationId": app.id if app else "",
         "clientId": app.job.company_id if app and app.job else "",

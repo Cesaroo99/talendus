@@ -8,7 +8,7 @@ from app.errors import AppError, ok
 from app.models import User
 from app.models.enums import UserRole
 from app.models.prospect import ProspectSend
-from app.schemas import ProspectBulkSendIn, ProspectIn, ProspectPatchIn, ProspectSendIn
+from app.schemas import ProspectBulkSendIn, ProspectIn, ProspectNoteIn, ProspectPatchIn, ProspectSendIn
 from app.services import prospects as svc
 
 router = APIRouter(prefix="/admin/prospects", tags=["prospects"])
@@ -45,6 +45,8 @@ def _detail(db: Session, staff: User, prospect_id: str) -> dict:
         "proposals": svc.proposals_for(db, row, staff),
         "attachments": svc.available_attachments(db, row),
         "sends": [svc.serialize_send(item) for item in _row_sends(db, row.id)],
+        "dossier": svc.dossier_for(db, row),
+        "stages": [{"key": k, "label": l} for k, l in svc.stages_for(row.side)],
     }
 
 
@@ -128,10 +130,28 @@ def get_prospect(prospect_id: str, db: Session = Depends(get_db), staff: User = 
     return ok(_detail(db, staff, prospect_id))
 
 
+@router.post("/p/{prospect_id}/notes")
+@router.post("/{prospect_id}/notes")
+def add_prospect_note(prospect_id: str, payload: ProspectNoteIn, db: Session = Depends(get_db), staff: User = Depends(_staff)):
+    note = svc.add_prospect_note(db, staff, prospect_id, payload.text)
+    db.commit()
+    db.refresh(note)
+    return ok(
+        {
+            "id": note.id,
+            "text": note.text,
+            "author_id": note.author_id,
+            "author_name": staff.full_name,
+            "created_at": note.created_at.isoformat() if note.created_at else None,
+        },
+        message="Note enregistrée.",
+    )
+
+
 @router.patch("/p/{prospect_id}")
 @router.patch("/{prospect_id}")
-def patch_prospect(prospect_id: str, payload: ProspectPatchIn, db: Session = Depends(get_db), _staff_user: User = Depends(_staff)):
-    row = svc.patch_prospect(db, prospect_id, payload.model_dump(exclude_unset=True))
+def patch_prospect(prospect_id: str, payload: ProspectPatchIn, db: Session = Depends(get_db), staff: User = Depends(_staff)):
+    row = svc.patch_prospect(db, prospect_id, payload.model_dump(exclude_unset=True), actor=staff)
     db.commit()
     db.refresh(row)
     return ok(svc.serialize_prospect(row), message="Prospect mis à jour.")

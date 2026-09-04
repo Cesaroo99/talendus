@@ -10,7 +10,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from app.errors import AppError
-from app.models import Candidate, Company, Contract, Invoice, User
+from app.models import Application, AuditLog, Candidate, Company, Contract, InternalNote, Interview, Invoice, RecruitmentMission, User
 from app.models.enums import EmailType, UserRole, utcnow
 from app.models.prospect import Prospect, ProspectSend
 from app.services.email import EmailAttachment, send_composed_email
@@ -357,6 +357,225 @@ def serialize_send(row: ProspectSend) -> dict:
     }
 
 
+def _iso(value) -> str | None:
+    return value.isoformat() if value else None
+
+
+def _account(user: User | None) -> dict | None:
+    if not user:
+        return None
+    return {
+        "id": user.id,
+        "email": user.email,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+        "phone": user.phone,
+        "role": user.role.value if user.role else None,
+        "is_active": bool(user.is_active),
+        "is_email_verified": bool(user.is_email_verified),
+        "account_status": user.account_status.value if user.account_status else None,
+        "last_login_at": _iso(user.last_login_at),
+        "created_at": _iso(user.created_at),
+    }
+
+
+def _note_row(note: InternalNote, authors: dict[str, User]) -> dict:
+    author = authors.get(note.author_id)
+    return {
+        "id": note.id,
+        "entity_type": note.entity_type,
+        "entity_id": note.entity_id,
+        "text": note.text,
+        "author_id": note.author_id,
+        "author_name": author.full_name if author else None,
+        "created_at": _iso(note.created_at),
+    }
+
+
+def dossier_for(db: Session, row: Prospect) -> dict:
+    from app.services.audit import serialize_audit
+    from app.services.candidates import serialize_candidate
+    from app.services.companies import serialize_company
+    from app.services.hiring_requests import serialize_request
+
+    user = db.get(User, row.user_id) if row.user_id else None
+    if user is None:
+        user = db.scalar(select(User).where(User.email == row.email))
+    profile = db.get(Candidate, row.candidate_id) if row.candidate_id else None
+    if profile is None and user:
+        profile = db.scalar(select(Candidate).where(Candidate.user_id == user.id))
+    company = db.get(Company, row.company_id) if row.company_id else None
+    if company is None and user:
+        company = db.scalar(select(Company).where(Company.owner_user_id == user.id))
+
+    applications = []
+    interviews = []
+    if profile:
+        applications = list(
+            db.scalars(select(Application).where(Application.candidate_id == profile.id).order_by(Application.created_at.desc())).all()
+        )
+        interviews = list(
+            db.scalars(select(Interview).where(Interview.candidate_id == profile.id).order_by(Interview.scheduled_at.desc())).all()
+        )
+    hiring = []
+    contracts = []
+    invoices = []
+    if company:
+        hiring = list(
+            db.scalars(
+                select(RecruitmentMission).where(RecruitmentMission.company_id == company.id).order_by(RecruitmentMission.created_at.desc())
+            ).all()
+        )
+        contracts = list(db.scalars(select(Contract).where(Contract.company_id == company.id).order_by(Contract.created_at.desc())).all())
+        invoices = list(db.scalars(select(Invoice).where(Invoice.company_id == company.id).order_by(Invoice.created_at.desc())).all())
+
+    related_ids = {row.id}
+    if profile:
+        related_ids.add(profile.id)
+    if company:
+        related_ids.add(company.id)
+    if user:
+        related_ids.add(user.id)
+    related_ids.update(item.id for item in applications)
+    related_ids.update(item.id for item in hiring)
+
+    notes = list(
+        db.scalars(
+            select(InternalNote)
+            .where(InternalNote.entity_id.in_(related_ids))
+            .order_by(InternalNote.created_at.desc())
+            .limit(40)
+        ).all()
+    )
+    authors = {
+        person.id: person
+        for person in (
+            db.scalars(select(User).where(User.id.in_({n.author_id for n in notes if n.author_id}))).all() if notes else []
+        )
+    }
+    audits = list(
+        db.scalars(
+            select(AuditLog)
+            .where(
+                or_(
+                    (AuditLog.entity_type == "prospect") & (AuditLog.entity_id == row.id),
+                    AuditLog.entity_id.in_(related_ids),
+                )
+            )
+            .order_by(AuditLog.created_at.desc())
+            .limit(40)
+        ).all()
+    )
+    audit_actors = {
+        person.id: person
+        for person in (
+            db.scalars(select(User).where(User.id.in_({a.actor_id for a in audits if a.actor_id}))).all() if audits else []
+        )
+    }
+
+    expectations = {}
+    if profile:
+        expectations = {
+            "availability": profile.availability,
+            "shift": profile.shift_preference,
+            "salary_min": profile.desired_salary_min,
+            "salary_max": profile.desired_salary_max,
+            "mobility": profile.mobility,
+            "contract_type": profile.contract_type,
+            "work_status": profile.work_status,
+            "job_search_status": profile.job_search_status.value if profile.job_search_status else None,
+            "work_preferences": profile.work_preferences,
+            "languages": profile.languages,
+            "city": profile.city,
+            "title": profile.title,
+        }
+    elif hiring:
+        first = hiring[0]
+        expectations = {
+            "title": first.title,
+            "location": first.location,
+            "shift": first.shift,
+            "salary": first.salary_display,
+            "contract_type": first.contract_type,
+            "skills": first.skills,
+            "seats": first.seats,
+            "work_authorization": first.work_authorization,
+            "notes": first.notes,
+        }
+
+    return {
+        "account": _account(user),
+        "linked": {
+            "candidate_id": profile.id if profile else row.candidate_id,
+            "company_id": company.id if company else row.company_id,
+            "user_id": user.id if user else row.user_id,
+        },
+        "profile": serialize_candidate(profile, include_private=True) if profile else None,
+        "company": serialize_company(company) if company else None,
+        "expectations": expectations,
+        "applications": [
+            {
+                "id": item.id,
+                "status": item.status.value if item.status else None,
+                "job_id": item.job_id,
+                "job_title": item.job.title if item.job else None,
+                "company_name": item.job.company.name if item.job and item.job.company else None,
+                "cover_note": item.cover_note,
+                "created_at": _iso(item.created_at),
+            }
+            for item in applications
+        ],
+        "hiring_requests": [serialize_request(item) for item in hiring],
+        "interviews": [
+            {
+                "id": item.id,
+                "type": item.type.value if item.type else None,
+                "status": item.status.value if item.status else None,
+                "scheduled_at": _iso(item.scheduled_at),
+                "location": item.location,
+                "job_id": item.job_id,
+            }
+            for item in interviews
+        ],
+        "contracts": [
+            {
+                "id": item.id,
+                "type": item.type,
+                "status": item.status.value if item.status else None,
+                "commission_percent": item.commission_percent,
+                "start_date": item.start_date,
+                "end_date": item.end_date,
+            }
+            for item in contracts
+        ],
+        "invoices": [
+            {
+                "id": item.id,
+                "number": item.number,
+                "status": item.status.value if item.status else None,
+                "amount_total": item.amount_total or item.amount,
+                "due_date": item.due_date,
+            }
+            for item in invoices
+        ],
+        "notes": [_note_row(note, authors) for note in notes],
+        "recent_actions": [serialize_audit(item, audit_actors.get(item.actor_id)) for item in audits],
+    }
+
+
+def add_prospect_note(db: Session, actor: User, prospect_id: str, text: str) -> InternalNote:
+    from app.services.audit import audit
+
+    row = get_prospect(db, prospect_id)
+    note = InternalNote(entity_type="prospect", entity_id=row.id, author_id=actor.id, text=(text or "").strip())
+    if not note.text:
+        raise AppError(400, "La note ne peut pas être vide.", "VALIDATION_ERROR")
+    db.add(note)
+    audit(db, "note.create", actor, "prospect", row.id)
+    db.flush()
+    return note
+
+
 def upsert_prospect(
     db: Session,
     *,
@@ -599,11 +818,16 @@ def create_prospect(db: Session, actor: User, data: dict) -> Prospect:
     )
     if row is None:
         raise AppError(400, "Impossible de créer ce prospect.", "VALIDATION_ERROR")
+    from app.services.audit import audit
+
+    audit(db, "prospect.create", actor, "prospect", row.id, metadata={"side": row.side, "email": row.email})
     return row
 
 
-def patch_prospect(db: Session, prospect_id: str, data: dict) -> Prospect:
+def patch_prospect(db: Session, prospect_id: str, data: dict, actor: User | None = None) -> Prospect:
     row = get_prospect(db, prospect_id)
+    tracked = ("stage", "first_name", "last_name", "phone", "company_name", "title", "city", "sector", "source_detail", "message", "assigned_recruiter_id")
+    old = {key: getattr(row, key) for key in tracked}
     if "stage" in data and data["stage"]:
         row.stage = _valid_stage(row.side, data["stage"])
     for key in ("first_name", "last_name", "phone", "company_name", "title", "city", "sector", "source_detail", "message"):
@@ -611,6 +835,12 @@ def patch_prospect(db: Session, prospect_id: str, data: dict) -> Prospect:
             setattr(row, key, str(data[key])[:500] if key != "message" else str(data[key])[:5000])
     if "assigned_recruiter_id" in data:
         row.assigned_recruiter_id = data["assigned_recruiter_id"] or None
+    changed = {key: getattr(row, key) for key in tracked if old.get(key) != getattr(row, key)}
+    if actor and changed:
+        from app.services.audit import audit
+
+        action = "prospect.stage" if list(changed.keys()) == ["stage"] else "prospect.patch"
+        audit(db, action, actor, "prospect", row.id, old_value={k: old[k] for k in changed}, new_value=changed)
     return row
 
 
@@ -798,6 +1028,9 @@ def send_to_prospect(db: Session, actor: User, row: Prospect, req: SendRequest) 
     row.last_contacted_at = utcnow()
     if row.stage in {"nouveau", "a-contacter"}:
         row.stage = "contacte"
+    from app.services.audit import audit
+
+    audit(db, "prospect.send", actor, "prospect", row.id, metadata={"template": key, "to": row.email, "subject": subject[:180]})
     db.flush()
     return {
         "prospect_id": row.id,

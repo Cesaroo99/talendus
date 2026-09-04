@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, File, Query, UploadFile
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from pydantic import BaseModel
@@ -310,25 +310,60 @@ def set_role(
 @router.get("/audit")
 def audit_logs(
     limit: int = Query(default=100, ge=1, le=500),
+    actor_id: str | None = None,
+    action: str | None = None,
+    entity_type: str | None = None,
+    q: str | None = None,
+    scope: str = "staff",
     db: Session = Depends(get_db),
-    _: User = Depends(_admin_user),
+    _: User = Depends(_staff),
 ):
-    rows = db.scalars(select(AuditLog).order_by(AuditLog.created_at.desc()).limit(limit)).all()
+    from app.rbac import STAFF
+    from app.services.audit import action_label, serialize_audit
+
+    stmt = select(AuditLog)
+    if actor_id:
+        stmt = stmt.where(AuditLog.actor_id == actor_id)
+    if action:
+        stmt = stmt.where(AuditLog.action == action)
+    if entity_type:
+        stmt = stmt.where(AuditLog.entity_type == entity_type)
+    needle = (q or "").strip().lower()
+    if needle:
+        like = f"%{needle}%"
+        stmt = stmt.where(
+            or_(
+                func.lower(AuditLog.action).like(like),
+                func.lower(func.coalesce(AuditLog.entity_type, "")).like(like),
+                func.lower(func.coalesce(AuditLog.entity_id, "")).like(like),
+            )
+        )
+    if (scope or "staff").lower() != "all":
+        staff_ids = list(db.scalars(select(User.id).where(User.role.in_(STAFF))).all())
+        stmt = stmt.where(AuditLog.actor_id.in_(staff_ids or ["__none__"]))
+    rows = db.scalars(stmt.order_by(AuditLog.created_at.desc()).limit(limit)).all()
+    actor_ids = {row.actor_id for row in rows if row.actor_id}
+    actors = {
+        user.id: user
+        for user in (db.scalars(select(User).where(User.id.in_(actor_ids))).all() if actor_ids else [])
+    }
+    staff = db.scalars(select(User).where(User.role.in_(STAFF)).order_by(User.last_name.asc(), User.first_name.asc())).all()
+    seen_actions = db.scalars(select(AuditLog.action).distinct().order_by(AuditLog.action.asc())).all()
     return ok(
-        [
-            {
-                "id": r.id,
-                "action": r.action,
-                "actor_id": r.actor_id,
-                "entity_type": r.entity_type,
-                "entity_id": r.entity_id,
-                "ip_address": r.ip_address,
-                "old_value": r.old_value,
-                "new_value": r.new_value,
-                "created_at": r.created_at.isoformat() if r.created_at else None,
-            }
-            for r in rows
-        ]
+        [serialize_audit(row, actors.get(row.actor_id)) for row in rows],
+        meta={
+            "scope": "all" if (scope or "").lower() == "all" else "staff",
+            "actors": [
+                {
+                    "id": user.id,
+                    "name": user.full_name,
+                    "email": user.email,
+                    "role": user.role.value if user.role else None,
+                }
+                for user in staff
+            ],
+            "actions": [{"key": key, "label": action_label(key)} for key in seen_actions if key],
+        },
     )
 
 
