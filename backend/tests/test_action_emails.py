@@ -65,17 +65,16 @@ def test_smtp_test_email_is_logged(client):
     admin_h = auth_header(admin)
     sent = client.post("/api/admin/settings/test-email", headers=admin_h, json={})
     assert sent.status_code == 200, sent.text
-    assert sent.json()["data"]["to_email"] == "smtp-test-admin@example.com"
-    logs = _emails_to(client, admin_h, "smtp-test-admin@example.com")
+    assert sent.json()["data"]["to_email"] == "cesarmemoli1@gmail.com"
+    logs = _emails_to(client, admin_h, "cesarmemoli1@gmail.com")
     assert any("test" in (row.get("subject") or "").lower() for row in logs)
-    real = client.post(
+    rewritten = client.post(
         "/api/admin/settings/test-email",
         headers=admin_h,
-        json={"to_email": "cesarmemoli1@gmail.com"},
+        json={"to_email": "lea.super@talendus.ca"},
     )
-    assert real.status_code == 200, real.text
-    assert real.json()["data"]["to_email"] == "cesarmemoli1@gmail.com"
-    assert _emails_to(client, admin_h, "cesarmemoli1@gmail.com")
+    assert rewritten.status_code == 200, rewritten.text
+    assert rewritten.json()["data"]["to_email"] == "cesarmemoli1@gmail.com"
 
 
 def test_interview_actions_email_and_thread(client):

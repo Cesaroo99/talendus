@@ -361,15 +361,23 @@ def patch_setting(
 
 
 TEST_INBOX = "cesarmemoli1@gmail.com"
+_FAKE_TEST_INBOXES = {
+    "lea.super@talendus.ca",
+    "sophie.admin@talendus.ca",
+    "marc.recruiter@talendus.ca",
+    "camille.recruiter@talendus.ca",
+    "nathalie.finance@talendus.ca",
+    "alex.editeur@talendus.ca",
+}
 
 
-def _test_inbox(payload: EmailTestIn, admin: User) -> str:
-    if payload.to_email:
-        return str(payload.to_email).lower()
-    current = (admin.email or "").strip().lower()
-    if current in {"lea.super@talendus.ca", "sophie.admin@talendus.ca"} or current.endswith("@talendus.ca"):
+def _test_inbox(payload: EmailTestIn, admin: User | None = None) -> str:
+    requested = str(payload.to_email or "").strip().lower()
+    if not requested:
         return TEST_INBOX
-    return current or TEST_INBOX
+    if requested in _FAKE_TEST_INBOXES or requested.endswith("@talendus.ca"):
+        return TEST_INBOX
+    return requested
 
 
 @router.post("/settings/test-email")

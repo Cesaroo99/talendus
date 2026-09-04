@@ -2840,8 +2840,8 @@
           '<option value="oui"' + (val("smtp.use_tls", "oui") !== "non" ? " selected" : "") + ">oui</option>" +
           '<option value="non"' + (val("smtp.use_tls") === "non" ? " selected" : "") + ">non</option>" +
           "</select>" +
-          '<label>Envoyer le test à une vraie boîte</label><input id="adm-smtp-test-to" type="email" value="cesarmemoli1@gmail.com" placeholder="cesarmemoli1@gmail.com">' +
-          '<p class="sub">Ne pas utiliser lea.super@talendus.ca : ce compte n’a pas de vraie boîte. Le test part vers Gmail ci-dessus.</p>' +
+          '<label>Envoyer le test à une vraie boîte</label><input id="adm-smtp-test-to" type="email" value="cesarmemoli1@gmail.com" readonly>' +
+          '<p class="sub">Le test va uniquement à cesarmemoli1@gmail.com. lea.super@talendus.ca n’est jamais utilisé.</p>' +
           '<p style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">' +
           '<button class="btn btn-orange" type="submit">Enregistrer le courriel</button>' +
           '<button class="btn btn-ghost" type="button" id="adm-smtp-test">Envoyer un test</button>' +
@@ -2858,8 +2858,7 @@
         };
         var testBtn = document.getElementById("adm-smtp-test");
         if (testBtn) testBtn.onclick = function () {
-          var toInput = document.getElementById("adm-smtp-test-to");
-          var toEmail = (toInput && toInput.value ? toInput.value : "cesarmemoli1@gmail.com").trim();
+          var toEmail = "cesarmemoli1@gmail.com";
           var fd = sf ? U.formData(sf) : {};
           var saveKeys = Object.keys(fd).filter(function (key) { return key.indexOf("smtp.") === 0; });
           var save = saveKeys.length ? Promise.all(saveKeys.map(function (key) {
