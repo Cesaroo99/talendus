@@ -1547,6 +1547,10 @@
     return parts.join("&");
   }
 
+  function prospectUrl(id, extra) {
+    return "/admin/prospects/p/" + encodeURIComponent(id) + (extra || "");
+  }
+
   function renderProspectFilters() {
     var box = document.getElementById("prospect-filters");
     if (!box) return;
@@ -1659,7 +1663,7 @@
     });
     Array.from(root.querySelectorAll("[data-pstage]")).forEach(function (sel) {
       sel.onchange = function () {
-        api().request("/admin/prospects/p/" + sel.getAttribute("data-pstage"), { method: "PATCH", body: { stage: sel.value } })
+        api().request(prospectUrl(sel.getAttribute("data-pstage")), { method: "PATCH", body: { stage: sel.value } })
           .then(function () { U.toast("Statut enregistré.", "ok"); hydrateProspects(); })
           .catch(function (err) { U.toast((err && err.message) || "Statut non enregistré.", "err"); hydrateProspects(); });
       };
@@ -1699,7 +1703,7 @@
 
   function openProspectFiche(id) {
     if (!api() || !id) return;
-    api().request("/admin/prospects/p/" + id).then(function (json) {
+    api().request(prospectUrl(id)).then(function (json) {
       var d = (json && json.data) || {};
       if (d.side && d.side !== prospectSide()) {
         U.toast("Cette fiche n’appartient pas à cette base.", "err");
@@ -1731,7 +1735,7 @@
         onMount: function (box, close) {
           box.querySelector("#pf-update").onclick = function () {
             var payload = U.formData(box.querySelector("#pf-edit"));
-            api().request("/admin/prospects/p/" + id, { method: "PATCH", body: payload }).then(function () {
+            api().request(prospectUrl(id), { method: "PATCH", body: payload }).then(function () {
               U.toast("Fiche enregistrée.", "ok");
               close();
               hydrateProspects();
@@ -1751,7 +1755,7 @@
   function openProspectComposer(ids) {
     if (!api() || !ids.length) return;
     var firstId = ids[0];
-    api().request("/admin/prospects/p/" + firstId).then(function (json) {
+    api().request(prospectUrl(firstId)).then(function (json) {
       var detail = (json && json.data) || {};
       if (detail.side && detail.side !== prospectSide()) {
         U.toast("Ce prospect n’appartient pas à cette base.", "err");
@@ -1805,7 +1809,7 @@
               force: !!(box.querySelector("#pc-force") && box.querySelector("#pc-force").checked)
             };
             var req = ids.length === 1
-              ? api().request("/admin/prospects/p/" + firstId + "/send", { method: "POST", body: payload })
+              ? api().request(prospectUrl(firstId, "/send"), { method: "POST", body: payload })
               : api().request("/admin/prospects/broadcast", { method: "POST", body: Object.assign({ ids: ids }, payload) });
             req.then(function (res) {
               U.toast((res && res.message) || "Envoyé.", "ok");

@@ -39,13 +39,45 @@ def test_register_creates_prospects(client):
     assert metal["side"] == "employer"
     assert cands.json()["meta"]["side"] == "candidate"
     catalog_trap = client.get("/api/admin/prospects/catalog", headers=admin_h)
-    assert catalog_trap.status_code == 404
+    assert catalog_trap.status_code == 200, catalog_trap.text
     assert "Prospect introuvable" not in catalog_trap.text
+    catalog_keys = {row["key"] for row in catalog_trap.json()["data"]}
+    assert "cand_first_contact" in catalog_keys
     templates = client.get("/api/admin/prospects/templates?side=candidate", headers=admin_h)
     assert templates.status_code == 200, templates.text
     keys = {row["key"] for row in templates.json()["data"]}
     assert "cand_first_contact" in keys
     assert "emp_first_contact" not in keys
+
+
+def test_list_persists_synced_prospects(client):
+    from sqlalchemy import delete
+
+    from app.database import SessionLocal
+    from app.models.prospect import Prospect, ProspectSend
+
+    register(client, "ghost.sync@example.com", "CANDIDATE", first_name="Ghost")
+    db = SessionLocal()
+    db.execute(delete(ProspectSend))
+    db.execute(delete(Prospect))
+    db.commit()
+    db.close()
+    admin = promote_admin(client, "crm-sync@example.com")
+    admin_h = auth_header(admin)
+    listed = client.get("/api/admin/prospects?side=candidate", headers=admin_h)
+    assert listed.status_code == 200, listed.text
+    ghost = next(row for row in listed.json()["data"] if row["email"] == "ghost.sync@example.com")
+    detail = client.get(f"/api/admin/prospects/p/{ghost['id']}", headers=admin_h)
+    assert detail.status_code == 200, detail.text
+    assert "Prospect introuvable" not in detail.text
+    assert detail.json()["data"]["first_name"] == "Ghost"
+    send = client.post(
+        f"/api/admin/prospects/p/{ghost['id']}/send",
+        headers=admin_h,
+        json={"template_key": "cand_first_contact"},
+    )
+    assert send.status_code == 200, send.text
+    assert send.json()["data"]["to_email"] == "ghost.sync@example.com"
 
 
 def test_contact_and_manual_prospect(client):
