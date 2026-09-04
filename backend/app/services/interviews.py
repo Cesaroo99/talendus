@@ -87,12 +87,12 @@ def call_step(row: Interview, viewer: User | None) -> str:
         return "missed"
     if row.type not in CALL_TYPES:
         return "onsite"
-    if viewer and viewer.role == UserRole.CANDIDATE and row.status == InterviewStatus.SCHEDULED:
-        return "confirm"
-    if viewer_can_start_call(row, viewer) and not call_is_open(row):
-        return "start"
     if viewer_can_join_call(row, viewer):
         return "join"
+    if viewer_can_start_call(row, viewer) and not call_is_open(row):
+        return "start"
+    if viewer and viewer.role == UserRole.CANDIDATE and row.status == InterviewStatus.SCHEDULED:
+        return "confirm"
     return "wait_host"
 
 

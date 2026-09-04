@@ -46,6 +46,9 @@ def test_in_app_call_signals_between_candidate_and_staff(client):
     staff = client.post(f"/api/calls/{interview['id']}/join", headers=admin_h, json={"video": True})
     assert staff.status_code == 200, staff.text
     assert staff.json()["data"]["call_open"] is True
+    opened = client.get(f"/api/interviews/{interview['id']}", headers=cand_h).json()["data"]
+    assert opened["can_join_call"] is True
+    assert opened["call_step"] == "join"
 
     join = client.post(f"/api/calls/{interview['id']}/join", headers=cand_h, json={"video": True})
     assert join.status_code == 200, join.text
