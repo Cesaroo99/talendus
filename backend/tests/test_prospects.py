@@ -147,7 +147,8 @@ def test_personalized_send_dedup_and_isolation(client):
     keys = {row["key"] for row in proposals.json()["data"]}
     assert "cand_first_contact" in keys
     assert "emp_first_contact" not in keys
-    assert any("Aline" in row["subject"] for row in proposals.json()["data"])
+    assert any("Aline" in row["body"] for row in proposals.json()["data"])
+    assert all(not row["subject"].startswith("Aline,") for row in proposals.json()["data"])
     first = client.post(
         f"/api/admin/prospects/p/{a['id']}/send",
         headers=admin_h,
@@ -226,15 +227,20 @@ def test_greeting_without_person_name_and_attachment_note(client):
     assert "paiement" not in first["body"].lower()
     assert "payé" not in first["body"].lower()
     assert "étapes" not in first["body"].lower()
+    assert "profils qui tiennent" not in first["body"]
+    assert "comprendre le contexte" in first["body"]
     assert emp["login_link"].startswith("https://talendus.ca/espace-employeur.html#/login")
     assert "info.usine%40example.com" in emp["login_link"]
     assert emp["register_link"].startswith("https://talendus.ca/espace-employeur.html#/register")
     assert "role=EMPLOYER" in emp["register_link"]
     early_keys = {"emp_first_contact", "emp_followup", "emp_discovery", "emp_mandate", "emp_search_start"}
+    amateur = ("répondez simplement « oui »", "sans frais pour vous", "profils qui tiennent", "sans engagement")
     for row in proposals:
         blob = (row["subject"] + "\n" + row["body"]).lower()
         assert "16 %" not in row["subject"] + row["body"]
         assert "je vous enverrai" not in blob
+        for phrase in amateur:
+            assert phrase not in blob
         if row["key"] in early_keys:
             assert "paiement" not in blob
             assert "honoraires" not in blob
@@ -247,9 +253,19 @@ def test_greeting_without_person_name_and_attachment_note(client):
     assert [row["key"] for row in cand_props][0] == "cand_first_contact"
     opener = next(row for row in cand_props if row["key"] == "cand_first_contact")
     assert opener["body"].startswith("Bonjour,")
-    assert opener["subject"].startswith("Talendus")
-    assert "sans frais" in opener["subject"]
+    assert opener["subject"].startswith("Votre profil")
+    assert "Cariste" in opener["subject"]
+    assert "sans frais" not in opener["subject"].lower()
+    assert "sans frais" not in opener["body"].lower()
+    assert "débourser" not in opener["body"].lower()
     assert "16 %" not in opener["body"]
+    assert "honoraires" not in opener["body"].lower()
+    for row in cand_props:
+        blob = (row["subject"] + "\n" + row["body"]).lower()
+        assert "16 %" not in row["subject"] + row["body"]
+        assert "honoraires" not in blob
+        assert "répondez simplement" not in blob
+        assert "« oui »" not in blob
     note = attachment_note(
         [EmailAttachment(filename="mandat-usine-nord.pdf", data=b"%PDF", mime="application/pdf", kind="contract")],
         {
