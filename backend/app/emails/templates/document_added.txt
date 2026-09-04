@@ -5,5 +5,3 @@ Talendus a déposé un document dans votre dossier : {{document}}.
 
 Ouvrir vos documents :
 {{link}}
-
-Talendus · info@talendus.ca

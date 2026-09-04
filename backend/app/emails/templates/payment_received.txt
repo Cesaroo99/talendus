@@ -7,4 +7,3 @@ Statut : {{status}}
 Votre espace : {{link}}
 
 Merci.
-Talendus · info@talendus.ca

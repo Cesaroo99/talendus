@@ -7,5 +7,3 @@ Statut : {{status}}
 
 Voir le suivi dans votre espace :
 {{link}}
-
-Talendus · info@talendus.ca

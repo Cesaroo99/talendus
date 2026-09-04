@@ -8,5 +8,3 @@ Honoraires : {{percent}} %
 
 Ouvrez votre espace, lisez le mandat, puis signez :
 {{link}}
-
-Talendus · info@talendus.ca · 263 558 5225

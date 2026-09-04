@@ -6,5 +6,3 @@ Confirmez votre présence, puis lancez l’appel au moment convenu.
 
 Ouvrir l’entretien :
 {{link}}
-
-Talendus · info@talendus.ca

@@ -6,5 +6,3 @@ Un recruteur Talendus vous rejoint si le profil correspond.
 
 Suivre votre candidature :
 {{link}}
-
-Talendus · info@talendus.ca

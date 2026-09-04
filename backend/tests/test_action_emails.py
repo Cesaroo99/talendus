@@ -10,6 +10,63 @@ def _emails_to(client, admin_h, address: str) -> list[dict]:
     return [row for row in rows if (row.get("to_email") or "").lower() == address.lower()]
 
 
+def test_every_template_gets_talendus_signature():
+    from app.services.email import (
+        SIGNATURE_IMAGE,
+        SIGNATURE_CID,
+        TEMPLATE_DIR,
+        _render,
+        build_email_message,
+        runtime_email_config,
+        signed_html,
+        signed_plain,
+        strip_legacy_footer,
+    )
+
+    assert SIGNATURE_IMAGE.is_file()
+    assert SIGNATURE_IMAGE.stat().st_size < 80_000
+    assert SIGNATURE_IMAGE.stat().st_size > 8_000
+    leftover = strip_legacy_footer(
+        "Facture prête.\n\nTalendus · info@talendus.ca · 514 555-0199"
+    )
+    assert leftover == "Facture prête."
+    assert "514 555-0199" not in leftover
+    plain = signed_plain("Bonjour Hugo,\n\nVotre entretien est confirmé.")
+    assert "Bonjour Hugo" in plain
+    assert "263 558 5225" in plain
+    assert "info@talendus.ca" in plain
+    assert "talendus.ca" in plain
+    html = signed_html(plain)
+    assert f'cid:{SIGNATURE_CID}' in html
+    assert "Bonjour Hugo" in html
+    assert "514 555-0199" not in html
+    cfg = runtime_email_config()
+    msg = build_email_message(cfg, "cesarmemoli1@gmail.com", "Test signature", plain)
+    raw = msg.as_bytes()
+    assert b"image/jpeg" in raw
+    assert f"<{SIGNATURE_CID}>".encode() in raw
+    assert b'inline; filename="talendus-signature.jpg"' in raw
+    payload = msg.get_payload()
+    assert len(payload) >= 2
+    for path in sorted(TEMPLATE_DIR.glob("*.txt")):
+        subject, body = _render(
+            path.stem,
+            name="Hugo",
+            link="https://talendus.ca/espace.html#/messages",
+            sender_name="Léa",
+            preview="Disponible demain",
+            document="CV",
+            number="F-100",
+            amount="1 200",
+            due="30 sept. 2026",
+        )
+        signed = signed_plain(body)
+        assert subject
+        assert "263 558 5225" in signed, path.name
+        assert "info@talendus.ca" in signed, path.name
+        assert "Talendus" in signed, path.name
+
+
 def test_runtime_from_is_info():
     from app.services.email import runtime_email_config
 

@@ -4,5 +4,3 @@ Une nouvelle candidature a été déposée pour « {{job_title}} » :
 
 Ouvrir le dossier :
 {{link}}
-
-Talendus · info@talendus.ca

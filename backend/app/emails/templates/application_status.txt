@@ -6,5 +6,3 @@ Le statut de votre candidature pour « {{job_title}} » est maintenant : {{statu
 
 Voir le suivi :
 {{link}}
-
-Talendus · info@talendus.ca
