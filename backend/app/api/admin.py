@@ -360,24 +360,55 @@ def patch_setting(
     return ok(serialize_setting(row))
 
 
+TEST_INBOX = "cesarmemoli1@gmail.com"
+_FAKE_TEST_INBOXES = {
+    "lea.super@talendus.ca",
+    "sophie.admin@talendus.ca",
+    "marc.recruiter@talendus.ca",
+    "camille.recruiter@talendus.ca",
+    "nathalie.finance@talendus.ca",
+    "alex.editeur@talendus.ca",
+}
+
+
+def _test_inbox(payload: EmailTestIn, admin: User | None = None) -> str:
+    requested = str(payload.to_email or "").strip().lower()
+    if not requested:
+        return TEST_INBOX
+    if requested in _FAKE_TEST_INBOXES or requested.endswith("@talendus.ca"):
+        return TEST_INBOX
+    return requested
+
+
 @router.post("/settings/test-email")
 def send_test_email(
     payload: EmailTestIn,
     db: Session = Depends(get_db),
     admin: User = Depends(_admin_user),
 ):
-    from app.models.enums import EmailType
+    from app.models.enums import EmailStatus, EmailType
     from app.services.email import send_email
     from app.services.ops_notify import frontend
 
-    to_email = str(payload.to_email or admin.email).lower()
-    send_email(
+    to_email = _test_inbox(payload, admin)
+    log = send_email(
         db,
         to_email,
         EmailType.ADMIN,
         "smtp_test",
+        sync=True,
         name=admin.first_name or "Admin",
         link=f"{frontend()}/admin/#/settings",
     )
     db.commit()
-    return ok({"to_email": to_email}, message="E-mail de test journalisé. S’il est configuré, SMTP l’envoie depuis info@talendus.ca.")
+    status = log.status.value if log.status else EmailStatus.QUEUED.value
+    if log.status == EmailStatus.FAILED:
+        raise AppError(
+            502,
+            f"L’envoi vers {to_email} a échoué : {log.error or 'erreur SMTP'}. Vérifiez identifiant, mot de passe d’application et « Activer l’envoi ».",
+            "SMTP_SEND_FAILED",
+        )
+    return ok(
+        {"to_email": to_email, "status": status, "error": log.error},
+        message=f"Test {status.lower()} vers {to_email} depuis info@talendus.ca.",
+    )
