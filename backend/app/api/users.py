@@ -1,12 +1,16 @@
+from pathlib import Path
+
 from fastapi import APIRouter, Depends, File, UploadFile
 from fastapi.responses import FileResponse, RedirectResponse
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.deps import get_current_user
 from app.errors import AppError, ok
 from app.models import User
-from app.models.enums import AccountStatus, UserRole, utcnow
+from app.models.calls import CallPeer
+from app.models.enums import AccountStatus, utcnow
 from app.schemas import UserPreferenceIn, UserPublic, UserUpdateIn
 from app.services.audit import audit
 from app.services.portal import set_avatar
@@ -14,6 +18,48 @@ from app.services.settings import ensure_preferences, serialize_preferences, upd
 from app.services.storage import open_stored
 
 router = APIRouter(prefix="/users", tags=["users"])
+
+AVATAR_TYPES = {
+    ".png": "image/png",
+    ".webp": "image/webp",
+    ".gif": "image/gif",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+}
+
+
+def _avatar_media_type(path: Path) -> str:
+    return AVATAR_TYPES.get(path.suffix.lower(), "image/jpeg")
+
+
+def _send_avatar(user: User):
+    if not user.avatar_path:
+        raise AppError(404, "Aucune photo.", "NOT_FOUND")
+    url, path = open_stored(user.avatar_path, None, "avatars")
+    if url:
+        return RedirectResponse(url)
+    return FileResponse(path, media_type=_avatar_media_type(Path(path)))
+
+
+def _can_see_avatar(db: Session, viewer: User, target_id: str) -> bool:
+    from app.services.interviews import is_staff, list_interviews
+
+    if viewer.id == target_id or is_staff(viewer):
+        return True
+    rooms = list(db.scalars(select(CallPeer.interview_id).where(CallPeer.user_id == viewer.id)).all())
+    if rooms:
+        other = db.scalar(
+            select(CallPeer).where(CallPeer.user_id == target_id, CallPeer.interview_id.in_(rooms))
+        )
+        if other:
+            return True
+    for row in list_interviews(db, viewer):
+        cand = row.candidate.user if row.candidate else None
+        if cand and cand.id == target_id:
+            return True
+        if row.recruiter_id == target_id:
+            return True
+    return False
 
 
 @router.get("/me")
@@ -34,12 +80,17 @@ async def upload_avatar(
 
 @router.get("/me/avatar")
 def my_avatar(user: User = Depends(get_current_user)):
-    if not user.avatar_path:
+    return _send_avatar(user)
+
+
+@router.get("/{user_id}/avatar")
+def user_avatar(user_id: str, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if not _can_see_avatar(db, user, user_id):
+        raise AppError(403, "Photo non visible.", "FORBIDDEN")
+    target = db.get(User, user_id)
+    if not target:
         raise AppError(404, "Aucune photo.", "NOT_FOUND")
-    url, path = open_stored(user.avatar_path, None, "avatars")
-    if url:
-        return RedirectResponse(url)
-    return FileResponse(path, media_type="image/jpeg")
+    return _send_avatar(target)
 
 
 @router.patch("/me")

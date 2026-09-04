@@ -125,10 +125,13 @@
     }
     function avatarHtml(user, cls) {
       var url = window.__tlAvatarUrl;
+      var letters = initials(user);
       if (url) {
-        return '<span class="tl-avatar ' + (cls || "") + '"><img src="' + esc(url) + '" alt="' + esc(displayName(user)) + '"></span>';
+        return '<span class="tl-avatar ' + (cls || "") + '" data-initials="' + esc(letters) + '"><img src="' +
+          esc(url) + '" alt="' + esc(displayName(user)) +
+          '" onerror="this.style.display=\'none\';var p=this.parentNode;if(p&&!p.getAttribute(\'data-fb\')){p.setAttribute(\'data-fb\',\'1\');p.appendChild(document.createTextNode(p.getAttribute(\'data-initials\')||\'\'));}"></span>';
       }
-      return '<span class="tl-avatar ' + (cls || "") + '" aria-hidden="true">' + esc(initials(user)) + "</span>";
+      return '<span class="tl-avatar ' + (cls || "") + '" aria-hidden="true">' + esc(letters) + "</span>";
     }
     function parseAuthHash() {
       var raw = (location.hash || "").replace(/^#\/?/, "");
@@ -611,6 +614,12 @@
       });
     }
 
+    function blobLooksLikeImage(blob) {
+      if (!blob || !blob.size) return false;
+      var t = String(blob.type || "").toLowerCase();
+      if (!t || t === "application/octet-stream" || t.indexOf("octet") >= 0) return true;
+      return t.indexOf("image") === 0;
+    }
     function loadAvatarThen(user, done) {
       if (!user || !user.avatar_path) { done(); return; }
       if (window.__tlAvatarUrl) { done(); return; }
@@ -619,7 +628,7 @@
       fetch("/api/users/me/avatar", { headers: token ? { Authorization: "Bearer " + token } : {} })
         .then(function (res) { return res.ok ? res.blob() : Promise.reject(); })
         .then(function (blob) {
-          if (blob && blob.type && blob.type.indexOf("image") === 0) {
+          if (blobLooksLikeImage(blob)) {
             window.__tlAvatarUrl = URL.createObjectURL(blob);
           }
         })

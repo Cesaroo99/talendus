@@ -56,6 +56,8 @@ def test_in_app_call_signals_between_candidate_and_staff(client):
     assert body["self_id"] == cand["user"]["id"]
     assert body["ice_servers"]
     assert any("stun:" in (item.get("urls") or "") for item in body["ice_servers"])
+    assert any("turn:" in (item.get("urls") or "") for item in body["ice_servers"])
+    assert any(p.get("initials") for p in body["peers"])
 
     peers = client.get(f"/api/calls/{interview['id']}/signals", headers=admin_h)
     assert peers.status_code == 200, peers.text
@@ -163,6 +165,8 @@ def test_admin_shell_can_join_in_app_call():
     assert "function callButtons" in js
     assert "candidate_can_start" in js
     assert "data-open-call" in js
+    assert "data-int-close" in js
+    assert "canWrap: true" in js
     assert "Lancer visio" in js
     assert "Lancer audio" in js
     assert 'var open = i.call_open ? "Rejoindre" : "Lancer"' not in js
@@ -264,11 +268,97 @@ def test_candidate_shell_loads_call_engine():
     assert "native ? 12 : 4" in engine
     assert "interviewStepsLead" in account
     assert "can_start_call" in account
-    assert "Rejoindre n’apparaît que lorsque le conseiller a lancé" in account
+    assert "Rejoindre n’apparaît que lorsque le recruteur a lancé" in account
     assert "t.startCallAudio" in account
     assert "t.joinCallAudio" in account
     assert "tl-profile-stack" in account
     assert "notifGroupInterviews" in account
+    assert "canWrap" in engine
+    assert "RTCIceCandidate" in engine
+    assert "iceRestart" in engine
+    assert "data-wrap" in engine
+    assert "Le recruteur n’a pas encore lancé" in engine
     css = (ROOT / "assets" / "css" / "talendus.css").read_text(encoding="utf-8")
     assert ".tl-session-menu-copy" in css
     assert ".tl-avatar.is-menu" in css
+    assert ".tl-int-outcome" in css
+
+
+PNG = (
+    b"\x89PNG\r\n\x1a\n"
+    b"\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89"
+    b"\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n-\xb4"
+    b"\x00\x00\x00\x00IEND\xaeB`\x82"
+)
+
+
+def test_recruiter_closes_interview_and_candidate_is_notified(client):
+    admin = promote_admin(client, "call-close-admin@example.com")
+    admin_h = auth_header(admin)
+    emp = register(client, "call-close-emp@example.com", "EMPLOYER")
+    job = staff_publish_job(client, emp, admin, slug="call-close", title="Cariste")
+    cand = register(client, "call-close-cand@example.com")
+    cand_h = auth_header(cand)
+    applied = client.post("/api/applications", headers=cand_h, json={"job_id": job["id"]}).json()["data"]
+    interview = _interview(client, admin_h, cand, applied, "VIDEO")
+    closed = client.post(
+        f"/api/interviews/{interview['id']}/status",
+        headers=admin_h,
+        json={"status": "COMPLETED"},
+    )
+    assert closed.status_code == 200, closed.text
+    body = closed.json()["data"]
+    assert body["status"] == "COMPLETED"
+    assert body["status_label"] == "Terminé"
+    assert body["in_app_call"] is False
+    assert body["can_join_call"] is False
+    mine = client.get(f"/api/interviews/{interview['id']}", headers=cand_h).json()["data"]
+    assert mine["status"] == "COMPLETED"
+    assert mine["status_label"] == "Terminé"
+    assert mine["call_step"] == "done"
+    notifs = client.get("/api/notifications", headers=cand_h).json()["data"]
+    assert any("terminé" in (n.get("title") or "").lower() or "terminé" in (n.get("message") or "").lower() for n in notifs)
+    absent = client.post(
+        f"/api/interviews/{interview['id']}/status",
+        headers=admin_h,
+        json={"status": "NO_SHOW"},
+    )
+    assert absent.status_code == 200, absent.text
+    again = client.get(f"/api/interviews/{interview['id']}", headers=cand_h).json()["data"]
+    assert again["status"] == "NO_SHOW"
+    assert again["status_label"] == "Absent"
+    notes = client.get("/api/notifications", headers=cand_h).json()["data"]
+    assert any("absent" in ((n.get("title") or "") + " " + (n.get("message") or "")).lower() for n in notes)
+
+
+def test_avatar_is_served_with_real_image_type_and_to_call_peer(client):
+    admin = promote_admin(client, "call-ava-admin@example.com")
+    admin_h = auth_header(admin)
+    emp = register(client, "call-ava-emp@example.com", "EMPLOYER")
+    job = staff_publish_job(client, emp, admin, slug="call-ava", title="Cariste")
+    cand = register(client, "call-ava-cand@example.com")
+    cand_h = auth_header(cand)
+    photo = client.post(
+        "/api/users/me/avatar",
+        headers=cand_h,
+        files={"file": ("photo.png", PNG, "image/png")},
+    )
+    assert photo.status_code == 200, photo.text
+    mine = client.get("/api/users/me/avatar", headers=cand_h)
+    assert mine.status_code == 200
+    assert "image/" in (mine.headers.get("content-type") or "")
+    outsider = register(client, "call-ava-out@example.com")
+    blocked = client.get(f"/api/users/{cand['user']['id']}/avatar", headers=auth_header(outsider))
+    assert blocked.status_code in {403, 404}
+    staff_photo = client.get(f"/api/users/{cand['user']['id']}/avatar", headers=admin_h)
+    assert staff_photo.status_code == 200
+    applied = client.post("/api/applications", headers=cand_h, json={"job_id": job["id"]}).json()["data"]
+    interview = _interview(client, admin_h, cand, applied, "VIDEO")
+    assert client.post(f"/api/calls/{interview['id']}/join", headers=admin_h, json={"video": True}).status_code == 200
+    joined = client.post(f"/api/calls/{interview['id']}/join", headers=cand_h, json={"video": True})
+    assert joined.status_code == 200, joined.text
+    peers = joined.json()["data"]["peers"]
+    self_peer = next(p for p in peers if p["self"])
+    assert self_peer["has_avatar"] is True
+    peer_photo = client.get(f"/api/users/{cand['user']['id']}/avatar", headers=admin_h)
+    assert peer_photo.status_code == 200

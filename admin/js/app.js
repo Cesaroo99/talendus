@@ -111,6 +111,9 @@
     html += i.candidate_can_start
       ? ' <button type="button" class="btn btn-ghost btn-sm" data-call-perm="' + U.esc(i.id) + '" data-allow="0">Candidat : lancer retiré</button>'
       : ' <button type="button" class="btn btn-ghost btn-sm" data-call-perm="' + U.esc(i.id) + '" data-allow="1">Autoriser le candidat à lancer</button>';
+    html += ' <button type="button" class="btn btn-ghost btn-sm" data-int-close="' + U.esc(i.id) + '" data-status="COMPLETED">Terminé</button>';
+    html += ' <button type="button" class="btn btn-ghost btn-sm" data-int-close="' + U.esc(i.id) + '" data-status="NO_SHOW">Absent</button>';
+    html += ' <button type="button" class="btn btn-ghost btn-sm" data-int-close="' + U.esc(i.id) + '" data-status="CANCELLED">Annulé</button>';
     return html;
   }
 
@@ -496,7 +499,7 @@
     var rows = pg.items.map(function (c) {
       return `<tr data-go="#/candidates/${c.id}">
         <td class="check" onclick="event.stopPropagation()"><input type="checkbox" data-sel="${c.id}" ${selected.has(c.id) ? "checked" : ""}></td>
-        <td><div class="person">${U.avatar({ firstName: c.firstName, lastName: c.lastName })}<div><b>${U.esc(c.firstName + " " + c.lastName)}</b><span>${U.esc(c.email)}</span></div></div></td>
+        <td><div class="person">${U.avatar({ firstName: c.firstName, lastName: c.lastName, userId: c.userId })}<div><b>${U.esc(c.firstName + " " + c.lastName)}</b><span>${U.esc(c.email)}</span></div></div></td>
         <td>${U.esc(c.title)}</td>
         <td>${U.esc(c.city)}</td>
         <td>${U.esc(c.sector)}</td>
@@ -619,7 +622,7 @@
         </div></div>
       <div class="detail-grid">
         <div class="card card-pad side-card">
-          ${U.avatar({ firstName: c.firstName, lastName: c.lastName }, "lg")}
+          ${U.avatar({ firstName: c.firstName, lastName: c.lastName, userId: c.userId }, "lg")}
           <p><b>${U.esc(c.email)}</b><br>${U.esc(c.phone)}</p>
           <div class="row"><span>Recruteur</span><b>${U.esc(TLStore.name(c.recruiterId))}</b></div>
           <div class="row"><span>Inscription</span><b>${U.dateFr(c.createdAt)}</b></div>
@@ -1322,7 +1325,8 @@
         var when = i.at || "";
         var join = callButtons(i);
         var meet = i.meetingUrl ? ' <a class="btn btn-ghost btn-sm" href="' + U.esc(i.meetingUrl) + '" target="_blank" rel="noopener">Lien visio</a>' : "";
-        return '<div class="int-card"><b>' + U.esc(name) + "</b><span>" + U.esc(interviewTypeLabel(i)) + " · " + U.esc(when) + "</span><span>" + U.esc(i.location || "") + "</span>" +
+        var face = U.avatar({ firstName: name.split(" ")[0], lastName: name.split(" ").slice(1).join(" "), userId: i.candidateUserId });
+        return '<div class="int-card">' + face + "<div><b>" + U.esc(name) + "</b><span>" + U.esc(interviewTypeLabel(i)) + " · " + U.esc(when) + "</span><span>" + U.esc(i.location || "") + "</span></div>" +
           '<div class="int-actions">' + join + meet + "</div></div>";
       }).join("") || '<p style="color:var(--steel);font-size:12px">Aucun entretien.</p>';
       return '<div class="int-col"><h4>' + col[1] + ' <span class="badge">' + items.length + "</span></h4>" + cards + "</div>";
@@ -1920,8 +1924,27 @@
         window.TalendusCall.start({
           interviewId: joinCall.getAttribute("data-join-call"),
           video: joinCall.getAttribute("data-video") !== "0",
-          onHangup: function () { refreshLive().then(render); }
+          canWrap: true,
+          onHangup: function () { refreshLive().then(render); },
+          onWrapped: function () { refreshLive().then(render); }
         });
+        return;
+      }
+      var closeInt = t.closest("[data-int-close]");
+      if (closeInt) {
+        (async function () {
+          try {
+            await window.TalendusAPI.request("/interviews/" + closeInt.getAttribute("data-int-close") + "/status", {
+              method: "POST",
+              body: { status: closeInt.getAttribute("data-status") }
+            });
+            await refreshLive();
+            U.toast("Statut envoyé au candidat.", "ok");
+            render();
+          } catch (err) {
+            U.toast((err && err.message) || "Mise à jour impossible.", "err");
+          }
+        })();
         return;
       }
       var openCall = t.closest("[data-open-call]");
@@ -2752,6 +2775,46 @@
     bindKanban();
   }
 
+  var avatarCache = window.__tlAdminAvatars || (window.__tlAdminAvatars = {});
+  function adminToken() {
+    try {
+      var raw = sessionStorage.getItem("talendus-admin-session");
+      var s = raw ? JSON.parse(raw) : null;
+      if (s && s.access_token) return s.access_token;
+    } catch (e) {}
+    try { return localStorage.getItem("talendus_access_token") || ""; } catch (e2) { return ""; }
+  }
+  function warmAvatars() {
+    var token = adminToken();
+    if (!token) return;
+    var ids = [];
+    var me = TLStore.me();
+    if (me && me.id) ids.push(me.id);
+    (S().candidates || []).forEach(function (c) { if (c.userId && c.hasAvatar) ids.push(c.userId); });
+    (S().users || []).forEach(function (u) { if (u.id && u.hasAvatar) ids.push(u.id); });
+    (S().interviews || []).forEach(function (i) { if (i.candidateUserId && i.candidateHasAvatar) ids.push(i.candidateUserId); });
+    var changed = false;
+    var left = 0;
+    ids.forEach(function (id) {
+      if (avatarCache[id]) return;
+      avatarCache[id] = "pending";
+      left += 1;
+      fetch("/api/users/" + encodeURIComponent(id) + "/avatar", {
+        headers: { Authorization: "Bearer " + token }
+      }).then(function (res) { return res.ok ? res.blob() : Promise.reject(); })
+        .then(function (blob) {
+          if (!blob || !blob.size) throw new Error("empty");
+          avatarCache[id] = URL.createObjectURL(blob);
+          changed = true;
+        })
+        .catch(function () { avatarCache[id] = "none"; })
+        .then(function () {
+          left -= 1;
+          if (left <= 0 && changed) render();
+        });
+    });
+  }
+
   function render() {
     var me = TLStore.me();
     var r = route();
@@ -2795,6 +2858,7 @@
       }
       var v = document.getElementById("view");
       if (v) { v.innerHTML = inner; bindView(); }
+      warmAvatars();
       if (r.name === "content") hydrateBlogCms();
       if (r.name === "messages") hydrateMessages();
       if (r.name === "services") hydrateServices();

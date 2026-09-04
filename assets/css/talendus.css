@@ -2477,6 +2477,16 @@ table, .tl-job-card p, .tl-card .body p { color: var(--tl-navy); }
   font-weight: 600;
   margin: 0 0 10px;
 }
+.tl-int-outcome {
+  display: inline-block;
+  margin: 0 0 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #efe7dc;
+  color: var(--tl-navy);
+  font-weight: 700;
+  font-size: 13px;
+}
 .tl-account-notif[data-open-thread] {
   display: block;
   width: 100%;

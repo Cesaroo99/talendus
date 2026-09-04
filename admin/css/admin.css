@@ -183,7 +183,9 @@ img { max-width: 100%; }
   display: grid; place-items: center;
   background: var(--electric); color: #fff;
   font-weight: 800; font-size: 12px; flex: 0 0 36px;
+  overflow: hidden;
 }
+.avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .avatar.sm { width: 28px; height: 28px; flex-basis: 28px; font-size: 11px; }
 .avatar.lg { width: 56px; height: 56px; flex-basis: 56px; font-size: 18px; }
 .user-chip b { display: block; font-size: 13px; }
@@ -769,7 +771,9 @@ table.data .check { width: 36px; cursor: default; }
 .int-card {
   background: #fff; border: 1px solid var(--line); border-radius: 12px;
   padding: 12px; margin-bottom: 8px;
+  display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start;
 }
+.int-card .int-actions { grid-column: 1 / -1; }
 .int-card b { display: block; font-size: 13px; }
 .int-card span { color: var(--steel); font-size: 12px; display: block; margin: 4px 0; }
 .int-card .int-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
