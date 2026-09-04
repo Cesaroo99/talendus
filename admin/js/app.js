@@ -2790,9 +2790,9 @@
     var ids = [];
     var me = TLStore.me();
     if (me && me.id) ids.push(me.id);
-    (S().candidates || []).forEach(function (c) { if (c.userId && c.hasAvatar) ids.push(c.userId); });
-    (S().users || []).forEach(function (u) { if (u.id && u.hasAvatar) ids.push(u.id); });
-    (S().interviews || []).forEach(function (i) { if (i.candidateUserId && i.candidateHasAvatar) ids.push(i.candidateUserId); });
+    (S().candidates || []).forEach(function (c) { if (c.userId) ids.push(c.userId); });
+    (S().users || []).forEach(function (u) { if (u.id) ids.push(u.id); });
+    (S().interviews || []).forEach(function (i) { if (i.candidateUserId) ids.push(i.candidateUserId); });
     var changed = false;
     var left = 0;
     ids.forEach(function (id) {

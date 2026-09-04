@@ -124,6 +124,7 @@
       waitHost: "The recruiter has not started the call yet.",
       brand: "Talendus interview",
       audioHint: "Audio only. Stay on this screen — the recruiter joins you here.",
+      waitingHint: "As soon as the other person joins, picture and sound appear here.",
       unavailable: "This interview cannot be taken in the app.",
       forbidden: "You cannot join this call.",
       retry: "Try again",
@@ -150,6 +151,7 @@
       waitHost: "Le recruteur n’a pas encore lancé l’appel.",
       brand: "Entretien Talendus",
       audioHint: "Audio seulement. Restez sur cet écran — le recruteur vous rejoint ici.",
+      waitingHint: "Dès que l’autre personne rejoint, l’image et le son s’affichent ici.",
       unavailable: "Cet entretien ne peut pas se faire dans l’appli.",
       forbidden: "Vous ne pouvez pas rejoindre cet appel.",
       retry: "Relancer",
@@ -233,7 +235,7 @@
     var chip = overlay().querySelector(".tn-call-chip");
     var brandSub = overlay().querySelector("[data-call-sub]");
     if (peer) {
-      if (hintName) hintName.textContent = peer.name || labels().waiting;
+      if (hintName && peer.name) hintName.textContent = peer.name;
       if (chip) chip.textContent = peer.name || "";
       if (brandSub) brandSub.textContent = peer.name || (live && live.video ? labels().camera : "Audio");
       if (orb && !orb.querySelector("img")) orb.textContent = peer.initials || "T";
@@ -546,7 +548,7 @@
           '<div class="tn-call-orb-wrap"><span class="tn-call-ring"></span><span class="tn-call-ring"></span>' +
             '<div class="tn-call-orb" aria-hidden="true">' + esc((peer && peer.initials) || "T") + "</div></div>" +
           '<p class="tn-call-status">' + (title || t.connecting) + "</p>" +
-          '<p class="tn-call-hint" data-call-peer>' + (live && live.video ? t.waiting : t.audioHint) + "</p>" +
+          '<p class="tn-call-hint" data-call-peer>' + (live && live.video ? t.waitingHint : t.audioHint) + "</p>" +
         "</div>" +
       "</div>" +
       '<div class="tn-call-dock">' +

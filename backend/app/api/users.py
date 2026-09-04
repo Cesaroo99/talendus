@@ -29,6 +29,16 @@ AVATAR_TYPES = {
 
 
 def _avatar_media_type(path: Path) -> str:
+    try:
+        head = path.read_bytes()[:16]
+    except OSError:
+        head = b""
+    if head.startswith(b"\x89PNG"):
+        return "image/png"
+    if head.startswith(b"\xff\xd8\xff"):
+        return "image/jpeg"
+    if head.startswith(b"RIFF") and b"WEBP" in head:
+        return "image/webp"
     return AVATAR_TYPES.get(path.suffix.lower(), "image/jpeg")
 
 
