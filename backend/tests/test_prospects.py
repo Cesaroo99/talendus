@@ -195,7 +195,7 @@ def test_personalized_send_dedup_and_isolation(client):
 
 def test_greeting_without_person_name_and_attachment_note(client):
     from app.models.prospect import Prospect
-    from app.services.prospects import attachment_note, context_for, fill_tokens, get_template
+    from app.services.prospects import append_attachment_note, attachment_note, context_for, fill_tokens, get_template
 
     admin = promote_admin(client, "crm-copy@example.com")
     admin_h = auth_header(admin)
@@ -221,7 +221,23 @@ def test_greeting_without_person_name_and_attachment_note(client):
     assert first["subject"].startswith("Usine Nord")
     assert first["body"].startswith("Bonjour,")
     assert "Bonjour Usine Nord" not in first["body"]
-    assert "honoraires" in first["body"].lower() or "16 %" in first["body"]
+    assert "16 %" not in first["body"]
+    assert "honoraires" not in first["body"].lower()
+    assert "paiement" not in first["body"].lower()
+    assert "payé" not in first["body"].lower()
+    assert "étapes" not in first["body"].lower()
+    assert emp["login_link"].startswith("https://talendus.ca/espace-employeur.html#/login")
+    assert "info.usine%40example.com" in emp["login_link"]
+    assert emp["register_link"].startswith("https://talendus.ca/espace-employeur.html#/register")
+    assert "role=EMPLOYER" in emp["register_link"]
+    early_keys = {"emp_first_contact", "emp_followup", "emp_discovery", "emp_mandate", "emp_search_start"}
+    for row in proposals:
+        blob = (row["subject"] + "\n" + row["body"]).lower()
+        assert "16 %" not in row["subject"] + row["body"]
+        assert "je vous enverrai" not in blob
+        if row["key"] in early_keys:
+            assert "paiement" not in blob
+            assert "honoraires" not in blob
     cand = client.post(
         "/api/admin/prospects",
         headers=admin_h,
@@ -233,13 +249,28 @@ def test_greeting_without_person_name_and_attachment_note(client):
     assert opener["body"].startswith("Bonjour,")
     assert opener["subject"].startswith("Talendus")
     assert "sans frais" in opener["subject"]
+    assert "16 %" not in opener["body"]
     note = attachment_note(
         [EmailAttachment(filename="mandat-usine-nord.pdf", data=b"%PDF", mime="application/pdf", kind="contract")],
-        {"employer_link": "https://talendus.ca/employeur.html", "info": "info@talendus.ca"},
+        {
+            "login_link": emp["login_link"],
+            "register_link": emp["register_link"],
+            "info": "info@talendus.ca",
+        },
     )
-    assert note.startswith("Pièce jointe — mandat")
+    assert "trouverez ceci en pièce jointe" in note.lower()
+    assert "mandat-usine-nord.pdf" in note
     assert "signer" in note.lower()
-    assert "16 %" in note
+    assert "16 %" not in note
+    assert "honoraires" not in note.lower()
+    assert emp["login_link"] in note
+    assert emp["register_link"] in note
+    already = append_attachment_note(
+        "Bonjour,\n\n" + note,
+        [EmailAttachment(filename="mandat-usine-nord.pdf", data=b"%PDF", mime="application/pdf", kind="contract")],
+        {"login_link": emp["login_link"], "register_link": emp["register_link"]},
+    )
+    assert already.count("trouverez ceci en pièce jointe") == 1
     tpl = get_template("emp_mandate")
     ctx = context_for(
         Prospect(side="employer", email="x@y.z", company_name="Usine Nord", first_name=""),
@@ -248,12 +279,14 @@ def test_greeting_without_person_name_and_attachment_note(client):
     body = fill_tokens(tpl["body"], ctx)
     assert body.startswith("Bonjour,")
     assert "au sujet de Usine Nord" in body
+    assert "16 %" not in body
+    assert "espace-employeur.html#/login?email=x%40y.z" in ctx["login_link"]
     from app.services.email import signed_html
 
-    html = signed_html("Bonjour,\n\nPièce jointe — facture\nLe fichier F-2026-014.pdf est joint.")
+    html = signed_html("Bonjour,\n\nVous trouverez ceci en pièce jointe : F-2026-014.pdf\nOuvrez le fichier.")
     assert "#0b1f3a" in html
     assert "#ff6b00" in html
-    assert "Pièce jointe" in html
+    assert "pièce jointe" in html.lower()
     assert "cid:talendus-signature@talendus.ca" in html
 
 
@@ -289,5 +322,18 @@ def test_admin_ui_has_prospects_module():
     assert "/admin/prospects/p/" in js
     assert "/admin/prospects/broadcast" in js
     assert "cand_first_contact" not in js
+    assert "Vous trouverez ceci en pièce jointe" in js
+    assert "syncAttachmentNotes" in js
+    assert "lire, signer ou payer" not in js
     assert '"prospects"' in store
     assert "lea.super@talendus.ca" not in js
+    templates = Path(__file__).resolve().parents[2] / "backend" / "app" / "emails" / "templates"
+    to_sign = (templates / "contract_to_sign.txt").read_text(encoding="utf-8")
+    reminder = (templates / "contract_reminder.txt").read_text(encoding="utf-8")
+    assert "Honoraires :" not in to_sign
+    assert "Honoraires :" not in reminder
+    assert "{{percent}}" not in to_sign
+    assert "{{percent}}" not in reminder
+    auth = (Path(__file__).resolve().parents[2] / "assets" / "js" / "auth-gate.js").read_text(encoding="utf-8")
+    assert "prefEmail" in auth
+    assert 'autocomplete="username" value="' in auth

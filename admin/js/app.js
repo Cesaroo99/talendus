@@ -1975,11 +1975,15 @@
       var opts = proposals.map(function (p) {
         return '<option value="' + U.esc(p.key) + '">' + U.esc(p.label) + (p.already_sent ? " — déjà envoyé" : "") + "</option>";
       }).join("");
+      var attFilename = function (label, fallback) {
+        var name = String(label || fallback || "document").trim() || fallback;
+        return /\.pdf$/i.test(name) ? name : name + ".pdf";
+      };
       var inv = (attachments.invoices || []).map(function (i) {
-        return '<label class="check"><input type="checkbox" data-inv="' + U.esc(i.id) + '"> Facture ' + U.esc(i.label) + "</label>";
+        return '<label class="check"><input type="checkbox" data-inv="' + U.esc(i.id) + '" data-filename="' + U.esc(attFilename(i.label, "facture")) + '"> Facture ' + U.esc(i.label) + "</label>";
       }).join("");
       var cts = (attachments.contracts || []).map(function (c) {
-        return '<label class="check"><input type="checkbox" data-ct="' + U.esc(c.id) + '"> ' + U.esc(c.label) + "</label>";
+        return '<label class="check"><input type="checkbox" data-ct="' + U.esc(c.id) + '" data-filename="' + U.esc(attFilename("mandat-" + (c.label || "talendus"), "mandat")) + '"> ' + U.esc(c.label) + "</label>";
       }).join("");
       U.modal({
         title: ids.length > 1 ? "Envoyer à " + ids.length + " fiches" : "Écrire à " + prospectLabel(detail),
@@ -1990,12 +1994,53 @@
           '<p class="sub" id="pc-intent"></p>' +
           '<label>Sujet</label><input id="pc-subject">' +
           '<label>Message</label><textarea id="pc-body" rows="8"></textarea>' +
-          (inv || cts ? "<p class='sub'>Pièces jointes pour ce destinataire. Le courriel expliquera quoi faire avec (lire, signer ou payer).</p>" + inv + cts : "") +
+          (inv || cts ? "<p class='sub'>Cochez une pièce jointe : le message dira ce qui est joint, quoi en faire, et comment (connexion ou création de compte).</p>" + inv + cts : "") +
           '<label class="check"><input type="checkbox" id="pc-force"> Renvoyer ce modèle même s’il a déjà été envoyé</label>' +
           "</div>",
         footer: '<button class="btn btn-ghost" data-close>Annuler</button><button class="btn btn-orange" id="pc-send">Envoyer</button>',
         onMount: function (box, close) {
           var tpl = box.querySelector("#pc-tpl");
+          var stripAttachmentNotes = function (text) {
+            var src = text || "";
+            var markers = ["Vous trouverez ceci en pièce jointe", "Pièce jointe —", "Pièce jointe\n"];
+            var cut = -1;
+            markers.forEach(function (m) {
+              var i = src.indexOf(m);
+              if (i >= 0 && (cut < 0 || i < cut)) cut = i;
+            });
+            return (cut < 0 ? src : src.slice(0, cut)).replace(/\s+$/, "");
+          };
+          var accountHowto = function () {
+            var login = detail.login_link || "";
+            var register = detail.register_link || "";
+            return "Comment faire :\n" +
+              "- Si vous avez déjà un compte Talendus, connectez-vous ici :\n" + login + "\n" +
+              "- Si vous n’avez pas encore créé de compte, ouvrez ce lien : il préremplit votre courriel et crée votre accès :\n" + register;
+          };
+          var noteFor = function (kind, filename) {
+            var hook = "Vous trouverez ceci en pièce jointe : " + filename;
+            var howto = accountHowto();
+            if (kind === "invoice") {
+              return hook + "\n\nÀ faire :\n- ouvrir le PDF et vérifier le montant\n- régler par virement ou chèque, selon les conditions du mandat signé\n- nous écrire si une ligne vous interroge\n\n" + howto;
+            }
+            if (kind === "contract") {
+              return hook + "\n\nÀ faire :\n- ouvrir le PDF et le lire en entier\n- le signer dans votre espace (plus simple que d’imprimer)\n- nous répondre « signé » une fois c’est fait\n\n" + howto;
+            }
+            return hook + "\n\nÀ faire : ouvrez le fichier, puis répondez si une suite est demandée.\n\n" + howto;
+          };
+          var syncAttachmentNotes = function () {
+            var bodyEl = box.querySelector("#pc-body");
+            if (!bodyEl) return;
+            var notes = [];
+            box.querySelectorAll("[data-inv]:checked").forEach(function (el) {
+              notes.push(noteFor("invoice", el.getAttribute("data-filename") || "facture.pdf"));
+            });
+            box.querySelectorAll("[data-ct]:checked").forEach(function (el) {
+              notes.push(noteFor("contract", el.getAttribute("data-filename") || "mandat.pdf"));
+            });
+            var core = stripAttachmentNotes(bodyEl.value || "");
+            bodyEl.value = notes.length ? core + "\n\n" + notes.join("\n\n") : core;
+          };
           var apply = function () {
             var found = proposals.filter(function (p) { return p.key === tpl.value; })[0];
             box.querySelector("#pc-intent").textContent = found ? found.intent : "Rédigez un message unique. Le même sujet ne pourra pas être renvoyé à la même personne.";
@@ -2003,8 +2048,12 @@
               box.querySelector("#pc-subject").value = found.subject;
               box.querySelector("#pc-body").value = found.body;
             }
+            syncAttachmentNotes();
           };
           tpl.onchange = apply;
+          box.querySelectorAll("[data-inv], [data-ct]").forEach(function (el) {
+            el.onchange = syncAttachmentNotes;
+          });
           apply();
           box.querySelector("#pc-send").onclick = function () {
             var key = tpl.value;

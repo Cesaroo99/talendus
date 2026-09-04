@@ -193,6 +193,7 @@
 
     var pending = null;
     var authRole = "";
+    var prefEmail = "";
     var providers = { password: true, google: false, linkedin: false, google_client_id: "" };
     var providersReady = api.providers().then(function (json) {
       providers = Object.assign(providers, json.data || {});
@@ -345,11 +346,11 @@
 
     function bindAuthForm(mode, role) {
       overlay.querySelectorAll("[data-auth-goto]").forEach(function (btn) {
-        btn.onclick = function () { openAuth(btn.getAttribute("data-auth-goto"), { role: role }); };
+        btn.onclick = function () { openAuth(btn.getAttribute("data-auth-goto"), { role: role, email: prefEmail }); };
       });
       overlay.querySelectorAll("[data-auth-role]").forEach(function (btn) {
         btn.onclick = function () {
-          openAuth("register", { role: btn.getAttribute("data-auth-role") });
+          openAuth("register", { role: btn.getAttribute("data-auth-role"), email: prefEmail });
         };
       });
       var closeBtn = overlay.querySelector("[data-auth-close]");
@@ -416,6 +417,7 @@
 
     function openAuth(mode, opts) {
       opts = opts || {};
+      if (opts.email) prefEmail = String(opts.email || "").trim();
       var role = (opts.role || authRole || defaultRole()).toUpperCase();
       if (pending && pending.type === "save") role = "CANDIDATE";
       if (role !== "EMPLOYER") role = "CANDIDATE";
@@ -444,7 +446,7 @@
             '<p class="tl-kicker">' + esc(t.login) + "</p>" +
             "<h2>" + esc(t.forgotTitle) + "</h2>" +
             '<form class="tl-form tl-auth-form" id="tl-auth-forgot">' +
-              "<label>" + esc(t.email) + '</label><input name="email" type="email" required autocomplete="email">' +
+              "<label>" + esc(t.email) + '</label><input name="email" type="email" required autocomplete="email" value="' + esc(opts.email || prefEmail || "") + '">' +
               '<button class="tl-btn tl-btn-lg" type="submit">' + esc(t.sendReset) + "</button>" +
               '<div class="tl-success"></div></form>' +
             '<p class="tl-auth-switch"><button type="button" class="tl-text-btn" data-auth-goto="login">' + esc(t.back) + "</button></p>",
@@ -490,7 +492,7 @@
                 "<div><label>" + esc(t.last) + '</label><input name="last_name" required autocomplete="family-name"></div>' +
               "</div>" +
               (isHire ? "<label>" + esc(t.company) + '</label><input name="company_name" required autocomplete="organization">' : "") +
-              "<label>" + esc(t.email) + '</label><input name="email" type="email" required autocomplete="email" value="' + esc(opts.email || "") + '">' +
+              "<label>" + esc(t.email) + '</label><input name="email" type="email" required autocomplete="email" value="' + esc(opts.email || prefEmail || "") + '">' +
               "<label>" + esc(t.password) + '</label><input name="password" type="password" required minlength="8" autocomplete="new-password">' +
               '<button class="tl-btn tl-btn-lg" type="submit">' + esc(t.submitRegister) + "</button>" +
               '<div class="tl-success"></div></form>' + oauthBlock() +
@@ -502,7 +504,7 @@
             "<h2>" + esc(t.login) + "</h2>" +
             '<p class="tl-auth-lead">' + esc(savingJob ? t.saveNeedCandidate : t.loginLead) + "</p>" +
             '<form class="tl-form tl-auth-form" id="tl-auth-login">' +
-              "<label>" + esc(t.email) + '</label><input name="email" type="email" required autocomplete="username">' +
+              "<label>" + esc(t.email) + '</label><input name="email" type="email" required autocomplete="username" value="' + esc(opts.email || prefEmail || "") + '">' +
               "<label>" + esc(t.password) + '</label><input name="password" type="password" required minlength="8" autocomplete="current-password">' +
               '<p class="tl-auth-forgot"><button type="button" class="tl-text-btn" data-auth-goto="forgot">' + esc(t.forgot) + "</button></p>" +
               '<button class="tl-btn tl-btn-lg" type="submit">' + esc(t.submitLogin) + "</button>" +

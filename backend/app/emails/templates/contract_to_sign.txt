@@ -4,7 +4,6 @@ Subject: Mandat Talendus à lire et signer — {{company}}
 Un mandat de recrutement Talendus vous a été transmis pour {{company}}.
 
 Type : {{type}}
-Honoraires : {{percent}} %
 
-Ouvrez votre espace employeur, lisez le mandat en entier, puis signez électroniquement (signature interne Talendus, sans DocuSign) :
+Ouvrez votre espace employeur, lisez le mandat en entier (les conditions y sont écrites), puis signez électroniquement (signature interne Talendus, sans DocuSign) :
 {{link}}
