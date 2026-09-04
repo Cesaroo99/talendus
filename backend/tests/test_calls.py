@@ -240,6 +240,7 @@ def test_candidate_shell_loads_call_engine():
     assert "signalIsStale" in engine
     assert "replacePc" in engine
     assert "data-call-retry" in engine
+    assert "native ? 12 : 4" in engine
     assert "interviewStepsLead" in account
     assert "can_start_call" in account
     assert "tl-profile-stack" in account
