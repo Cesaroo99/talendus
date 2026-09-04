@@ -1627,31 +1627,32 @@
         <div class="card card-pad smtp-guide">
           <div class="card-head"><h3>Courriel opérationnel</h3></div>
           <p class="sub">Tous les e-mails destinés aux recruteurs et aux candidats partent de <b>info@talendus.ca</b> et apparaissent aussi dans le fil de messages. Un clic admin ou recruteur suffit : le message est rédigé automatiquement, avec le lien vers l’action.</p>
-          <h4>Étapes pour activer l’envoi</h4>
+          <h4>Google Workspace (Google Pro) — à faire une seule fois</h4>
+          <p class="sub">Talendus envoie via SMTP de la boîte <b>info@talendus.ca</b>. On utilise un <b>mot de passe d’application</b>, jamais le mot de passe de connexion Google.</p>
           <ol>
-            <li>Ouvrez la boîte <b>info@talendus.ca</b> chez votre hébergeur (Google Workspace, OVH, Microsoft 365…).</li>
-            <li>Autorisez SMTP : mot de passe d’application ou relais SMTP. Ne mettez jamais le mot de passe du compte dans le code, seulement ici ou dans les variables d’environnement du serveur.</li>
-            <li>Remplissez le formulaire ci-dessous, enregistrez, puis cliquez sur <b>Envoyer un test</b>.</li>
-            <li>Vérifiez la boîte info@ (et les spams). Le journal sous le formulaire doit passer à « envoyé ».</li>
+            <li>Vérifiez que le domaine <code>talendus.ca</code> est bien dans Google Workspace et que la boîte <code>info@talendus.ca</code> existe (console d’admin → Annuaire → Utilisateurs).</li>
+            <li>Connectez-vous à la console d’admin Google (<code>admin.google.com</code>) avec un super-admin.</li>
+            <li>Sécurité → Authentification → <b>Validation en 2 étapes</b> : autorisez les utilisateurs à l’activer (si ce n’est pas déjà fait).</li>
+            <li>Sécurité → Authentification → <b>Mots de passe d’application</b> : autorisez les utilisateurs à en créer.</li>
+            <li>Ouvrez Gmail avec <code>info@talendus.ca</code> → Paramètres (engrenage) → Voir tous les paramètres → <b>Transfert et POP/IMAP</b> → activez <b>IMAP</b> → Enregistrer.</li>
+            <li>Toujours connecté en <code>info@talendus.ca</code>, allez sur <code>myaccount.google.com/security</code> → activez la <b>validation en 2 étapes</b> si elle n’est pas déjà active.</li>
+            <li>Puis <code>myaccount.google.com/apppasswords</code> → créer un mot de passe d’application nommé <b>Talendus</b>. Google affiche 16 lettres. Copiez-les (sans espaces).</li>
+            <li>Dans le formulaire ci-dessous, collez exactement :
+              <ul>
+                <li>Activer l’envoi : <b>Oui — envoyer vraiment</b></li>
+                <li>Serveur : <code>smtp.gmail.com</code></li>
+                <li>Port : <code>587</code></li>
+                <li>Identifiant : <code>info@talendus.ca</code></li>
+                <li>Mot de passe : les 16 lettres du mot de passe d’application</li>
+                <li>Expéditeur : <code>Talendus &lt;info@talendus.ca&gt;</code></li>
+                <li>TLS : <b>oui</b></li>
+              </ul>
+            </li>
+            <li>Cliquez <b>Enregistrer le courriel</b>, puis <b>Envoyer un test</b>.</li>
+            <li>Ouvrez Gmail <code>info@talendus.ca</code> (et les spams). Le journal sous le formulaire doit passer à « SENT ». Les réponses des candidats arriveront dans cette même boîte.</li>
           </ol>
-          <h4>Google Workspace (Gmail professionnel)</h4>
-          <ol>
-            <li>Compte Google de <code>info@talendus.ca</code> → Sécurité → Validation en 2 étapes → Mots de passe d’application.</li>
-            <li>Serveur <code>smtp.gmail.com</code>, port <code>587</code>, TLS = oui, identifiant = <code>info@talendus.ca</code>, mot de passe = le mot de passe d’application (16 caractères).</li>
-            <li>Expéditeur : <code>Talendus &lt;info@talendus.ca&gt;</code>.</li>
-          </ol>
-          <h4>OVH / hébergeur MX</h4>
-          <ol>
-            <li>Espace client OVH → E-mails → <code>info@talendus.ca</code>.</li>
-            <li>Serveur souvent <code>ssl0.ovh.net</code> (ou celui indiqué dans l’aide OVH), port <code>587</code>, TLS = oui.</li>
-            <li>Identifiant = l’adresse complète, mot de passe = celui de la boîte.</li>
-          </ol>
-          <h4>Autre SMTP</h4>
-          <ol>
-            <li>Demandez à l’hébergeur : hôte, port (587 STARTTLS ou 465), identifiant, mot de passe.</li>
-            <li>L’expéditeur doit être une adresse autorisée du domaine <code>talendus.ca</code>, idéalement <code>info@talendus.ca</code>.</li>
-          </ol>
-          <p class="sub">Variante serveur : les mêmes valeurs existent en variables <code>EMAIL_*</code> (Render, etc.). Si un champ admin est rempli, il prime sur la variable. Laisser « Activer l’envoi » vide conserve le réglage du serveur.</p>
+          <p class="sub">Si « Mots de passe d’application » n’apparaît pas : la validation en 2 étapes n’est pas encore active sur info@, ou l’admin Workspace ne l’a pas autorisée. Les deux doivent être ouvertes avant de réessayer le lien <code>myaccount.google.com/apppasswords</code>.</p>
+          <p class="sub">Variante serveur (Render) : les mêmes valeurs existent en variables <code>EMAIL_*</code>. Un champ rempli ici prime sur la variable.</p>
         </div>
         <div class="card card-pad" style="margin-top:16px">
           <div class="card-head"><h3>Réglages SMTP</h3></div>

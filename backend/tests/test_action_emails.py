@@ -164,7 +164,8 @@ def test_admin_ui_explains_smtp_steps():
     js = (ROOT / "admin" / "js" / "app.js").read_text(encoding="utf-8")
     assert 'data-stab="email"' in js
     assert "Google Workspace" in js
-    assert "ssl0.ovh.net" in js
+    assert "smtp.gmail.com" in js
+    assert "apppasswords" in js
     assert "info@talendus.ca" in js
     assert "adm-smtp-form" in js
     assert "Envoyer un test" in js
