@@ -64,6 +64,8 @@ def list_prospects(
     rows = svc.list_prospects(db, side=side, stage=stage, q=q, source=source, city=city, sector=sector)
     if any(row.side != side for row in rows):
         raise AppError(500, "Les deux bases ne doivent pas être mélangées.", "SIDE_MIXED")
+    # sync_known_people crée des fiches : sans commit, Écrire / Fiche 404 « Prospect introuvable ».
+    db.commit()
     sent = svc.sent_keys_map(db, [row.id for row in rows])
     options = svc.filter_options(db, side)
     return ok(
@@ -80,11 +82,13 @@ def list_prospects(
 
 
 @router.get("/templates")
-def templates(side: str, _staff_user: User = Depends(_staff)):
-    return ok(svc.catalog(side))
+@router.get("/catalog")
+def templates(side: str | None = None, _staff_user: User = Depends(_staff)):
+    return ok(svc.catalog(side) if side else svc.catalog())
 
 
 @router.post("/broadcast")
+@router.post("/send-bulk")
 def broadcast(payload: ProspectBulkSendIn, db: Session = Depends(get_db), staff: User = Depends(_staff)):
     result = svc.send_bulk(db, staff, payload.ids, _req(payload))
     db.commit()
@@ -102,28 +106,32 @@ def create_prospect(payload: ProspectIn, db: Session = Depends(get_db), staff: U
     return ok(svc.serialize_prospect(row), message="Prospect ajouté.")
 
 
-@router.get("/p/{prospect_id}")
-def get_prospect(prospect_id: str, db: Session = Depends(get_db), staff: User = Depends(_staff)):
-    return ok(_detail(db, staff, prospect_id))
-
-
-@router.patch("/p/{prospect_id}")
-def patch_prospect(prospect_id: str, payload: ProspectPatchIn, db: Session = Depends(get_db), _staff_user: User = Depends(_staff)):
-    row = svc.patch_prospect(db, prospect_id, payload.model_dump(exclude_unset=True))
-    db.commit()
-    db.refresh(row)
-    return ok(svc.serialize_prospect(row), message="Prospect mis à jour.")
-
-
 @router.get("/p/{prospect_id}/proposals")
+@router.get("/{prospect_id}/proposals")
 def proposals(prospect_id: str, db: Session = Depends(get_db), staff: User = Depends(_staff)):
     row = svc.get_prospect(db, prospect_id)
     return ok(svc.proposals_for(db, row, staff))
 
 
 @router.post("/p/{prospect_id}/send")
+@router.post("/{prospect_id}/send")
 def send_one(prospect_id: str, payload: ProspectSendIn, db: Session = Depends(get_db), staff: User = Depends(_staff)):
     row = svc.get_prospect(db, prospect_id)
     result = svc.send_to_prospect(db, staff, row, _req(payload))
     db.commit()
     return ok(result, message=f"Envoyé à {result['to_email']}.")
+
+
+@router.get("/p/{prospect_id}")
+@router.get("/{prospect_id}")
+def get_prospect(prospect_id: str, db: Session = Depends(get_db), staff: User = Depends(_staff)):
+    return ok(_detail(db, staff, prospect_id))
+
+
+@router.patch("/p/{prospect_id}")
+@router.patch("/{prospect_id}")
+def patch_prospect(prospect_id: str, payload: ProspectPatchIn, db: Session = Depends(get_db), _staff_user: User = Depends(_staff)):
+    row = svc.patch_prospect(db, prospect_id, payload.model_dump(exclude_unset=True))
+    db.commit()
+    db.refresh(row)
+    return ok(svc.serialize_prospect(row), message="Prospect mis à jour.")

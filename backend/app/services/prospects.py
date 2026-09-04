@@ -529,11 +529,17 @@ def sent_keys_map(db: Session, prospect_ids: list[str]) -> dict[str, list[str]]:
     return out
 
 
+RESERVED_PATHS = frozenset({"catalog", "templates", "broadcast", "send-bulk", "sync", "p"})
+
+
 def get_prospect(db: Session, prospect_id: str) -> Prospect:
-    row = db.get(Prospect, prospect_id)
-    if not row:
+    key = (prospect_id or "").strip()
+    if not key or key.lower() in RESERVED_PATHS:
         raise AppError(404, "Prospect introuvable.", "NOT_FOUND")
-    return row
+    row = db.get(Prospect, key)
+    if row:
+        return row
+    raise AppError(404, "Prospect introuvable.", "NOT_FOUND")
 
 
 def create_prospect(db: Session, actor: User, data: dict) -> Prospect:
