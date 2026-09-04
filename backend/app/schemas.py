@@ -537,6 +537,10 @@ class AdminCandidatePatchIn(BaseModel):
     work_status: str | None = None
     desired_salary_min: int | None = None
     desired_salary_max: int | None = None
+    mobility: str | None = None
+    contract_type: str | None = None
+    work_preferences: str | None = None
+    job_search_status: JobSearchStatus | None = None
     pipeline_status: str | None = Field(default=None, max_length=40)
     assigned_recruiter_id: str | None = None
 
@@ -711,6 +715,10 @@ class ProspectPatchIn(BaseModel):
     source_detail: str | None = None
     message: str | None = None
     assigned_recruiter_id: str | None = None
+
+
+class ProspectNoteIn(BaseModel):
+    text: str = Field(min_length=1, max_length=4000)
 
 
 class ProspectSendIn(BaseModel):

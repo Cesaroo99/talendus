@@ -45,6 +45,24 @@
   const JOB_CONTRACTS = ["Permanent", "Temporaire", "Contractuel", "Saisonnier", "Stage"];
   const JOB_HOURS = ["Temps plein", "Temps partiel", "Sur appel", "4 jours / 3"];
   const JOB_SHIFTS = ["Quart de jour", "Quart de soir", "Quart de nuit", "Quarts rotatifs", "Fin de semaine", "Quarts brisés"];
+  const APP_STATUSES = [
+    ["SUBMITTED", "Reçue"],
+    ["RECEIVED", "Reçue"],
+    ["UNDER_REVIEW", "En étude"],
+    ["SHORTLISTED", "Présélection"],
+    ["INTERVIEW", "Entretien Talendus"],
+    ["SECOND_INTERVIEW", "Entretien client"],
+    ["OFFER_SENT", "Offre envoyée"],
+    ["HIRED", "Embauché"],
+    ["REJECTED", "Refusé"],
+    ["WITHDRAWN", "Retiré"]
+  ];
+  const SEARCH_STATUSES = {
+    ACTIVE: "En recherche active",
+    PASSIVE: "Ouvert aux opportunités",
+    NOT_LOOKING: "Pas en recherche",
+    HIRED: "Placé"
+  };
 
   function jobSelect(label, name, values, selected) {
     return U.field(label, name, { options: values, selected: selected || values[0] }, "select");
@@ -141,6 +159,7 @@
       ["content", "Contenu", "fa-solid fa-pen-nib"],
       ["finance", "Finance", "fa-solid fa-file-invoice-dollar"],
       ["analytics", "Statistiques", "fa-solid fa-chart-line"],
+      ["journal", "Journal", "fa-solid fa-clock-rotate-left"],
       ["services", "Services", "fa-solid fa-plug"],
       ["notifications", "Notifications", "fa-solid fa-bell"]
     ]],
@@ -153,7 +172,7 @@
   function route() {
     var h = (location.hash || "#/dashboard").replace(/^#\/?/, "");
     var parts = h.split("/").filter(Boolean);
-    return { name: parts[0] || "dashboard", id: parts[1] || "" };
+    return { name: parts[0] || "dashboard", id: parts[1] || "", extra: parts[2] || "" };
   }
 
   function go(hash) { location.hash = hash; }
@@ -563,23 +582,40 @@
     var tabs = { profil: "Profil", cv: "CV & documents", histo: "Candidatures", entretiens: "Entretiens", notes: "Notes internes", interactions: "Historique" };
     var body = "";
     if (detailTab === "profil") {
-      body = `<div class="form-grid">
-        <div class="card card-pad"><h3>Informations personnelles</h3>
+      var salary = (typeof c.salaryMin === "number" && c.salaryMin < 1000 && c.salaryMin > 0)
+        ? (c.salaryMin + "–" + (c.salaryMax || "?") + " $/h")
+        : (c.salaryMin || c.salaryMax ? U.money(c.salaryMin) + " – " + U.money(c.salaryMax) : "—");
+      body = `<div class="fiche-kpis">
+        <div class="fiche-kpi"><span>Recherche</span><b>${U.esc(SEARCH_STATUSES[c.jobSearchStatus] || c.jobSearchStatus || "—")}</b></div>
+        <div class="fiche-kpi"><span>Disponibilité</span><b>${U.esc(c.availability || "—")}</b></div>
+        <div class="fiche-kpi"><span>Quart</span><b>${U.esc(c.shift || "—")}</b></div>
+        <div class="fiche-kpi"><span>Salaire visé</span><b>${U.esc(salary)}</b></div>
+        <div class="fiche-kpi"><span>Compte</span><b>${c.accountActive === false ? "Inactif" : "Actif"}${c.emailVerified ? " · vérifié" : ""}</b></div>
+      </div>
+      <div class="form-grid">
+        <div class="card card-pad"><h3>Identité</h3>
           <div class="row"><span>Nom</span><b>${U.esc(c.firstName + " " + c.lastName)}</b></div>
-          <div class="row"><span>Ville</span><b>${U.esc(c.city)}</b></div>
-          <div class="row"><span>Langues</span><b>${U.esc(candLangs(c).join(", "))}</b></div>
+          <div class="row"><span>Ville</span><b>${U.esc([c.city, c.province].filter(Boolean).join(", ") || "—")}</b></div>
+          <div class="row"><span>Adresse</span><b>${U.esc(c.address || "—")}</b></div>
+          <div class="row"><span>Langues</span><b>${U.esc(candLangs(c).join(", ") || "—")}</b></div>
+          <div class="row"><span>Dernière connexion</span><b>${c.lastLoginAt ? U.dateFr(c.lastLoginAt) : "Jamais"}</b></div>
         </div>
         <div class="card card-pad"><h3>Coordonnées</h3>
           <div class="row"><span>Courriel</span><b>${U.esc(c.email)}</b></div>
-          <div class="row"><span>Téléphone</span><b>${U.esc(c.phone)}</b></div>
+          <div class="row"><span>Téléphone</span><b>${U.esc(c.phone || "—")}</b></div>
         </div>
-        <div class="card card-pad full"><h3>Profil professionnel</h3><p>${U.esc(c.bio)}</p>
-          <p><b>Compétences :</b> ${c.skills.map(function (s) { return '<span class="badge">' + U.esc(s) + "</span>"; }).join(" ")}</p>
-          <p><b>Disponibilité :</b> ${U.esc(c.availability)} · <b>Quart :</b> ${U.esc(c.shift)}</p>
-          <p><b>Préférences :</b> ${U.esc(c.sector)} · ${typeof c.salaryMin === "number" && c.salaryMin < 1000 ? c.salaryMin + "–" + c.salaryMax + " $/h" : U.money(c.salaryMin) + " – " + U.money(c.salaryMax)}</p>
+        <div class="card card-pad full"><h3>Attentes et critères de placement</h3>
+          <div class="row"><span>Poste visé</span><b>${U.esc(c.title || "—")}</b></div>
+          <div class="row"><span>Secteur</span><b>${U.esc(c.sector || "—")}</b></div>
+          <div class="row"><span>Type de contrat</span><b>${U.esc(c.contractType || "—")}</b></div>
+          <div class="row"><span>Mobilité</span><b>${U.esc(c.mobility || "—")}</b></div>
+          <div class="row"><span>Statut de travail</span><b>${U.esc(c.workStatus || "—")}</b></div>
+          <div class="row"><span>Niveau</span><b>${U.esc(c.level || c.educationLevel || "—")}</b></div>
+          <p>${U.esc(c.workPreferences || c.bio || "")}</p>
+          <p><b>Compétences :</b> ${(c.skills || []).map(function (s) { return '<span class="badge">' + U.esc(s) + "</span>"; }).join(" ") || "—"}</p>
         </div>
-        <div class="card card-pad"><h3>Expériences</h3>${c.experiences.map(function (e) { return "<p><b>" + U.esc(e.role) + "</b> — " + U.esc(e.company) + "<br><span style='color:var(--steel)'>" + U.esc(e.years) + "</span></p>"; }).join("") || "<p>—</p>"}</div>
-        <div class="card card-pad"><h3>Formations</h3>${c.education.map(function (e) { return "<p><b>" + U.esc(e.diploma) + "</b> — " + U.esc(e.school) + " (" + e.year + ")</p>"; }).join("") || "<p>—</p>"}</div>
+        <div class="card card-pad"><h3>Expériences</h3>${(c.experiences || []).map(function (e) { return "<p><b>" + U.esc(e.role) + "</b> — " + U.esc(e.company) + "<br><span style='color:var(--steel)'>" + U.esc(e.years) + "</span></p>"; }).join("") || "<p>—</p>"}</div>
+        <div class="card card-pad"><h3>Formations</h3>${(c.education || []).map(function (e) { return "<p><b>" + U.esc(e.diploma) + "</b> — " + U.esc(e.school) + " (" + e.year + ")</p>"; }).join("") || "<p>—</p>"}</div>
       </div>`;
     } else if (detailTab === "cv") {
       var docRows = docs.map(function (d) {
@@ -594,11 +630,15 @@
         '<button class="btn btn-orange" type="submit">Ajouter un document</button></form></div>';
     } else if (detailTab === "histo") {
       var apps = c.applications || [];
-      body = `<div class="card card-pad"><h3>Historique des candidatures</h3>
+      body = `<div class="card card-pad"><h3>Demandes et candidatures à gérer</h3>
         ${apps.length ? apps.map(function (a) {
           var job = TLStore.job(a.jobId) || {};
-          return "<p><a href=\"#/jobs/" + a.jobId + "\">" + U.esc(a.jobTitle || job.title || "Offre") + "</a> — " + U.badge(a.status) + " · " + U.dateFr(a.createdAt) + "</p>";
-        }).join("") : "<p>Offre liée : <a href=\"#/jobs/" + c.jobId + "\">" + U.esc((TLStore.job(c.jobId) || {}).title || "—") + "</a></p>"}
+          var key = a.statusKey || "";
+          var opts = APP_STATUSES.map(function (s) {
+            return "<option value=\"" + s[0] + "\"" + (key === s[0] ? " selected" : "") + ">" + s[1] + "</option>";
+          }).join("");
+          return "<div class='manage-row'><div><a href=\"#/jobs/" + a.jobId + "\">" + U.esc(a.jobTitle || job.title || "Offre") + "</a><div class='sub'>" + U.dateFr(a.createdAt) + " · " + U.badge(a.status) + "</div></div><select data-app-status=\"" + U.esc(a.id || a.applicationId) + "\">" + opts + "</select></div>";
+        }).join("") : "<p>Aucune candidature. Offre liée : <a href=\"#/jobs/" + c.jobId + "\">" + U.esc((TLStore.job(c.jobId) || {}).title || "—") + "</a></p>"}
         <h3>Entreprises auxquelles il a été présenté</h3>
         <p>${client ? '<a href="#/clients/' + client.id + '">' + U.esc(client.name) + "</a> — " + U.badge(c.status) : "Pas encore présenté."}</p></div>`;
     } else if (detailTab === "entretiens") {
@@ -886,6 +926,7 @@
     var cands = S().candidates.filter(function (x) { return x.clientId === id; });
     var inv = S().invoices.filter(function (i) { return i.clientId === id; });
     var notes = S().notes.filter(function (n) { return n.entity === "client" && n.entityId === id; });
+    var needs = hiringList().filter(function (h) { return h.company_id === id; });
     return `
       <div class="crumbs"><a href="#/clients">Clients</a> / ${U.esc(c.name)}</div>
       <div class="page-head"><div><h1>${U.esc(c.name)}</h1><p>${U.esc(c.sector)} · ${U.esc(c.city)} · ${U.badge(c.status)}</p></div>
@@ -893,26 +934,45 @@
           <button class="btn btn-ghost" data-edit-client="${id}">Modifier</button>
           <button class="btn btn-orange" data-add-contract="${id}">Préparer le mandat</button>
         </div></div>
+      <div class="fiche-kpis">
+        <div class="fiche-kpi"><span>Compte</span><b>${c.accountActive === false ? "Inactif" : "Actif"}${c.emailVerified ? " · vérifié" : ""}</b></div>
+        <div class="fiche-kpi"><span>Besoins ouverts</span><b>${needs.filter(function (h) { return h.status !== "CLOSED"; }).length}</b></div>
+        <div class="fiche-kpi"><span>Mandats</span><b>${contracts.length}</b></div>
+        <div class="fiche-kpi"><span>Dernière connexion</span><b>${c.lastLoginAt ? U.dateFr(c.lastLoginAt) : "Jamais"}</b></div>
+      </div>
       <div class="grid grid-2">
         <div class="card card-pad"><h3>Informations générales</h3>
-          <div class="row"><span>Employés</span><b>${c.employees}</b></div>
+          <div class="row"><span>Employés</span><b>${c.employees || c.sizeLabel || "—"}</b></div>
           <div class="row"><span>Client depuis</span><b>${U.dateFr(c.since)}</b></div>
-          <div class="row"><span>Site</span><b>${U.esc(c.website)}</b></div>
-          <h3 style="margin-top:16px">Contacts</h3>
+          <div class="row"><span>Site</span><b>${U.esc(c.website || "—")}</b></div>
+          <div class="row"><span>Adresse</span><b>${U.esc([c.address, c.city, c.province].filter(Boolean).join(", ") || "—")}</b></div>
+          <h3 style="margin-top:16px">Contact / compte</h3>
           <p><b>${U.esc(c.contact)}</b><br>${U.esc(c.email)}<br>${U.esc(c.phone)}</p>
+          ${c.ownerEmail ? "<p class='sub'>Espace : " + U.esc(c.ownerEmail) + "</p>" : ""}
+          ${c.description ? "<p>" + U.esc(c.description) + "</p>" : ""}
         </div>
+        <div class="card card-pad"><h3>Attentes et besoins à gérer</h3>
+          ${needs.length ? needs.map(function (h) {
+            var opts = HIRING_STATUSES.map(function (s) {
+              return "<option value=\"" + s[0] + "\"" + (h.status === s[0] ? " selected" : "") + ">" + s[1] + "</option>";
+            }).join("");
+            return "<div class='manage-row'><div><a href='#/hiring/" + h.id + "'>" + U.esc(h.title) + "</a><div class='sub'>" + U.esc([h.location, h.shift, h.salary_display].filter(Boolean).join(" · ") || "—") + "</div></div><select data-hire-status='" + h.id + "'>" + opts + "</select></div>";
+          }).join("") : "<p>Aucun besoin transmis. Les demandes de l’espace employeur apparaissent ici.</p>"}
+        </div>
+      </div>
+      <div class="grid grid-2" style="margin-top:16px">
         <div class="card card-pad"><h3>Contrats</h3>${contracts.map(contractCard).join("") || "<p>Aucun mandat. Préparez-le, lisez-le, signez pour Talendus, puis envoyez-le au client. Vous suivrez ensuite reçu, ouvert et signé.</p>"}</div>
-      </div>
-      <div class="grid grid-2" style="margin-top:16px">
         <div class="card card-pad"><h3>Missions</h3>${missions.map(function (m) { return '<p><a href="#/missions/' + m.id + '">' + U.esc(m.title) + "</a> " + U.badge(m.status) + "</p>"; }).join("") || "<p>—</p>"}</div>
-        <div class="card card-pad"><h3>Offres d’emploi</h3>${jobs.map(function (j) { return '<p><a href="#/jobs/' + j.id + '">' + U.esc(j.title) + "</a> " + U.badge(j.status) + "</p>"; }).join("") || "<p>—</p>"}</div>
       </div>
       <div class="grid grid-2" style="margin-top:16px">
+        <div class="card card-pad"><h3>Offres d’emploi</h3>${jobs.map(function (j) { return '<p><a href="#/jobs/' + j.id + '">' + U.esc(j.title) + "</a> " + U.badge(j.status) + "</p>"; }).join("") || "<p>—</p>"}</div>
         <div class="card card-pad"><h3>Candidats présentés / placements</h3>${cands.map(function (x) { return '<p><a href="#/candidates/' + x.id + '">' + U.esc(x.firstName + " " + x.lastName) + "</a> " + U.badge(x.status) + "</p>"; }).join("") || "<p>—</p>"}</div>
-        <div class="card card-pad"><h3>Factures & paiements</h3>${inv.map(function (i) { return "<p>" + U.esc(i.id) + " · " + U.money(i.amount) + " " + U.badge(i.status) + "</p>"; }).join("") || "<p>—</p>"}</div>
       </div>
-      <div class="card card-pad" style="margin-top:16px"><h3>Notes internes</h3>${notes.map(function (n) { return '<div class="note">' + U.esc(n.text) + " <span class='meta'>· " + U.esc(n.at) + "</span></div>"; }).join("") || "<p>Aucune note.</p>"}
+      <div class="grid grid-2" style="margin-top:16px">
+        <div class="card card-pad"><h3>Factures & paiements</h3>${inv.map(function (i) { return "<p>" + U.esc(i.id) + " · " + U.money(i.amount) + " " + U.badge(i.status) + "</p>"; }).join("") || "<p>—</p>"}</div>
+        <div class="card card-pad"><h3>Notes internes</h3>${notes.map(function (n) { return '<div class="note">' + U.esc(n.text) + " <span class='meta'>· " + U.esc(n.at) + "</span></div>"; }).join("") || "<p>Aucune note.</p>"}
         <form id="client-note-form" style="margin-top:12px">${U.field("Nouvelle note", "text", "", "textarea", "full")}<button class="btn btn-orange" type="submit">Enregistrer la note</button></form>
+        </div>
       </div>`;
   }
 
@@ -1511,6 +1571,7 @@
   }
 
   function viewProspects() {
+    if (route().extra) return viewProspectFiche(route().extra);
     var side = prospectSide();
     if (viewProspects._side !== side) {
       viewProspects._side = side;
@@ -1659,7 +1720,9 @@
       btn.onclick = function () { openProspectComposer([btn.getAttribute("data-pmail")]); };
     });
     Array.from(root.querySelectorAll("[data-pfiche]")).forEach(function (btn) {
-      btn.onclick = function () { openProspectFiche(btn.getAttribute("data-pfiche")); };
+      btn.onclick = function () {
+        go("#/prospects/" + (prospectSide() === "employer" ? "employers" : "candidates") + "/" + btn.getAttribute("data-pfiche"));
+      };
     });
     Array.from(root.querySelectorAll("[data-pstage]")).forEach(function (sel) {
       sel.onchange = function () {
@@ -1701,55 +1764,200 @@
     });
   }
 
-  function openProspectFiche(id) {
-    if (!api() || !id) return;
-    api().request(prospectUrl(id)).then(function (json) {
+  function viewProspectFiche(id) {
+    var side = prospectSide();
+    return '<div class="crumbs"><a href="#/prospects/' + (side === "employer" ? "employers" : "candidates") + '">' +
+      (side === "employer" ? "Prospects employeurs" : "Prospects candidats") + "</a> / Fiche</div>" +
+      '<div id="prospect-fiche"><p class="sub">Chargement du dossier…</p></div>';
+  }
+
+  function ficheDash(value) {
+    return value ? U.esc(String(value)) : "—";
+  }
+
+  function openProspectEdit(id, d) {
+    var employer = d.side === "employer";
+    U.modal({
+      title: "Modifier la fiche",
+      body: '<form id="pf-edit" class="form-grid">' +
+        U.field("Prénom", "first_name", d.first_name || "") +
+        U.field("Nom", "last_name", d.last_name || "") +
+        (employer ? U.field("Entreprise", "company_name", d.company_name || "") : "") +
+        U.field(employer ? "Poste du contact" : "Métier", "title", d.title || "") +
+        U.field("Ville", "city", d.city || "") +
+        U.field("Secteur", "sector", d.sector || "") +
+        U.field("Téléphone", "phone", d.phone || "") +
+        U.field("Note interne", "message", d.message || "", "textarea", "full") +
+        "</form>",
+      footer: '<button class="btn btn-ghost" data-close>Annuler</button><button class="btn btn-orange" id="pf-update">Enregistrer</button>',
+      onMount: function (box, close) {
+        box.querySelector("#pf-update").onclick = function () {
+          var payload = U.formData(box.querySelector("#pf-edit"));
+          api().request(prospectUrl(id), { method: "PATCH", body: payload }).then(function () {
+            U.toast("Fiche enregistrée.", "ok");
+            close();
+            hydrateProspectFiche(id);
+          }).catch(function (err) { U.toast((err && err.message) || "Enregistrement impossible.", "err"); });
+        };
+      }
+    });
+  }
+
+  async function hydrateProspectFiche(id) {
+    var root = document.getElementById("prospect-fiche");
+    if (!root || !api() || !id) return;
+    try {
+      var json = await api().request(prospectUrl(id));
       var d = (json && json.data) || {};
       if (d.side && d.side !== prospectSide()) {
-        U.toast("Cette fiche n’appartient pas à cette base.", "err");
+        root.innerHTML = "<p class='sub'>Cette fiche n’appartient pas à cette base.</p>";
         return;
       }
       var employer = d.side === "employer";
-      var sends = d.sends || [];
-      var histo = sends.length
-        ? sends.map(function (s) {
-          return "<p><b>" + U.esc(s.subject) + "</b><br><span class='sub'>" + U.esc(s.to_email) + " · " + U.dateFr(s.created_at) + (s.attachment_names && s.attachment_names.length ? " · " + U.esc(s.attachment_names.join(", ")) : "") + "</span></p>";
-        }).join("")
-        : "<p class='sub'>Aucun envoi pour l’instant.</p>";
-      U.modal({
-        title: prospectLabel(d),
-        wide: true,
-        body: '<form id="pf-edit" class="form-grid">' +
-          U.field("Prénom", "first_name", d.first_name || "") +
-          U.field("Nom", "last_name", d.last_name || "") +
-          (employer ? U.field("Entreprise", "company_name", d.company_name || "") : "") +
-          U.field(employer ? "Poste du contact" : "Métier", "title", d.title || "") +
-          U.field("Ville", "city", d.city || "") +
-          U.field("Secteur", "sector", d.sector || "") +
-          U.field("Téléphone", "phone", d.phone || "") +
-          U.field("Note / besoin", "message", d.message || "", "textarea", "full") +
-          "</form>" +
-          "<p class='sub'>" + U.esc(d.email) + " · " + U.esc(sourceLabel(d.source)) + (d.last_contacted_at ? " · contacté le " + U.dateFr(d.last_contacted_at) : " · jamais contacté") + "</p>" +
-          "<h3>Envois</h3>" + histo,
-        footer: '<button class="btn btn-ghost" data-close>Fermer</button><button class="btn btn-ghost" id="pf-write">Écrire</button><button class="btn btn-orange" id="pf-update">Enregistrer</button>',
-        onMount: function (box, close) {
-          box.querySelector("#pf-update").onclick = function () {
-            var payload = U.formData(box.querySelector("#pf-edit"));
-            api().request(prospectUrl(id), { method: "PATCH", body: payload }).then(function () {
-              U.toast("Fiche enregistrée.", "ok");
-              close();
-              hydrateProspects();
-            }).catch(function (err) { U.toast((err && err.message) || "Enregistrement impossible.", "err"); });
-          };
-          box.querySelector("#pf-write").onclick = function () {
-            close();
-            openProspectComposer([id]);
-          };
-        }
-      });
-    }).catch(function (err) {
-      U.toast((err && err.message) || "Fiche introuvable.", "err");
-    });
+      var dossier = d.dossier || {};
+      var account = dossier.account || null;
+      var exp = dossier.expectations || {};
+      var profile = dossier.profile || null;
+      var company = dossier.company || null;
+      var linked = dossier.linked || {};
+      var stages = d.stages || prospectMeta.stages || [];
+      var stageOpts = stages.map(function (s) {
+        return '<option value="' + U.esc(s.key) + '"' + (d.stage === s.key ? " selected" : "") + ">" + U.esc(s.label) + "</option>";
+      }).join("");
+      var dossierHref = employer && linked.company_id
+        ? "#/clients/" + linked.company_id
+        : (!employer && linked.candidate_id ? "#/candidates/" + linked.candidate_id : "");
+      var salary = "";
+      if (exp.salary) salary = exp.salary;
+      else if (exp.salary_min || exp.salary_max) salary = [exp.salary_min, exp.salary_max].filter(function (v) { return v != null; }).join(" – ");
+      var kpis = employer
+        ? [
+          ["Besoins", (dossier.hiring_requests || []).length],
+          ["Mandats", (dossier.contracts || []).length],
+          ["Factures", (dossier.invoices || []).length],
+          ["Compte", account ? (account.is_active ? "Actif" : "Inactif") : "Pas encore"]
+        ]
+        : [
+          ["Recherche", SEARCH_STATUSES[exp.job_search_status] || exp.job_search_status || "—"],
+          ["Disponibilité", exp.availability || "—"],
+          ["Quart", exp.shift || "—"],
+          ["Salaire", salary || "—"],
+          ["Compte", account ? (account.is_active ? "Actif" : "Inactif") : "Pas encore"]
+        ];
+      var sends = (d.sends || []).map(function (s) {
+        return "<p><b>" + U.esc(s.subject) + "</b><br><span class='sub'>" + U.esc(s.to_email) + " · " + U.dateFr(s.created_at) + (s.attachment_names && s.attachment_names.length ? " · " + U.esc(s.attachment_names.join(", ")) : "") + "</span></p>";
+      }).join("") || "<p class='sub'>Aucun envoi pour l’instant.</p>";
+      var apps = (dossier.applications || []).map(function (a) {
+        var opts = APP_STATUSES.map(function (s) {
+          return "<option value=\"" + s[0] + "\"" + (a.status === s[0] ? " selected" : "") + ">" + s[1] + "</option>";
+        }).join("");
+        return "<div class='manage-row'><div><a href='#/jobs/" + U.esc(a.job_id || "") + "'>" + ficheDash(a.job_title) + "</a><div class='sub'>" + ficheDash(a.company_name) + " · " + U.dateFr(a.created_at) + "</div></div><select data-app-status='" + U.esc(a.id) + "'>" + opts + "</select></div>";
+      }).join("") || "<p class='sub'>Aucune candidature à gérer.</p>";
+      var hiring = (dossier.hiring_requests || []).map(function (h) {
+        var opts = HIRING_STATUSES.map(function (s) {
+          return "<option value=\"" + s[0] + "\"" + (h.status === s[0] ? " selected" : "") + ">" + s[1] + "</option>";
+        }).join("");
+        return "<div class='manage-row'><div><a href='#/hiring/" + h.id + "'>" + U.esc(h.title) + "</a><div class='sub'>" + U.esc([h.location, h.shift, h.salary_display].filter(Boolean).join(" · ") || "—") + "</div></div><select data-hire-status='" + h.id + "'>" + opts + "</select></div>";
+      }).join("") || "<p class='sub'>Aucun besoin à gérer.</p>";
+      var notes = (dossier.notes || []).map(function (n) {
+        return '<div class="note"><div class="meta">' + ficheDash(n.author_name) + " · " + U.dateFr(n.created_at) + "</div>" + U.esc(n.text) + "</div>";
+      }).join("") || "<p class='sub'>Aucune note interne.</p>";
+      var actions = (dossier.recent_actions || []).map(function (a) {
+        return "<div class='act'><span class='dot'></span><div><div>" + ficheDash(a.action_label) + (a.actor_name ? " · " + U.esc(a.actor_name) : "") + "</div><time>" + U.dateFr(a.created_at) + "</time></div></div>";
+      }).join("") || "<p class='sub'>Aucune action récente sur ce dossier.</p>";
+      var interviews = (dossier.interviews || []).map(function (i) {
+        return "<p><b>" + ficheDash(i.type) + "</b> — " + U.dateFr(i.scheduled_at) + " · " + ficheDash(i.status) + (i.location ? " · " + U.esc(i.location) : "") + "</p>";
+      }).join("") || "<p class='sub'>Aucun entretien.</p>";
+      var contracts = (dossier.contracts || []).map(function (c) {
+        return "<p><b>" + ficheDash(c.type) + "</b> · " + ficheDash(c.status) + (c.commission_percent != null ? " · " + c.commission_percent + " %" : "") + "</p>";
+      }).join("") || "<p class='sub'>Aucun mandat.</p>";
+      var invoices = (dossier.invoices || []).map(function (i) {
+        return "<p><b>" + ficheDash(i.number) + "</b> · " + ficheDash(i.status) + (i.amount_total != null ? " · " + U.money(i.amount_total) : "") + "</p>";
+      }).join("") || "<p class='sub'>Aucune facture.</p>";
+      root.innerHTML =
+        '<div class="page-head"><div><h1>' + U.esc(prospectLabel(d)) + "</h1><p>" +
+        U.esc(d.email) + " · " + U.esc(sourceLabel(d.source)) + " · " + U.badge(d.stage) +
+        (d.last_contacted_at ? " · contacté le " + U.dateFr(d.last_contacted_at) : " · jamais contacté") +
+        "</p></div><div class='actions'>" +
+        '<select data-pstage-fiche="' + U.esc(id) + '">' + stageOpts + "</select>" +
+        '<button type="button" class="btn btn-ghost" id="pf-edit-btn">Modifier</button>' +
+        '<button type="button" class="btn btn-orange" id="pf-write">Écrire</button>' +
+        (dossierHref ? '<a class="btn btn-ghost" href="' + dossierHref + '">Ouvrir le dossier</a>' : "") +
+        "</div></div>" +
+        '<div class="fiche-kpis">' + kpis.map(function (k) {
+          return '<div class="fiche-kpi"><span>' + U.esc(k[0]) + "</span><b>" + U.esc(String(k[1])) + "</b></div>";
+        }).join("") + "</div>" +
+        '<div class="detail-grid">' +
+        '<div class="card card-pad side-card">' +
+        "<h3>Coordonnées</h3>" +
+        "<div class='row'><span>Téléphone</span><b>" + ficheDash(d.phone || (account && account.phone)) + "</b></div>" +
+        "<div class='row'><span>Ville</span><b>" + ficheDash(d.city || exp.city) + "</b></div>" +
+        "<div class='row'><span>Secteur</span><b>" + ficheDash(d.sector) + "</b></div>" +
+        (employer ? "<div class='row'><span>Entreprise</span><b>" + ficheDash(d.company_name || (company && company.name)) + "</b></div>" : "<div class='row'><span>Métier</span><b>" + ficheDash(d.title || exp.title) + "</b></div>") +
+        "<h3>Compte</h3>" +
+        (account
+          ? "<div class='row'><span>Espace</span><b>" + (account.is_active ? "Ouvert" : "Fermé") + "</b></div>" +
+            "<div class='row'><span>Courriel vérifié</span><b>" + (account.is_email_verified ? "Oui" : "Non") + "</b></div>" +
+            "<div class='row'><span>Dernière connexion</span><b>" + (account.last_login_at ? U.dateFr(account.last_login_at) : "Jamais") + "</b></div>" +
+            "<div class='row'><span>Inscription</span><b>" + U.dateFr(account.created_at) + "</b></div>"
+          : "<p class='sub'>Pas encore de compte sur l’espace Talendus.</p>") +
+        (d.message ? "<h3>Message d’origine</h3><p>" + U.esc(d.message) + "</p>" : "") +
+        "</div><div>" +
+        '<div class="card card-pad"><h3>Attentes</h3>' +
+        (employer
+          ? "<div class='row'><span>Poste</span><b>" + ficheDash(exp.title || d.title) + "</b></div>" +
+            "<div class='row'><span>Lieu</span><b>" + ficheDash(exp.location || d.city) + "</b></div>" +
+            "<div class='row'><span>Quart</span><b>" + ficheDash(exp.shift) + "</b></div>" +
+            "<div class='row'><span>Salaire</span><b>" + ficheDash(exp.salary) + "</b></div>" +
+            "<div class='row'><span>Contrat</span><b>" + ficheDash(exp.contract_type) + "</b></div>" +
+            "<div class='row'><span>Postes</span><b>" + ficheDash(exp.seats) + "</b></div>" +
+            (exp.notes ? "<p>" + U.esc(exp.notes) + "</p>" : "")
+          : "<div class='row'><span>Disponibilité</span><b>" + ficheDash(exp.availability) + "</b></div>" +
+            "<div class='row'><span>Quart</span><b>" + ficheDash(exp.shift) + "</b></div>" +
+            "<div class='row'><span>Salaire</span><b>" + ficheDash(salary) + "</b></div>" +
+            "<div class='row'><span>Mobilité</span><b>" + ficheDash(exp.mobility) + "</b></div>" +
+            "<div class='row'><span>Contrat</span><b>" + ficheDash(exp.contract_type) + "</b></div>" +
+            "<div class='row'><span>Statut de travail</span><b>" + ficheDash(exp.work_status) + "</b></div>" +
+            (profile && profile.bio ? "<p>" + U.esc(profile.bio) + "</p>" : "") +
+            (exp.work_preferences ? "<p>" + U.esc(exp.work_preferences) + "</p>" : "")) +
+        "</div>" +
+        '<div class="card card-pad" style="margin-top:16px"><h3>' + (employer ? "Besoins à gérer" : "Candidatures à gérer") + "</h3>" +
+        (employer ? hiring : apps) + "</div>" +
+        (employer
+          ? '<div class="grid grid-2" style="margin-top:16px"><div class="card card-pad"><h3>Mandats</h3>' + contracts + '</div><div class="card card-pad"><h3>Factures</h3>' + invoices + "</div></div>"
+          : '<div class="card card-pad" style="margin-top:16px"><h3>Entretiens</h3>' + interviews + "</div>") +
+        '<div class="card card-pad" style="margin-top:16px"><h3>Envois</h3>' + sends + "</div>" +
+        '<div class="card card-pad" style="margin-top:16px"><h3>Notes internes</h3>' + notes +
+        '<form id="pf-note">' + U.field("Nouvelle note", "text", "", "textarea", "full") +
+        '<button class="btn btn-orange" type="submit">Enregistrer la note</button></form></div>' +
+        '<div class="card card-pad" style="margin-top:16px"><h3>Actions sur ce dossier</h3><div class="activity">' + actions + "</div></div>" +
+        "</div></div>";
+      var write = document.getElementById("pf-write");
+      if (write) write.onclick = function () { openProspectComposer([id]); };
+      var editBtn = document.getElementById("pf-edit-btn");
+      if (editBtn) editBtn.onclick = function () { openProspectEdit(id, d); };
+      var stageSel = root.querySelector("[data-pstage-fiche]");
+      if (stageSel) {
+        stageSel.onchange = function () {
+          api().request(prospectUrl(id), { method: "PATCH", body: { stage: stageSel.value } })
+            .then(function () { U.toast("Statut enregistré.", "ok"); hydrateProspectFiche(id); })
+            .catch(function (err) { U.toast((err && err.message) || "Statut non enregistré.", "err"); });
+        };
+      }
+      var noteForm = document.getElementById("pf-note");
+      if (noteForm) {
+        noteForm.onsubmit = function (e) {
+          e.preventDefault();
+          var text = U.formData(noteForm).text;
+          if (!text) return;
+          api().request(prospectUrl(id, "/notes"), { method: "POST", body: { text: text } })
+            .then(function () { U.toast("Note enregistrée.", "ok"); hydrateProspectFiche(id); })
+            .catch(function (err) { U.toast((err && err.message) || "Note non enregistrée.", "err"); });
+        };
+      }
+    } catch (err) {
+      root.innerHTML = "<p class='sub'>" + U.esc((err && err.message) || "Fiche introuvable.") + "</p>";
+    }
   }
 
   function openProspectComposer(ids) {
@@ -1861,6 +2069,90 @@
     }
   }
 
+  var journalFilters = { q: "", actor_id: "", action: "", scope: "staff" };
+
+  function viewJournal() {
+    return `
+      <div class="page-head"><div><h1>Journal d’équipe</h1><p>Toutes les actions des employés Talendus sur la plateforme.</p></div></div>
+      <div class="filters" id="journal-filters">
+        <input id="journal-q" placeholder="Rechercher une action" value="${U.esc(journalFilters.q || "")}">
+        <select id="journal-actor"><option value="">Tous les employés</option></select>
+        <select id="journal-action"><option value="">Toutes les actions</option></select>
+        <select id="journal-scope">
+          <option value="staff"${journalFilters.scope !== "all" ? " selected" : ""}>Employés Talendus</option>
+          <option value="all"${journalFilters.scope === "all" ? " selected" : ""}>Tout le monde (y compris candidats / entreprises)</option>
+        </select>
+      </div>
+      <div id="journal-root"><p class="sub">Chargement…</p></div>`;
+  }
+
+  async function hydrateJournal() {
+    var root = document.getElementById("journal-root");
+    if (!root) return;
+    if (!api()) {
+      root.innerHTML = "<p class='sub'>Connectez-vous à l’API pour voir le journal réel.</p>";
+      return;
+    }
+    try {
+      var parts = ["limit=200", "scope=" + encodeURIComponent(journalFilters.scope || "staff")];
+      if (journalFilters.q) parts.push("q=" + encodeURIComponent(journalFilters.q));
+      if (journalFilters.actor_id) parts.push("actor_id=" + encodeURIComponent(journalFilters.actor_id));
+      if (journalFilters.action) parts.push("action=" + encodeURIComponent(journalFilters.action));
+      var json = await api().request("/admin/audit?" + parts.join("&"));
+      var rows = (json && json.data) || [];
+      var meta = (json && json.meta) || {};
+      var actorSel = document.getElementById("journal-actor");
+      var actionSel = document.getElementById("journal-action");
+      if (actorSel && actorSel.options.length <= 1) {
+        (meta.actors || []).forEach(function (a) {
+          var opt = document.createElement("option");
+          opt.value = a.id;
+          opt.textContent = (a.name || a.email) + (a.role ? " · " + a.role : "");
+          if (a.id === journalFilters.actor_id) opt.selected = true;
+          actorSel.appendChild(opt);
+        });
+      }
+      if (actionSel && actionSel.options.length <= 1) {
+        (meta.actions || []).forEach(function (a) {
+          var opt = document.createElement("option");
+          opt.value = a.key;
+          opt.textContent = a.label || a.key;
+          if (a.key === journalFilters.action) opt.selected = true;
+          actionSel.appendChild(opt);
+        });
+      }
+      var body = rows.map(function (r) {
+        var change = "";
+        if (r.old_value || r.new_value) {
+          change = "<div class='sub'>" + U.esc((r.old_value || "—") + " → " + (r.new_value || "—")).slice(0, 220) + "</div>";
+        }
+        return "<tr><td>" + U.dateFr(r.created_at) + "</td><td><b>" + U.esc(r.actor_name || "Système") + "</b><div class='sub'>" + U.esc(r.actor_email || "") + "</div></td><td>" + U.esc(r.action_label || r.action) + change + "</td><td>" + U.esc(r.entity_type || "—") + "</td><td class='sub'>" + U.esc(r.entity_id || "") + "</td></tr>";
+      }).join("");
+      root.innerHTML = '<div class="card"><div class="table-wrap"><table class="data"><thead><tr><th>Quand</th><th>Employé</th><th>Action</th><th>Dossier</th><th>Réf.</th></tr></thead><tbody>' +
+        (body || '<tr><td colspan="5">' + U.empty("Aucune action", "Les connexions, envois, notes et mises à jour de l’équipe apparaîtront ici.") + "</td></tr>") +
+        "</tbody></table></div></div>";
+      ["journal-q", "journal-actor", "journal-action", "journal-scope"].forEach(function (fid) {
+        var el = document.getElementById(fid);
+        if (!el || el.getAttribute("data-bound")) return;
+        el.setAttribute("data-bound", "1");
+        el.onchange = function () {
+          journalFilters.q = (document.getElementById("journal-q") || {}).value || "";
+          journalFilters.actor_id = (document.getElementById("journal-actor") || {}).value || "";
+          journalFilters.action = (document.getElementById("journal-action") || {}).value || "";
+          journalFilters.scope = (document.getElementById("journal-scope") || {}).value || "staff";
+          hydrateJournal();
+        };
+        if (fid === "journal-q") {
+          el.onkeydown = function (ev) {
+            if (ev.key === "Enter") { ev.preventDefault(); el.onchange(); }
+          };
+        }
+      });
+    } catch (err) {
+      root.innerHTML = "<p class='sub'>" + U.esc((err && err.message) || "Impossible de lire le journal.") + "</p>";
+    }
+  }
+
   function viewNotifications() {
     return `<div class="page-head"><div><h1>Notifications</h1><p>Centre d’alertes opérationnelles</p></div>
       <div class="actions"><button class="btn btn-ghost" id="mark-all">Tout marquer lu</button></div></div>
@@ -1878,6 +2170,7 @@
       ["Finance et factures", false, true, false, true],
       ["Contenu du site", false, false, true, true],
       ["Statistiques", false, true, false, true],
+      ["Journal d’équipe", true, true, false, true],
       ["Services (courriel, paiement, Google…)", false, true, false, true],
       ["Notifications internes", true, true, true, true],
       ["Paramètres du compte", true, true, true, true],
@@ -2912,14 +3205,38 @@
         var c = TLStore.candidate(editC.getAttribute("data-edit-cand"));
         U.modal({
           title: "Modifier le candidat",
-          body: '<form id="ec" class="form-grid">' + U.field("Ville", "city", c.city) + U.field("Poste", "title", c.title) + U.field("Disponibilité", "availability", c.availability) + U.field("Secteur", "sector", c.sector || "") + U.field("Téléphone", "phone", c.phone || "") + "</form>",
+          body: '<form id="ec" class="form-grid">' +
+            U.field("Ville", "city", c.city) +
+            U.field("Poste", "title", c.title) +
+            U.field("Disponibilité", "availability", c.availability) +
+            U.field("Quart", "shift_preference", c.shift || "") +
+            U.field("Secteur", "sector", c.sector || "") +
+            U.field("Téléphone", "phone", c.phone || "") +
+            U.field("Mobilité", "mobility", c.mobility || "") +
+            U.field("Type de contrat", "contract_type", c.contractType || "") +
+            U.field("Salaire min", "desired_salary_min", c.salaryMin || "", "number") +
+            U.field("Salaire max", "desired_salary_max", c.salaryMax || "", "number") +
+            U.field("Préférences", "work_preferences", c.workPreferences || "", "textarea", "full") +
+            "</form>",
           footer: '<button class="btn btn-ghost" data-close>Annuler</button><button class="btn btn-orange" id="save">Enregistrer</button>',
           onMount: function (box, close) {
             box.querySelector("#save").onclick = async function () {
               var d = U.formData(box.querySelector("#ec"));
               try {
                 if (live()) {
-                  await api().request("/admin/candidates/" + c.id, { method: "PATCH", body: { city: d.city, title: d.title, availability: d.availability, sector: d.sector, phone: d.phone } });
+                  await api().request("/admin/candidates/" + c.id, { method: "PATCH", body: {
+                    city: d.city,
+                    title: d.title,
+                    availability: d.availability,
+                    sector: d.sector,
+                    phone: d.phone,
+                    shift_preference: d.shift_preference,
+                    mobility: d.mobility,
+                    contract_type: d.contract_type,
+                    desired_salary_min: d.desired_salary_min ? Number(d.desired_salary_min) : undefined,
+                    desired_salary_max: d.desired_salary_max ? Number(d.desired_salary_max) : undefined,
+                    work_preferences: d.work_preferences
+                  } });
                   await refreshLive();
                 } else {
                   TLStore.update(function (st) { Object.assign(st.candidates.find(function (x) { return x.id === c.id; }), d); });
@@ -2957,6 +3274,21 @@
           }
         })();
       }
+      if (t.hasAttribute("data-app-status")) {
+        var appId = t.getAttribute("data-app-status");
+        var appStatus = t.value;
+        (async function () {
+          try {
+            await api().request("/applications/" + appId + "/status", { method: "POST", body: { status: appStatus } });
+            await refreshLive();
+            U.toast("Candidature mise à jour — le candidat le voit dans son espace.", "ok");
+            if (route().name === "prospects" && route().extra) hydrateProspectFiche(route().extra);
+            else render();
+          } catch (err) {
+            U.toast((err && err.message) || "Statut non enregistré.", "err");
+          }
+        })();
+      }
       if (t.hasAttribute("data-hire-status")) {
         var hid = t.getAttribute("data-hire-status");
         var status = t.value;
@@ -2965,7 +3297,8 @@
             await window.TalendusAPI.request("/hiring-requests/" + hid + "/status", { method: "POST", body: { status: status } });
             await refreshLive();
             U.toast("Statut mis à jour — l’entreprise le voit dans son espace.", "ok");
-            render();
+            if (route().name === "prospects" && route().extra) hydrateProspectFiche(route().extra);
+            else render();
           } catch (err) {
             U.toast((err && err.message) || "Statut non enregistré.", "err");
           }
@@ -3301,6 +3634,7 @@
         else if (r.name === "hiring" && r.id) inner = viewHiringDetail(r.id);
         else if (r.name === "hiring") inner = viewHiring();
         else if (r.name === "prospects") inner = viewProspects();
+        else if (r.name === "journal") inner = viewJournal();
         else if (r.name === "interviews") inner = viewInterviews();
         else if (r.name === "messages") inner = viewMessages();
         else if (r.name === "content") inner = viewContent();
@@ -3323,7 +3657,9 @@
       if (r.name === "services") hydrateServices();
       if (r.name === "analytics") hydrateAnalytics();
       if (r.name === "settings") hydrateTeam();
-      if (r.name === "prospects") hydrateProspects();
+      if (r.name === "prospects" && r.extra) hydrateProspectFiche(r.extra);
+      else if (r.name === "prospects") hydrateProspects();
+      if (r.name === "journal") hydrateJournal();
     }, 180);
   }
 
