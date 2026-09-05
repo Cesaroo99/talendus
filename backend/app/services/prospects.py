@@ -249,9 +249,63 @@ def _split_name(raw: str | None) -> tuple[str, str]:
     return parts[0], " ".join(parts[1:])
 
 
+_GENERIC_PERSON_TOKENS = {
+    "accueil",
+    "administration",
+    "bonjour",
+    "contact",
+    "direction",
+    "equipe",
+    "équipe",
+    "humaine",
+    "humaines",
+    "info",
+    "recrutement",
+    "ressource",
+    "ressources",
+    "rh",
+    "service",
+}
+
+_GENERIC_TITLES = {
+    "recrutement",
+    "ressource humaine",
+    "ressources humaines",
+    "rh",
+    "service des ressources humaines",
+}
+
+
+def is_generic_person_name(first: str = "", last: str = "") -> bool:
+    tokens = [part.casefold() for part in re.split(r"[\s/,.-]+", f"{first} {last}") if part]
+    if not tokens:
+        return True
+    return all(part in _GENERIC_PERSON_TOKENS for part in tokens)
+
+
+def is_generic_job_title(title: str | None) -> bool:
+    return (title or "").strip().casefold() in _GENERIC_TITLES
+
+
+def person_name_parts(raw: str | None) -> tuple[str, str]:
+    first, last = _split_name(raw)
+    if is_generic_person_name(first, last):
+        return "", ""
+    return first, last
+
+
+def sanitize_generic_person(row: Prospect) -> None:
+    if is_generic_person_name(row.first_name or "", row.last_name or ""):
+        row.first_name = ""
+        row.last_name = ""
+
+
 def display_name(row: Prospect) -> str:
-    name = f"{row.first_name} {row.last_name}".strip()
-    return name or row.company_name or row.email
+    if not is_generic_person_name(row.first_name or "", row.last_name or ""):
+        name = f"{row.first_name} {row.last_name}".strip()
+        if name:
+            return name
+    return (row.company_name or "").strip() or row.email
 
 
 def account_links_for(email: str | None, side: str | None) -> dict[str, str]:
@@ -268,10 +322,15 @@ def account_links_for(email: str | None, side: str | None) -> dict[str, str]:
 
 
 def context_for(row: Prospect, actor: User | None = None) -> dict[str, str]:
-    first = (row.first_name or "").strip()
-    last = (row.last_name or "").strip()
+    raw_first = (row.first_name or "").strip()
+    raw_last = (row.last_name or "").strip()
+    generic = is_generic_person_name(raw_first, raw_last)
+    first = "" if generic else raw_first
+    last = "" if generic else raw_last
     company = (row.company_name or "").strip()
     title = (row.title or "").strip()
+    if (row.side or "") == "employer" and is_generic_job_title(title):
+        title = ""
     city = (row.city or "").strip()
     sector = (row.sector or "").strip()
     recruiter = ""
@@ -279,7 +338,7 @@ def context_for(row: Prospect, actor: User | None = None) -> dict[str, str]:
         recruiter = f"{actor.first_name} {actor.last_name}".strip()
     hello = f"Bonjour {first}," if first else "Bonjour,"
     ctx = {
-        "first_name": first or company or "bonjour",
+        "first_name": first,
         "last_name": last,
         "name": display_name(row),
         "hello": hello,
@@ -335,13 +394,14 @@ def custom_template_key(subject: str) -> str:
 
 
 def serialize_prospect(row: Prospect, sent_keys: list[str] | None = None) -> dict:
+    generic = is_generic_person_name(row.first_name or "", row.last_name or "")
     return {
         "id": row.id,
         "side": row.side,
         "stage": row.stage,
         "email": row.email,
-        "first_name": row.first_name,
-        "last_name": row.last_name,
+        "first_name": "" if generic else row.first_name,
+        "last_name": "" if generic else row.last_name,
         "phone": row.phone,
         "company_name": row.company_name,
         "title": row.title,

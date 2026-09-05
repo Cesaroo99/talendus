@@ -12,7 +12,7 @@ from app.data.quebec_employer_leads import QUEBEC_EMPLOYER_LEADS
 from app.models import Company, InternalNote, User
 from app.models.enums import CompanyStatus, UserRole
 from app.models.prospect import Prospect
-from app.services.prospects import upsert_prospect
+from app.services.prospects import person_name_parts, sanitize_generic_person, upsert_prospect
 
 logger = logging.getLogger("talendus.employer_leads")
 
@@ -107,17 +107,11 @@ def _ensure_prospect(db: Session, company: Company, lead: dict[str, Any], recrui
     email = (lead.get("email") or "").strip()
     if not email or "@" not in email:
         return
-    contact = (lead.get("contact_name") or "Ressources humaines").strip()
-    parts = contact.split(None, 1)
-    first = parts[0] if parts and parts[0].casefold() != "ressources" else ""
-    last = parts[1] if len(parts) > 1 and first else ""
-    if not first:
-        first = "Ressources"
-        last = "humaines"
+    first, last = person_name_parts(lead.get("contact_name") or "")
     hiring = (lead.get("hiring") or "")[:5000]
     detail = (lead.get("hiring") or lead.get("careers_url") or "")[:240]
     existing = db.scalar(select(Prospect.id).where(Prospect.side == "employer", Prospect.email == email.lower()))
-    upsert_prospect(
+    row = upsert_prospect(
         db,
         side="employer",
         email=email,
@@ -135,6 +129,8 @@ def _ensure_prospect(db: Session, company: Company, lead: dict[str, Any], recrui
         assigned_recruiter_id=recruiter.id if recruiter else None,
         stage="a-contacter" if existing is None else None,
     )
+    if row is not None:
+        sanitize_generic_person(row)
 
 
 def ensure_quebec_employer_leads(db: Session) -> int:

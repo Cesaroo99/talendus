@@ -336,6 +336,7 @@ table.data th {
 table.data tbody tr { cursor: pointer; }
 table.data tbody tr:hover { background: #f7f9fc; }
 table.data .check { width: 36px; cursor: default; }
+table.data .check input { width: 16px; height: 16px; margin: 0; vertical-align: middle; }
 .person { display: flex; align-items: center; gap: 10px; }
 .person b { display: block; }
 .person span { color: var(--steel); font-size: 12px; }
