@@ -128,7 +128,7 @@ def test_mobile_app_asks_for_phone_notifications():
         assert needle in js
     assert ".showNotification(" not in js
     sw = (ROOT / "sw.js").read_text(encoding="utf-8")
-    assert "talendus-app-v33" in sw
+    assert "talendus-app-v34" in sw
     assert "/espace.html#/notifs" in sw
     assert "/m.html#/notifs" not in sw
     assert "showNotification" in sw

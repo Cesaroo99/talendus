@@ -163,9 +163,62 @@ def _editor_bootstrap(db: Session, user: User) -> dict:
     }
 
 
+def _finance_bootstrap(db: Session, user: User) -> dict:
+    invoices = db.scalars(
+        select(Invoice).options(joinedload(Invoice.company), joinedload(Invoice.mission)).order_by(Invoice.created_at.desc())
+    ).unique().all()
+    payments = db.scalars(select(Payment).options(joinedload(Payment.invoice)).order_by(Payment.created_at.desc())).unique().all()
+    notif_stmt = select(Notification).where(Notification.user_id == user.id).order_by(Notification.created_at.desc())
+    notifications = db.scalars(notif_stmt.limit(100)).all()
+    unread_messages = int(
+        db.scalar(
+            select(func.count()).select_from(Message).where(Message.recipient_id == user.id, Message.is_read.is_(False))
+        )
+        or 0
+    )
+    users = db.scalars(select(User).order_by(User.created_at.asc())).all()
+    paid = [row for row in invoices if row.status == InvoiceStatus.PAID]
+    return {
+        "live": True,
+        "unreadMessages": unread_messages,
+        "users": [_user(u) for u in users if u.role.value in {"ADMIN", "SUPER_ADMIN", "RECRUITER", "FINANCE", "EDITOR"}],
+        "clients": [],
+        "jobs": [],
+        "candidates": [],
+        "missions": [],
+        "hiringRequests": [],
+        "applications": [],
+        "contracts": [],
+        "notes": [],
+        "notifications": [_notification(n) for n in notifications],
+        "interviews": [],
+        "invoices": [_invoice(i) for i in invoices],
+        "payments": [_payment(p) for p in payments],
+        "documents": [],
+        "pages": [dict(page) for page in SITE_PAGES],
+        "testimonials": [],
+        "faqs": [],
+        "jobMatches": [],
+        "monthly": _monthly([], invoices),
+        "stats": {
+            "candidates": 0,
+            "clients": 0,
+            "jobs": 0,
+            "publishedJobs": 0,
+            "applications": 0,
+            "placements": 0,
+            "openMissions": 0,
+            "paidInvoices": len(paid),
+        },
+        "activities": [],
+    }
+
+
 def bootstrap(db: Session, user: User | None = None) -> dict:
     if user and user.role == UserRole.EDITOR:
         return _editor_bootstrap(db, user)
+    if user and user.role == UserRole.FINANCE:
+        return _finance_bootstrap(db, user)
     users = db.scalars(select(User).order_by(User.created_at.asc())).all()
     companies = db.scalars(select(Company).options(joinedload(Company.owner)).order_by(Company.name.asc())).unique().all()
     jobs = db.scalars(select(JobOffer).options(joinedload(JobOffer.company)).order_by(JobOffer.created_at.desc())).unique().all()

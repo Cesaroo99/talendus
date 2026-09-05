@@ -1,0 +1,7 @@
+Subject: Welcome to Talendus
+{{name}},
+
+Your Talendus account is ready. Recruitment in Quebec, every sector, every role.
+
+Sign in:
+{{link}}

@@ -75,7 +75,10 @@ def list_companies(db: Session, user: User) -> list[Company]:
         return list(db.scalars(select(Company).where(Company.id.in_(ids)).order_by(Company.name.asc())).all())
     if user.role not in {UserRole.RECRUITER} | ADMINS:
         raise AppError(403, "Permission insuffisante.", "FORBIDDEN")
-    return list(db.scalars(select(Company).order_by(Company.name.asc())).all())
+    rows = list(db.scalars(select(Company).order_by(Company.name.asc())).all())
+    if user.role == UserRole.RECRUITER:
+        return [row for row in rows if recruiter_can_access_company(db, user, row)]
+    return rows
 
 
 def invite_recruiter(db: Session, user: User, data) -> Recruiter:

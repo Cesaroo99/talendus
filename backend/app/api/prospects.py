@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -103,9 +104,13 @@ def broadcast(payload: ProspectBulkSendIn, db: Session = Depends(get_db), staff:
 
 @router.post("")
 def create_prospect(payload: ProspectIn, db: Session = Depends(get_db), staff: User = Depends(_staff)):
-    row = svc.create_prospect(db, staff, payload.model_dump())
-    db.commit()
-    db.refresh(row)
+    try:
+        row = svc.create_prospect(db, staff, payload.model_dump())
+        db.commit()
+        db.refresh(row)
+    except IntegrityError:
+        db.rollback()
+        raise AppError(409, "Ce prospect existe déjà de ce côté.", "PROSPECT_EXISTS") from None
     return ok(svc.serialize_prospect(row), message="Prospect ajouté.")
 
 

@@ -28,10 +28,29 @@ from app.services.notifications import notify
 settings = get_settings()
 
 ALLOWED_SELF_ROLES = {UserRole.CANDIDATE, UserRole.EMPLOYER}
+PUBLIC_EMAIL_GATE_ROLES = {UserRole.CANDIDATE, UserRole.EMPLOYER}
 
 
 def email_gate_enabled(db: Session | None = None) -> bool:
+    """Le gate suit un override SMTP explicite, sinon EMAIL_ENABLED.
+
+    Les identifiants SMTP seuls n’activent pas le gate. Un stub qui force
+    `runtime_email_config().enabled` sans `smtp.enabled` en base ne le change pas.
+    """
+    if db is not None:
+        try:
+            from app.services.email import _truthy, load_smtp_overrides
+
+            override = _truthy(load_smtp_overrides(db).get("smtp.enabled"))
+            if override is not None:
+                return bool(override)
+        except Exception:  # noqa: BLE001
+            pass
     return bool(get_settings().email_enabled)
+
+
+def user_needs_email_gate(user: User | None) -> bool:
+    return bool(user and user.role in PUBLIC_EMAIL_GATE_ROLES)
 _ROLE_ACCOUNT_LABEL = {
     UserRole.CANDIDATE: "talent",
     UserRole.EMPLOYER: "employeur",
@@ -44,21 +63,25 @@ _ROLE_ACCOUNT_LABEL = {
 _LOGIN_FAILS: dict[str, list[float]] = defaultdict(list)
 
 
-def _login_key(email: str, ip: str | None) -> str:
-    return f"{(email or '').lower()}|{(ip or 'unknown')}"
+def _login_key(email: str, ip: str | None = None) -> str:
+    return (email or "").strip().lower()
 
 
-def _failed_login_count(db: Session, email: str, ip: str | None) -> int:
+def _failed_login_count(db: Session, email: str, ip: str | None = None) -> int:
     minutes = get_settings().login_lockout_minutes or 15
     since = utcnow() - timedelta(minutes=minutes)
-    filters = [
-        LoginEvent.email == email,
-        LoginEvent.success.is_(False),
-        LoginEvent.created_at >= since,
-    ]
-    if ip:
-        filters.append(LoginEvent.ip_address == (ip or "")[:64])
-    return int(db.scalar(select(func.count()).select_from(LoginEvent).where(*filters)) or 0)
+    return int(
+        db.scalar(
+            select(func.count())
+            .select_from(LoginEvent)
+            .where(
+                LoginEvent.email == (email or "").strip().lower(),
+                LoginEvent.success.is_(False),
+                LoginEvent.created_at >= since,
+            )
+        )
+        or 0
+    )
 
 
 def _assert_not_locked(email: str, ip: str | None, db: Session | None = None) -> None:
@@ -98,8 +121,37 @@ def _log_login(db: Session, email: str, success: bool, user: User | None, ip: st
     )
 
 
+def _user_locale(db: Session, user: User) -> str:
+    pref = getattr(user, "preferences", None)
+    if pref is None:
+        pref = db.scalar(select(UserPreference).where(UserPreference.user_id == user.id))
+    locale = (getattr(pref, "locale", None) or "fr-CA").strip() or "fr-CA"
+    return locale
+
+
+def portal_auth_link(
+    db: Session,
+    user: User,
+    purpose: str,
+    token: str | None = None,
+    locale: str | None = None,
+) -> str:
+    locale = (locale or _user_locale(db, user)).strip() or "fr-CA"
+    is_en = locale.lower().startswith("en")
+    is_employer = user.role == UserRole.EMPLOYER
+    if is_en:
+        page = "en/account-employer.html" if is_employer else "en/account.html"
+    else:
+        page = "espace-employeur.html" if is_employer else "espace.html"
+    base = settings.frontend_url.rstrip("/")
+    if purpose == "welcome" and not token:
+        return f"{base}/{page}"
+    suffix = f"#/{purpose}/{token}" if token else ""
+    return f"{base}/{page}{suffix}"
+
+
 def _issue_tokens(db: Session, user: User) -> dict:
-    access = create_access_token(user.id, user.role.value)
+    access = create_access_token(user.id, user.role.value, getattr(user, "session_version", 0) or 0)
     refresh = create_refresh_token()
     db.add(
         RefreshToken(
@@ -149,7 +201,9 @@ def register(db: Session, data: RegisterIn, ip: str | None = None, user_agent: s
         )
         db.add(user)
         db.flush()
-        db.add(UserPreference(user_id=user.id))
+        locale = "en-CA" if str(getattr(data, "locale", None) or "").lower().startswith("en") else "fr-CA"
+        db.add(UserPreference(user_id=user.id, locale=locale))
+        db.flush()
         if user.role == UserRole.CANDIDATE:
             db.add(Candidate(user_id=user.id, country="Canada", province="Québec"))
         elif user.role == UserRole.EMPLOYER:
@@ -159,13 +213,14 @@ def register(db: Session, data: RegisterIn, ip: str | None = None, user_agent: s
         elif user.role == UserRole.RECRUITER:
             db.add(Recruiter(user_id=user.id))
         token = _make_email_token(db, user, "verify", 24)
+        verify_link = portal_auth_link(db, user, "verify", token, locale=locale)
         send_email(
             db, user.email, EmailType.WELCOME, "welcome",
-            name=user.first_name, link=f"{settings.frontend_url}/m.html#/verify/{token}",
+            name=user.first_name, link=verify_link, locale=locale,
         )
         send_email(
             db, user.email, EmailType.VERIFY_EMAIL, "verify",
-            name=user.first_name, link=f"{settings.frontend_url}/m.html#/verify/{token}",
+            name=user.first_name, link=verify_link, locale=locale,
         )
         notify(db, user, NotificationType.ACCOUNT_CREATED, "Compte créé", "Bienvenue chez Talendus.")
         audit(db, "account.register", user, "user", user.id, ip)
@@ -196,7 +251,7 @@ def login(db: Session, data: LoginIn, ip: str | None = None, user_agent: str | N
         _log_login(db, email, False, user, ip, user_agent)
         db.commit()
         raise AppError(403, "Ce compte est désactivé.", "ACCOUNT_DISABLED")
-    if email_gate_enabled(db) and not user.is_email_verified:
+    if email_gate_enabled(db) and user_needs_email_gate(user) and not user.is_email_verified:
         _log_login(db, email, False, user, ip, user_agent)
         db.commit()
         raise AppError(403, "Vérifiez votre courriel avant de vous connecter.", "EMAIL_NOT_VERIFIED")
@@ -216,7 +271,7 @@ def refresh(db: Session, raw: str) -> dict:
     user = db.get(User, row.user_id)
     if not user or not user.is_active or user.account_status in {AccountStatus.SUSPENDED, AccountStatus.DEACTIVATED}:
         raise AppError(401, "Compte indisponible.", "ACCOUNT_DISABLED")
-    if email_gate_enabled(db) and not user.is_email_verified:
+    if email_gate_enabled(db) and user_needs_email_gate(user) and not user.is_email_verified:
         raise AppError(403, "Vérifiez votre courriel avant de vous connecter.", "EMAIL_NOT_VERIFIED")
     row.revoked = True
     tokens = _issue_tokens(db, user)
@@ -241,7 +296,8 @@ def request_password_reset(db: Session, email: str) -> None:
     send_email(
         db, user.email, EmailType.PASSWORD_RESET, "reset",
         name=user.first_name or "Bonjour",
-        link=f"{settings.frontend_url}/m.html#/reset/{token}",
+        link=portal_auth_link(db, user, "reset", token),
+        locale=_user_locale(db, user),
     )
     db.commit()
 
@@ -286,11 +342,19 @@ def resend_verification(db: Session, user: User) -> None:
     if user.is_email_verified:
         return
     token = _make_email_token(db, user, "verify", 24)
+    locale = _user_locale(db, user)
     send_email(
         db, user.email, EmailType.VERIFY_EMAIL, "verify",
-        name=user.first_name, link=f"{settings.frontend_url}/m.html#/verify/{token}",
+        name=user.first_name, link=portal_auth_link(db, user, "verify", token),
+        locale=locale,
     )
     db.commit()
+
+
+def resend_verification_by_email(db: Session, email: str) -> None:
+    user = db.scalar(select(User).where(User.email == (email or "").strip().lower()))
+    if user and not user.is_email_verified:
+        resend_verification(db, user)
 
 
 def ensure_candidate(db: Session, user: User) -> Candidate:
@@ -315,14 +379,16 @@ def _provision_role(db: Session, user: User, company_name: str | None = None) ->
 
 
 def auth_providers() -> dict:
-    google_client_id = get_settings().google_oauth_client_id or ""
-    linkedin_client_id = get_settings().linkedin_oauth_client_id or ""
+    env = get_settings()
+    google_client_id = env.google_oauth_client_id or ""
+    linkedin_client_id = env.linkedin_oauth_client_id or ""
+    linkedin_secret = env.linkedin_oauth_client_secret or env.linkedin_client_secret or ""
     return {
         "password": True,
         "google": bool(google_client_id),
         "google_client_id": google_client_id,
-        "linkedin": bool(linkedin_client_id),
-        "linkedin_client_id": linkedin_client_id,
+        "linkedin": bool(linkedin_client_id and linkedin_secret),
+        "linkedin_client_id": linkedin_client_id if linkedin_secret else "",
     }
 
 
@@ -365,7 +431,8 @@ def login_with_identity(
             EmailType.WELCOME,
             "welcome",
             name=user.first_name,
-            link=f"{settings.frontend_url}/espace.html",
+            link=portal_auth_link(db, user, "welcome"),
+            locale=_user_locale(db, user),
         )
         notify(db, user, NotificationType.ACCOUNT_CREATED, "Compte créé", "Bienvenue chez Talendus.")
         audit(db, f"account.oauth.{provider}", user, "user", user.id, ip)
@@ -385,6 +452,10 @@ def login_with_identity(
     if created or (email_verified and not user.is_email_verified):
         user.is_email_verified = True
         user.email_verified_at = user.email_verified_at or utcnow()
+    if not created and email_gate_enabled(db) and user_needs_email_gate(user) and not user.is_email_verified:
+        _log_login(db, email, False, user, ip, user_agent)
+        db.commit()
+        raise AppError(403, "Vérifiez votre courriel avant de vous connecter.", "EMAIL_NOT_VERIFIED")
     user.last_login_at = utcnow()
     tokens = _issue_tokens(db, user)
     _log_login(db, email, True, user, ip, user_agent)
@@ -534,6 +605,7 @@ def _revoke_user_sessions(db: Session, user: User) -> int:
     rows = list(db.scalars(select(RefreshToken).where(RefreshToken.user_id == user.id, RefreshToken.revoked.is_(False))).all())
     for row in rows:
         row.revoked = True
+    user.session_version = int(getattr(user, "session_version", 0) or 0) + 1
     return len(rows)
 
 

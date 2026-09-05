@@ -32,13 +32,17 @@ def get_current_user_optional(
         return None
     if user.account_status and user.account_status.value in {"SUSPENDED", "DEACTIVATED"}:
         return None
+    token_ver = int(payload.get("ver") or 0)
+    user_ver = int(getattr(user, "session_version", 0) or 0)
+    if token_ver != user_ver:
+        return None
     return user
 
 
 def _require_verified_if_needed(db: Session, user: User) -> None:
-    from app.services.auth import email_gate_enabled
+    from app.services.auth import email_gate_enabled, user_needs_email_gate
 
-    if email_gate_enabled(db) and not user.is_email_verified:
+    if email_gate_enabled(db) and user_needs_email_gate(user) and not user.is_email_verified:
         raise AppError(403, "Vérifiez votre courriel avant de continuer.", "EMAIL_NOT_VERIFIED")
 
 

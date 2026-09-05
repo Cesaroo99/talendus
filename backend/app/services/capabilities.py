@@ -109,7 +109,10 @@ def public_services() -> dict:
         "login": {
             "password": True,
             "google": bool(settings.google_oauth_client_id),
-            "linkedin": bool(settings.linkedin_oauth_client_id),
+            "linkedin": bool(
+                settings.linkedin_oauth_client_id
+                and (settings.linkedin_oauth_client_secret or settings.linkedin_client_secret)
+            ),
         },
         "messaging": {
             "in_app": True,

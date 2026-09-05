@@ -41,7 +41,7 @@
   }
 
   function isPublicAuthPath(path) {
-    return /\/auth\/(login|register|oauth|forgot-password|reset-password|verify-email|refresh)/.test(path);
+    return /\/auth\/(login|register|oauth|forgot-password|reset-password|verify-email|resend-verification-email|refresh)/.test(path);
   }
 
   function expireSession() {
@@ -89,8 +89,32 @@
     return pageIsEn() ? "Session expired. Sign in again." : "Session expirée";
   }
 
+  var AUTH_CODE_EN = {
+    EMAIL_NOT_VERIFIED: "Verify your email before signing in.",
+    INVALID_CREDENTIALS: "Incorrect email or password.",
+    LOGIN_LOCKED: "Too many attempts. Try again later.",
+    ACCOUNT_DISABLED: "This account is disabled.",
+    ACCOUNT_EXISTS: "An account already exists with this email. Sign in instead.",
+    EMAIL_TAKEN: "An account already exists with this email. Sign in instead.",
+    INVALID_TOKEN: "This link is invalid or has expired.",
+    INVALID_PASSWORD: "The current password is incorrect.",
+    INVALID_REFRESH: "Session expired. Sign in again.",
+    ROLE_NOT_ALLOWED: "This role cannot register publicly.",
+    OAUTH_UNAVAILABLE: "This sign-in method is not configured.",
+    OAUTH_INVALID: "This sign-in token is invalid.",
+    OAUTH_UNVERIFIED: "This email is not verified with the provider.",
+    UNAUTHENTICATED: "Sign in to continue.",
+    FORBIDDEN: "You do not have access to this resource."
+  };
+
+  function localizedApiMessage(json) {
+    var code = json && json.code;
+    if (pageIsEn() && code && AUTH_CODE_EN[code]) return AUTH_CODE_EN[code];
+    return (json && json.message) || fallbackErr();
+  }
+
   function failPayload(res, json) {
-    var err = new Error((json && json.message) || fallbackErr());
+    var err = new Error(localizedApiMessage(json));
     err.code = json && json.code;
     err.status = res.status;
     err.payload = json;
@@ -255,6 +279,12 @@
       return request("/auth/reset-password", { method: "POST", body: { token: token, new_password: password } });
     },
     verifyEmail: function (token) { return request("/auth/verify-email", { method: "POST", body: { token: token } }); },
+    resendVerificationEmail: function (email) {
+      return request("/auth/resend-verification-email", {
+        method: "POST",
+        body: { email: String(email || "").trim().toLowerCase() }
+      });
+    },
     oauthGoogle: function (body) {
       return request("/auth/oauth/google", { method: "POST", body: body }).then(function (json) {
         setSession(json.data);

@@ -487,6 +487,50 @@ def paypal_capture(db: Session, user: User, invoice_id: str) -> dict:
     }
 
 
+def manual_refund(db: Session, user: User, invoice_id: str, amount: int | None = None) -> dict:
+    _finance(user)
+    row = get_invoice(db, user, invoice_id)
+    if row.status not in {InvoiceStatus.PAID, InvoiceStatus.REFUNDED}:
+        raise AppError(409, "Cette facture n'est pas remboursable.", "INVOICE_NOT_REFUNDABLE")
+    total = row.amount_total if row.amount_total is not None else row.amount
+    dollars = int(amount) if amount is not None else int(total)
+    if dollars <= 0 or dollars > int(total):
+        raise AppError(400, "Montant de remboursement invalide.", "INVOICE_AMOUNT_INVALID")
+    db.add(
+        Payment(
+            invoice_id=row.id,
+            amount=-abs(dollars),
+            method=PaymentMethod.TRANSFER,
+            paid_at=utcnow().date().isoformat(),
+            reference=f"manual-refund-{row.id}"[:80],
+            recorded_by=user.id,
+        )
+    )
+    row.status = InvoiceStatus.REFUNDED
+    row.paid_at = None
+    audit(db, "invoice.refund", user, "invoice", row.id, metadata={"amount": dollars, "provider": "manual"})
+    db.commit()
+    return {
+        "provider": "manual",
+        "status": "refunded",
+        "amount": dollars,
+        "reference": f"manual-refund-{row.id}"[:80],
+        "invoice": serialize_invoice(get_invoice(db, user, row.id)),
+    }
+
+
+def refund_invoice(db: Session, user: User, invoice_id: str, amount: int | None = None, provider: str = "stripe") -> dict:
+    _finance(user)
+    row = get_invoice(db, user, invoice_id)
+    if (provider or "").lower() == "paypal":
+        return paypal_refund(db, user, invoice_id, amount)
+    if row.stripe_payment_intent_id:
+        from app.services import stripe_billing
+
+        return stripe_billing.refund_invoice(db, user, invoice_id, amount)
+    return manual_refund(db, user, invoice_id, amount)
+
+
 def paypal_refund(db: Session, user: User, invoice_id: str, amount: int | None = None) -> dict:
     from app.integrations.payments.paypal import PayPalService
 

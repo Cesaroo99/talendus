@@ -6,9 +6,10 @@ import re
 import unicodedata
 from urllib.parse import urlparse
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
+from app.errors import AppError
 from app.models import Company, CompanyMembership, User
 from app.models.enums import CompanyMemberRole, CompanyStatus
 from app.models.prospect import Prospect
@@ -186,12 +187,21 @@ def attach_user_to_company_prospects(db: Session, user: User, company: Company) 
 
 
 def claim_employer_company(db: Session, user: User, company: Company) -> Company:
-    company.owner_user_id = user.id
-    company.contact_name = user.full_name or company.contact_name
+    values = {"owner_user_id": user.id}
+    if user.full_name:
+        values["contact_name"] = user.full_name
     if not company.email:
-        company.email = user.email
+        values["email"] = user.email
     if not company.phone and user.phone:
-        company.phone = user.phone
+        values["phone"] = user.phone
+    result = db.execute(
+        update(Company)
+        .where(Company.id == company.id, Company.owner_user_id.is_(None))
+        .values(**values)
+    )
+    if int(result.rowcount or 0) != 1:
+        raise AppError(409, "Cette fiche entreprise a déjà un titulaire.", "COMPANY_ALREADY_CLAIMED")
+    db.refresh(company)
     _ensure_owner_membership(db, company, user)
     attach_user_to_company_prospects(db, user, company)
     from app.services.audit import audit
@@ -227,5 +237,9 @@ def claim_or_create_employer_company(db: Session, user: User, company_name: str 
     offered = (company_name or "").strip()
     claimed = find_unclaimed_employer_company(db, email=user.email, company_name=offered)
     if claimed:
-        return claim_employer_company(db, user, claimed)
+        try:
+            return claim_employer_company(db, user, claimed)
+        except AppError as exc:
+            if getattr(exc, "code", "") != "COMPANY_ALREADY_CLAIMED":
+                raise
     return _create_employer_company(db, user, offered)

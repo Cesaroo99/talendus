@@ -184,7 +184,7 @@ def build_en(write, wrap, page_hero):
         f'<a class="tl-card" href="{href}"><div class="body"><span class="tl-chip orange">{chip}</span><h3>{t}</h3><p>{p}</p></div></a>'
         for href, chip, t, p in [
             ("permanent-recruiting.html", "Permanent", "Permanent recruiting", "Stable roles in every industry. Success fees, replacement guarantee."),
-            ("executive-search.html", "Passive", "Search mandates", "Direct approach of passive candidates for scarce profiles, whatever the industry."),
+            ("executive-search.html", "Passive", "Executive search", "Direct approach of passive candidates for scarce profiles, whatever the industry."),
             ("leadership-recruiting.html", "Leadership", "Manager recruiting", "Managers and executives. Often confidential."),
             ("industrial-recruiting.html", "Example", "Industrial recruiting", "One example among others: production, maintenance, logistics. Talendus is not limited to industry."),
             ("technical-recruiting.html", "Trades", "Skilled roles", "Technicians, welders, developers, nurses, accountants, a wide range of profiles."),
