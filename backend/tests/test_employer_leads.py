@@ -74,6 +74,25 @@ def test_ensure_creates_prospect_clients_without_employer_accounts(client, db):
     assert casc.company_name == "Cascades"
     assert casc.stage == "a-contacter"
     assert casc.city == "Kingsey Falls"
+    assert not (casc.first_name or "").strip()
+    assert not (casc.last_name or "").strip()
+    assert all(not (p.first_name or "").casefold().startswith("ressource") for p in prospects)
+
+
+def test_ensure_clears_generic_contact_names(client, db):
+    promote_admin(client, "leads-generic@talendus.ca")
+    ensure_quebec_employer_leads(db)
+    db.commit()
+    row = db.scalar(select(Prospect).where(Prospect.email == "contact@cascades.com"))
+    row.first_name = "Ressources"
+    row.last_name = "humaines"
+    db.commit()
+    ensure_quebec_employer_leads(db)
+    db.commit()
+    again = db.scalar(select(Prospect).where(Prospect.email == "contact@cascades.com"))
+    assert again.first_name == ""
+    assert again.last_name == ""
+    assert again.company_name == "Cascades"
 
 
 def test_ensure_does_not_reset_prospect_stage(client, db):

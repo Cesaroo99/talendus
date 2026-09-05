@@ -1819,6 +1819,7 @@
           <p id="prospect-lead">${employer ? "Base recruteurs / entreprises uniquement. Les candidats sont dans l’autre onglet." : "Base candidats uniquement. Les employeurs sont dans l’autre onglet."}</p>
         </div>
         <div class="actions">
+          <button type="button" class="btn btn-ghost" id="prospect-select-all">Tout sélectionner</button>
           <button type="button" class="btn btn-ghost" id="prospect-bulk">Écrire aux sélectionnés</button>
           <button type="button" class="btn btn-orange" id="prospect-new">Ajouter</button>
         </div>
@@ -1911,7 +1912,8 @@
       var lead = document.getElementById("prospect-lead");
       if (lead) {
         lead.textContent = rows.length + " fiche" + (rows.length > 1 ? "s" : "") + " dans cette base" +
-          (employer ? " employeur." : " candidat.") + " L’autre base reste à part.";
+          (employer ? " employeur." : " candidat.") +
+          " Tout sélectionner coche uniquement les fiches affichées après filtre.";
       }
       var stages = prospectMeta.stages || [];
       var body = rows.map(function (r) {
@@ -1920,11 +1922,12 @@
         }).join("");
         var lieu = [r.city, r.sector].filter(Boolean).join(" · ") || "—";
         var envois = r.sent_templates && r.sent_templates.length ? r.sent_templates.length + " envoi(s)" : "Aucun";
+        var personSub = employer ? (r.title || "") : (r.company_name || r.title || "");
         return "<tr>" +
           '<td class="check"><input type="checkbox" data-pcheck="' + U.esc(r.id) + '"></td>' +
-          "<td class='person-cell'><b>" + U.esc(prospectLabel(r)) + "</b><div class='sub'>" + U.esc(r.title || r.company_name || "") + "</div></td>" +
+          "<td class='person-cell'><b>" + U.esc(prospectLabel(r)) + "</b>" + (personSub ? "<div class='sub'>" + U.esc(personSub) + "</div>" : "") + "</td>" +
           "<td>" + U.esc(r.email) + (r.phone ? "<div class='sub'>" + U.esc(r.phone) + "</div>" : "") + "</td>" +
-          "<td>" + U.esc(employer ? (r.company_name || "—") : (r.title || "—")) + "</td>" +
+          "<td>" + U.esc(r.title || "—") + "</td>" +
           "<td>" + U.esc(lieu) + "</td>" +
           "<td>" + U.esc(sourceLabel(r.source)) + "</td>" +
           '<td class="prospect-stage">' + U.badge(r.stage) + '<select data-pstage="' + U.esc(r.id) + '">' + stageOpts + "</select></td>" +
@@ -1933,7 +1936,8 @@
           "</tr>";
       }).join("");
       root.innerHTML = '<div class="card prospect-list"><div class="table-wrap"><table class="data">' +
-        "<thead><tr><th></th><th>Personne</th><th>Coordonnées</th><th>" + (employer ? "Entreprise" : "Métier") + "</th><th>Lieu</th><th>Source</th><th>Statut</th><th>Envois</th><th></th></tr></thead>" +
+        '<thead><tr><th class="check"><input type="checkbox" id="pcheck-all" title="Tout sélectionner les fiches affichées"></th><th>' +
+        (employer ? "Entreprise" : "Personne") + "</th><th>Coordonnées</th><th>" + (employer ? "Fonction" : "Métier") + "</th><th>Lieu</th><th>Source</th><th>Statut</th><th>Envois</th><th></th></tr></thead>" +
         "<tbody>" + (body || '<tr><td colspan="9">' + U.empty("Aucun prospect", "Ajoutez une fiche ou attendez une inscription / un formulaire.") + "</td></tr>") + "</tbody></table></div></div>";
       bindProspectList(root);
     } catch (err) {
@@ -1941,13 +1945,59 @@
     }
   }
 
+  function prospectChecks(root) {
+    return Array.from((root || document).querySelectorAll("[data-pcheck]"));
+  }
+
+  function selectedProspectIds(root) {
+    return prospectChecks(root).filter(function (el) { return el.checked; }).map(function (el) { return el.getAttribute("data-pcheck"); });
+  }
+
+  function syncProspectSelection(root) {
+    var boxes = prospectChecks(root);
+    var on = boxes.filter(function (el) { return el.checked; });
+    var all = document.getElementById("pcheck-all");
+    var toggle = document.getElementById("prospect-select-all");
+    var bulk = document.getElementById("prospect-bulk");
+    if (all) {
+      all.checked = boxes.length > 0 && on.length === boxes.length;
+      all.indeterminate = on.length > 0 && on.length < boxes.length;
+    }
+    if (toggle) {
+      toggle.disabled = !boxes.length;
+      toggle.textContent = (boxes.length && on.length === boxes.length) ? "Tout désélectionner" : "Tout sélectionner";
+    }
+    if (bulk) {
+      bulk.textContent = on.length
+        ? ("Écrire aux " + on.length + " sélectionné" + (on.length > 1 ? "s" : ""))
+        : "Écrire aux sélectionnés";
+    }
+  }
+
+  function setProspectSelection(root, on) {
+    prospectChecks(root).forEach(function (el) { el.checked = !!on; });
+    syncProspectSelection(root);
+  }
+
   function bindProspectList(root) {
     var addBtn = document.getElementById("prospect-new");
     if (addBtn) addBtn.onclick = function () { openProspectCreate(); };
+    var toggle = document.getElementById("prospect-select-all");
+    if (toggle) toggle.onclick = function () {
+      var boxes = prospectChecks(root);
+      if (!boxes.length) { U.toast("Aucune fiche à sélectionner avec ce filtre.", "err"); return; }
+      setProspectSelection(root, !boxes.every(function (el) { return el.checked; }));
+    };
+    var all = document.getElementById("pcheck-all");
+    if (all) all.onchange = function () { setProspectSelection(root, all.checked); };
+    prospectChecks(root).forEach(function (el) {
+      el.onchange = function () { syncProspectSelection(root); };
+    });
+    syncProspectSelection(root);
     var bulk = document.getElementById("prospect-bulk");
     if (bulk) bulk.onclick = function () {
-      var ids = Array.from(root.querySelectorAll("[data-pcheck]:checked")).map(function (el) { return el.getAttribute("data-pcheck"); });
-      if (!ids.length) { U.toast("Cochez au moins une ligne.", "err"); return; }
+      var ids = selectedProspectIds(root);
+      if (!ids.length) { U.toast("Cochez au moins une ligne, ou utilisez Tout sélectionner.", "err"); return; }
       openProspectComposer(ids);
     };
     Array.from(root.querySelectorAll("[data-pmail]")).forEach(function (btn) {

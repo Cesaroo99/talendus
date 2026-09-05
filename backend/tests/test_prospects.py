@@ -194,6 +194,33 @@ def test_personalized_send_dedup_and_isolation(client):
     assert "Prospect introuvable" in missing.text
 
 
+def test_generic_rh_name_is_not_used_in_greeting():
+    from app.models.prospect import Prospect
+    from app.services.prospects import context_for, display_name, fill_tokens, get_template
+
+    row = Prospect(
+        side="employer",
+        email="rh@cascades.example",
+        company_name="Cascades",
+        first_name="Ressources",
+        last_name="humaines",
+        title="Ressources humaines",
+    )
+    ctx = context_for(row, None)
+    assert display_name(row) == "Cascades"
+    assert ctx["hello"] == "Bonjour,"
+    assert ctx["first_name"] == ""
+    assert ctx["name"] == "Cascades"
+    assert ctx["about_company"] == " au sujet de Cascades"
+    assert not ctx["title_bit"]
+    body = fill_tokens(get_template("emp_first_contact")["body"], ctx)
+    assert body.startswith("Bonjour,")
+    assert "Bonjour Ressource" not in body
+    assert "Bonjour Cascades" not in body
+    assert "au sujet de Cascades" in body
+    assert "poste (Ressources humaines)" not in body
+
+
 def test_greeting_without_person_name_and_attachment_note(client):
     from app.models.prospect import Prospect
     from app.services.prospects import append_attachment_note, attachment_note, context_for, fill_tokens, get_template
