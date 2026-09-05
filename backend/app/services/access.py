@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models import Company, CompanyMembership, User
+from app.models import Company, CompanyMembership, RecruitmentMission, User
 from app.models.enums import ApplicationStatus, CompanyMemberRole, InterviewType, UserRole
 from app.rbac import ADMINS, company_can, is_admin
 
@@ -58,6 +58,18 @@ def first_employer_company(db: Session, user: User) -> Company | None:
     return db.get(Company, membership.company_id)
 
 
+def recruiter_can_access_company(db: Session, user: User, company: Company) -> bool:
+    if not company.assigned_recruiter_id or company.assigned_recruiter_id == user.id:
+        return True
+    mission_id = db.scalar(
+        select(RecruitmentMission.id).where(
+            RecruitmentMission.company_id == company.id,
+            RecruitmentMission.recruiter_id == user.id,
+        )
+    )
+    return mission_id is not None
+
+
 def user_belongs_to_company(db: Session, user: User, company_id: str) -> bool:
     if is_admin(user) or user.role == UserRole.RECRUITER:
         return True
@@ -84,12 +96,23 @@ def member_role_for(db: Session, user: User, company_id: str) -> CompanyMemberRo
 
 
 def require_company_perm(db: Session, user: User, company_id: str, permission: str) -> Company:
-    if is_admin(user) or user.role == UserRole.RECRUITER:
+    if is_admin(user):
         company = db.get(Company, company_id)
         if not company:
             from app.errors import AppError
 
             raise AppError(404, "Entreprise introuvable.", "COMPANY_NOT_FOUND")
+        return company
+    if user.role == UserRole.RECRUITER:
+        company = db.get(Company, company_id)
+        if not company:
+            from app.errors import AppError
+
+            raise AppError(404, "Entreprise introuvable.", "COMPANY_NOT_FOUND")
+        if not recruiter_can_access_company(db, user, company):
+            from app.errors import AppError
+
+            raise AppError(403, "Cette fiche est assignée à un autre recruteur.", "FORBIDDEN")
         return company
     if user.role != UserRole.EMPLOYER:
         from app.errors import AppError

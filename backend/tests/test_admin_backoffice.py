@@ -231,3 +231,34 @@ def test_recruiter_cannot_patch_company_assigned_to_another(client):
         json={"name": name, "city": "Montréal"},
     )
     assert admin_ok.status_code == 200
+
+
+def test_recruiter_cannot_read_or_mission_company_assigned_to_another(client):
+    from app.database import SessionLocal
+    from app.models import Company
+
+    emp = register(client, "bo-acl-emp@example.com", "EMPLOYER")
+    rec_a = _promote(client, "bo-acl-a@example.com", "RECRUITER")
+    rec_b = _promote(client, "bo-acl-b@example.com", "RECRUITER")
+    company = client.get("/api/companies/me", headers=auth_header(emp)).json()["data"]
+    company_id = company["id"]
+    db = SessionLocal()
+    row = db.get(Company, company_id)
+    row.assigned_recruiter_id = rec_a["user"]["id"]
+    db.commit()
+    db.close()
+    assert client.get(f"/api/companies/{company_id}", headers=auth_header(rec_a)).status_code == 200
+    blocked = client.get(f"/api/companies/{company_id}", headers=auth_header(rec_b))
+    assert blocked.status_code == 403
+    mission = client.post(
+        "/api/recruiters/missions",
+        headers=auth_header(rec_b),
+        json={"company_id": company_id, "title": "Soudeur"},
+    )
+    assert mission.status_code == 403
+    allowed = client.post(
+        "/api/recruiters/missions",
+        headers=auth_header(rec_a),
+        json={"company_id": company_id, "title": "Soudeur"},
+    )
+    assert allowed.status_code == 200, allowed.text

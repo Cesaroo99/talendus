@@ -8,7 +8,7 @@ import re
 from dataclasses import dataclass
 from urllib.parse import quote
 
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from app.errors import AppError
@@ -26,6 +26,7 @@ from app.services.email import (
 
 logger = logging.getLogger("talendus.prospects")
 BULK_SEND_MAX = 400
+BULK_SEND_DAILY_MAX = 400
 
 SIDES = ("candidate", "employer")
 
@@ -1230,12 +1231,24 @@ def send_to_prospect(db: Session, actor: User, row: Prospect, req: SendRequest, 
     }
 
 
+def _prospect_sends_today(db: Session) -> int:
+    start = utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    return int(db.scalar(select(func.count()).select_from(ProspectSend).where(ProspectSend.created_at >= start)) or 0)
+
+
 def send_bulk(db: Session, actor: User, ids: list[str], req: SendRequest) -> dict:
     ids = list(dict.fromkeys((prospect_id or "").strip() for prospect_id in ids if (prospect_id or "").strip()))
     if not ids:
         raise AppError(400, "Choisissez au moins un prospect.", "VALIDATION_ERROR")
     if len(ids) > BULK_SEND_MAX:
         raise AppError(400, f"Maximum {BULK_SEND_MAX} destinataires à la fois.", "VALIDATION_ERROR")
+    already = _prospect_sends_today(db)
+    if already + len(ids) > BULK_SEND_DAILY_MAX:
+        raise AppError(
+            400,
+            f"Plafond quotidien atteint ({BULK_SEND_DAILY_MAX} courriels prospects / jour). Réessayez demain ou envoyez un lot plus petit.",
+            "BULK_DAILY_LIMIT",
+        )
     sent, skipped, failed = [], [], []
     found = [db.get(Prospect, prospect_id) for prospect_id in ids]
     sides = {row.side for row in found if row}

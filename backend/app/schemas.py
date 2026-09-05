@@ -47,7 +47,9 @@ class OAuthGoogleIn(BaseModel):
 
 
 class OAuthLinkedInIn(BaseModel):
-    access_token: str = Field(min_length=8, max_length=4000)
+    access_token: str | None = Field(default=None, min_length=8, max_length=4000)
+    code: str | None = Field(default=None, min_length=8, max_length=2000)
+    redirect_uri: str | None = Field(default=None, max_length=500)
     role: UserRole = UserRole.CANDIDATE
     company_name: str | None = Field(default=None, max_length=160)
 

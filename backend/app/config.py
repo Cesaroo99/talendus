@@ -60,6 +60,7 @@ class Settings(BaseSettings):
     login_lockout_minutes: int = 15
     google_oauth_client_id: str = ""
     linkedin_oauth_client_id: str = ""
+    linkedin_oauth_client_secret: str = ""
     seed_password: str = "talendus"
     default_currency: str = "CAD"
     default_tax_rate_bp: int = 14975
