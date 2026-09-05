@@ -1,4 +1,5 @@
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
 
 from app.errors import AppError
@@ -138,48 +139,52 @@ def apply(db: Session, user: User, data: ApplicationCreateIn, ip: str | None = N
     from app.services.matching import score_pair
 
     score, _reasons = score_pair(candidate, job)
-    application = Application(
-        candidate_id=candidate.id,
-        job_id=job.id,
-        resume_id=resume.id if resume else None,
-        status=ApplicationStatus.SUBMITTED,
-        cover_note=data.cover_note,
-        source="site",
-        match_score=score,
-    )
-    db.add(application)
-    db.flush()
-    _history(db, application, None, ApplicationStatus.SUBMITTED.value, user)
-    staff = db.get(User, job.recruiter_id) if job.recruiter_id else None
-    _notify_new_application(db, job, user)
-    notify_people(
-        db,
-        user,
-        actor=staff or first_staff(db),
-        ntype=NotificationType.APPLICATION_NEW,
-        title="Candidature envoyée",
-        message=f"Votre candidature pour {job.title} a été transmise.",
-        section="apps",
-        template="application_confirm",
-        email_type=EmailType.APPLICATION_CONFIRMATION,
-        ctx={"name": user.first_name or "", "job_title": job.title},
-        application_id=application.id,
-    )
-    from app.integrations.hooks import maybe_send_whatsapp
-
-    maybe_send_whatsapp(
-        recipient=user.phone,
-        template="application_confirm",
-        variables={"name": user.first_name or "", "job": job.title},
-    )
-    if staff:
-        maybe_send_whatsapp(
-            recipient=staff.phone,
-            template="employer_notice",
-            variables={"candidate": user.full_name, "job": job.title},
+    try:
+        application = Application(
+            candidate_id=candidate.id,
+            job_id=job.id,
+            resume_id=resume.id if resume else None,
+            status=ApplicationStatus.SUBMITTED,
+            cover_note=data.cover_note,
+            source="site",
+            match_score=score,
         )
-    audit(db, "application.create", user, "application", application.id, ip, {"job_id": job.id})
-    db.commit()
+        db.add(application)
+        db.flush()
+        _history(db, application, None, ApplicationStatus.SUBMITTED.value, user)
+        staff = db.get(User, job.recruiter_id) if job.recruiter_id else None
+        _notify_new_application(db, job, user)
+        notify_people(
+            db,
+            user,
+            actor=staff or first_staff(db),
+            ntype=NotificationType.APPLICATION_NEW,
+            title="Candidature envoyée",
+            message=f"Votre candidature pour {job.title} a été transmise.",
+            section="apps",
+            template="application_confirm",
+            email_type=EmailType.APPLICATION_CONFIRMATION,
+            ctx={"name": user.first_name or "", "job_title": job.title},
+            application_id=application.id,
+        )
+        from app.integrations.hooks import maybe_send_whatsapp
+
+        maybe_send_whatsapp(
+            recipient=user.phone,
+            template="application_confirm",
+            variables={"name": user.first_name or "", "job": job.title},
+        )
+        if staff:
+            maybe_send_whatsapp(
+                recipient=staff.phone,
+                template="employer_notice",
+                variables={"candidate": user.full_name, "job": job.title},
+            )
+        audit(db, "application.create", user, "application", application.id, ip, {"job_id": job.id})
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise AppError(409, "Une candidature existe déjà pour cette offre.", "APPLICATION_ALREADY_EXISTS") from None
     db.refresh(application)
     return application
 
@@ -218,8 +223,12 @@ def apply_staff(db: Session, actor: User, data: StaffApplicationIn, ip: str | No
         source="staff",
         match_score=score,
     )
-    db.add(application)
-    db.flush()
+    try:
+        db.add(application)
+        db.flush()
+    except IntegrityError:
+        db.rollback()
+        raise AppError(409, "Ce candidat est déjà lié à cette offre.", "APPLICATION_ALREADY_EXISTS") from None
     _history(db, application, None, ApplicationStatus.UNDER_REVIEW.value, actor, "Liaison interne Talendus")
     if not candidate.pipeline_status or candidate.pipeline_status in {"nouveau", "inactif"}:
         candidate.pipeline_status = "a-contacter"
@@ -316,7 +325,11 @@ def apply_staff(db: Session, actor: User, data: StaffApplicationIn, ip: str | No
         ip,
         {"job_id": job.id, "candidate_id": candidate.id, "mission_id": mission.id if mission else None},
     )
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise AppError(409, "Ce candidat est déjà lié à cette offre.", "APPLICATION_ALREADY_EXISTS") from None
     row = get_application(db, actor, application.id)
     cv_summary = summary_from_storage(resume.parse_json, profile=candidate) if resume else ""
     row.dossier = {

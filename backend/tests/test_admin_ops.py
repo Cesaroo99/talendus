@@ -191,3 +191,27 @@ def test_admin_ui_covers_ops_gaps():
     assert "dont 1 prospect" not in js
     track = (ROOT / "assets" / "js" / "tracking.js").read_text(encoding="utf-8")
     assert "/api/tracking/hit" in track
+
+
+def test_invoice_retries_duplicate_number(client, monkeypatch):
+    from app.services import invoices as invoices_svc
+
+    emp = register(client, "dup-inv-emp@example.com", "EMPLOYER")
+    company_id = company_id_for(client, emp)
+    admin = promote_admin(client, "dup-inv-fin@example.com")
+    first = client.post(
+        "/api/invoices",
+        headers=auth_header(admin),
+        json={"company_id": company_id, "amount": 4000},
+    )
+    assert first.status_code == 200, first.text
+    taken = first.json()["data"]["number"]
+    seq = [taken, "F-2099-777"]
+    monkeypatch.setattr(invoices_svc, "next_number", lambda _db: seq.pop(0) if seq else "F-2099-778")
+    second = client.post(
+        "/api/invoices",
+        headers=auth_header(admin),
+        json={"company_id": company_id, "amount": 4100},
+    )
+    assert second.status_code == 200, second.text
+    assert second.json()["data"]["number"] == "F-2099-777"

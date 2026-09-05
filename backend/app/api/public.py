@@ -40,7 +40,7 @@ def ready(db: Session = Depends(get_db)):
         from app.errors import AppError
 
         raise AppError(503, "Base de données indisponible.", "DB_UNAVAILABLE") from None
-    return ok({"status": "ready", "service": "talendus-api"})
+    return ok({"status": "ready", "service": "talendus-api", "db": True})
 
 
 @router.get("/job-board")

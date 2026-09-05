@@ -343,3 +343,62 @@ def test_public_html_has_honeypot_and_industrial_trades_first():
     js = (ROOT / "assets" / "js" / "talendus.js").read_text(encoding="utf-8")
     assert "c.demo" in js
     assert "mailto:" in js
+
+
+def test_composed_email_attachments_force_sync(monkeypatch):
+    from app.models.enums import EmailStatus
+    from app.services import email as email_svc
+
+    recorded = {}
+    queued = []
+
+    monkeypatch.setattr(
+        email_svc,
+        "runtime_email_config",
+        lambda _db: email_svc.SmtpRuntime(
+            enabled=True,
+            host="smtp.test",
+            port=587,
+            username="u",
+            password="p",
+            from_addr="info@talendus.ca",
+            use_tls=True,
+            reply_to="",
+        ),
+    )
+
+    def fake_record(log, _cfg, fail_fast=False, attachments=None):
+        recorded["fail_fast"] = fail_fast
+        recorded["attachments"] = attachments
+        log.status = EmailStatus.SENT
+
+    monkeypatch.setattr(email_svc, "_record_smtp_result", fake_record)
+    monkeypatch.setattr(email_svc._queue, "put", queued.append)
+
+    class DummyDb:
+        def add(self, _row):
+            return None
+
+        def flush(self):
+            return None
+
+    email_svc.send_composed_email(
+        DummyDb(),
+        "client@example.com",
+        "Mandat",
+        "Bonjour",
+        sync=False,
+        attachments=[email_svc.EmailAttachment(filename="mandat.pdf", data=b"%PDF", mime="application/pdf")],
+    )
+    assert recorded.get("fail_fast") is True
+    assert recorded.get("attachments")
+    assert queued == []
+
+
+def test_lifespan_keeps_workers_if_seed_fails():
+    text = (ROOT / "backend" / "app" / "main.py").read_text(encoding="utf-8")
+    assert "Seed en échec — l'API et les workers continuent" in text
+    seed_idx = text.index("seed_if_empty()")
+    worker_idx = text.index("start_worker()")
+    assert worker_idx > seed_idx
+    assert text.index("Workers email/ops en échec") > worker_idx

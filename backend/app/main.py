@@ -45,15 +45,23 @@ class SiteStatic(StaticFiles):
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     assert_runtime_safe(settings)
+    db_ok = False
     try:
         init_db()
-        if settings.app_env != "test":
+        db_ok = True
+    except Exception:
+        logger.exception("Démarrage base en échec — le site public reste servi")
+    if db_ok and settings.app_env != "test":
+        try:
             seed_if_empty()
+        except Exception:
+            logger.exception("Seed en échec — l'API et les workers continuent")
+        try:
             start_worker()
             start_ops_worker()
-    except Exception:
-        logger.exception("Démarrage base/seed en échec — le site public reste servi")
-    logger.info("Talendus API ready env=%s", settings.app_env)
+        except Exception:
+            logger.exception("Workers email/ops en échec")
+    logger.info("Talendus API ready env=%s db=%s", settings.app_env, db_ok)
     yield
 
 

@@ -119,6 +119,65 @@ def test_login_lockout_and_journal(client):
     assert sessions.json()["data"]
 
 
+def test_login_lockout_survives_memory_reset(client):
+    from app.services.auth import _LOGIN_FAILS
+
+    register(client, "persist-lock@example.com")
+    for _ in range(5):
+        bad = client.post("/api/auth/login", json={"email": "persist-lock@example.com", "password": "WrongPass1"})
+        assert bad.status_code == 401
+    _LOGIN_FAILS.clear()
+    locked = client.post("/api/auth/login", json={"email": "persist-lock@example.com", "password": "WrongPass1"})
+    assert locked.status_code == 429
+    assert locked.json()["code"] == "LOGIN_LOCKED"
+
+
+def test_register_integrity_error_is_email_taken():
+    from sqlalchemy.exc import IntegrityError
+
+    from app.errors import AppError
+    from app.schemas import RegisterIn
+    from app.services.auth import register as register_user
+
+    class DummyDb:
+        def __init__(self):
+            self.rolled = False
+
+        def scalar(self, *_a, **_k):
+            return None
+
+        def add(self, *_a, **_k):
+            return None
+
+        def flush(self):
+            raise IntegrityError("INSERT", {}, Exception("users.email"))
+
+        def rollback(self):
+            self.rolled = True
+
+        def commit(self):
+            raise AssertionError("commit ne doit pas être appelé")
+
+    db = DummyDb()
+    try:
+        register_user(
+            db,
+            RegisterIn(
+                email="race@example.com",
+                password="Password1!",
+                first_name="Ada",
+                last_name="Lovelace",
+            ),
+            "203.0.113.9",
+            "pytest",
+        )
+        raise AssertionError("AppError attendu")
+    except AppError as exc:
+        assert exc.status_code == 409
+        assert exc.code == "EMAIL_TAKEN"
+        assert db.rolled
+
+
 def test_refresh_rotates_tokens(client):
     data = register(client, "refresh-me@example.com")
     old_refresh = data["refresh_token"]

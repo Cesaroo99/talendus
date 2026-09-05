@@ -1,6 +1,7 @@
 from datetime import date, timedelta
 
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.config import get_settings
@@ -199,54 +200,61 @@ def create_invoice(db: Session, user: User, data: InvoiceIn, ip: str | None) -> 
     else:
         tax_amount = tax_from_bp(ht, tax_bp) if tax_bp else (data.tax_amount or 0)
     total = ht + tax_amount
-    row = Invoice(
-        number=next_number(db),
-        company_id=company.id,
-        mission_id=data.mission_id,
-        client_user_id=data.client_user_id,
-        amount=total,
-        amount_ht=ht,
-        tax_amount=tax_amount,
-        amount_total=total,
-        tax_rate_bp=tax_bp or None,
-        currency=data.currency or "CAD",
-        status=InvoiceStatus.DRAFT,
-        issued_at=data.issued_at or today,
-        due_date=data.due_date or default_due_date(db, data.issued_at or today),
-        notes=data.notes,
-    )
-    db.add(row)
-    db.flush()
-    if lines_data:
-        for line in lines_data:
-            qty = max(1, line.quantity)
-            amount = qty * line.unit_price
-            db.add(
-                InvoiceLine(
-                    invoice_id=row.id,
-                    description=line.description,
-                    quantity=qty,
-                    unit_price=line.unit_price,
-                    amount=amount,
-                    reference=line.reference,
-                    job_id=line.job_id,
-                    mission_id=line.mission_id or data.mission_id,
-                )
-            )
-    else:
-        db.add(
-            InvoiceLine(
-                invoice_id=row.id,
-                description=data.notes or "Honoraires de recrutement",
-                quantity=1,
-                unit_price=ht,
-                amount=ht,
+    for attempt in range(4):
+        try:
+            row = Invoice(
+                number=next_number(db),
+                company_id=company.id,
                 mission_id=data.mission_id,
+                client_user_id=data.client_user_id,
+                amount=total,
+                amount_ht=ht,
+                tax_amount=tax_amount,
+                amount_total=total,
+                tax_rate_bp=tax_bp or None,
+                currency=data.currency or "CAD",
+                status=InvoiceStatus.DRAFT,
+                issued_at=data.issued_at or today,
+                due_date=data.due_date or default_due_date(db, data.issued_at or today),
+                notes=data.notes,
             )
-        )
-    audit(db, "invoice.create", user, "invoice", row.id, ip, {"number": row.number})
-    db.commit()
-    return get_invoice(db, user, row.id)
+            db.add(row)
+            db.flush()
+            if lines_data:
+                for line in lines_data:
+                    qty = max(1, line.quantity)
+                    amount = qty * line.unit_price
+                    db.add(
+                        InvoiceLine(
+                            invoice_id=row.id,
+                            description=line.description,
+                            quantity=qty,
+                            unit_price=line.unit_price,
+                            amount=amount,
+                            reference=line.reference,
+                            job_id=line.job_id,
+                            mission_id=line.mission_id or data.mission_id,
+                        )
+                    )
+            else:
+                db.add(
+                    InvoiceLine(
+                        invoice_id=row.id,
+                        description=data.notes or "Honoraires de recrutement",
+                        quantity=1,
+                        unit_price=ht,
+                        amount=ht,
+                        mission_id=data.mission_id,
+                    )
+                )
+            audit(db, "invoice.create", user, "invoice", row.id, ip, {"number": row.number})
+            db.commit()
+            return get_invoice(db, user, row.id)
+        except IntegrityError:
+            db.rollback()
+            if attempt >= 3:
+                raise AppError(409, "Cette facture n'a pas pu être enregistrée. Réessayez.", "INVOICE_CONFLICT") from None
+            company = db.get(Company, data.company_id) or company
 
 
 def update_invoice(db: Session, user: User, invoice_id: str, data: InvoicePatchIn) -> Invoice:
