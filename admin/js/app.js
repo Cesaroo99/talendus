@@ -2250,7 +2250,43 @@
     }
   }
 
+  function uniqueProspectIds(ids) {
+    var seen = {};
+    return (ids || []).filter(function (id) {
+      if (!id || seen[id]) return false;
+      seen[id] = true;
+      return true;
+    });
+  }
+
+  function chunkProspectIds(ids, size) {
+    var out = [];
+    var step = size || 40;
+    for (var i = 0; i < ids.length; i += step) out.push(ids.slice(i, i + step));
+    return out;
+  }
+
+  async function sendProspectBroadcast(ids, payload, onProgress) {
+    var chunks = chunkProspectIds(uniqueProspectIds(ids), 40);
+    var sent = 0;
+    var skipped = 0;
+    var failed = 0;
+    for (var i = 0; i < chunks.length; i++) {
+      if (onProgress) onProgress(i + 1, chunks.length);
+      var res = await api().request("/admin/prospects/broadcast", {
+        method: "POST",
+        body: Object.assign({}, payload, { ids: chunks[i] })
+      });
+      var data = (res && res.data) || {};
+      sent += (data.sent || []).length;
+      skipped += (data.skipped || []).length;
+      failed += (data.failed || []).length;
+    }
+    return { sent: sent, skipped: skipped, failed: failed };
+  }
+
   function openProspectComposer(ids) {
+    ids = uniqueProspectIds(ids);
     if (!api() || !ids.length) return;
     var firstId = ids[0];
     api().request(prospectUrl(firstId)).then(function (json) {
@@ -2279,7 +2315,7 @@
         title: ids.length > 1 ? "Envoyer à " + ids.length + " fiches" : "Écrire à " + prospectLabel(detail),
         wide: true,
         body: '<div class="prospect-composer">' +
-          (others > 0 ? "<p class='sub'>Un courriel distinct par personne, personnalisé. Personne ne voit les autres adresses. Les deux bases restent séparées.</p>" : "") +
+          (others > 0 ? "<p class='sub'>Chaque fiche reçoit son propre courriel, personnalisé à son nom d’entreprise. Aucune autre adresse n’apparaît en destinataire, copie ou CCI. Les envois partent un par un.</p>" : "") +
           '<label>Modèle</label><select id="pc-tpl">' + opts + '<option value="custom">Message libre</option></select>' +
           '<p class="sub" id="pc-intent"></p>' +
           '<label>Sujet</label><input id="pc-subject">' +
@@ -2345,7 +2381,8 @@
             el.onchange = syncAttachmentNotes;
           });
           apply();
-          box.querySelector("#pc-send").onclick = function () {
+          box.querySelector("#pc-send").onclick = async function () {
+            var btn = box.querySelector("#pc-send");
             var key = tpl.value;
             var payload = {
               template_key: key === "custom" ? "" : key,
@@ -2355,14 +2392,27 @@
               contract_ids: Array.from(box.querySelectorAll("[data-ct]:checked")).map(function (el) { return el.getAttribute("data-ct"); }),
               force: !!(box.querySelector("#pc-force") && box.querySelector("#pc-force").checked)
             };
-            var req = ids.length === 1
-              ? api().request(prospectUrl(firstId, "/send"), { method: "POST", body: payload })
-              : api().request("/admin/prospects/broadcast", { method: "POST", body: Object.assign({ ids: ids }, payload) });
-            req.then(function (res) {
-              U.toast((res && res.message) || "Envoyé.", "ok");
+            if (btn) { btn.disabled = true; btn.textContent = ids.length > 1 ? "Envoi en cours…" : "Envoi…"; }
+            try {
+              var res;
+              if (ids.length === 1) {
+                res = await api().request(prospectUrl(firstId, "/send"), { method: "POST", body: payload });
+                U.toast((res && res.message) || "Envoyé.", "ok");
+              } else {
+                var result = await sendProspectBroadcast(ids, payload, function (done, total) {
+                  if (btn) btn.textContent = "Envoi " + done + " / " + total + "…";
+                });
+                var parts = [result.sent + " envoyé" + (result.sent > 1 ? "s" : "")];
+                if (result.skipped) parts.push(result.skipped + " déjà contacté" + (result.skipped > 1 ? "s" : ""));
+                if (result.failed) parts.push(result.failed + " échec" + (result.failed > 1 ? "s" : ""));
+                U.toast(parts.join(", ") + ". Chaque personne a reçu son propre courriel, sans voir les autres.", result.failed ? "err" : "ok");
+              }
               close();
               hydrateProspects();
-            }).catch(function (err) { U.toast((err && err.message) || "Envoi impossible.", "err"); });
+            } catch (err) {
+              if (btn) { btn.disabled = false; btn.textContent = "Envoyer"; }
+              U.toast((err && err.message) || "Envoi impossible.", "err");
+            }
           };
         }
       });

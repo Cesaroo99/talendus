@@ -14,7 +14,9 @@ from app.errors import AppError
 from app.models import Application, AuditLog, Candidate, Company, Contract, InternalNote, Interview, Invoice, RecruitmentMission, User
 from app.models.enums import EmailType, UserRole, utcnow
 from app.models.prospect import Prospect, ProspectSend
-from app.services.email import EmailAttachment, send_composed_email
+from app.services.email import EmailAttachment, send_composed_email, start_worker
+
+BULK_SEND_MAX = 400
 
 SIDES = ("candidate", "employer")
 
@@ -1084,7 +1086,7 @@ def available_attachments(db: Session, row: Prospect) -> dict:
     return {"invoices": invoices, "contracts": contracts}
 
 
-def send_to_prospect(db: Session, actor: User, row: Prospect, req: SendRequest) -> dict:
+def send_to_prospect(db: Session, actor: User, row: Prospect, req: SendRequest, *, sync: bool = True) -> dict:
     key = (req.template_key or "").strip()
     subject = (req.subject or "").strip()
     body = (req.body or "").strip()
@@ -1116,7 +1118,7 @@ def send_to_prospect(db: Session, actor: User, row: Prospect, req: SendRequest) 
         subject,
         body,
         email_type=EmailType.ADMIN,
-        sync=True,
+        sync=True if attachments else sync,
         attachments=attachments,
     )
     names = "|".join(att.filename for att in attachments)
@@ -1158,24 +1160,27 @@ def send_to_prospect(db: Session, actor: User, row: Prospect, req: SendRequest) 
 
 
 def send_bulk(db: Session, actor: User, ids: list[str], req: SendRequest) -> dict:
+    ids = list(dict.fromkeys((prospect_id or "").strip() for prospect_id in ids if (prospect_id or "").strip()))
     if not ids:
         raise AppError(400, "Choisissez au moins un prospect.", "VALIDATION_ERROR")
-    if len(ids) > 80:
-        raise AppError(400, "Maximum 80 destinataires à la fois.", "VALIDATION_ERROR")
+    if len(ids) > BULK_SEND_MAX:
+        raise AppError(400, f"Maximum {BULK_SEND_MAX} destinataires à la fois.", "VALIDATION_ERROR")
     sent, skipped, failed = [], [], []
     found = [db.get(Prospect, prospect_id) for prospect_id in ids]
     sides = {row.side for row in found if row}
     if len(sides) > 1:
         raise AppError(400, "Impossible d’envoyer aux deux bases en même temps.", "SIDE_MIXED")
+    has_attachments = bool(req.invoice_ids or req.contract_ids)
     for prospect_id, row in zip(ids, found):
         if not row:
             failed.append({"id": prospect_id, "reason": "introuvable"})
             continue
         try:
-            sent.append(send_to_prospect(db, actor, row, req))
+            sent.append(send_to_prospect(db, actor, row, req, sync=has_attachments))
         except AppError as exc:
             if exc.code == "ALREADY_SENT":
                 skipped.append({"id": row.id, "email": row.email, "reason": exc.message})
             else:
                 failed.append({"id": row.id, "email": row.email, "reason": exc.message})
+    start_worker()
     return {"sent": sent, "skipped": skipped, "failed": failed}
