@@ -78,10 +78,13 @@ ACTION_LABELS = {
     "prospect.patch": "Fiche prospect mise à jour",
     "prospect.stage": "Statut prospect",
     "prospect.send": "Courriel prospect envoyé",
+    "prospect.send_failed": "Courriel prospect non parti",
 }
 
 
-def action_label(action: str) -> str:
+def action_label(action: str, metadata: dict | None = None) -> str:
+    if action == "prospect.send" and isinstance(metadata, dict) and metadata.get("delivered") is False:
+        return ACTION_LABELS["prospect.send_failed"]
     if not action:
         return "Action"
     if action in ACTION_LABELS:
@@ -101,7 +104,7 @@ def serialize_audit(row: AuditLog, actor: User | None = None) -> dict:
     return {
         "id": row.id,
         "action": row.action,
-        "action_label": action_label(row.action),
+        "action_label": action_label(row.action, metadata if isinstance(metadata, dict) else None),
         "actor_id": row.actor_id,
         "actor_name": actor.full_name if actor else None,
         "actor_email": actor.email if actor else None,

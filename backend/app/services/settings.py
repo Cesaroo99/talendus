@@ -122,7 +122,7 @@ PLATFORM_DEFAULTS = (
     ("billing.neq", "2282510496", "NEQ (Registraire des entreprises du Québec)"),
     ("billing.gst", "", "N° de TPS (RT)"),
     ("billing.qst", "", "N° de TVQ"),
-    ("smtp.enabled", "", "Activer l’envoi SMTP (oui / non ; vide = variable d’environnement)"),
+    ("smtp.enabled", "", "Activer l’envoi SMTP (oui / non ; vide = oui si le serveur SMTP est configuré)"),
     ("smtp.host", "", "Serveur SMTP"),
     ("smtp.port", "587", "Port SMTP"),
     ("smtp.username", "", "Identifiant SMTP (souvent info@talendus.ca)"),

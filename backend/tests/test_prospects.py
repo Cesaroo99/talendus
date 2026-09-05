@@ -1,6 +1,6 @@
 from app.models.enums import EmailType
 from app.services.email import EmailAttachment, build_email_message, runtime_email_config
-from tests.conftest import auth_header, promote_admin, register
+from tests.conftest import auth_header, promote_admin, register, stub_smtp_delivery
 
 
 def test_register_creates_prospects(client):
@@ -50,7 +50,8 @@ def test_register_creates_prospects(client):
     assert "emp_first_contact" not in keys
 
 
-def test_list_persists_synced_prospects(client):
+def test_list_persists_synced_prospects(client, monkeypatch):
+    stub_smtp_delivery(monkeypatch)
     from sqlalchemy import delete
 
     from app.database import SessionLocal
@@ -124,7 +125,8 @@ def test_contact_and_manual_prospect(client):
     assert patched.json()["data"]["phone"] == "5145550101"
 
 
-def test_personalized_send_dedup_and_isolation(client):
+def test_personalized_send_dedup_and_isolation(client, monkeypatch):
+    stub_smtp_delivery(monkeypatch)
     admin = promote_admin(client, "crm-mail@example.com")
     admin_h = auth_header(admin)
     a = client.post(
@@ -195,7 +197,8 @@ def test_personalized_send_dedup_and_isolation(client):
     assert "Prospect introuvable" in missing.text
 
 
-def test_broadcast_accepts_the_full_employer_list(client):
+def test_broadcast_accepts_the_full_employer_list(client, monkeypatch):
+    stub_smtp_delivery(monkeypatch)
     admin = promote_admin(client, "bulk-271@talendus.ca")
     admin_h = auth_header(admin)
     created = []
@@ -414,6 +417,8 @@ def test_admin_ui_has_prospects_module():
     assert "sendProspectBroadcast" in js
     assert "chunkProspectIds" in js
     assert "Chaque fiche reçoit son propre courriel" in js
+    assert "non parti" in js
+    assert "email_status" in js
     assert "Maximum 80 destinataires" not in js
     assert "cand_first_contact" not in js
     assert "Vous trouverez ceci en pièce jointe" in js
@@ -431,3 +436,192 @@ def test_admin_ui_has_prospects_module():
     auth = (Path(__file__).resolve().parents[2] / "assets" / "js" / "auth-gate.js").read_text(encoding="utf-8")
     assert "prefEmail" in auth
     assert 'autocomplete="username" value="' in auth
+
+
+def test_smtp_off_does_not_mark_prospect_contacted(client):
+    admin = promote_admin(client, "smtp-off-admin@example.com")
+    admin_h = auth_header(admin)
+    created = client.post(
+        "/api/admin/prospects",
+        headers=admin_h,
+        json={"side": "employer", "email": "memolicesar1@gmail.com", "company_name": "Memo Test", "stage": "a-contacter"},
+    )
+    assert created.status_code == 200, created.text
+    pid = created.json()["data"]["id"]
+    sent = client.post(
+        f"/api/admin/prospects/p/{pid}/send",
+        headers=admin_h,
+        json={"template_key": "emp_first_contact"},
+    )
+    assert sent.status_code == 502, sent.text
+    assert sent.json()["code"] == "SMTP_SEND_FAILED"
+    assert "n’a pas quitté le serveur" in sent.json()["message"]
+    detail = client.get(f"/api/admin/prospects/p/{pid}", headers=admin_h).json()["data"]
+    assert detail["stage"] == "a-contacter"
+    assert not detail.get("last_contacted_at")
+    assert detail["sends"] == []
+    logs = client.get("/api/emails", headers=admin_h).json()["data"]
+    memo = [row for row in logs if row["to_email"] == "memolicesar1@gmail.com"]
+    assert memo
+    assert memo[0]["status"] == "FAILED"
+    assert memo[0]["delivered"] is False
+    assert (memo[0]["attempts"] or 0) == 0
+    bulk = client.post(
+        "/api/admin/prospects/broadcast",
+        headers=admin_h,
+        json={"ids": [pid], "template_key": "emp_first_contact"},
+    )
+    assert bulk.status_code == 200, bulk.text
+    data = bulk.json()["data"]
+    assert data["sent"] == []
+    assert data["failed"]
+    assert data["failed"][0]["email"] == "memolicesar1@gmail.com"
+    again = client.get(f"/api/admin/prospects/p/{pid}", headers=admin_h).json()["data"]
+    assert again["stage"] == "a-contacter"
+
+
+def test_reconcile_resets_old_fake_sends(client, monkeypatch):
+    from app.database import SessionLocal
+    from app.models import EmailLog
+    from app.models.enums import EmailStatus, EmailType, utcnow
+    from app.models.prospect import Prospect, ProspectSend
+    from app.services.email import FAKE_SENT_ERROR
+    from app.services.prospects import reconcile_undelivered_prospect_mails
+
+    admin = promote_admin(client, "reconcile-admin@example.com")
+    admin_h = auth_header(admin)
+    old = client.post(
+        "/api/admin/prospects",
+        headers=admin_h,
+        json={"side": "employer", "email": "ancien@usine.example", "company_name": "Ancienne Usine", "stage": "a-contacter"},
+    ).json()["data"]
+    recent = client.post(
+        "/api/admin/prospects",
+        headers=admin_h,
+        json={"side": "employer", "email": "memolicesar1@gmail.com", "company_name": "Memo", "stage": "nouveau"},
+    ).json()["data"]
+    kept = client.post(
+        "/api/admin/prospects",
+        headers=admin_h,
+        json={"side": "employer", "email": "vrai@usine.example", "company_name": "Vraie Usine", "stage": "a-contacter"},
+    ).json()["data"]
+    later = client.post(
+        "/api/admin/prospects",
+        headers=admin_h,
+        json={"side": "employer", "email": "mandat@usine.example", "company_name": "Mandat Plus", "stage": "proposition"},
+    ).json()["data"]
+
+    db = SessionLocal()
+    fake_old = EmailLog(
+        to_email="ancien@usine.example",
+        type=EmailType.ADMIN,
+        subject="Recrutement",
+        body="Bonjour",
+        status=EmailStatus.SENT,
+        attempts=0,
+        sent_at=utcnow(),
+    )
+    fake_new = EmailLog(
+        to_email="memolicesar1@gmail.com",
+        type=EmailType.ADMIN,
+        subject="Recrutement",
+        body="Bonjour",
+        status=EmailStatus.SENT,
+        attempts=0,
+        sent_at=utcnow(),
+    )
+    real = EmailLog(
+        to_email="vrai@usine.example",
+        type=EmailType.ADMIN,
+        subject="Recrutement",
+        body="Bonjour",
+        status=EmailStatus.SENT,
+        attempts=1,
+        sent_at=utcnow(),
+    )
+    failed = EmailLog(
+        to_email="mandat@usine.example",
+        type=EmailType.ADMIN,
+        subject="Recrutement",
+        body="Bonjour",
+        status=EmailStatus.FAILED,
+        error="SMTP",
+        attempts=1,
+    )
+    db.add_all([fake_old, fake_new, real, failed])
+    db.flush()
+    for pid, email, log, stage in (
+        (old["id"], "ancien@usine.example", fake_old, "contacte"),
+        (recent["id"], "memolicesar1@gmail.com", fake_new, "contacte"),
+        (kept["id"], "vrai@usine.example", real, "contacte"),
+        (later["id"], "mandat@usine.example", failed, "proposition"),
+    ):
+        row = db.get(Prospect, pid)
+        row.stage = stage
+        row.last_contacted_at = utcnow()
+        db.add(
+            ProspectSend(
+                prospect_id=pid,
+                template_key="emp_first_contact",
+                subject="Recrutement",
+                body="Bonjour",
+                to_email=email,
+                email_log_id=log.id,
+            )
+        )
+    db.commit()
+    stats = reconcile_undelivered_prospect_mails(db)
+    db.commit()
+    assert stats["fake_logs"] == 2
+    assert stats["removed_sends"] == 3
+    assert stats["reset_stages"] == 2
+    db.refresh(fake_old)
+    db.refresh(fake_new)
+    db.refresh(real)
+    assert fake_old.status == EmailStatus.FAILED
+    assert FAKE_SENT_ERROR in (fake_old.error or "")
+    assert fake_new.status == EmailStatus.FAILED
+    assert real.status == EmailStatus.SENT
+    assert db.get(Prospect, old["id"]).stage == "a-contacter"
+    assert db.get(Prospect, recent["id"]).stage == "a-contacter"
+    assert db.get(Prospect, old["id"]).last_contacted_at is None
+    assert db.get(Prospect, kept["id"]).stage == "contacte"
+    assert db.get(Prospect, kept["id"]).last_contacted_at is not None
+    assert db.get(Prospect, later["id"]).stage == "proposition"
+    db.close()
+
+    retry = client.post(
+        f"/api/admin/prospects/p/{old['id']}/send",
+        headers=admin_h,
+        json={"template_key": "emp_first_contact"},
+    )
+    assert retry.status_code == 502
+    stub_smtp_delivery(monkeypatch)
+    ok_send = client.post(
+        f"/api/admin/prospects/p/{old['id']}/send",
+        headers=admin_h,
+        json={"template_key": "emp_first_contact"},
+    )
+    assert ok_send.status_code == 200, ok_send.text
+    assert ok_send.json()["data"]["delivered"] is True
+    contacted = client.get(f"/api/admin/prospects/p/{old['id']}", headers=admin_h).json()["data"]
+    assert contacted["stage"] == "contacte"
+
+
+def test_smtp_auto_enables_when_credentials_are_set(client):
+    from app.database import SessionLocal
+    from app.models import SystemSetting
+    from app.services.email import runtime_email_config
+
+    db = SessionLocal()
+    db.add(SystemSetting(key="smtp.host", value="smtp.gmail.com"))
+    db.add(SystemSetting(key="smtp.username", value="info@talendus.ca"))
+    db.add(SystemSetting(key="smtp.password", value="abcdefghijklmnop"))
+    db.commit()
+    cfg = runtime_email_config(db)
+    assert cfg.enabled is True
+    db.add(SystemSetting(key="smtp.enabled", value="non"))
+    db.commit()
+    off = runtime_email_config(db)
+    assert off.enabled is False
+    db.close()

@@ -77,6 +77,25 @@ def company_id_for(client, emp_tokens: dict) -> str:
     return res.json()["data"]["id"]
 
 
+def stub_smtp_delivery(monkeypatch):
+    from app.services.email import SmtpRuntime
+
+    monkeypatch.setattr(
+        "app.services.email.runtime_email_config",
+        lambda db=None: SmtpRuntime(
+            enabled=True,
+            host="smtp.gmail.com",
+            port=587,
+            username="info@talendus.ca",
+            password="abcdefghijklmnop",
+            from_addr="Talendus <info@talendus.ca>",
+            use_tls=True,
+            reply_to="info@talendus.ca",
+        ),
+    )
+    monkeypatch.setattr("app.services.email._smtp_send", lambda *_args, **_kwargs: None)
+
+
 def staff_publish_job(client, emp_tokens: dict, admin_tokens: dict | None = None, **fields):
     if admin_tokens is None:
         slug = fields.get("slug", "job")

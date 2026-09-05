@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import logging
 import re
 from dataclasses import dataclass
 from urllib.parse import quote
@@ -11,11 +12,19 @@ from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from app.errors import AppError
-from app.models import Application, AuditLog, Candidate, Company, Contract, InternalNote, Interview, Invoice, RecruitmentMission, User
+from app.models import Application, AuditLog, Candidate, Company, Contract, EmailLog, InternalNote, Interview, Invoice, RecruitmentMission, User
 from app.models.enums import EmailType, UserRole, utcnow
 from app.models.prospect import Prospect, ProspectSend
-from app.services.email import EmailAttachment, send_composed_email, start_worker
+from app.services.email import (
+    EmailAttachment,
+    delivery_error,
+    email_actually_sent,
+    mark_fake_sent_logs,
+    send_composed_email,
+    start_worker,
+)
 
+logger = logging.getLogger("talendus.prospects")
 BULK_SEND_MAX = 400
 
 SIDES = ("candidate", "employer")
@@ -847,14 +856,33 @@ def filter_options(db: Session, side: str) -> dict[str, list[str]]:
     }
 
 
+def _delivered_send_logs(db: Session, sends: list[ProspectSend]) -> dict[str, EmailLog]:
+    ids = [row.email_log_id for row in sends if row.email_log_id]
+    if not ids:
+        return {}
+    logs = list(db.scalars(select(EmailLog).where(EmailLog.id.in_(ids))).all())
+    return {log.id: log for log in logs if email_actually_sent(log)}
+
+
 def sent_keys_map(db: Session, prospect_ids: list[str]) -> dict[str, list[str]]:
     if not prospect_ids:
         return {}
-    rows = db.scalars(select(ProspectSend).where(ProspectSend.prospect_id.in_(prospect_ids))).all()
+    rows = list(db.scalars(select(ProspectSend).where(ProspectSend.prospect_id.in_(prospect_ids))).all())
+    delivered = _delivered_send_logs(db, rows)
     out: dict[str, list[str]] = {pid: [] for pid in prospect_ids}
     for row in rows:
-        out.setdefault(row.prospect_id, []).append(row.template_key)
+        if row.email_log_id and row.email_log_id in delivered:
+            out.setdefault(row.prospect_id, []).append(row.template_key)
     return out
+
+
+def _send_was_delivered(db: Session, row: ProspectSend | None) -> bool:
+    if row is None or not row.email_log_id:
+        return False
+    return email_actually_sent(db.get(EmailLog, row.email_log_id))
+
+
+CONTACT_STAGES = frozenset({"contacte"})
 
 
 RESERVED_PATHS = frozenset({"catalog", "templates", "broadcast", "send-bulk", "sync", "p"})
@@ -924,7 +952,9 @@ def patch_prospect(db: Session, prospect_id: str, data: dict, actor: User | None
 
 
 def proposals_for(db: Session, row: Prospect, actor: User | None) -> list[dict]:
-    sent = {s.template_key for s in db.scalars(select(ProspectSend).where(ProspectSend.prospect_id == row.id)).all()}
+    sends = list(db.scalars(select(ProspectSend).where(ProspectSend.prospect_id == row.id)).all())
+    delivered = _delivered_send_logs(db, sends)
+    sent = {s.template_key for s in sends if s.email_log_id and s.email_log_id in delivered}
     ctx = context_for(row, actor)
     out = []
     for item in TEMPLATES:
@@ -1104,12 +1134,16 @@ def send_to_prospect(db: Session, actor: User, row: Prospect, req: SendRequest, 
         subject = fill_tokens(subject, ctx)
         body = fill_tokens(body, ctx)
     existing = db.scalar(select(ProspectSend).where(ProspectSend.prospect_id == row.id, ProspectSend.template_key == key))
-    if existing and not req.force:
+    if existing and _send_was_delivered(db, existing) and not req.force:
         raise AppError(
             409,
             f"{display_name(row)} a déjà reçu ce message ({existing.subject}). Choisissez un autre modèle, ou forcez l’envoi.",
             "ALREADY_SENT",
         )
+    if existing and not _send_was_delivered(db, existing):
+        db.delete(existing)
+        db.flush()
+        existing = None
     attachments = _attachments_for(db, row, req.invoice_ids, req.contract_ids, actor)
     body = append_attachment_note(body, attachments, ctx)
     log = send_composed_email(
@@ -1118,10 +1152,40 @@ def send_to_prospect(db: Session, actor: User, row: Prospect, req: SendRequest, 
         subject,
         body,
         email_type=EmailType.ADMIN,
-        sync=True if attachments else sync,
+        sync=True,
         attachments=attachments,
     )
+    delivered = email_actually_sent(log)
     names = "|".join(att.filename for att in attachments)
+    from app.services.audit import audit
+
+    audit(
+        db,
+        "prospect.send",
+        actor,
+        "prospect",
+        row.id,
+        metadata={
+            "template": key,
+            "to": row.email,
+            "subject": subject[:180],
+            "email_status": log.status.value if log.status else "QUEUED",
+            "delivered": delivered,
+            "error": log.error or "",
+        },
+    )
+    if not delivered:
+        db.flush()
+        return {
+            "prospect_id": row.id,
+            "to_email": row.email,
+            "template_key": key,
+            "subject": subject,
+            "email_status": log.status.value if log.status else "QUEUED",
+            "delivered": False,
+            "email_error": delivery_error(log),
+            "attachments": [att.filename for att in attachments],
+        }
     if existing and req.force:
         existing.subject = subject[:180]
         existing.body = body
@@ -1129,25 +1193,22 @@ def send_to_prospect(db: Session, actor: User, row: Prospect, req: SendRequest, 
         existing.email_log_id = log.id
         existing.attachment_names = names
         existing.sent_by_id = actor.id
-        send_row = existing
     else:
-        send_row = ProspectSend(
-            prospect_id=row.id,
-            template_key=key,
-            subject=subject[:180],
-            body=body,
-            to_email=row.email,
-            email_log_id=log.id,
-            attachment_names=names,
-            sent_by_id=actor.id,
+        db.add(
+            ProspectSend(
+                prospect_id=row.id,
+                template_key=key,
+                subject=subject[:180],
+                body=body,
+                to_email=row.email,
+                email_log_id=log.id,
+                attachment_names=names,
+                sent_by_id=actor.id,
+            )
         )
-        db.add(send_row)
     row.last_contacted_at = utcnow()
     if row.stage in {"nouveau", "a-contacter"}:
         row.stage = "contacte"
-    from app.services.audit import audit
-
-    audit(db, "prospect.send", actor, "prospect", row.id, metadata={"template": key, "to": row.email, "subject": subject[:180]})
     db.flush()
     return {
         "prospect_id": row.id,
@@ -1155,6 +1216,7 @@ def send_to_prospect(db: Session, actor: User, row: Prospect, req: SendRequest, 
         "template_key": key,
         "subject": subject,
         "email_status": log.status.value if log.status else "QUEUED",
+        "delivered": True,
         "attachments": [att.filename for att in attachments],
     }
 
@@ -1170,13 +1232,22 @@ def send_bulk(db: Session, actor: User, ids: list[str], req: SendRequest) -> dic
     sides = {row.side for row in found if row}
     if len(sides) > 1:
         raise AppError(400, "Impossible d’envoyer aux deux bases en même temps.", "SIDE_MIXED")
-    has_attachments = bool(req.invoice_ids or req.contract_ids)
     for prospect_id, row in zip(ids, found):
         if not row:
             failed.append({"id": prospect_id, "reason": "introuvable"})
             continue
         try:
-            sent.append(send_to_prospect(db, actor, row, req, sync=has_attachments))
+            result = send_to_prospect(db, actor, row, req, sync=True)
+            if result.get("delivered"):
+                sent.append(result)
+            else:
+                failed.append(
+                    {
+                        "id": row.id,
+                        "email": row.email,
+                        "reason": result.get("email_error") or "Le courriel n’a pas quitté le serveur.",
+                    }
+                )
         except AppError as exc:
             if exc.code == "ALREADY_SENT":
                 skipped.append({"id": row.id, "email": row.email, "reason": exc.message})
@@ -1184,3 +1255,47 @@ def send_bulk(db: Session, actor: User, ids: list[str], req: SendRequest) -> dic
                 failed.append({"id": row.id, "email": row.email, "reason": exc.message})
     start_worker()
     return {"sent": sent, "skipped": skipped, "failed": failed}
+
+
+def reconcile_undelivered_prospect_mails(db: Session) -> dict[str, int]:
+    """Remet à « à contacter » les fiches dont le courriel n’est jamais vraiment parti."""
+    fake_logs = mark_fake_sent_logs(db)
+    sends = list(db.scalars(select(ProspectSend)).all())
+    delivered_logs = _delivered_send_logs(db, sends)
+    removed = 0
+    for send in sends:
+        if send.email_log_id and send.email_log_id in delivered_logs:
+            continue
+        db.delete(send)
+        removed += 1
+    db.flush()
+    remaining = list(db.scalars(select(ProspectSend)).all())
+    still_delivered = _delivered_send_logs(db, remaining)
+    delivered_ids = {send.prospect_id for send in remaining if send.email_log_id and send.email_log_id in still_delivered}
+    latest_by_prospect: dict[str, ProspectSend] = {}
+    for send in remaining:
+        if not send.email_log_id or send.email_log_id not in still_delivered:
+            continue
+        current = latest_by_prospect.get(send.prospect_id)
+        if current is None or (send.created_at and (current.created_at is None or send.created_at > current.created_at)):
+            latest_by_prospect[send.prospect_id] = send
+    reset = 0
+    cleared = 0
+    for row in db.scalars(select(Prospect)).all():
+        if row.id in delivered_ids:
+            latest = latest_by_prospect.get(row.id)
+            if latest and latest.created_at:
+                row.last_contacted_at = latest.created_at
+            continue
+        changed = False
+        if row.stage in CONTACT_STAGES:
+            row.stage = "a-contacter"
+            reset += 1
+            changed = True
+        if row.last_contacted_at is not None:
+            row.last_contacted_at = None
+            cleared += 1
+            changed = True
+        if changed:
+            logger.info("prospect undelivered reset id=%s email=%s", row.id, row.email)
+    return {"fake_logs": fake_logs, "removed_sends": removed, "reset_stages": reset, "cleared_contact": cleared}

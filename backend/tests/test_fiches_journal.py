@@ -75,7 +75,8 @@ def test_prospect_actions_and_notes_are_audited(client):
     note = client.post(f"/api/admin/prospects/p/{pid}/notes", headers=admin_h, json={"text": "Disponible le quart de jour."})
     assert note.status_code == 200, note.text
     sent = client.post(f"/api/admin/prospects/p/{pid}/send", headers=admin_h, json={"template_key": "cand_first_contact"})
-    assert sent.status_code == 200, sent.text
+    assert sent.status_code == 502, sent.text
+    assert sent.json()["code"] == "SMTP_SEND_FAILED"
     detail = client.get(f"/api/admin/prospects/p/{pid}", headers=admin_h).json()["data"]
     assert any(n["text"] == "Disponible le quart de jour." for n in detail["dossier"]["notes"])
     actions = {row["action"] for row in detail["dossier"]["recent_actions"]}
