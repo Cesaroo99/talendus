@@ -96,8 +96,8 @@ def reset(payload: PasswordResetIn, db: Session = Depends(get_db)):
 
 @router.post("/change-password")
 def change(payload: PasswordChangeIn, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    auth_service.change_password(db, user, payload.current_password, payload.new_password)
-    return ok(message="Mot de passe modifié.")
+    tokens = auth_service.change_password(db, user, payload.current_password, payload.new_password)
+    return ok(tokens, message="Mot de passe modifié.")
 
 
 @router.post("/verify-email")
@@ -113,9 +113,8 @@ def resend_verification(user: User = Depends(get_current_user_unverified), db: S
 
 
 @router.post("/resend-verification-email")
-def resend_verification_email(payload: EmailResendIn, request: Request, db: Session = Depends(get_db)):
+def resend_verification_email(payload: EmailResendIn, db: Session = Depends(get_db)):
     email = str(payload.email).strip().lower()
-    auth_service._assert_not_locked(email, client_ip(request), db)
     auth_service.resend_verification_by_email(db, email)
     return ok(message="Si un compte existe et n'est pas encore vérifié, un courriel a été envoyé.")
 
@@ -133,8 +132,8 @@ def revoke_session(session_id: str, user: User = Depends(get_current_user), db: 
 
 @router.post("/sessions/revoke-all")
 def revoke_all(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    count = auth_service.revoke_all_sessions(db, user)
-    return ok({"revoked": count}, message="Sessions révoquées.")
+    payload = auth_service.revoke_all_sessions(db, user)
+    return ok(payload, message="Sessions révoquées.")
 
 
 @router.get("/login-events")

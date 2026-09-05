@@ -163,8 +163,36 @@ def test_password_change_invalidates_access_token(client):
         json={"current_password": "Password1!", "new_password": "NewerPass12!"},
     )
     assert changed.status_code == 200
+    tokens = changed.json()["data"]
+    assert tokens["access_token"]
+    assert tokens["refresh_token"]
     dead = client.get("/api/users/me", headers=headers)
     assert dead.status_code == 401
+    alive = client.get("/api/users/me", headers=auth_header(tokens))
+    assert alive.status_code == 200
+
+
+def test_revoke_all_keeps_current_device(client):
+    data = register(client, "keep-device@example.com")
+    headers = auth_header(data)
+    revoked = client.post("/api/auth/sessions/revoke-all", headers=headers)
+    assert revoked.status_code == 200
+    payload = revoked.json()["data"]
+    assert payload["revoked"] >= 1
+    assert payload["access_token"]
+    dead = client.get("/api/users/me", headers=headers)
+    assert dead.status_code == 401
+    alive = client.get("/api/users/me", headers=auth_header(payload))
+    assert alive.status_code == 200
+
+
+def test_resend_verification_does_not_lock_login(client):
+    register(client, "resend-lock@example.com")
+    for _ in range(6):
+        res = client.post("/api/auth/resend-verification-email", json={"email": "resend-lock@example.com"})
+        assert res.status_code == 200
+    login = client.post("/api/auth/login", json={"email": "resend-lock@example.com", "password": "Password1!"})
+    assert login.status_code == 200
 
 
 def test_finance_bootstrap_omits_crm_pii(client):
@@ -236,6 +264,10 @@ def test_overlay_and_copy_are_optimal():
     account = (ROOT / "assets" / "js" / "account.js").read_text(encoding="utf-8")
     assert "__tlPushEnabled" in account
     assert "notify_push" in account
+    assert "setSession(json.data)" in account
+    mobile = (ROOT / "assets" / "js" / "mobile-app.js").read_text(encoding="utf-8")
+    assert "INSTALL_LIVE || nativePush()" in mobile
+    assert "notify_push" in mobile
     sw = (ROOT / "sw.js").read_text(encoding="utf-8")
     assert "talendus-app-v34" in sw
     assert '"/assets/js/mobile-app.js"' not in sw
