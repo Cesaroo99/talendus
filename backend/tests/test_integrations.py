@@ -359,6 +359,9 @@ def test_invoice_refund_and_paypal_unconfigured(client):
     inv_id = invoice.json()["data"]["id"]
     sent = client.post(f"/api/invoices/{inv_id}/send", headers=h)
     assert sent.status_code == 200, sent.text
+    paypal = client.post(f"/api/invoices/{inv_id}/paypal", headers=auth_header(emp))
+    assert paypal.status_code == 503
+    assert paypal.json()["code"] == "INTEGRATION_NOT_CONFIGURED"
     refund = client.post(f"/api/invoices/{inv_id}/refund", headers=h, json={})
     assert refund.status_code == 409
     assert refund.json()["code"] == "INVOICE_NOT_REFUNDABLE"
@@ -373,9 +376,6 @@ def test_invoice_refund_and_paypal_unconfigured(client):
     assert manual.status_code == 200, manual.text
     assert manual.json()["data"]["provider"] == "manual"
     assert manual.json()["data"]["invoice"]["status"] == "REFUNDED"
-    paypal = client.post(f"/api/invoices/{inv_id}/paypal", headers=auth_header(emp))
-    assert paypal.status_code == 503
-    assert paypal.json()["code"] == "INTEGRATION_NOT_CONFIGURED"
 
 
 def test_candidate_ai_and_contract_esign_not_configured(client):

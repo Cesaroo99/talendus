@@ -129,8 +129,14 @@ def _user_locale(db: Session, user: User) -> str:
     return locale
 
 
-def portal_auth_link(db: Session, user: User, purpose: str, token: str | None = None) -> str:
-    locale = _user_locale(db, user)
+def portal_auth_link(
+    db: Session,
+    user: User,
+    purpose: str,
+    token: str | None = None,
+    locale: str | None = None,
+) -> str:
+    locale = (locale or _user_locale(db, user)).strip() or "fr-CA"
     is_en = locale.lower().startswith("en")
     is_employer = user.role == UserRole.EMPLOYER
     if is_en:
@@ -197,6 +203,7 @@ def register(db: Session, data: RegisterIn, ip: str | None = None, user_agent: s
         db.flush()
         locale = "en-CA" if str(getattr(data, "locale", None) or "").lower().startswith("en") else "fr-CA"
         db.add(UserPreference(user_id=user.id, locale=locale))
+        db.flush()
         if user.role == UserRole.CANDIDATE:
             db.add(Candidate(user_id=user.id, country="Canada", province="Québec"))
         elif user.role == UserRole.EMPLOYER:
@@ -206,7 +213,7 @@ def register(db: Session, data: RegisterIn, ip: str | None = None, user_agent: s
         elif user.role == UserRole.RECRUITER:
             db.add(Recruiter(user_id=user.id))
         token = _make_email_token(db, user, "verify", 24)
-        verify_link = portal_auth_link(db, user, "verify", token)
+        verify_link = portal_auth_link(db, user, "verify", token, locale=locale)
         send_email(
             db, user.email, EmailType.WELCOME, "welcome",
             name=user.first_name, link=verify_link, locale=locale,
