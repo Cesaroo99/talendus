@@ -764,7 +764,6 @@ def send_contract(db: Session, user: User, contract_id: str) -> Contract:
         item_id=row.id,
     )
     audit(db, "contract.send" if first_send else "contract.remind", user, "contract", row.id)
-    db.commit()
     try:
         verb = "a été transmis" if first_send else "vous a été renvoyé"
         message_company(
@@ -774,7 +773,8 @@ def send_contract(db: Session, user: User, contract_id: str) -> Contract:
             f"Le mandat « {row.type} » {verb} pour lecture et signature électronique dans Contrats.",
         )
     except Exception:
-        pass
+        logger.exception("message mandat non envoyé contract=%s", row.id)
+    db.commit()
     return get_contract(db, user, row.id)
 
 

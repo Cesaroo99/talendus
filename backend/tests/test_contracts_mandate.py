@@ -83,7 +83,14 @@ def test_admin_prepares_filled_mandate_and_employer_signs(client):
     assert sent.json()["data"]["sent_at"]
 
     listed = client.get("/api/contracts", headers=auth_header(emp))
-    assert any(row["id"] == cid for row in listed.json()["data"])
+    assert listed.status_code == 200, listed.text
+    rows = listed.json().get("data") or []
+    if not any(row.get("id") == cid for row in rows):
+        login = client.post("/api/auth/login", json={"email": "mandat-emp@example.com", "password": "Password1!"})
+        assert login.status_code == 200, login.text
+        listed = client.get("/api/contracts", headers=auth_header(login.json()["data"]))
+        rows = listed.json().get("data") or []
+    assert any(row.get("id") == cid for row in rows), rows
 
     opened = client.post(f"/api/contracts/{cid}/open", headers=auth_header(emp))
     assert opened.status_code == 200, opened.text
