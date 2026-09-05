@@ -336,6 +336,7 @@ def audit_logs(
                 func.lower(AuditLog.action).like(like),
                 func.lower(func.coalesce(AuditLog.entity_type, "")).like(like),
                 func.lower(func.coalesce(AuditLog.entity_id, "")).like(like),
+                func.lower(func.coalesce(AuditLog.metadata_json, "")).like(like),
             )
         )
     if (scope or "staff").lower() != "all":
@@ -349,10 +350,17 @@ def audit_logs(
     }
     staff = db.scalars(select(User).where(User.role.in_(STAFF)).order_by(User.last_name.asc(), User.first_name.asc())).all()
     seen_actions = db.scalars(select(AuditLog.action).distinct().order_by(AuditLog.action.asc())).all()
-    return ok(
+    from app.services.email import email_delivery_summary, enrich_audits_with_delivery
+
+    payload = enrich_audits_with_delivery(
+        db,
         [serialize_audit(row, actors.get(row.actor_id)) for row in rows],
+    )
+    return ok(
+        payload,
         meta={
             "scope": "all" if (scope or "").lower() == "all" else "staff",
+            "email_summary": email_delivery_summary(db),
             "actors": [
                 {
                     "id": user.id,

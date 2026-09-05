@@ -8,7 +8,7 @@ import re
 from dataclasses import dataclass
 from urllib.parse import quote
 
-from sqlalchemy import or_, select
+from sqlalchemy import or_, select, update
 from sqlalchemy.orm import Session
 
 from app.errors import AppError
@@ -433,7 +433,9 @@ def serialize_prospect(row: Prospect, sent_keys: list[str] | None = None) -> dic
     }
 
 
-def serialize_send(row: ProspectSend) -> dict:
+def serialize_send(row: ProspectSend, log: EmailLog | None = None) -> dict:
+    from app.services.email import delivery_snapshot
+
     return {
         "id": row.id,
         "prospect_id": row.prospect_id,
@@ -442,6 +444,7 @@ def serialize_send(row: ProspectSend) -> dict:
         "to_email": row.to_email,
         "attachment_names": [n for n in (row.attachment_names or "").split("|") if n],
         "created_at": row.created_at.isoformat() if row.created_at else None,
+        **delivery_snapshot(log),
     }
 
 
@@ -1172,10 +1175,13 @@ def send_to_prospect(db: Session, actor: User, row: Prospect, req: SendRequest, 
             "email_status": log.status.value if log.status else "QUEUED",
             "delivered": delivered,
             "error": log.error or "",
+            "email_log_id": log.id,
         },
     )
     if not delivered:
         db.flush()
+        from app.services.email import delivery_snapshot
+
         return {
             "prospect_id": row.id,
             "to_email": row.email,
@@ -1185,6 +1191,7 @@ def send_to_prospect(db: Session, actor: User, row: Prospect, req: SendRequest, 
             "delivered": False,
             "email_error": delivery_error(log),
             "attachments": [att.filename for att in attachments],
+            **delivery_snapshot(log),
         }
     if existing and req.force:
         existing.subject = subject[:180]
@@ -1210,6 +1217,8 @@ def send_to_prospect(db: Session, actor: User, row: Prospect, req: SendRequest, 
     if row.stage in {"nouveau", "a-contacter"}:
         row.stage = "contacte"
     db.flush()
+    from app.services.email import delivery_snapshot
+
     return {
         "prospect_id": row.id,
         "to_email": row.email,
@@ -1218,6 +1227,7 @@ def send_to_prospect(db: Session, actor: User, row: Prospect, req: SendRequest, 
         "email_status": log.status.value if log.status else "QUEUED",
         "delivered": True,
         "attachments": [att.filename for att in attachments],
+        **delivery_snapshot(log),
     }
 
 
@@ -1272,30 +1282,17 @@ def reconcile_undelivered_prospect_mails(db: Session) -> dict[str, int]:
     remaining = list(db.scalars(select(ProspectSend)).all())
     still_delivered = _delivered_send_logs(db, remaining)
     delivered_ids = {send.prospect_id for send in remaining if send.email_log_id and send.email_log_id in still_delivered}
-    latest_by_prospect: dict[str, ProspectSend] = {}
-    for send in remaining:
-        if not send.email_log_id or send.email_log_id not in still_delivered:
-            continue
-        current = latest_by_prospect.get(send.prospect_id)
-        if current is None or (send.created_at and (current.created_at is None or send.created_at > current.created_at)):
-            latest_by_prospect[send.prospect_id] = send
-    reset = 0
-    cleared = 0
-    for row in db.scalars(select(Prospect)).all():
-        if row.id in delivered_ids:
-            latest = latest_by_prospect.get(row.id)
-            if latest and latest.created_at:
-                row.last_contacted_at = latest.created_at
-            continue
-        changed = False
-        if row.stage in CONTACT_STAGES:
-            row.stage = "a-contacter"
-            reset += 1
-            changed = True
-        if row.last_contacted_at is not None:
-            row.last_contacted_at = None
-            cleared += 1
-            changed = True
-        if changed:
-            logger.info("prospect undelivered reset id=%s email=%s", row.id, row.email)
+    keep = list(delivered_ids) or ["__none__"]
+    reset = db.execute(
+        update(Prospect)
+        .where(Prospect.stage.in_(tuple(CONTACT_STAGES)), ~Prospect.id.in_(keep))
+        .values(stage="a-contacter")
+    ).rowcount or 0
+    cleared = db.execute(
+        update(Prospect)
+        .where(Prospect.last_contacted_at.is_not(None), ~Prospect.id.in_(keep))
+        .values(last_contacted_at=None)
+    ).rowcount or 0
+    db.expire_all()
+    logger.info("prospect undelivered reset stages=%s cleared=%s", reset, cleared)
     return {"fake_logs": fake_logs, "removed_sends": removed, "reset_stages": reset, "cleared_contact": cleared}

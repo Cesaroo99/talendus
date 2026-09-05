@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.deps import require_roles
 from app.errors import AppError, ok
-from app.models import User
+from app.models import EmailLog, User
 from app.models.enums import UserRole
 from app.models.prospect import ProspectSend
 from app.schemas import ProspectBulkSendIn, ProspectIn, ProspectNoteIn, ProspectPatchIn, ProspectSendIn
@@ -40,11 +40,17 @@ def _row_sends(db: Session, prospect_id: str) -> list[ProspectSend]:
 def _detail(db: Session, staff: User, prospect_id: str) -> dict:
     row = svc.get_prospect(db, prospect_id)
     sent = svc.sent_keys_map(db, [row.id])
+    sends = _row_sends(db, row.id)
+    log_ids = [item.email_log_id for item in sends if item.email_log_id]
+    logs = {
+        log.id: log
+        for log in (db.scalars(select(EmailLog).where(EmailLog.id.in_(log_ids))).all() if log_ids else [])
+    }
     return {
         **svc.serialize_prospect(row, sent.get(row.id, [])),
         "proposals": svc.proposals_for(db, row, staff),
         "attachments": svc.available_attachments(db, row),
-        "sends": [svc.serialize_send(item) for item in _row_sends(db, row.id)],
+        "sends": [svc.serialize_send(item, logs.get(item.email_log_id)) for item in sends],
         "dossier": svc.dossier_for(db, row),
         "stages": [{"key": k, "label": l} for k, l in svc.stages_for(row.side)],
     }

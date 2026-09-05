@@ -418,7 +418,8 @@ def test_admin_ui_has_prospects_module():
     assert "chunkProspectIds" in js
     assert "Chaque fiche reçoit son propre courriel" in js
     assert "non parti" in js
-    assert "email_status" in js
+    assert "mailDeliveryBadge" in js
+    assert "Acceptés par SMTP" in js
     assert "Maximum 80 destinataires" not in js
     assert "cand_first_contact" not in js
     assert "Vous trouverez ceci en pièce jointe" in js
@@ -608,6 +609,48 @@ def test_reconcile_resets_old_fake_sends(client, monkeypatch):
     assert contacted["stage"] == "contacte"
 
 
+def test_journal_and_pixel_show_delivery_and_open(client, monkeypatch):
+    stub_smtp_delivery(monkeypatch)
+    admin = promote_admin(client, "track-admin@example.com")
+    admin_h = auth_header(admin)
+    created = client.post(
+        "/api/admin/prospects",
+        headers=admin_h,
+        json={"side": "employer", "email": "memolicesar1@gmail.com", "company_name": "Memo", "stage": "a-contacter"},
+    )
+    assert created.status_code == 200, created.text
+    pid = created.json()["data"]["id"]
+    sent = client.post(
+        f"/api/admin/prospects/p/{pid}/send",
+        headers=admin_h,
+        json={"template_key": "emp_first_contact"},
+    )
+    assert sent.status_code == 200, sent.text
+    assert sent.json()["data"]["delivered"] is True
+    assert sent.json()["data"]["delivery"] == "accepted"
+    logs = client.get("/api/emails", headers=admin_h).json()["data"]
+    memo = next(row for row in logs if row["to_email"] == "memolicesar1@gmail.com")
+    assert memo["delivered"] is True
+    assert memo["opened"] is False
+    assert memo["tracking_token"]
+    html = client.get(f"/api/mail/o/{memo['tracking_token']}.gif")
+    assert html.status_code == 200
+    assert html.headers["content-type"].startswith("image/gif")
+    again = client.get("/api/emails", headers=admin_h).json()["data"]
+    opened = next(row for row in again if row["id"] == memo["id"])
+    assert opened["opened"] is True
+    assert opened["open_count"] >= 1
+    assert opened["delivery"] == "opened"
+    journal = client.get("/api/admin/audit?q=memolicesar1&limit=20", headers=admin_h)
+    assert journal.status_code == 200, journal.text
+    send_row = next(row for row in journal.json()["data"] if row["action"] == "prospect.send")
+    assert send_row["delivery"]["delivery"] == "opened"
+    assert send_row["delivery"]["opened"] is True
+    assert journal.json()["meta"]["email_summary"]["opened"] >= 1
+    detail = client.get(f"/api/admin/prospects/p/{pid}", headers=admin_h).json()["data"]
+    assert detail["sends"][0]["delivery"] == "opened"
+
+
 def test_smtp_auto_enables_when_credentials_are_set(client):
     from app.database import SessionLocal
     from app.models import SystemSetting
@@ -624,4 +667,23 @@ def test_smtp_auto_enables_when_credentials_are_set(client):
     db.commit()
     off = runtime_email_config(db)
     assert off.enabled is False
+    db.close()
+
+
+def test_smtp_credentials_send_outside_test_even_if_toggle_off(client, monkeypatch):
+    from app.config import get_settings
+    from app.database import SessionLocal
+    from app.models import SystemSetting
+    from app.services.email import runtime_email_config
+
+    settings = get_settings()
+    monkeypatch.setattr(settings, "app_env", "production")
+    db = SessionLocal()
+    db.add(SystemSetting(key="smtp.host", value="smtp.gmail.com"))
+    db.add(SystemSetting(key="smtp.username", value="info@talendus.ca"))
+    db.add(SystemSetting(key="smtp.password", value="abcdefghijklmnop"))
+    db.add(SystemSetting(key="smtp.enabled", value="non"))
+    db.commit()
+    cfg = runtime_email_config(db)
+    assert cfg.enabled is True
     db.close()

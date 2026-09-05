@@ -2135,7 +2135,7 @@
           ["Compte", account ? (account.is_active ? "Actif" : "Inactif") : "Pas encore"]
         ];
       var sends = (d.sends || []).map(function (s) {
-        return "<p><b>" + U.esc(s.subject) + "</b><br><span class='sub'>" + U.esc(s.to_email) + " · " + U.dateFr(s.created_at) + (s.attachment_names && s.attachment_names.length ? " · " + U.esc(s.attachment_names.join(", ")) : "") + "</span></p>";
+        return "<p><b>" + U.esc(s.subject) + "</b> " + mailDeliveryBadge(s) + "<br><span class='sub'>" + U.esc(s.to_email) + " · " + U.dateFr(s.created_at) + (s.attachment_names && s.attachment_names.length ? " · " + U.esc(s.attachment_names.join(", ")) : "") + (s.opened_at ? " · ouvert " + U.dateFr(s.opened_at) : "") + "</span></p>";
       }).join("") || "<p class='sub'>Aucun envoi pour l’instant.</p>";
       var apps = (dossier.applications || []).map(function (a) {
         var opts = APP_STATUSES.map(function (s) {
@@ -2464,9 +2464,24 @@
 
   var journalFilters = { q: "", actor_id: "", action: "", scope: "staff" };
 
+  function mailDeliveryBadge(d) {
+    var snap = d || {};
+    var key = snap.delivery || "";
+    var label = snap.delivery_label || "";
+    if (!key && snap.delivered === false) { key = "failed"; label = "Non parti"; }
+    if (!key && snap.delivered === true) { key = snap.opened ? "opened" : "accepted"; label = snap.opened ? "Ouvert" : "Parti — accepté par le serveur"; }
+    if (!label) return "";
+    var cls = "muted";
+    if (key === "opened") cls = "ok";
+    else if (key === "accepted") cls = "info";
+    else if (key === "failed") cls = "danger";
+    else if (key === "queued") cls = "warn";
+    return '<span class="badge ' + cls + '">' + U.esc(label) + "</span>";
+  }
+
   function viewJournal() {
     return `
-      <div class="page-head"><div><h1>Journal d’équipe</h1><p>Toutes les actions des employés Talendus. Un « courriel envoyé » dans ce journal est le clic : le vrai départ SMTP apparaît en sous-ligne (SENT ou non parti).</p></div></div>
+      <div class="page-head"><div><h1>Journal d’équipe</h1><p>Actions de l’équipe. Pour chaque courriel : <b>parti</b> (accepté par Gmail/SMTP), <b>ouvert</b> (le destinataire a affiché le message), ou <b>non parti</b> avec la raison.</p></div></div>
       <div class="filters" id="journal-filters">
         <input id="journal-q" placeholder="Rechercher une action" value="${U.esc(journalFilters.q || "")}">
         <select id="journal-actor"><option value="">Tous les employés</option></select>
@@ -2519,20 +2534,29 @@
         if (r.old_value || r.new_value) {
           change = "<div class='sub'>" + U.esc((r.old_value || "—") + " → " + (r.new_value || "—")).slice(0, 220) + "</div>";
         }
-        var meta = r.metadata || {};
+        var mailMeta = r.metadata || {};
+        var delivery = r.delivery || mailMeta;
         var mailBits = [];
-        if (meta.to) mailBits.push(meta.to);
-        if (meta.email_status) {
-          mailBits.push(meta.delivered === false ? (meta.email_status + " — non parti") : meta.email_status);
-        }
-        if (meta.subject) mailBits.push(meta.subject);
-        if (meta.error && meta.delivered === false) mailBits.push(meta.error);
+        if (mailMeta.to) mailBits.push(mailMeta.to);
+        if (mailMeta.subject) mailBits.push(mailMeta.subject);
+        if (delivery && delivery.email_error && delivery.delivery === "failed") mailBits.push(delivery.email_error);
+        if (delivery && delivery.opened_at) mailBits.push("ouvert " + U.dateFr(delivery.opened_at));
         if (mailBits.length) {
           change += "<div class='sub'>" + U.esc(mailBits.join(" · ")).slice(0, 280) + "</div>";
         }
-        return "<tr><td>" + U.dateFr(r.created_at) + "</td><td><b>" + U.esc(r.actor_name || "Système") + "</b><div class='sub'>" + U.esc(r.actor_email || "") + "</div></td><td>" + U.esc(r.action_label || r.action) + change + "</td><td>" + U.esc(r.entity_type || "—") + "</td><td class='sub'>" + U.esc(r.entity_id || "") + "</td></tr>";
+        var liv = (r.action === "prospect.send" || mailMeta.email_log_id || mailMeta.to)
+          ? mailDeliveryBadge(delivery)
+          : "—";
+        return "<tr><td>" + U.dateFr(r.created_at) + "</td><td><b>" + U.esc(r.actor_name || "Système") + "</b><div class='sub'>" + U.esc(r.actor_email || "") + "</div></td><td>" + U.esc(r.action_label || r.action) + change + "</td><td>" + liv + "</td><td>" + U.esc(r.entity_type || "—") + "</td></tr>";
       }).join("");
-      root.innerHTML = '<div class="card"><div class="table-wrap"><table class="data"><thead><tr><th>Quand</th><th>Employé</th><th>Action</th><th>Dossier</th><th>Réf.</th></tr></thead><tbody>' +
+      var sum = meta.email_summary || {};
+      var summary = '<div class="grid grid-4" style="margin-bottom:16px">' +
+        '<div class="card card-pad"><div class="sub">Acceptés par SMTP</div><b>' + U.esc(String(sum.accepted || 0)) + "</b></div>" +
+        '<div class="card card-pad"><div class="sub">Ouverts</div><b>' + U.esc(String(sum.opened || 0)) + "</b></div>" +
+        '<div class="card card-pad"><div class="sub">Non partis</div><b>' + U.esc(String(sum.failed || 0)) + "</b></div>" +
+        '<div class="card card-pad"><div class="sub">En file</div><b>' + U.esc(String(sum.queued || 0)) + "</b></div></div>" +
+        '<p class="sub">« Parti » = Gmail (ou votre SMTP) a accepté le message pour livraison. « Ouvert » = le destinataire a affiché le courriel. Gmail ne dit pas si le message est dans la boîte ou les spams, sauf s’il est ouvert.</p>';
+      root.innerHTML = summary + '<div class="card"><div class="table-wrap"><table class="data"><thead><tr><th>Quand</th><th>Employé</th><th>Action</th><th>Livraison</th><th>Dossier</th></tr></thead><tbody>' +
         (body || '<tr><td colspan="5">' + U.empty("Aucune action", "Les connexions, envois, notes et mises à jour de l’équipe apparaîtront ici.") + "</td></tr>") +
         "</tbody></table></div></div>";
       ["journal-q", "journal-actor", "journal-action", "journal-scope"].forEach(function (fid) {
@@ -2680,7 +2704,7 @@
               </ul>
             </li>
             <li>Cliquez <b>Enregistrer le courriel</b>, puis <b>Envoyer un test</b>.</li>
-            <li>Ouvrez Gmail <code>cesarmemoli1@gmail.com</code> (et les spams). Le journal sous le formulaire doit passer à « SENT » avec au moins 1 tentative. Un statut SENT sans tentative, ou FAILED, signifie que le courriel n’a pas quitté le serveur. Les réponses des candidats arriveront dans <code>info@talendus.ca</code>.</li>
+            <li>Ouvrez Gmail <code>cesarmemoli1@gmail.com</code> (et les spams). Le journal sous le formulaire et l’onglet Journal doivent afficher « Parti — accepté par le serveur ». « Ouvert » apparaît quand la boîte charge le message. Les réponses arrivent dans <code>info@talendus.ca</code>.</li>
           </ol>
           <p class="sub">Erreur <code>535 5.7.8</code> : Google refuse le login. Le formulaire Talendus est correct ; le couple identifiant + mot de passe n’est pas accepté par Gmail. Vérifiez dans <code>admin.google.com</code> → Annuaire → Utilisateurs que <code>info@talendus.ca</code> est un <b>utilisateur</b> (pas un groupe ni un simple alias). Recréez le mot de passe d’application sur <b>ce compte-là</b>, puis mettez la même adresse en identifiant.</p>
           <p class="sub">Si « Mots de passe d’application » n’apparaît pas : la validation en 2 étapes n’est pas encore active sur info@, ou l’admin Workspace ne l’a pas autorisée. Les deux doivent être ouvertes avant de réessayer le lien <code>myaccount.google.com/apppasswords</code>.</p>
@@ -3875,7 +3899,7 @@
           '<label>Activer l’envoi</label><select name="smtp.enabled">' +
           '<option value="">Auto — envoyer si le serveur et le mot de passe sont remplis</option>' +
           '<option value="oui"' + (val("smtp.enabled") === "oui" ? " selected" : "") + ">Oui — envoyer vraiment</option>" +
-          '<option value="non"' + (val("smtp.enabled") === "non" ? " selected" : "") + ">Non — journaliser seulement</option>" +
+          '<option value="non"' + (val("smtp.enabled") === "non" ? " selected" : "") + ">Non — seulement en test (ignoré en production si le SMTP est rempli)</option>" +
           "</select>" +
           '<label>Serveur SMTP</label><input name="smtp.host" placeholder="smtp.gmail.com" value="' + U.esc(val("smtp.host")) + '">' +
           '<label>Port</label><input name="smtp.port" placeholder="587" value="' + U.esc(val("smtp.port", "587")) + '">' +
@@ -3934,12 +3958,9 @@
         }
         logBox.innerHTML = '<div class="table-wrap"><table class="data"><thead><tr><th>Date</th><th>Destinataire</th><th>Sujet</th><th>Statut</th><th>Erreur</th></tr></thead><tbody>' +
           rows.map(function (r) {
-            var status = r.status || "";
-            if (r.delivered === false) status = (status || "FAILED") + " — non parti";
-            else if (r.delivered === true) status = "SENT";
             return "<tr><td>" + U.esc((r.created_at || "").replace("T", " ").slice(0, 16)) + "</td><td>" +
-              U.esc(r.to_email || "") + "</td><td>" + U.esc(r.subject || "") + "</td><td>" + U.esc(status) +
-              "</td><td>" + U.esc(r.error || "—") + "</td></tr>";
+              U.esc(r.to_email || "") + "</td><td>" + U.esc(r.subject || "") + "</td><td>" + mailDeliveryBadge(r) +
+              "</td><td>" + U.esc(r.email_error || r.error || "—") + "</td></tr>";
           }).join("") + "</tbody></table></div>";
       }).catch(function () { logBox.innerHTML = "<p class='sub'>Journal indisponible.</p>"; });
     }

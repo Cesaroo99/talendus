@@ -35,6 +35,28 @@ def ensure_interviews_schema(engine: Engine) -> None:
         logger.exception("Réparation du schéma entretiens incomplète")
 
 
+def ensure_email_logs_schema(engine: Engine) -> None:
+    """Suivi de livraison / ouverture sur email_logs. Idempotent."""
+    try:
+        inspector = inspect(engine)
+        if "email_logs" not in inspector.get_table_names():
+            return
+        existing = {col["name"] for col in inspector.get_columns("email_logs")}
+        ts = "TIMESTAMPTZ" if engine.dialect.name == "postgresql" else "DATETIME"
+        with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
+            if "tracking_token" not in existing:
+                _run(conn, "ALTER TABLE email_logs ADD COLUMN tracking_token VARCHAR(64)")
+            if "message_id" not in existing:
+                _run(conn, "ALTER TABLE email_logs ADD COLUMN message_id VARCHAR(180)")
+            if "opened_at" not in existing:
+                _run(conn, f"ALTER TABLE email_logs ADD COLUMN opened_at {ts}")
+            if "open_count" not in existing:
+                _run(conn, "ALTER TABLE email_logs ADD COLUMN open_count INTEGER DEFAULT 0")
+            _run(conn, "CREATE UNIQUE INDEX IF NOT EXISTS ix_email_logs_tracking_token ON email_logs (tracking_token)")
+    except Exception:
+        logger.exception("Réparation du schéma email_logs incomplète")
+
+
 def ensure_contracts_schema(engine: Engine) -> None:
     """Ajoute DRAFT, élargit le type, stocke le statut en texte. Idempotent."""
     global _DONE

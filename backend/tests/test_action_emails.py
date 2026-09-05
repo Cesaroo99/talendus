@@ -38,6 +38,8 @@ def test_every_template_gets_talendus_signature():
     assert "talendus.ca" in plain
     html = signed_html(plain)
     assert f'cid:{SIGNATURE_CID}' in html
+    tracked = signed_html(plain, tracking_url="https://talendus.ca/api/mail/o/token123.gif")
+    assert "https://talendus.ca/api/mail/o/token123.gif" in tracked
     assert "Bonjour Hugo" in html
     assert "#0b1f3a" in html
     assert "#ff6b00" in html

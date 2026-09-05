@@ -6,11 +6,13 @@ import html
 import logging
 import queue
 import re
+import secrets
 import smtplib
 import threading
 import time
 from dataclasses import dataclass
 from email.message import EmailMessage
+from email.utils import make_msgid
 from pathlib import Path
 
 from sqlalchemy import select
@@ -23,6 +25,10 @@ from app.models.enums import EmailStatus, EmailType, utcnow
 logger = logging.getLogger("talendus.email")
 SMTP_DISABLED_ERROR = "SMTP désactivé — le courriel n’a pas quitté le serveur."
 FAKE_SENT_ERROR = "Jamais remis au serveur SMTP (journalisé seulement)."
+PIXEL_GIF = (
+    b"GIF89a\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00\xff\xff\xff!"
+    b"\xf9\x04\x01\x00\x00\x00\x00,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;"
+)
 EMAIL_DIR = Path(__file__).resolve().parents[1] / "emails"
 TEMPLATE_DIR = EMAIL_DIR / "templates"
 SIGNATURE_IMAGE = EMAIL_DIR / "assets" / "signature.jpg"
@@ -126,10 +132,11 @@ def runtime_email_config(db: Session | None = None) -> SmtpRuntime:
         or (env.email_from or "").strip()
         or "Talendus <info@talendus.ca>"
     )
-    if enabled_ov is None:
+    ready = _smtp_ready(host, username, password)
+    if ready:
+        enabled = False if (enabled_ov is False and env.app_env == "test") else True
+    elif enabled_ov is None:
         enabled = bool(env.email_enabled)
-        if not enabled and _smtp_ready(host, username, password):
-            enabled = True
     else:
         enabled = enabled_ov
     return SmtpRuntime(
@@ -168,6 +175,168 @@ def delivery_error(log: EmailLog | None) -> str:
     if log is None:
         return SMTP_DISABLED_ERROR
     return (log.error or SMTP_DISABLED_ERROR).strip() or SMTP_DISABLED_ERROR
+
+
+def new_tracking_token() -> str:
+    return secrets.token_urlsafe(24)
+
+
+def public_base_url() -> str:
+    env = get_settings()
+    return (env.frontend_url or env.render_external_url or "https://talendus.ca").rstrip("/")
+
+
+def tracking_pixel_url(token: str) -> str:
+    return f"{public_base_url()}/api/mail/o/{token}.gif"
+
+
+def delivery_snapshot(log: EmailLog | None) -> dict:
+    if log is None:
+        return {
+            "delivery": "unknown",
+            "delivery_label": "Statut inconnu",
+            "delivered": False,
+            "opened": False,
+            "opened_at": None,
+            "open_count": 0,
+            "sent_at": None,
+            "email_error": "",
+            "email_log_id": None,
+            "email_status": None,
+        }
+    delivered = email_actually_sent(log)
+    opened = bool(getattr(log, "opened_at", None))
+    if delivered and opened:
+        key, label = "opened", "Ouvert"
+    elif delivered:
+        key, label = "accepted", "Parti — accepté par le serveur"
+    elif log.status == EmailStatus.QUEUED:
+        key, label = "queued", "En file"
+    else:
+        key, label = "failed", "Non parti"
+    return {
+        "delivery": key,
+        "delivery_label": label,
+        "delivered": delivered,
+        "opened": opened,
+        "opened_at": log.opened_at.isoformat() if getattr(log, "opened_at", None) else None,
+        "open_count": int(getattr(log, "open_count", 0) or 0),
+        "sent_at": log.sent_at.isoformat() if log.sent_at else None,
+        "email_error": log.error or "",
+        "email_log_id": log.id,
+        "email_status": log.status.value if log.status else "QUEUED",
+    }
+
+
+def serialize_email_log(log: EmailLog) -> dict:
+    snap = delivery_snapshot(log)
+    return {
+        "id": log.id,
+        "to_email": log.to_email,
+        "type": log.type.value if log.type else None,
+        "subject": log.subject,
+        "body": log.body,
+        "status": log.status.value if log.status else "QUEUED",
+        "error": log.error,
+        "attempts": log.attempts,
+        "message_id": getattr(log, "message_id", None),
+        "tracking_token": getattr(log, "tracking_token", None),
+        "created_at": log.created_at.isoformat() if log.created_at else None,
+        **snap,
+    }
+
+
+def record_email_open(db: Session, token: str) -> EmailLog | None:
+    value = (token or "").strip().removesuffix(".gif")
+    if len(value) < 8:
+        return None
+    log = db.scalar(select(EmailLog).where(EmailLog.tracking_token == value))
+    if log is None:
+        return None
+    log.open_count = (log.open_count or 0) + 1
+    if not log.opened_at:
+        log.opened_at = utcnow()
+    return log
+
+
+def ensure_smtp_ready(db: Session) -> dict:
+    """En production, active l’envoi dès que le serveur SMTP est renseigné."""
+    from app.models import SystemSetting
+
+    cfg = runtime_email_config(db)
+    ready = _smtp_ready(cfg.host, cfg.username, cfg.password)
+    env = get_settings()
+    if ready and env.app_env != "test":
+        row = db.scalar(select(SystemSetting).where(SystemSetting.key == "smtp.enabled"))
+        if row is None:
+            db.add(
+                SystemSetting(
+                    key="smtp.enabled",
+                    value="oui",
+                    label="Activer l’envoi SMTP (oui / non ; vide = oui si le serveur SMTP est configuré)",
+                )
+            )
+        elif (row.value or "").strip().lower() != "oui":
+            row.value = "oui"
+        db.flush()
+        cfg = runtime_email_config(db)
+    elif not ready:
+        logger.warning(
+            "SMTP incomplet host=%s user=%s password=%s — les courriels ne partiront pas",
+            cfg.host or "(vide)",
+            cfg.username or "(vide)",
+            "oui" if cfg.password else "non",
+        )
+    return {
+        "enabled": cfg.enabled,
+        "ready": ready,
+        "host": cfg.host,
+        "username": cfg.username,
+        "has_password": bool(cfg.password),
+    }
+
+
+def email_delivery_summary(db: Session, limit: int = 200) -> dict[str, int]:
+    rows = list(db.scalars(select(EmailLog).order_by(EmailLog.created_at.desc()).limit(limit)).all())
+    counts = {"accepted": 0, "opened": 0, "failed": 0, "queued": 0, "total": len(rows)}
+    for log in rows:
+        key = delivery_snapshot(log)["delivery"]
+        if key in counts:
+            counts[key] += 1
+    return counts
+
+
+def enrich_audits_with_delivery(db: Session, rows: list[dict]) -> list[dict]:
+    log_ids = []
+    lookups: list[tuple[str, str]] = []
+    for row in rows:
+        meta = row.get("metadata") if isinstance(row.get("metadata"), dict) else {}
+        if meta.get("email_log_id"):
+            log_ids.append(meta["email_log_id"])
+        elif meta.get("to") and meta.get("subject"):
+            lookups.append((str(meta["to"]).lower(), str(meta["subject"])[:180]))
+    logs: dict[str, EmailLog] = {}
+    if log_ids:
+        for log in db.scalars(select(EmailLog).where(EmailLog.id.in_(log_ids))).all():
+            logs[log.id] = log
+    by_pair: dict[tuple[str, str], EmailLog] = {}
+    if lookups:
+        emails = {to for to, _ in lookups}
+        for log in db.scalars(select(EmailLog).where(EmailLog.to_email.in_(emails)).order_by(EmailLog.created_at.desc())).all():
+            pair = ((log.to_email or "").lower(), (log.subject or "")[:180])
+            by_pair.setdefault(pair, log)
+    for row in rows:
+        meta = row.get("metadata") if isinstance(row.get("metadata"), dict) else {}
+        log = logs.get(meta.get("email_log_id")) if meta.get("email_log_id") else None
+        if log is None and meta.get("to") and meta.get("subject"):
+            log = by_pair.get((str(meta["to"]).lower(), str(meta["subject"])[:180]))
+        if log is None and row.get("action") != "prospect.send":
+            continue
+        snap = delivery_snapshot(log)
+        row["delivery"] = snap
+        if isinstance(row.get("metadata"), dict):
+            row["metadata"] = {**row["metadata"], **snap}
+    return rows
 
 
 def mark_fake_sent_logs(db: Session) -> int:
@@ -277,9 +446,15 @@ def _text_to_html_blocks(core: str) -> str:
     return "".join(blocks) or '<p style="margin:0;"></p>'
 
 
-def signed_html(body: str) -> str:
+def signed_html(body: str, tracking_url: str | None = None) -> str:
     core = strip_legacy_footer(body)
     inner = _text_to_html_blocks(core)
+    pixel = ""
+    if tracking_url:
+        pixel = (
+            f'<img src="{html.escape(tracking_url)}" width="1" height="1" alt="" '
+            'style="display:block;width:1px;height:1px;border:0;opacity:0;">'
+        )
     return (
         "<!DOCTYPE html><html lang=\"fr-CA\"><head><meta charset=\"utf-8\">"
         '<meta name="viewport" content="width=device-width,initial-scale=1"></head>'
@@ -296,7 +471,7 @@ def signed_html(body: str) -> str:
         f'<tr><td style="padding:28px 28px 10px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.6;color:#1a2332;">{inner}</td></tr>'
         '<tr><td style="padding:4px 16px 22px;">'
         f'<img src="cid:{SIGNATURE_CID}" width="600" alt="Talendus — Votre partenaire stratégique en recrutement au Québec. info@talendus.ca · 263 558 5225 · talendus.ca" style="display:block;width:100%;max-width:600px;height:auto;border:0;">'
-        "</td></tr></table></td></tr></table></body></html>"
+        f"{pixel}</td></tr></table></td></tr></table></body></html>"
     )
 
 
@@ -318,16 +493,20 @@ def build_email_message(
     subject: str,
     body: str,
     attachments: list[EmailAttachment] | None = None,
+    tracking_url: str | None = None,
+    message_id: str | None = None,
 ) -> EmailMessage:
     plain = signed_plain(body)
     msg = EmailMessage()
     msg["From"] = cfg.from_addr
     msg["To"] = to_email
     msg["Subject"] = subject
+    if message_id:
+        msg["Message-ID"] = message_id
     if cfg.reply_to:
         msg["Reply-To"] = cfg.reply_to
     msg.set_content(plain, charset="utf-8")
-    msg.add_alternative(signed_html(body), subtype="html", charset="utf-8")
+    msg.add_alternative(signed_html(body, tracking_url=tracking_url), subtype="html", charset="utf-8")
     image = SIGNATURE_IMAGE.read_bytes() if SIGNATURE_IMAGE.is_file() else b""
     if image:
         for part in msg.iter_parts():
@@ -358,14 +537,27 @@ def _smtp_send(
     subject: str,
     body: str,
     attachments: list[EmailAttachment] | None = None,
-) -> None:
-    msg = build_email_message(cfg, to_email, subject, body, attachments)
-    with smtplib.SMTP(cfg.host, cfg.port, timeout=15) as smtp:
+    tracking_url: str | None = None,
+    message_id: str | None = None,
+) -> str:
+    msg = build_email_message(
+        cfg,
+        to_email,
+        subject,
+        body,
+        attachments,
+        tracking_url=tracking_url,
+        message_id=message_id,
+    )
+    with smtplib.SMTP(cfg.host, cfg.port, timeout=20) as smtp:
         if cfg.use_tls:
             smtp.starttls()
         if cfg.username:
             smtp.login(cfg.username, cfg.password)
-        smtp.send_message(msg)
+        refused = smtp.send_message(msg)
+        if refused:
+            raise RuntimeError(f"SMTP a refusé le destinataire : {refused}")
+    return str(msg["Message-ID"] or message_id or "")
 
 
 def _record_smtp_result(
@@ -376,11 +568,22 @@ def _record_smtp_result(
     attachments: list[EmailAttachment] | None = None,
 ) -> None:
     try:
-        _smtp_send(cfg, log.to_email, log.subject, log.body or "", attachments)
+        token = getattr(log, "tracking_token", None) or ""
+        mid = _smtp_send(
+            cfg,
+            log.to_email,
+            log.subject,
+            log.body or "",
+            attachments,
+            tracking_url=tracking_pixel_url(token) if token else None,
+            message_id=getattr(log, "message_id", None),
+        )
         log.status = EmailStatus.SENT
         log.error = None
         log.sent_at = utcnow()
         log.attempts = (log.attempts or 0) + 1
+        if mid:
+            log.message_id = mid
     except Exception as exc:  # noqa: BLE001
         log.attempts = (log.attempts or 0) + 1
         log.error = str(exc)[:2000]
@@ -406,6 +609,8 @@ def send_email(
         body=body,
         status=EmailStatus.QUEUED,
         attempts=0,
+        tracking_token=new_tracking_token(),
+        message_id=make_msgid(domain="talendus.ca"),
     )
     db.add(log)
     db.flush()
@@ -440,6 +645,8 @@ def send_composed_email(
         body=body,
         status=EmailStatus.QUEUED,
         attempts=0,
+        tracking_token=new_tracking_token(),
+        message_id=make_msgid(domain="talendus.ca"),
     )
     db.add(log)
     db.flush()
@@ -460,6 +667,8 @@ def send_composed_email(
 
 def start_worker() -> None:
     global _worker_started
+    if get_settings().app_env == "test":
+        return
     with _worker_lock:
         if _worker_started:
             return

@@ -37,6 +37,10 @@ class EmailLog(Base):
     error: Mapped[str | None] = mapped_column(Text)
     attempts: Mapped[int] = mapped_column(Integer, default=0)
     sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    tracking_token: Mapped[str | None] = mapped_column(String(64), unique=True, index=True)
+    message_id: Mapped[str | None] = mapped_column(String(180))
+    opened_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    open_count: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 

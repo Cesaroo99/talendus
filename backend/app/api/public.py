@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.exceptions import RequestValidationError
+from fastapi.responses import Response
 from pydantic import ValidationError
 from sqlalchemy import select, text
 from sqlalchemy.orm import Session
@@ -13,7 +14,7 @@ from app.models.enums import EmailType, UserRole
 from app.schemas import ContactIn, PublicTalentProfileIn
 from app.services.audit import audit
 from app.services.capabilities import public_services
-from app.services.email import email_actually_sent, send_email
+from app.services.email import PIXEL_GIF, record_email_open, send_email, serialize_email_log
 from app.services import candidates as cand_svc
 from app.services.spam import reject_honeypot
 
@@ -178,6 +179,21 @@ def ops_tick(_: User = Depends(require_roles(UserRole.ADMIN, UserRole.FINANCE, U
     return ok(run_ops_tick(), message="Relances internes exécutées.")
 
 
+@router.get("/mail/o/{token}.gif")
+@router.get("/mail/o/{token}")
+def mail_open_pixel(token: str, db: Session = Depends(get_db)):
+    record_email_open(db, (token or "").removesuffix(".gif"))
+    db.commit()
+    return Response(
+        content=PIXEL_GIF,
+        media_type="image/gif",
+        headers={
+            "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+            "Pragma": "no-cache",
+        },
+    )
+
+
 emails_router = APIRouter(prefix="/emails", tags=["emails"])
 
 
@@ -188,20 +204,4 @@ def list_emails(
     _: User = Depends(require_roles(UserRole.ADMIN)),
 ):
     rows = db.scalars(select(EmailLog).order_by(EmailLog.created_at.desc()).limit(limit)).all()
-    return ok(
-        [
-            {
-                "id": r.id,
-                "to_email": r.to_email,
-                "type": r.type.value,
-                "subject": r.subject,
-                "body": r.body,
-                "status": r.status.value,
-                "error": r.error,
-                "attempts": r.attempts,
-                "delivered": email_actually_sent(r),
-                "created_at": r.created_at.isoformat() if r.created_at else None,
-            }
-            for r in rows
-        ]
-    )
+    return ok([serialize_email_log(r) for r in rows])
