@@ -186,12 +186,53 @@ def test_personalized_send_dedup_and_isolation(client):
     assert all("a.talent@example.com" not in (row.get("body") or "") for row in to_b)
     assert any("Aline" in (row.get("body") or "") or "Aline" in (row.get("subject") or "") for row in to_a)
     assert any("Benoit" in (row.get("body") or "") or "Benoit" in (row.get("subject") or "") for row in to_b)
+    assert all((row.get("to_email") or "").count("@") == 1 for row in to_a + to_b)
     detail = client.get(f"/api/admin/prospects/p/{a['id']}", headers=admin_h)
     assert detail.status_code == 200
     assert detail.json()["data"]["email"] == "a.talent@example.com"
     missing = client.get("/api/admin/prospects/p/inconnu", headers=admin_h)
     assert missing.status_code == 404
     assert "Prospect introuvable" in missing.text
+
+
+def test_broadcast_accepts_the_full_employer_list(client):
+    admin = promote_admin(client, "bulk-271@talendus.ca")
+    admin_h = auth_header(admin)
+    created = []
+    for i in range(90):
+        row = client.post(
+            "/api/admin/prospects",
+            headers=admin_h,
+            json={"side": "employer", "email": f"rh{i}@usine-bulk.example.com", "company_name": f"Usine {i}"},
+        )
+        assert row.status_code == 200, row.text
+        created.append(row.json()["data"]["id"])
+    too_many = client.post(
+        "/api/admin/prospects/broadcast",
+        headers=admin_h,
+        json={"ids": created + [f"x{i}" for i in range(311)], "template_key": "emp_first_contact"},
+    )
+    assert too_many.status_code == 422, too_many.text
+    assert too_many.json()["message"] == "Les données envoyées sont invalides."
+    bulk = client.post(
+        "/api/admin/prospects/broadcast",
+        headers=admin_h,
+        json={"ids": created, "template_key": "emp_first_contact"},
+    )
+    assert bulk.status_code == 200, bulk.text
+    data = bulk.json()["data"]
+    assert len(data["sent"]) == 90
+    assert not data["failed"]
+    logs = client.get("/api/emails?limit=200", headers=admin_h).json()["data"]
+    targets = {f"rh{i}@usine-bulk.example.com" for i in range(90)}
+    sent_logs = [row for row in logs if row["to_email"] in targets]
+    assert len(sent_logs) == 90
+    assert {row["to_email"] for row in sent_logs} == targets
+    for row in sent_logs:
+        assert row["to_email"].count("@") == 1
+        assert "Cc:" not in (row.get("body") or "")
+        others = targets - {row["to_email"]}
+        assert all(other not in (row.get("body") or "") and other not in (row.get("subject") or "") for other in others)
 
 
 def test_generic_rh_name_is_not_used_in_greeting():
@@ -370,6 +411,10 @@ def test_admin_ui_has_prospects_module():
     assert "Prospects candidats" in js
     assert "/admin/prospects/p/" in js
     assert "/admin/prospects/broadcast" in js
+    assert "sendProspectBroadcast" in js
+    assert "chunkProspectIds" in js
+    assert "Chaque fiche reçoit son propre courriel" in js
+    assert "Maximum 80 destinataires" not in js
     assert "cand_first_contact" not in js
     assert "Vous trouverez ceci en pièce jointe" in js
     assert "syncAttachmentNotes" in js
