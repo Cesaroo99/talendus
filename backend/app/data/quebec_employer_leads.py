@@ -9,11 +9,13 @@ Critères (tous doivent tenir) :
 
 Vague 1 : 50 fiches (surtout transformation / logistique) — courriel absent si non publié.
 Vague 2 : 50 fiches multi-secteurs, toutes avec un courriel public vérifié.
+Vague 4 : villes restantes, privés et OBNL — tous avec un courriel public vérifié.
 """
 
 from __future__ import annotations
 
 from app.data.quebec_employer_leads_more import QUEBEC_EMPLOYER_LEADS_MORE
+from app.data.quebec_employer_leads_wave4 import QUEBEC_EMPLOYER_LEADS_WAVE4
 
 # name est la clé d’idempotence (insensible à la casse).
 _WAVE1: tuple[dict, ...] = (
@@ -721,4 +723,4 @@ _WAVE1: tuple[dict, ...] = (
     },
 )
 
-QUEBEC_EMPLOYER_LEADS: tuple[dict, ...] = _WAVE1 + QUEBEC_EMPLOYER_LEADS_MORE
+QUEBEC_EMPLOYER_LEADS: tuple[dict, ...] = _WAVE1 + QUEBEC_EMPLOYER_LEADS_MORE + QUEBEC_EMPLOYER_LEADS_WAVE4
