@@ -1,19 +1,22 @@
-"""50 employeurs québécois réellement en recrutement — sources publiques uniquement.
+"""Employeurs québécois réellement en recrutement — sources publiques uniquement.
 
 Critères (tous doivent tenir) :
-- établissement majeur au Québec, une fiche par groupe (pas de filiale doublon) ;
-- métiers Talendus : usine, production, entrepôt, maintenance, métal, agro, transport, plasturgie, bois, aéro ;
-- plusieurs postes ouverts observés (portail carrières, Jobillico, Indeed, LinkedIn) en 2026 ;
+- établissement au Québec, une fiche par groupe (pas de filiale doublon) ;
+- tous secteurs et tous types de postes (Talendus n’est plus limité à l’usine) ;
+- plusieurs postes ouverts observés (portail carrières, Jobillico, Indeed, LinkedIn) ;
 - coordonnées publiques (site, téléphone, courriel RH/info publié) — aucun nom ni courriel inventé ;
 - pas déjà dans le seed de démo (Métalco, Alimor, etc.).
 
-Les courriels absents le sont parce que l’employeur n’en publie pas : on ne fabrique pas de boîte.
+Vague 1 : 50 fiches (surtout transformation / logistique) — courriel absent si non publié.
+Vague 2 : 50 fiches multi-secteurs, toutes avec un courriel public vérifié.
 """
 
 from __future__ import annotations
 
+from app.data.quebec_employer_leads_more import QUEBEC_EMPLOYER_LEADS_MORE
+
 # name est la clé d’idempotence (insensible à la casse).
-QUEBEC_EMPLOYER_LEADS: tuple[dict, ...] = (
+_WAVE1: tuple[dict, ...] = (
     {
         "name": "Olymel",
         "legal_name": "Olymel S.E.C.",
@@ -717,3 +720,5 @@ QUEBEC_EMPLOYER_LEADS: tuple[dict, ...] = (
         "hiring": "Chenilles et pneus (groupe Michelin). Usine Estrie. Opérateurs caoutchouc, maintenance, qualité. Recrutement usine récurrent.",
     },
 )
+
+QUEBEC_EMPLOYER_LEADS: tuple[dict, ...] = _WAVE1 + QUEBEC_EMPLOYER_LEADS_MORE

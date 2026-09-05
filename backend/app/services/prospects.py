@@ -67,7 +67,7 @@ TEMPLATES: tuple[dict, ...] = (
         "label": "1. Premier contact",
         "intent": "Premier contact talent — se présenter, expliquer pourquoi on écrit, proposer un échange. Ni argent, ni promesse de placement.",
         "subject": "Votre profil {{title_or_metier}}",
-        "body": "{{hello}}\n\nJe vous écris de Talendus, cabinet de recrutement au Québec. Nous travaillons avec des employeurs d’usine, d’entrepôt et d’atelier qui cherchent un profil{{title_bit}}{{city_bit}}.\n\nSi un changement de poste vous intéresse, même à explorer, répondez-moi. Je reviendrai ensuite avec des mandats précis — pas une liste envoyée à l’aveugle.\n\nVous pouvez aussi me déposer votre CV ici :\n{{candidate_link}}\n\n{{recruiter_name}}",
+        "body": "{{hello}}\n\nJe vous écris de Talendus, cabinet de recrutement au Québec. Nous travaillons avec des employeurs de tous les secteurs qui cherchent un profil{{title_bit}}{{city_bit}}.\n\nSi un changement de poste vous intéresse, même à explorer, répondez-moi. Je reviendrai ensuite avec des mandats précis — pas une liste envoyée à l’aveugle.\n\nVous pouvez aussi me déposer votre CV ici :\n{{candidate_link}}\n\n{{recruiter_name}}",
     },
     {
         "key": "cand_followup",
@@ -85,7 +85,7 @@ TEMPLATES: tuple[dict, ...] = (
         "label": "3. Qualification",
         "intent": "Qualification — trois précisions pour cibler, formulées comme un service, pas un interrogatoire.",
         "subject": "Quelques précisions pour cibler juste",
-        "body": "{{hello}}\n\nPour vous proposer quelque chose de juste{{title_bit}}, j’ai besoin de trois précisions :\n\n- votre disponibilité\n- le quart que vous acceptez\n- la fourchette que vous visez\n\nRépondez directement à ce courriel. Dès que j’ai ça, je reviens vers vous avec des postes concrets{{city_bit}}.\n\n{{recruiter_name}}",
+        "body": "{{hello}}\n\nPour vous proposer quelque chose de juste{{title_bit}}, j’ai besoin de trois précisions :\n\n- votre disponibilité\n- l’horaire que vous acceptez\n- la fourchette que vous visez\n\nRépondez directement à ce courriel. Dès que j’ai ça, je reviens vers vous avec des postes concrets{{city_bit}}.\n\n{{recruiter_name}}",
     },
     {
         "key": "cand_documents",
@@ -112,7 +112,7 @@ TEMPLATES: tuple[dict, ...] = (
         "label": "6. Poste à présenter",
         "intent": "Annoncer un poste concret et demander l’accord avant d’envoyer le détail. Sans parler d’honoraires.",
         "subject": "Un poste {{title_or_metier}} à vous soumettre",
-        "body": "{{hello}}\n\nNous avons un poste {{title_or_metier}}{{city_bit}} qui me semble correspondre à votre profil.\n\nSi vous souhaitez en voir le détail — quart, rémunération, lieu — répondez-moi. On verra ensuite ensemble s’il vaut la peine de vous présenter.\n\nVotre espace :\n{{candidate_link}}\n\n{{recruiter_name}}",
+        "body": "{{hello}}\n\nNous avons un poste {{title_or_metier}}{{city_bit}} qui me semble correspondre à votre profil.\n\nSi vous souhaitez en voir le détail — horaire, rémunération, lieu — répondez-moi. On verra ensuite ensemble s’il vaut la peine de vous présenter.\n\nVotre espace :\n{{candidate_link}}\n\n{{recruiter_name}}",
     },
     {
         "key": "cand_offer",
@@ -148,7 +148,7 @@ TEMPLATES: tuple[dict, ...] = (
         "label": "1. Premier contact",
         "intent": "Premier contact employeur — se présenter, une question sur le besoin. Ni slogan, ni honoraires, ni paiement.",
         "subject": "{{company_lead}}Recrutement",
-        "body": "{{hello}}\n\nJe vous contacte{{about_company}}. Je travaille chez Talendus : nous aidons des usines, entrepôts et ateliers du Québec à pourvoir des postes de production, de maintenance et d’entrepôt.\n\nSi un poste{{title_bit}} reste ouvert, j’aimerais en comprendre le contexte. Un mot sur le métier et le quart suffit pour commencer.\n\nVous pouvez aussi m’écrire le besoin ici :\n{{employer_link}}\n\n{{recruiter_name}}",
+        "body": "{{hello}}\n\nJe vous contacte{{about_company}}. Je travaille chez Talendus : nous aidons les entreprises du Québec, tous secteurs, à pourvoir tous les types de postes.\n\nSi un poste{{title_bit}} reste ouvert, j’aimerais en comprendre le contexte. Un mot sur le métier et le besoin suffit pour commencer.\n\nVous pouvez aussi m’écrire le besoin ici :\n{{employer_link}}\n\n{{recruiter_name}}",
     },
     {
         "key": "emp_followup",
@@ -157,7 +157,7 @@ TEMPLATES: tuple[dict, ...] = (
         "label": "2. Relance",
         "intent": "Relance employeur — une question, sans argumentaire commercial.",
         "subject": "{{company_lead}}Le besoin est-il toujours d’actualité ?",
-        "body": "{{hello}}\n\nJe me permets de revenir{{about_company}}. Avez-vous encore un poste{{sector_bit}} à pourvoir ?\n\nS’il est toujours d’actualité, un retour avec le métier et le quart me suffit pour reprendre le fil.\n\n{{recruiter_name}}",
+        "body": "{{hello}}\n\nJe me permets de revenir{{about_company}}. Avez-vous encore un poste{{sector_bit}} à pourvoir ?\n\nS’il est toujours d’actualité, un retour avec le métier et le contexte me suffit pour reprendre le fil.\n\n{{recruiter_name}}",
     },
     {
         "key": "emp_discovery",
@@ -211,7 +211,7 @@ TEMPLATES: tuple[dict, ...] = (
         "label": "8. Réactivation",
         "intent": "Reprendre contact sans urgence artificielle.",
         "subject": "{{company_lead}}Un besoin de recrutement de nouveau ?",
-        "body": "{{hello}}\n\nNous n’avons pas échangé depuis un moment. Si un poste {{title_or_poste}} est de nouveau à pourvoir {{chez_company}}, je peux reprendre une recherche.\n\nUn mot sur le métier et le quart suffit. Si le besoin n’est plus là, ignorez simplement ce message.\n\n{{recruiter_name}}",
+        "body": "{{hello}}\n\nNous n’avons pas échangé depuis un moment. Si un poste {{title_or_poste}} est de nouveau à pourvoir {{chez_company}}, je peux reprendre une recherche.\n\nUn mot sur le métier et le besoin suffit. Si le besoin n’est plus là, ignorez simplement ce message.\n\n{{recruiter_name}}",
     },
 )
 
@@ -289,13 +289,13 @@ def context_for(row: Prospect, actor: User | None = None) -> dict[str, str]:
         "about_company": f" au sujet de {company}" if company else "",
         "chez_company": f"chez {company}" if company else "chez vous",
         "title": title,
-        "title_or_metier": title or "en usine ou en entrepôt",
+        "title_or_metier": title or "ouvert",
         "title_or_poste": title or "à pourvoir",
         "title_bit": f" ({title})" if title else "",
         "city": city,
         "city_bit": f" à {city}" if city else "",
         "sector": sector,
-        "sector_or_industrie": sector or "industriels",
+        "sector_or_industrie": sector or "ouverts",
         "sector_bit": f" en {sector.lower()}" if sector else "",
         "phone": PHONE,
         "info": INFO,
