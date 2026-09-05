@@ -465,6 +465,8 @@ class ContactIn(BaseModel):
     skills: str | None = None
     contact_role: str | None = None
     company_size: str | None = None
+    shift: str | None = None
+    schedule: str | None = None
     website_url: str | None = None  # honeypot anti-spam
 
 

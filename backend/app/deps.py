@@ -35,7 +35,24 @@ def get_current_user_optional(
     return user
 
 
-def get_current_user(user: User | None = Depends(get_current_user_optional)) -> User:
+def _require_verified_if_needed(db: Session, user: User) -> None:
+    from app.services.auth import email_gate_enabled
+
+    if email_gate_enabled(db) and not user.is_email_verified:
+        raise AppError(403, "Vérifiez votre courriel avant de continuer.", "EMAIL_NOT_VERIFIED")
+
+
+def get_current_user(
+    user: User | None = Depends(get_current_user_optional),
+    db: Session = Depends(get_db),
+) -> User:
+    if not user:
+        raise AppError(401, "Authentification requise.", "UNAUTHENTICATED")
+    _require_verified_if_needed(db, user)
+    return user
+
+
+def get_current_user_unverified(user: User | None = Depends(get_current_user_optional)) -> User:
     if not user:
         raise AppError(401, "Authentification requise.", "UNAUTHENTICATED")
     return user

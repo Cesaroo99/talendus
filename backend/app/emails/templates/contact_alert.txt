@@ -1,0 +1,4 @@
+Subject: Nouveau message site — {{name}}
+{{name}} a écrit via le formulaire public Talendus.
+
+{{link}}

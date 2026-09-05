@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.deps import client_ip, get_current_user
+from app.deps import client_ip, get_current_user, get_current_user_unverified
 from app.errors import ok
 from app.models import User
 from app.schemas import (
@@ -69,7 +69,7 @@ def refresh(payload: RefreshIn, db: Session = Depends(get_db)):
 
 
 @router.post("/logout")
-def logout(request: Request, payload: RefreshIn | None = None, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def logout(request: Request, payload: RefreshIn | None = None, user: User = Depends(get_current_user_unverified), db: Session = Depends(get_db)):
     auth_service.logout(db, payload.refresh_token if payload else None, user, client_ip(request))
     return ok(message="Déconnexion effectuée.")
 
@@ -99,7 +99,7 @@ def verify(payload: EmailVerifyIn, db: Session = Depends(get_db)):
 
 
 @router.post("/resend-verification")
-def resend_verification(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def resend_verification(user: User = Depends(get_current_user_unverified), db: Session = Depends(get_db)):
     auth_service.resend_verification(db, user)
     return ok(message="Si le compte n'est pas encore vérifié, un courriel a été envoyé.")
 

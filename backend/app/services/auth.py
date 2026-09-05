@@ -27,6 +27,10 @@ from app.services.notifications import notify
 settings = get_settings()
 
 ALLOWED_SELF_ROLES = {UserRole.CANDIDATE, UserRole.EMPLOYER}
+
+
+def email_gate_enabled(db: Session | None = None) -> bool:
+    return bool(get_settings().email_enabled)
 _ROLE_ACCOUNT_LABEL = {
     UserRole.CANDIDATE: "talent",
     UserRole.EMPLOYER: "employeur",
@@ -169,7 +173,7 @@ def login(db: Session, data: LoginIn, ip: str | None = None, user_agent: str | N
         _log_login(db, email, False, user, ip, user_agent)
         db.commit()
         raise AppError(403, "Ce compte est désactivé.", "ACCOUNT_DISABLED")
-    if get_settings().email_enabled and not user.is_email_verified:
+    if email_gate_enabled(db) and not user.is_email_verified:
         _log_login(db, email, False, user, ip, user_agent)
         db.commit()
         raise AppError(403, "Vérifiez votre courriel avant de vous connecter.", "EMAIL_NOT_VERIFIED")
@@ -189,6 +193,8 @@ def refresh(db: Session, raw: str) -> dict:
     user = db.get(User, row.user_id)
     if not user or not user.is_active or user.account_status in {AccountStatus.SUSPENDED, AccountStatus.DEACTIVATED}:
         raise AppError(401, "Compte indisponible.", "ACCOUNT_DISABLED")
+    if email_gate_enabled(db) and not user.is_email_verified:
+        raise AppError(403, "Vérifiez votre courriel avant de vous connecter.", "EMAIL_NOT_VERIFIED")
     row.revoked = True
     tokens = _issue_tokens(db, user)
     db.commit()

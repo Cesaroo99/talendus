@@ -804,7 +804,7 @@ def sync_known_people(db: Session) -> int:
             sector=company.sector or "",
             user_id=owner.id if owner else None,
             company_id=company.id,
-            stage="client" if before is None and getattr(company.status, "value", str(company.status)) == "ACTIVE" else None,
+            stage=None,
         )
         if before is None:
             added += 1

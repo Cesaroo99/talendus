@@ -272,6 +272,15 @@ def test_candidate_shell_loads_call_engine():
     assert "t.startCallAudio" in account
     assert "t.joinCallAudio" in account
     assert "tl-profile-stack" in account
+    start = account.index('id="acc-profile">')
+    end = account.index("</form>", start)
+    form = account[start:end]
+    assert 'name="phone"' in form
+    assert 'name="bio"' in form
+    assert 'name="skills"' in form
+    assert 'choiceSelect("city"' in form
+    assert 'type="submit"' in form
+    assert form.find("</section>") > form.find('name="phone"') or 'name="phone"' in form
     assert "notifGroupInterviews" in account
     assert "acc-mobile-nav" not in account
     assert "data-space-menu" in account

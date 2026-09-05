@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.deps import get_current_user
+from app.deps import get_current_user, get_current_user_unverified
 from app.errors import AppError, ok
 from app.models import User
 from app.models.calls import CallPeer
@@ -63,7 +63,7 @@ def _can_see_avatar(db: Session, viewer: User, target_id: str) -> bool:
 
 
 @router.get("/me")
-def me(user: User = Depends(get_current_user)):
+def me(user: User = Depends(get_current_user_unverified)):
     return ok(UserPublic.model_validate(user).model_dump(mode="json"))
 
 

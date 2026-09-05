@@ -333,3 +333,27 @@ def test_reset_and_verify_missing_user_return_400(client):
     verified = client.post("/api/auth/verify-email", json={"token": vtoken})
     assert verified.status_code == 400
     assert verified.json()["code"] == "INVALID_TOKEN"
+
+
+def test_unverified_jwt_blocked_when_email_sending_is_on(client, monkeypatch):
+    from app.config import get_settings
+
+    data = register(client, "gate-me@example.com")
+    headers = auth_header(data)
+    monkeypatch.setenv("EMAIL_ENABLED", "true")
+    get_settings.cache_clear()
+    try:
+        blocked = client.get("/api/candidates/me", headers=headers)
+        assert blocked.status_code == 403
+        assert blocked.json()["code"] == "EMAIL_NOT_VERIFIED"
+        me = client.get("/api/users/me", headers=headers)
+        assert me.status_code == 200
+        assert me.json()["data"]["is_email_verified"] is False
+        resend = client.post("/api/auth/resend-verification", headers=headers)
+        assert resend.status_code == 200
+        reused = client.post("/api/auth/refresh", json={"refresh_token": data["refresh_token"]})
+        assert reused.status_code == 403
+        assert reused.json()["code"] == "EMAIL_NOT_VERIFIED"
+    finally:
+        monkeypatch.setenv("EMAIL_ENABLED", "false")
+        get_settings.cache_clear()

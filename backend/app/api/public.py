@@ -65,6 +65,8 @@ def contact(payload: ContactIn, request: Request, db: Session = Depends(get_db))
         f"Compétences : {payload.skills}" if payload.skills else "",
         f"Fonction : {payload.contact_role}" if payload.contact_role else "",
         f"Taille : {payload.company_size}" if payload.company_size else "",
+        f"Quart : {payload.shift}" if payload.shift else "",
+        f"Horaire : {payload.schedule}" if payload.schedule else "",
         f"Téléphone : {payload.phone}" if payload.phone else "",
     ]
     body = "\n".join(part for part in details if part)
@@ -72,7 +74,7 @@ def contact(payload: ContactIn, request: Request, db: Session = Depends(get_db))
         db,
         "info@talendus.ca",
         EmailType.ADMIN,
-        "welcome",
+        "contact_alert",
         name=payload.name,
         link=body[:1500],
     )

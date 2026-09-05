@@ -72,7 +72,7 @@ def test_notify_delivers_web_push(client, monkeypatch):
     assert calls
     body = json.loads(calls[0]["payload"].decode("utf-8"))
     assert body["title"] == "Nouveau message"
-    assert body["href"] == "/m.html#/messages"
+    assert body["href"] == "/espace.html#/messages"
     assert calls[0]["info"]["endpoint"].endswith("talendus-deliver")
 
 
@@ -128,7 +128,9 @@ def test_mobile_app_asks_for_phone_notifications():
         assert needle in js
     assert ".showNotification(" not in js
     sw = (ROOT / "sw.js").read_text(encoding="utf-8")
-    assert "talendus-app-v32" in sw
+    assert "talendus-app-v33" in sw
+    assert "/espace.html#/notifs" in sw
+    assert "/m.html#/notifs" not in sw
     assert "showNotification" in sw
     assert "renotify: false" in sw
     java = (ROOT / "mobile" / "android" / "app" / "src" / "main" / "java" / "ca" / "talendus" / "app" / "MainActivity.java").read_text(encoding="utf-8")

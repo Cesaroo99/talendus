@@ -921,10 +921,11 @@
         '<p class="tl-profile-lead">' + esc(t.photoHint) + "</p>" +
         '<div class="tl-profile-photo">' + photo + "<div><strong>" + esc((user.first_name || "") + " " + (user.last_name || "")) + "</strong><p>" + esc(user.email || "") + "</p></div></div>" +
         '<form class="tl-form" id="acc-avatar"><label>' + esc(t.photo) + '</label><input name="file" type="file" accept="image/jpeg,image/png,image/webp,image/*">' +
-        '<button class="tl-btn tl-btn-ghost" type="submit">' + esc(t.save) + '</button><div class="tl-success"></div></form>' +
-        '<form class="tl-form" id="acc-profile"><div class="tl-row-2"><div><label>' + esc(t.first) + '</label><input name="first_name" value="' + esc(user.first_name || "") + '"></div>' +
-        "<div><label>" + esc(t.last) + '</label><input name="last_name" value="' + esc(user.last_name || "") + '"></div></div></section>' +
+        '<button class="tl-btn tl-btn-ghost" type="submit">' + esc(t.save) + '</button><div class="tl-success"></div></form></section>' +
+        '<form class="tl-form" id="acc-profile">' +
         '<section class="tl-profile-card"><h3>' + esc(t.profileContact) + "</h3>" +
+        '<div class="tl-row-2"><div><label>' + esc(t.first) + '</label><input name="first_name" value="' + esc(user.first_name || "") + '"></div>' +
+        "<div><label>" + esc(t.last) + '</label><input name="last_name" value="' + esc(user.last_name || "") + '"></div></div>' +
         "<label>" + esc(t.email) + '</label><input value="' + esc(user.email || "") + '" disabled class="tl-disabled">' +
         "<label>" + esc(t.phone) + '</label><input name="phone" value="' + esc(user.phone || "") + '">' +
         "<label>" + esc(t.address) + '</label><input name="address" value="' + esc(profile.address || "") + '">' +
@@ -947,7 +948,7 @@
         choiceGroup("shift_preference", (jobOptions || {}).shifts, profile.shift_preference, t.shiftLabel) +
         "<label>" + esc(t.mobility) + '</label>' + choiceSelect("mobility", (jobOptions || {}).mobility, profile.mobility, t.pick) +
         '<div class="tl-row-2"><div><label>' + esc(t.desiredSalary) + '</label><input name="desired_salary_min" type="number" value="' + esc(profile.desired_salary_min || "") + '"></div><div></div></div>' +
-        '<button class="tl-btn" type="submit">' + esc(t.save) + '</button><div class="tl-success"></div></form></section>' +
+        '<button class="tl-btn" type="submit">' + esc(t.save) + '</button><div class="tl-success"></div></section></form>' +
         '<section class="tl-profile-card"><h3>' + esc(t.profilePath) + "</h3>" +
         "<h4>" + (isEn ? "Experience" : "Expériences") + "</h4><ul class=\"tl-profile-list\">" + exp + "</ul>" +
         '<form class="tl-form" id="acc-exp"><div class="tl-row-2"><input name="company" placeholder="' + esc(t.company) + '" required><input name="role" placeholder="' + esc(t.title) + '" required></div>' +

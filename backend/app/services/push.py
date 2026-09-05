@@ -91,31 +91,53 @@ def public_key(db: Session) -> str:
     return vapid_keys(db)[1]
 
 
+_EMPLOYER_HASHES = (
+    "/hiring",
+    "/need",
+    "/inbox",
+    "/invoices",
+    "/company",
+    "/pipeline",
+    "/contracts",
+)
+
+
 def app_href(href: str | None) -> str:
     if not href:
-        return "/m.html#/notifs"
+        return "/espace.html#/notifs"
+    raw = href.strip()
+    if raw.startswith("/espace-employeur.html") or raw.startswith("/en/account-employer.html"):
+        return raw
+    if raw.startswith("/espace.html") or raw.startswith("/en/account.html"):
+        return raw
     hashpart = ""
-    if "#" in href:
-        hashpart = href.split("#", 1)[1]
-    elif href.startswith("/m.html"):
-        return href
+    if "#" in raw:
+        hashpart = raw.split("#", 1)[1]
+    elif raw.startswith("/m.html"):
+        hashpart = raw.split("#", 1)[1] if "#" in raw else "/notifs"
     else:
-        hashpart = href.lstrip("/")
+        hashpart = raw.lstrip("/")
     if hashpart and not hashpart.startswith("/"):
         hashpart = "/" + hashpart
     aliases = {
-        "/dashboard": "/home",
-        "/documents": "/cv",
-        "/application": "/app",
+        "/dashboard": "/dashboard",
+        "/documents": "/documents",
+        "/application": "/application",
         "/applications": "/apps",
         "/hiring": "/hiring",
         "/jobs": "/jobs",
+        "/home": "/dashboard",
+        "/cv": "/documents",
+        "/app": "/application",
     }
     for old, new in aliases.items():
         if hashpart == old or hashpart.startswith(old + "/"):
             hashpart = new + hashpart[len(old) :]
             break
-    return "/m.html#" + (hashpart or "/notifs")
+    path = hashpart.split("?", 1)[0]
+    if any(path == key or path.startswith(key + "/") for key in _EMPLOYER_HASHES):
+        return "/espace-employeur.html#" + (hashpart or "/notifs")
+    return "/espace.html#" + (hashpart or "/notifs")
 
 
 def subscribe(db: Session, user: User, endpoint: str, p256dh: str, auth: str, user_agent: str | None = None) -> PushSubscription:
