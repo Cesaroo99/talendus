@@ -420,6 +420,8 @@ def test_admin_ui_has_prospects_module():
     assert "non parti" in js
     assert "mailDeliveryBadge" in js
     assert "Acceptés par SMTP" in js
+    assert "journal-retry-mails" in js
+    assert "/admin/emails/retry" in js
     assert "Maximum 80 destinataires" not in js
     assert "cand_first_contact" not in js
     assert "Vous trouverez ceci en pièce jointe" in js
@@ -687,3 +689,102 @@ def test_smtp_credentials_send_outside_test_even_if_toggle_off(client, monkeypat
     cfg = runtime_email_config(db)
     assert cfg.enabled is True
     db.close()
+
+
+def test_retry_sends_never_handed_admin_mails_not_hard_bounces(client, monkeypatch):
+    from app.database import SessionLocal
+    from app.models import EmailLog
+    from app.models.enums import EmailStatus, EmailType
+    from app.models.prospect import Prospect
+    from app.services.email import SMTP_DISABLED_ERROR, retry_undelivered_emails
+
+    admin = promote_admin(client, "retry-admin@example.com")
+    admin_h = auth_header(admin)
+    created = client.post(
+        "/api/admin/prospects",
+        headers=admin_h,
+        json={"side": "employer", "email": "relance@usine.example", "company_name": "Usine Relance", "stage": "a-contacter"},
+    ).json()["data"]
+
+    db = SessionLocal()
+    db.add(
+        EmailLog(
+            to_email="relance@usine.example",
+            type=EmailType.ADMIN,
+            subject="Usine Relance — Recrutement",
+            body="Bonjour",
+            status=EmailStatus.FAILED,
+            error=SMTP_DISABLED_ERROR,
+            attempts=0,
+        )
+    )
+    db.add(
+        EmailLog(
+            to_email="autre@usine.example",
+            type=EmailType.ADMIN,
+            subject="Autre — Recrutement",
+            body="Bonjour",
+            status=EmailStatus.FAILED,
+            error="Jamais remis au serveur SMTP (journalisé seulement).",
+            attempts=0,
+        )
+    )
+    db.add(
+        EmailLog(
+            to_email="welcome@usine.example",
+            type=EmailType.WELCOME,
+            subject="Bienvenue",
+            body="x",
+            status=EmailStatus.FAILED,
+            error=SMTP_DISABLED_ERROR,
+            attempts=0,
+        )
+    )
+    db.add(
+        EmailLog(
+            to_email="inconnu@no-such-domain.invalid",
+            type=EmailType.ADMIN,
+            subject="Bounce",
+            body="x",
+            status=EmailStatus.FAILED,
+            error="550-5.1.1 The email account does not exist",
+            attempts=1,
+        )
+    )
+    db.commit()
+    db.close()
+
+    journal = client.get("/api/admin/audit?limit=5", headers=admin_h).json()
+    summary = journal["meta"]["email_summary"]
+    assert summary["retryable"] >= 2
+    assert "pas une limite" in (summary["explanation"] or "").lower() or "jamais" in (summary["explanation"] or "").lower()
+
+    blocked = client.post("/api/admin/emails/retry", headers=admin_h, json={})
+    assert blocked.status_code == 502, blocked.text
+
+    stub_smtp_delivery(monkeypatch)
+    from sqlalchemy import select
+
+    db = SessionLocal()
+    stats = retry_undelivered_emails(db, sync=True)
+    db.commit()
+    assert stats["retried"] == 2
+    assert stats["sent"] == 2
+    sent_addrs = {
+        row.to_email
+        for row in db.scalars(select(EmailLog).where(EmailLog.status == EmailStatus.SENT)).all()
+        if (row.attempts or 0) >= 1
+    }
+    assert "relance@usine.example" in sent_addrs
+    assert "autre@usine.example" in sent_addrs
+    welcome = db.scalar(select(EmailLog).where(EmailLog.to_email == "welcome@usine.example"))
+    bounce = db.scalar(select(EmailLog).where(EmailLog.to_email == "inconnu@no-such-domain.invalid"))
+    assert welcome.status == EmailStatus.FAILED
+    assert bounce.status == EmailStatus.FAILED
+    prospect = db.get(Prospect, created["id"])
+    assert prospect.stage == "contacte"
+    db.close()
+
+    again = client.post("/api/admin/emails/retry", headers=admin_h, json={})
+    assert again.status_code == 200, again.text
+    assert again.json()["data"]["retried"] == 0

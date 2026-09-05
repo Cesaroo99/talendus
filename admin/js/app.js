@@ -2550,12 +2550,22 @@
         return "<tr><td>" + U.dateFr(r.created_at) + "</td><td><b>" + U.esc(r.actor_name || "Système") + "</b><div class='sub'>" + U.esc(r.actor_email || "") + "</div></td><td>" + U.esc(r.action_label || r.action) + change + "</td><td>" + liv + "</td><td>" + U.esc(r.entity_type || "—") + "</td></tr>";
       }).join("");
       var sum = meta.email_summary || {};
+      var smtp = sum.smtp || {};
+      var retryable = Number(sum.retryable || 0);
       var summary = '<div class="grid grid-4" style="margin-bottom:16px">' +
         '<div class="card card-pad"><div class="sub">Acceptés par SMTP</div><b>' + U.esc(String(sum.accepted || 0)) + "</b></div>" +
         '<div class="card card-pad"><div class="sub">Ouverts</div><b>' + U.esc(String(sum.opened || 0)) + "</b></div>" +
-        '<div class="card card-pad"><div class="sub">Non partis</div><b>' + U.esc(String(sum.failed || 0)) + "</b></div>" +
-        '<div class="card card-pad"><div class="sub">En file</div><b>' + U.esc(String(sum.queued || 0)) + "</b></div></div>" +
-        '<p class="sub">« Parti » = Gmail (ou votre SMTP) a accepté le message pour livraison. « Ouvert » = le destinataire a affiché le courriel. Gmail ne dit pas si le message est dans la boîte ou les spams, sauf s’il est ouvert.</p>';
+        '<div class="card card-pad"><div class="sub">À relancer (jamais remis au serveur)</div><b>' + U.esc(String(retryable)) + "</b></div>" +
+        '<div class="card card-pad"><div class="sub">Refusés par SMTP</div><b>' + U.esc(String(sum.hard_failed || 0)) + "</b></div></div>" +
+        '<div class="card card-pad" style="margin-bottom:16px">' +
+        "<p><b>" + (retryable ? "Ce n’est pas une limite, ni un problème d’adresses." : "Suivi SMTP") + "</b> " +
+        U.esc(sum.explanation || "") + "</p>" +
+        '<p class="sub">SMTP ' + (smtp.ready && smtp.enabled ? "prêt" : "incomplet") +
+        (smtp.host ? " · " + U.esc(smtp.host) : "") +
+        (smtp.username ? " · " + U.esc(smtp.username) : "") +
+        (smtp.has_password ? " · mot de passe enregistré" : " · mot de passe manquant") + ".</p>" +
+        (retryable ? '<p style="margin-top:12px"><button class="btn btn-orange" type="button" id="journal-retry-mails">Relancer les ' + retryable + " courriels non partis</button></p>" : "") +
+        "</div>";
       root.innerHTML = summary + '<div class="card"><div class="table-wrap"><table class="data"><thead><tr><th>Quand</th><th>Employé</th><th>Action</th><th>Livraison</th><th>Dossier</th></tr></thead><tbody>' +
         (body || '<tr><td colspan="5">' + U.empty("Aucune action", "Les connexions, envois, notes et mises à jour de l’équipe apparaîtront ici.") + "</td></tr>") +
         "</tbody></table></div></div>";
@@ -2576,6 +2586,22 @@
           };
         }
       });
+      var retryBtn = document.getElementById("journal-retry-mails");
+      if (retryBtn && !retryBtn.getAttribute("data-bound")) {
+        retryBtn.setAttribute("data-bound", "1");
+        retryBtn.onclick = function () {
+          retryBtn.disabled = true;
+          retryBtn.textContent = "Relance en cours…";
+          api().request("/admin/emails/retry", { method: "POST", body: {} }).then(function (res) {
+            U.toast((res && res.message) || "Relance lancée.", "ok");
+            hydrateJournal();
+          }).catch(function (err) {
+            retryBtn.disabled = false;
+            retryBtn.textContent = "Relancer les courriels non partis";
+            U.toast((err && err.message) || "Relance impossible.", "err");
+          });
+        };
+      }
     } catch (err) {
       root.innerHTML = "<p class='sub'>" + U.esc((err && err.message) || "Impossible de lire le journal.") + "</p>";
     }

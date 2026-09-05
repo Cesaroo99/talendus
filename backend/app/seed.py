@@ -12,7 +12,7 @@ from app.config import get_settings
 from app.database import SessionLocal, init_db
 from app.site_jobs import ensure_site_catalog
 from app.services.employer_leads import ensure_quebec_employer_leads
-from app.services.email import ensure_smtp_ready
+from app.services.email import ensure_smtp_ready, retry_undelivered_emails
 from app.services.prospects import reconcile_undelivered_prospect_mails
 from app.models import (
     Application,
@@ -239,8 +239,9 @@ def seed_if_empty() -> None:
             ensure_quebec_employer_leads(db)
             smtp = ensure_smtp_ready(db)
             stats = reconcile_undelivered_prospect_mails(db)
+            retry = retry_undelivered_emails(db)
             db.commit()
-            logger.info("SMTP %s — réconciliation courriels prospects %s", smtp, stats)
+            logger.info("SMTP %s — réconciliation %s — relance %s", smtp, stats, retry)
             return
         if db.scalar(select(User).limit(1)):
             seed_rbac(db)
@@ -249,16 +250,18 @@ def seed_if_empty() -> None:
             ensure_quebec_employer_leads(db)
             smtp = ensure_smtp_ready(db)
             stats = reconcile_undelivered_prospect_mails(db)
+            retry = retry_undelivered_emails(db)
             db.commit()
-            logger.info("SMTP %s — réconciliation courriels prospects %s", smtp, stats)
+            logger.info("SMTP %s — réconciliation %s — relance %s", smtp, stats, retry)
             return
         _seed(db)
         ensure_site_catalog(db)
         ensure_quebec_employer_leads(db)
         smtp = ensure_smtp_ready(db)
         stats = reconcile_undelivered_prospect_mails(db)
+        retry = retry_undelivered_emails(db)
         db.commit()
-        logger.info("Base Talendus initialisée (seed). smtp=%s courriels=%s", smtp, stats)
+        logger.info("Base Talendus initialisée (seed). smtp=%s courriels=%s relance=%s", smtp, stats, retry)
     except Exception:
         db.rollback()
         logger.exception("Échec du seed")

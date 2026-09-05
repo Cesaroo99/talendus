@@ -212,8 +212,10 @@ def delivery_snapshot(log: EmailLog | None) -> dict:
         key, label = "accepted", "Parti — accepté par le serveur"
     elif log.status == EmailStatus.QUEUED:
         key, label = "queued", "En file"
+    elif never_handed_to_smtp(log):
+        key, label = "failed", "Non parti — jamais remis au serveur"
     else:
-        key, label = "failed", "Non parti"
+        key, label = "failed", "Non parti — refusé par SMTP"
     return {
         "delivery": key,
         "delivery_label": label,
@@ -296,14 +298,134 @@ def ensure_smtp_ready(db: Session) -> dict:
     }
 
 
-def email_delivery_summary(db: Session, limit: int = 200) -> dict[str, int]:
-    rows = list(db.scalars(select(EmailLog).order_by(EmailLog.created_at.desc()).limit(limit)).all())
-    counts = {"accepted": 0, "opened": 0, "failed": 0, "queued": 0, "total": len(rows)}
+def never_handed_to_smtp(log: EmailLog | None) -> bool:
+    if log is None or email_actually_sent(log):
+        return False
+    if (log.attempts or 0) == 0:
+        return True
+    err = log.error or ""
+    return SMTP_DISABLED_ERROR in err or FAKE_SENT_ERROR in err or "journalisé seulement" in err
+
+
+def is_hard_smtp_reject(error: str | None) -> bool:
+    raw = (error or "").lower()
+    return any(
+        token in raw
+        for token in (
+            "5.1.1",
+            "user unknown",
+            "does not exist",
+            "recipient address rejected",
+            "mailbox unavailable",
+            "550-5.1.1",
+        )
+    )
+
+
+def retryable_undelivered_logs(db: Session, limit: int = 400) -> list[EmailLog]:
+    rows = list(
+        db.scalars(
+            select(EmailLog)
+            .where(EmailLog.type == EmailType.ADMIN, EmailLog.status != EmailStatus.SENT)
+            .order_by(EmailLog.created_at.desc())
+        ).all()
+    )
+    delivered_keys = {
+        ((log.to_email or "").lower(), (log.subject or "")[:180])
+        for log in db.scalars(select(EmailLog).where(EmailLog.status == EmailStatus.SENT)).all()
+        if email_actually_sent(log)
+    }
+    picked: list[EmailLog] = []
+    seen: set[tuple[str, str]] = set()
+    for log in rows:
+        if not never_handed_to_smtp(log):
+            continue
+        if is_hard_smtp_reject(log.error):
+            continue
+        key = ((log.to_email or "").lower(), (log.subject or "")[:180])
+        if key in delivered_keys or key in seen:
+            continue
+        seen.add(key)
+        picked.append(log)
+        if len(picked) >= limit:
+            break
+    return picked
+
+
+def touch_prospects_after_delivery(db: Session, log: EmailLog) -> int:
+    if not email_actually_sent(log):
+        return 0
+    from app.models.prospect import Prospect
+
+    rows = list(db.scalars(select(Prospect).where(Prospect.email == (log.to_email or "").lower())).all())
+    changed = 0
+    for row in rows:
+        row.last_contacted_at = log.sent_at or utcnow()
+        if row.stage in {"nouveau", "a-contacter"}:
+            row.stage = "contacte"
+            changed += 1
+    return changed
+
+
+def retry_undelivered_emails(db: Session, *, sync: bool = False, limit: int = 400) -> dict:
+    mark_fake_sent_logs(db)
+    smtp = ensure_smtp_ready(db)
+    cfg = runtime_email_config(db)
+    if not cfg.enabled:
+        return {"retried": 0, "queued": 0, "sent": 0, "reason": "smtp_off", "smtp": smtp}
+    logs = retryable_undelivered_logs(db, limit=limit)
+    for log in logs:
+        log.status = EmailStatus.QUEUED
+        log.error = None
+        if sync:
+            _record_smtp_result(log, cfg, fail_fast=True)
+            touch_prospects_after_delivery(db, log)
+    if logs and not sync:
+        start_worker()
+    sent_now = sum(1 for log in logs if email_actually_sent(log))
+    return {
+        "retried": len(logs),
+        "queued": 0 if sync else len(logs),
+        "sent": sent_now,
+        "reason": "ok" if logs else "none",
+        "smtp": smtp,
+    }
+
+
+def email_delivery_summary(db: Session, limit: int = 200) -> dict:
+    smtp = ensure_smtp_ready(db)
+    rows = list(
+        db.scalars(
+            select(EmailLog).where(EmailLog.type == EmailType.ADMIN).order_by(EmailLog.created_at.desc()).limit(limit)
+        ).all()
+    )
+    counts = {"accepted": 0, "opened": 0, "failed": 0, "queued": 0, "total": len(rows), "retryable": 0, "hard_failed": 0}
     for log in rows:
         key = delivery_snapshot(log)["delivery"]
         if key in counts:
             counts[key] += 1
-    return counts
+        if never_handed_to_smtp(log):
+            counts["retryable"] += 1
+        elif key == "failed":
+            counts["hard_failed"] += 1
+    retryable_all = len(retryable_undelivered_logs(db))
+    counts["retryable"] = retryable_all
+    if not smtp.get("ready"):
+        reason = "smtp_off"
+        explanation = (
+            "Ce n’est pas une limite Gmail ni un problème d’adresses. "
+            "Ces courriels n’ont jamais été remis au serveur SMTP (envoi journalisé seulement)."
+        )
+    elif retryable_all:
+        reason = "never_sent"
+        explanation = (
+            f"{retryable_all} courriels n’ont jamais quitté Talendus. "
+            "Ce n’est pas une limitation obligatoire : ils vont être relancés maintenant que le SMTP est prêt."
+        )
+    else:
+        reason = "ok"
+        explanation = "Les courriels prospects ont quitté le serveur, ou aucun n’est en attente de relance."
+    return {**counts, "reason": reason, "explanation": explanation, "smtp": smtp}
 
 
 def enrich_audits_with_delivery(db: Session, rows: list[dict]) -> list[dict]:
@@ -729,7 +851,10 @@ def _deliver(session_factory, log_id: str) -> None:
                 db.commit()
                 return
             _record_smtp_result(log, cfg, fail_fast=False)
+            if email_actually_sent(log):
+                touch_prospects_after_delivery(db, log)
             db.commit()
+            time.sleep(0.35)
             return
         finally:
             db.close()

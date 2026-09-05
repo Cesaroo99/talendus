@@ -375,6 +375,30 @@ def audit_logs(
     )
 
 
+@router.post("/emails/retry")
+def retry_undelivered(db: Session = Depends(get_db), _: User = Depends(_staff)):
+    from app.services.email import retry_undelivered_emails
+
+    result = retry_undelivered_emails(db)
+    db.commit()
+    if result.get("reason") == "smtp_off":
+        raise AppError(
+            502,
+            "Le SMTP n’est pas prêt : les courriels non partis ne peuvent pas encore être relancés. "
+            "Remplissez serveur, identifiant et mot de passe d’application dans Réglages → Courriel.",
+            "SMTP_DISABLED",
+        )
+    queued = int(result.get("queued") or result.get("retried") or 0)
+    return ok(
+        result,
+        message=(
+            f"{queued} courriel(s) remis en file pour un vrai départ SMTP."
+            if queued
+            else "Aucun courriel à relancer : tout a déjà quitté le serveur, ou le SMTP n’est pas prêt."
+        ),
+    )
+
+
 @router.get("/permissions")
 def permissions(db: Session = Depends(get_db), _: User = Depends(_admin_user)):
     roles = db.scalars(select(Role)).all()
