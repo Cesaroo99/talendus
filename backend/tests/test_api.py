@@ -15,6 +15,7 @@ def test_ready(client):
     res = client.get("/api/ready")
     assert res.status_code == 200
     assert res.json()["data"]["status"] == "ready"
+    assert res.json()["data"]["db"] is True
 
 
 def test_register_and_login(client):

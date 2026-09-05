@@ -121,6 +121,10 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 content=error_body("Trop de requêtes. Réessayez dans une minute.", "RATE_LIMITED"),
             )
         window.append(now)
+        if len(self.hits) > 8000:
+            stale = [key for key, q in self.hits.items() if not q or now - q[-1] > 60]
+            for key in stale[:2000]:
+                self.hits.pop(key, None)
         return await call_next(request)
 
 

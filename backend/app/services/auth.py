@@ -2,7 +2,8 @@ from datetime import timedelta
 from collections import defaultdict
 import time
 
-from sqlalchemy import select
+from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
@@ -47,15 +48,33 @@ def _login_key(email: str, ip: str | None) -> str:
     return f"{(email or '').lower()}|{(ip or 'unknown')}"
 
 
-def _assert_not_locked(email: str, ip: str | None) -> None:
+def _failed_login_count(db: Session, email: str, ip: str | None) -> int:
+    minutes = get_settings().login_lockout_minutes or 15
+    since = utcnow() - timedelta(minutes=minutes)
+    filters = [
+        LoginEvent.email == email,
+        LoginEvent.success.is_(False),
+        LoginEvent.created_at >= since,
+    ]
+    if ip:
+        filters.append(LoginEvent.ip_address == (ip or "")[:64])
+    return int(db.scalar(select(func.count()).select_from(LoginEvent).where(*filters)) or 0)
+
+
+def _assert_not_locked(email: str, ip: str | None, db: Session | None = None) -> None:
     max_attempts = get_settings().login_max_attempts or 5
     lock_minutes = get_settings().login_lockout_minutes or 15
     key = _login_key(email, ip)
     now = time.time()
     window = lock_minutes * 60
-    hits = [ts for ts in _LOGIN_FAILS[key] if now - ts < window]
-    _LOGIN_FAILS[key] = hits
+    hits = [ts for ts in _LOGIN_FAILS.get(key, []) if now - ts < window]
+    if hits:
+        _LOGIN_FAILS[key] = hits
+    else:
+        _LOGIN_FAILS.pop(key, None)
     if len(hits) >= max_attempts:
+        raise AppError(429, "Trop de tentatives. Réessayez plus tard.", "LOGIN_LOCKED")
+    if db is not None and _failed_login_count(db, email, ip) >= max_attempts:
         raise AppError(429, "Trop de tentatives. Réessayez plus tard.", "LOGIN_LOCKED")
 
 
@@ -119,50 +138,54 @@ def register(db: Session, data: RegisterIn, ip: str | None = None, user_agent: s
     existing = db.scalar(select(User).where(User.email == data.email.lower()))
     if existing:
         raise AppError(409, "Un compte existe déjà avec ce courriel. Connectez-vous.", "EMAIL_TAKEN")
-    user = User(
-        email=data.email.lower(),
-        password_hash=hash_password(data.password),
-        first_name=data.first_name.strip(),
-        last_name=data.last_name.strip(),
-        phone=data.phone,
-        role=data.role,
-    )
-    db.add(user)
-    db.flush()
-    db.add(UserPreference(user_id=user.id))
-    if user.role == UserRole.CANDIDATE:
-        db.add(Candidate(user_id=user.id, country="Canada", province="Québec"))
-    elif user.role == UserRole.EMPLOYER:
-        from app.services.employer_claim import claim_or_create_employer_company
+    try:
+        user = User(
+            email=data.email.lower(),
+            password_hash=hash_password(data.password),
+            first_name=data.first_name.strip(),
+            last_name=data.last_name.strip(),
+            phone=data.phone,
+            role=data.role,
+        )
+        db.add(user)
+        db.flush()
+        db.add(UserPreference(user_id=user.id))
+        if user.role == UserRole.CANDIDATE:
+            db.add(Candidate(user_id=user.id, country="Canada", province="Québec"))
+        elif user.role == UserRole.EMPLOYER:
+            from app.services.employer_claim import claim_or_create_employer_company
 
-        claim_or_create_employer_company(db, user, data.company_name or "")
-    elif user.role == UserRole.RECRUITER:
-        db.add(Recruiter(user_id=user.id))
-    token = _make_email_token(db, user, "verify", 24)
-    send_email(
-        db, user.email, EmailType.WELCOME, "welcome",
-        name=user.first_name, link=f"{settings.frontend_url}/m.html#/verify/{token}",
-    )
-    send_email(
-        db, user.email, EmailType.VERIFY_EMAIL, "verify",
-        name=user.first_name, link=f"{settings.frontend_url}/m.html#/verify/{token}",
-    )
-    notify(db, user, NotificationType.ACCOUNT_CREATED, "Compte créé", "Bienvenue chez Talendus.")
-    audit(db, "account.register", user, "user", user.id, ip)
-    from app.services.prospects import touch_from_user
+            claim_or_create_employer_company(db, user, data.company_name or "")
+        elif user.role == UserRole.RECRUITER:
+            db.add(Recruiter(user_id=user.id))
+        token = _make_email_token(db, user, "verify", 24)
+        send_email(
+            db, user.email, EmailType.WELCOME, "welcome",
+            name=user.first_name, link=f"{settings.frontend_url}/m.html#/verify/{token}",
+        )
+        send_email(
+            db, user.email, EmailType.VERIFY_EMAIL, "verify",
+            name=user.first_name, link=f"{settings.frontend_url}/m.html#/verify/{token}",
+        )
+        notify(db, user, NotificationType.ACCOUNT_CREATED, "Compte créé", "Bienvenue chez Talendus.")
+        audit(db, "account.register", user, "user", user.id, ip)
+        from app.services.prospects import touch_from_user
 
-    db.flush()
-    touch_from_user(db, user, source="inscription", company_name=data.company_name or "")
-    tokens = _issue_tokens(db, user)
-    _log_login(db, user.email, True, user, ip, user_agent)
-    db.commit()
-    db.refresh(user)
-    return user, tokens
+        db.flush()
+        touch_from_user(db, user, source="inscription", company_name=data.company_name or "")
+        tokens = _issue_tokens(db, user)
+        _log_login(db, user.email, True, user, ip, user_agent)
+        db.commit()
+        db.refresh(user)
+        return user, tokens
+    except IntegrityError:
+        db.rollback()
+        raise AppError(409, "Un compte existe déjà avec ce courriel. Connectez-vous.", "EMAIL_TAKEN") from None
 
 
 def login(db: Session, data: LoginIn, ip: str | None = None, user_agent: str | None = None) -> tuple[User, dict]:
     email = data.email.lower()
-    _assert_not_locked(email, ip)
+    _assert_not_locked(email, ip, db)
     user = db.scalar(select(User).where(User.email == email))
     if not user or not verify_password(data.password, user.password_hash):
         _record_login_fail(email, ip)
