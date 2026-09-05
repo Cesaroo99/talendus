@@ -30,6 +30,8 @@ def test_robots_txt_blocks_private_paths(client):
     assert "Disallow: /api/" in text
     assert "Disallow: /espace.html" in text
     assert "Disallow: /espace-employeur.html" in text
+    assert "Disallow: /app.html" in text
+    assert "Disallow: /m.html" in text
     assert "Disallow: /projects-left.html" in text
     assert "Disallow: /service-left.html" in text
 
@@ -45,6 +47,8 @@ def test_sitemap_excludes_private_and_includes_public(client):
     assert "espace.html" not in xml
     assert "espace-employeur.html" not in xml
     assert "/admin/" not in xml
+    assert "app.html" not in xml
+    assert "/m.html" not in xml
 
 
 def test_tracking_config_disabled_by_default(client):

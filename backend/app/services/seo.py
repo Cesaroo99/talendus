@@ -51,6 +51,10 @@ PRIVATE_PATHS = {
     "/espace-employeur.html",
     "/en/account.html",
     "/en/account-employer.html",
+    "/app.html",
+    "/en/app.html",
+    "/m.html",
+    "/en/m.html",
 }
 
 STATIC_PAIRS = [
@@ -167,6 +171,10 @@ def robots_txt() -> str:
         "Disallow: /espace-employeur.html",
         "Disallow: /en/account.html",
         "Disallow: /en/account-employer.html",
+        "Disallow: /app.html",
+        "Disallow: /en/app.html",
+        "Disallow: /m.html",
+        "Disallow: /en/m.html",
         "Disallow: /candidate",
         "Disallow: /employer",
         "Disallow: /en/candidate",

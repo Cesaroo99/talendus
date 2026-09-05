@@ -826,7 +826,21 @@
     (function setupPwa() {
       var INSTALL_LIVE = false;
       window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); });
-      if (!INSTALL_LIVE) return;
+      if (!INSTALL_LIVE) {
+        if ("serviceWorker" in navigator && navigator.serviceWorker.getRegistrations) {
+          navigator.serviceWorker.getRegistrations().then(function (regs) {
+            regs.forEach(function (reg) { reg.unregister(); });
+          }).catch(function () {});
+        }
+        if (window.caches && caches.keys) {
+          caches.keys().then(function (keys) {
+            keys.forEach(function (key) {
+              if (String(key).indexOf("talendus-app") === 0) caches.delete(key);
+            });
+          }).catch(function () {});
+        }
+        return;
+      }
       var DISMISS_KEY = "talendus_install_dismissed_at";
       var ASKED_KEY = "talendus_install_asked";
       var ua = (navigator.userAgent || "").toLowerCase();

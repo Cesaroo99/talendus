@@ -92,7 +92,12 @@ def test_mobile_app_uses_the_dashboard_session():
     assert 'return (isEn ? "/en/m.html" : "/m.html")' not in auth
     native = (ROOT / "assets" / "js" / "talendus.js").read_text(encoding="utf-8")
     assert "INSTALL_LIVE = false" in native
+    assert "getRegistrations" in native
+    assert "unregister" in native
     assert 'location.replace((path.indexOf("/en/") === 0 ? "/en/m.html"' not in native
+    mobile = (ROOT / "assets" / "js" / "mobile-app.js").read_text(encoding="utf-8")
+    assert "var INSTALL_LIVE = false" in mobile
+    assert "if (!INSTALL_LIVE && !native) return" in mobile
     page = (ROOT / "espace.html").read_text(encoding="utf-8")
     assert "tl-native-app" not in page
     assert 'location.replace((path.indexOf("/en/") === 0 ? "/en/m.html"' not in page
@@ -155,6 +160,8 @@ def test_native_app_never_asks_to_install_again():
     assert "TalendusApp" in js
     assert "isNativeApp" in js
     assert "INSTALL_LIVE = false" in js
+    assert "getRegistrations" in js
+    assert "unregister" in js
     assert 'location.replace((path.indexOf("/en/") === 0 ? "/en/m.html"' not in js
     java = (ROOT / "mobile" / "android" / "app" / "src" / "main" / "java" / "ca" / "talendus" / "app" / "MainActivity.java").read_text(encoding="utf-8")
     assert "TalendusApp/" in java

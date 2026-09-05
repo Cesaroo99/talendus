@@ -63,6 +63,8 @@ def test_app_page_downloads_real_packages():
     assert "Télécharger l'appli" not in page
     assert 'href="/download/talendus.apk"' not in page
     assert "s’utilise ici" in page or "s'utilise ici" in page
+    assert "n’est pas proposée" in page or "n'est pas proposée" in page
+    assert 'location.replace("emplois.html")' not in page
     assert "Trois petits gestes" not in page
     for banned in ("Xcode", "WKWebView", "Google Play", "App Store"):
         assert banned not in page
@@ -70,6 +72,8 @@ def test_app_page_downloads_real_packages():
     assert 'id="tl-install-board"' not in en
     assert "Download the app" not in en
     assert 'href="/download/talendus.apk"' not in en
+    assert "is not offered" in en
+    assert 'location.replace("jobs.html")' not in en
     for banned in ("Xcode", "WKWebView"):
         assert banned not in en
 
@@ -81,6 +85,8 @@ def test_install_script_starts_a_file_download():
     assert "location.assign" in js
     assert "openGuide" not in js
     assert "var INSTALL_LIVE = false" in js
+    assert "getRegistrations" in js
+    assert "unregister" in js
     assert "rememberDismiss(365)" in js
     assert "Le fichier est en bas de l'écran" in js
     assert "isDesktopOs" in js

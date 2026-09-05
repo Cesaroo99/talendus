@@ -2892,7 +2892,10 @@
     }
     if (window.TalendusCall && window.TalendusCall.isLive()) window.TalendusCall.hangup();
   }
+  var INSTALL_LIVE = false;
   function registerSw() {
+    var native = !!(window.TalendusNative || (navigator.userAgent || "").indexOf("TalendusApp/") !== -1);
+    if (!INSTALL_LIVE && !native) return;
     if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
       navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(function () {});
     }
