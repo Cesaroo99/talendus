@@ -126,3 +126,108 @@ def test_cms_testimonials_and_faq_persist_in_bootstrap(client):
     neq = next(row for row in settings.json()["data"] if row["key"] == "billing.neq")
     assert neq["value"] == "2282510496"
     assert not any(k.startswith("cms.") for k in keys)
+
+
+def _promote(client, email: str, role: str) -> dict:
+    from app.database import SessionLocal
+    from app.models import User
+    from app.models.enums import UserRole
+
+    data = register(client, email, "EMPLOYER", first_name="Alex", last_name="Staff")
+    db = SessionLocal()
+    user = db.get(User, data["user"]["id"])
+    user.role = UserRole[role]
+    db.commit()
+    db.close()
+    res = client.post("/api/auth/login", json={"email": email, "password": "Password1!"})
+    assert res.status_code == 200
+    return res.json()["data"]
+
+
+def test_editor_bootstrap_omits_crm_pii(client):
+    admin = promote_admin(client, "bo-editor-admin@example.com")
+    admin_h = auth_header(admin)
+    client.post(
+        "/api/admin/candidates",
+        headers=admin_h,
+        json={
+            "email": "secret.cand@example.com",
+            "first_name": "Secret",
+            "last_name": "Candidat",
+            "phone": "514 555-0199",
+            "city": "Montréal",
+            "title": "Soudeur",
+        },
+    )
+    editor = _promote(client, "bo-editor@example.com", "EDITOR")
+    boot = client.get("/api/admin/bootstrap", headers=auth_header(editor)).json()["data"]
+    assert boot["candidates"] == []
+    assert boot["invoices"] == []
+    assert boot["payments"] == []
+    assert boot["applications"] == []
+    assert boot["contracts"] == []
+    assert boot["notes"] == []
+    assert boot["documents"] == []
+    assert boot["jobMatches"] == []
+    assert boot["activities"] == []
+    assert boot["clients"] == []
+    assert boot["interviews"] == []
+    assert isinstance(boot["pages"], list)
+    assert isinstance(boot["testimonials"], list)
+    assert isinstance(boot["faqs"], list)
+    admin_boot = client.get("/api/admin/bootstrap", headers=admin_h).json()["data"]
+    assert any((c.get("email") == "secret.cand@example.com") for c in admin_boot["candidates"])
+
+
+def test_recruiter_cannot_patch_company_assigned_to_another(client):
+    from app.database import SessionLocal
+    from app.models import Company, RecruitmentMission
+
+    admin = promote_admin(client, "bo-rec-admin@example.com")
+    emp = register(client, "bo-rec-emp@example.com", "EMPLOYER")
+    rec_a = _promote(client, "bo-rec-a@example.com", "RECRUITER")
+    rec_b = _promote(client, "bo-rec-b@example.com", "RECRUITER")
+    company = client.get("/api/companies/me", headers=auth_header(emp)).json()["data"]
+    company_id = company["id"]
+    name = company["name"]
+    allowed = client.patch(
+        f"/api/companies/{company_id}",
+        headers=auth_header(rec_a),
+        json={"name": name, "city": "Laval"},
+    )
+    assert allowed.status_code == 200, allowed.text
+
+    db = SessionLocal()
+    row = db.get(Company, company_id)
+    row.assigned_recruiter_id = rec_a["user"]["id"]
+    db.commit()
+    db.close()
+    blocked = client.patch(
+        f"/api/companies/{company_id}",
+        headers=auth_header(rec_b),
+        json={"name": name, "city": "Québec"},
+    )
+    assert blocked.status_code == 403
+
+    db = SessionLocal()
+    db.add(RecruitmentMission(company_id=company_id, recruiter_id=rec_b["user"]["id"], title="Cariste"))
+    db.commit()
+    db.close()
+    via_mission = client.patch(
+        f"/api/companies/{company_id}",
+        headers=auth_header(rec_b),
+        json={"name": name, "city": "Québec"},
+    )
+    assert via_mission.status_code == 200, via_mission.text
+    still_owner = client.patch(
+        f"/api/companies/{company_id}",
+        headers=auth_header(rec_a),
+        json={"name": name, "city": "Longueuil"},
+    )
+    assert still_owner.status_code == 200
+    admin_ok = client.patch(
+        f"/api/companies/{company_id}",
+        headers=auth_header(admin),
+        json={"name": name, "city": "Montréal"},
+    )
+    assert admin_ok.status_code == 200

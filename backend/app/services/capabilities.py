@@ -81,6 +81,18 @@ def public_services() -> dict:
         phone_e164 = ""
         phone_display = ""
     tracking = tracking_public_config()
+    email_sending = bool(settings.email_enabled)
+    try:
+        from app.database import SessionLocal
+        from app.services.email import runtime_email_config
+
+        db = SessionLocal()
+        try:
+            email_sending = bool(runtime_email_config(db).enabled)
+        finally:
+            db.close()
+    except Exception:  # noqa: BLE001
+        pass
     return {
         "contact": {
             "phone_e164": phone_e164,
@@ -101,7 +113,7 @@ def public_services() -> dict:
         },
         "messaging": {
             "in_app": True,
-            "email_sending": bool(settings.email_enabled),
+            "email_sending": email_sending,
             "whatsapp_api": is_active("whatsapp"),
             "sms": False,
             "push": False,

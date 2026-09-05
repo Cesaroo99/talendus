@@ -190,3 +190,146 @@ def test_candidate_profile_address_fields(client):
     assert body["birth_date"] == "1990-04-12"
     dash = client.get("/api/candidates/me/dashboard", headers=headers)
     assert "saved_jobs" in dash.json()["data"]["stats"]
+
+
+def test_oauth_refuses_role_switch_and_keeps_existing_role(client):
+    from app.database import SessionLocal
+    from app.errors import AppError
+    from app.models import User
+    from app.models.enums import UserRole
+    from app.services.auth import login_with_identity
+
+    data = register(client, "oauth-role@example.com")
+    db = SessionLocal()
+    try:
+        try:
+            login_with_identity(
+                db,
+                email="oauth-role@example.com",
+                first_name="Alex",
+                last_name="Test",
+                role=UserRole.EMPLOYER,
+                company_name="Usine Nord",
+                ip=None,
+                user_agent=None,
+                provider="google",
+                email_verified=True,
+            )
+            raise AssertionError("expected ACCOUNT_EXISTS")
+        except AppError as exc:
+            assert exc.status_code == 409
+            assert exc.code == "ACCOUNT_EXISTS"
+            assert "talent" in exc.message
+        user = db.get(User, data["user"]["id"])
+        assert user.role == UserRole.CANDIDATE
+        same = login_with_identity(
+            db,
+            email="oauth-role@example.com",
+            first_name="Alex",
+            last_name="Test",
+            role=UserRole.CANDIDATE,
+            company_name=None,
+            ip=None,
+            user_agent=None,
+            provider="google",
+            email_verified=True,
+        )
+        assert same[0].role == UserRole.CANDIDATE
+        assert same[0].is_email_verified is True
+    finally:
+        db.close()
+
+
+def test_oauth_linkedin_does_not_verify_existing_password_account(client):
+    from app.database import SessionLocal
+    from app.models import User
+    from app.models.enums import UserRole
+    from app.services.auth import login_with_identity
+
+    data = register(client, "oauth-li@example.com")
+    db = SessionLocal()
+    user = db.get(User, data["user"]["id"])
+    assert user.is_email_verified is False
+    login_with_identity(
+        db,
+        email="oauth-li@example.com",
+        first_name="Alex",
+        last_name="Test",
+        role=UserRole.CANDIDATE,
+        company_name=None,
+        ip=None,
+        user_agent=None,
+        provider="linkedin",
+        email_verified=False,
+    )
+    db.expire_all()
+    user = db.get(User, data["user"]["id"])
+    assert user.is_email_verified is False
+    db.close()
+
+
+def test_reset_and_change_password_revoke_sessions(client):
+    from app.database import SessionLocal
+    from app.models import EmailToken
+    from app.security import create_refresh_token, hash_token
+
+    data = register(client, "revoke-me@example.com")
+    old_refresh = data["refresh_token"]
+    forgot = client.post("/api/auth/forgot-password", json={"email": "revoke-me@example.com"})
+    assert forgot.status_code == 200
+    db = SessionLocal()
+    row = (
+        db.query(EmailToken)
+        .filter(EmailToken.user_id == data["user"]["id"], EmailToken.purpose == "reset")
+        .order_by(EmailToken.created_at.desc())
+        .first()
+    )
+    token = create_refresh_token()
+    row.token_hash = hash_token(token)
+    db.commit()
+    db.close()
+    reset = client.post("/api/auth/reset-password", json={"token": token, "new_password": "NewPass12!"})
+    assert reset.status_code == 200
+    reused = client.post("/api/auth/refresh", json={"refresh_token": old_refresh})
+    assert reused.status_code == 401
+    login = client.post("/api/auth/login", json={"email": "revoke-me@example.com", "password": "NewPass12!"})
+    assert login.status_code == 200
+    fresh = login.json()["data"]
+    changed = client.post(
+        "/api/auth/change-password",
+        headers=auth_header(fresh),
+        json={"current_password": "NewPass12!", "new_password": "NewerPass12!"},
+    )
+    assert changed.status_code == 200
+    reused2 = client.post("/api/auth/refresh", json={"refresh_token": fresh["refresh_token"]})
+    assert reused2.status_code == 401
+
+
+def test_reset_and_verify_missing_user_return_400(client):
+    from datetime import timedelta
+
+    from sqlalchemy import text
+
+    from app.database import SessionLocal
+    from app.models import EmailToken
+    from app.models.enums import utcnow
+    from app.security import create_refresh_token, hash_token
+
+    data = register(client, "ghost-reset@example.com")
+    user_id = data["user"]["id"]
+    token = create_refresh_token()
+    vtoken = create_refresh_token()
+    db = SessionLocal()
+    db.add(EmailToken(user_id=user_id, purpose="reset", token_hash=hash_token(token), expires_at=utcnow() + timedelta(hours=2)))
+    db.add(EmailToken(user_id=user_id, purpose="verify", token_hash=hash_token(vtoken), expires_at=utcnow() + timedelta(hours=2)))
+    db.commit()
+    db.execute(text("PRAGMA foreign_keys=OFF"))
+    db.execute(text("DELETE FROM users WHERE id = :id"), {"id": user_id})
+    db.commit()
+    db.close()
+    reset = client.post("/api/auth/reset-password", json={"token": token, "new_password": "NewPass12!"})
+    assert reset.status_code == 400
+    assert reset.json()["code"] == "INVALID_TOKEN"
+    verified = client.post("/api/auth/verify-email", json={"token": vtoken})
+    assert verified.status_code == 400
+    assert verified.json()["code"] == "INVALID_TOKEN"

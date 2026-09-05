@@ -95,3 +95,15 @@ def test_linkedin_posting_stays_off_without_partner_api(client, monkeypatch):
         monkeypatch.delenv("LINKEDIN_CLIENT_SECRET", raising=False)
         monkeypatch.delenv("LINKEDIN_ENABLED", raising=False)
         get_settings.cache_clear()
+
+
+def test_public_services_email_sending_follows_runtime_override(client):
+    from app.database import SessionLocal
+    from app.models import SystemSetting
+
+    assert client.get("/api/services").json()["data"]["messaging"]["email_sending"] is False
+    db = SessionLocal()
+    db.add(SystemSetting(key="smtp.enabled", value="oui"))
+    db.commit()
+    db.close()
+    assert client.get("/api/services").json()["data"]["messaging"]["email_sending"] is True

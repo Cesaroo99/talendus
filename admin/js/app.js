@@ -2680,7 +2680,7 @@
               </ul>
             </li>
             <li>Cliquez <b>Enregistrer le courriel</b>, puis <b>Envoyer un test</b>.</li>
-            <li>Ouvrez Gmail <code>cesarmemoli1@gmail.com</code> (et les spams). Le journal sous le formulaire doit passer à « SENT » avec au moins 1 tentative. Un statut SENT sans tentative, ou FAILED, signifie que le courriel n’a pas quitté le serveur. Les réponses des candidats arriveront dans <code>info@talendus.ca</code>.</li>
+            <li>Ouvrez la boîte indiquée dans le champ de test (et les spams). Le journal sous le formulaire doit passer à « SENT » avec au moins 1 tentative. Un statut SENT sans tentative, ou FAILED, signifie que le courriel n’a pas quitté le serveur. Les réponses des candidats arriveront dans <code>info@talendus.ca</code>.</li>
           </ol>
           <p class="sub">Erreur <code>535 5.7.8</code> : Google refuse le login. Le formulaire Talendus est correct ; le couple identifiant + mot de passe n’est pas accepté par Gmail. Vérifiez dans <code>admin.google.com</code> → Annuaire → Utilisateurs que <code>info@talendus.ca</code> est un <b>utilisateur</b> (pas un groupe ni un simple alias). Recréez le mot de passe d’application sur <b>ce compte-là</b>, puis mettez la même adresse en identifiant.</p>
           <p class="sub">Si « Mots de passe d’application » n’apparaît pas : la validation en 2 étapes n’est pas encore active sur info@, ou l’admin Workspace ne l’a pas autorisée. Les deux doivent être ouvertes avant de réessayer le lien <code>myaccount.google.com/apppasswords</code>.</p>
@@ -3873,7 +3873,7 @@
         smtpBox.innerHTML =
           '<form id="adm-smtp-form">' +
           '<label>Activer l’envoi</label><select name="smtp.enabled">' +
-          '<option value="">Auto — envoyer si le serveur et le mot de passe sont remplis</option>' +
+          '<option value="">Suivre EMAIL_ENABLED (Render)</option>' +
           '<option value="oui"' + (val("smtp.enabled") === "oui" ? " selected" : "") + ">Oui — envoyer vraiment</option>" +
           '<option value="non"' + (val("smtp.enabled") === "non" ? " selected" : "") + ">Non — journaliser seulement</option>" +
           "</select>" +
@@ -3886,8 +3886,8 @@
           '<option value="oui"' + (val("smtp.use_tls", "oui") !== "non" ? " selected" : "") + ">oui</option>" +
           '<option value="non"' + (val("smtp.use_tls") === "non" ? " selected" : "") + ">non</option>" +
           "</select>" +
-          '<label>Envoyer le test à une vraie boîte</label><input id="adm-smtp-test-to" type="email" value="cesarmemoli1@gmail.com" readonly>' +
-          '<p class="sub">Le test va uniquement à cesarmemoli1@gmail.com. Les comptes admin de démo ne sont jamais utilisés.</p>' +
+          '<label>Envoyer le test à une vraie boîte</label><input id="adm-smtp-test-to" type="email" value="' + U.esc((function () { var me = TLStore.me() || {}; var mail = (me.email || "").trim(); return /@talendus\.ca$/i.test(mail) ? "" : mail; })()) + '" placeholder="vous@votreboite.com">' +
+          '<p class="sub">Le test part vers cette adresse (la vôtre par défaut). Les comptes de démo @talendus.ca sont ignorés.</p>' +
           '<p style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">' +
           '<button class="btn btn-orange" type="submit">Enregistrer le courriel</button>' +
           '<button class="btn btn-ghost" type="button" id="adm-smtp-test">Envoyer un test</button>' +
@@ -3904,7 +3904,12 @@
         };
         var testBtn = document.getElementById("adm-smtp-test");
         if (testBtn) testBtn.onclick = function () {
-          var toEmail = "cesarmemoli1@gmail.com";
+          var toInput = document.getElementById("adm-smtp-test-to");
+          var toEmail = ((toInput && toInput.value) || "").trim();
+          if (!toEmail) {
+            U.toast("Indiquez une adresse de test.", "err");
+            return;
+          }
           var fd = sf ? U.formData(sf) : {};
           var saveKeys = Object.keys(fd).filter(function (key) { return key.indexOf("smtp.") === 0; });
           var save = saveKeys.length ? Promise.all(saveKeys.map(function (key) {
