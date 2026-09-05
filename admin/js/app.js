@@ -607,7 +607,7 @@
       }).join("") + "</select>";
     };
     return `
-      <div class="page-head"><div><h1>Candidats</h1><p>${list.length} profils dans le vivier industriel</p></div>
+      <div class="page-head"><div><h1>Candidats</h1><p>${list.length} profils dans le vivier</p></div>
         <div class="actions">
           <button class="btn btn-ghost" data-export-cand>Exporter CSV</button>
           <button class="btn btn-orange" data-create="candidate">Nouveau candidat</button>

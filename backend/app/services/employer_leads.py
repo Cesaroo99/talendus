@@ -1,4 +1,4 @@
-"""Importe les 50 employeurs québécois recherchés : fiche client + prospect CRM."""
+"""Importe les employeurs québécois recherchés : fiche client + prospect CRM."""
 
 from __future__ import annotations
 
@@ -53,6 +53,10 @@ def _find_company(db: Session, lead: dict[str, Any]) -> Company | None:
     name = (lead.get("name") or "").strip()
     if not name:
         return None
+    # SQLite lower() est ASCII-only : « École » / « Île » ne matchent pas casefold().
+    exact = db.scalar(select(Company).where(Company.name == name))
+    if exact:
+        return exact
     return db.scalar(select(Company).where(func.lower(Company.name) == name.casefold()))
 
 
@@ -73,7 +77,7 @@ def _note_text(lead: dict[str, Any]) -> str:
         f"Signal : {jobs}\n"
         f"Carrières : {careers}\n"
         "Critères : plusieurs postes visibles (portail, Jobillico, Indeed ou LinkedIn), "
-        "métiers usine / entrepôt / maintenance, établissement québécois, une seule fiche par groupe."
+        "tous secteurs et tous métiers, établissement québécois, une seule fiche par groupe."
     )
 
 
@@ -134,7 +138,7 @@ def _ensure_prospect(db: Session, company: Company, lead: dict[str, Any], recrui
 
 
 def ensure_quebec_employer_leads(db: Session) -> int:
-    """Crée ou complète les 50 fiches. Idempotent. Aucun compte employeur."""
+    """Crée ou complète les fiches de veille. Idempotent. Aucun compte employeur."""
     recruiters = _recruiters(db)
     staff = recruiters[0] if recruiters else _staff_user(db)
     created = 0

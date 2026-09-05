@@ -229,6 +229,9 @@ def test_greeting_without_person_name_and_attachment_note(client):
     assert "étapes" not in first["body"].lower()
     assert "profils qui tiennent" not in first["body"]
     assert "comprendre le contexte" in first["body"]
+    assert "tous secteurs" in first["body"]
+    assert "tous les types de postes" in first["body"]
+    assert "industriel" not in first["body"].lower()
     assert emp["login_link"].startswith("https://talendus.ca/espace-employeur.html#/login")
     assert "info.usine%40example.com" in emp["login_link"]
     assert emp["register_link"].startswith("https://talendus.ca/espace-employeur.html#/register")
@@ -255,6 +258,9 @@ def test_greeting_without_person_name_and_attachment_note(client):
     assert opener["body"].startswith("Bonjour,")
     assert opener["subject"].startswith("Votre profil")
     assert "Cariste" in opener["subject"]
+    assert "tous les secteurs" in opener["body"]
+    assert "usine" not in opener["body"].lower()
+    assert "industriel" not in opener["body"].lower()
     assert "sans frais" not in opener["subject"].lower()
     assert "sans frais" not in opener["body"].lower()
     assert "débourser" not in opener["body"].lower()
