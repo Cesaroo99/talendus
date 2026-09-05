@@ -11,9 +11,21 @@ def test_mobile_shell_is_not_the_website():
     assert "mobile-app.js" not in page
     assert "data-install-now" not in page
     assert "talendus.js" not in page
+    assert 'keep(employer)' in page
+    assert 'keep(portal)' in page
+    assert "hireRoutes" in page
     en = (ROOT / "en" / "m.html").read_text(encoding="utf-8")
     assert "location.replace" in en
     assert "/en/jobs.html" in en
+    assert "keep(employer)" in en
+
+
+def test_mobile_shell_keeps_destination_hash():
+    page = (ROOT / "m.html").read_text(encoding="utf-8")
+    assert 'base + "#/" + name' in page
+    assert 'dest = employer;' not in page.replace(" ", "")
+    assert "#/verify/" in page
+    assert "espace-employeur.html" in page
 
 
 def test_mobile_app_has_recruiting_screens():

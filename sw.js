@@ -1,4 +1,4 @@
-const CACHE = "talendus-app-v32";
+const CACHE = "talendus-app-v33";
 const PRECACHE = [
   "/offline.html",
   "/en/offline.html",
@@ -34,7 +34,7 @@ function isEnPath(pathname) {
 }
 
 function defaultNotifsHref(en) {
-  return (en ? "/en/m.html" : "/m.html") + "#/notifs";
+  return en ? "/en/account.html#/notifs" : "/espace.html#/notifs";
 }
 
 self.addEventListener("fetch", function (event) {
@@ -71,7 +71,7 @@ self.addEventListener("push", function (event) {
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(function (list) {
       var en = false;
       for (var i = 0; i < list.length; i++) {
-        if (list[i].url && list[i].url.indexOf("/en/m.html") !== -1) { en = true; break; }
+        if (list[i].url && list[i].url.indexOf("/en/") !== -1) { en = true; break; }
       }
       var payload = {
         title: "Talendus",
@@ -84,7 +84,7 @@ self.addEventListener("push", function (event) {
       } catch (e) {
         try { payload.body = event.data ? event.data.text() : ""; } catch (err) {}
       }
-      if (!payload.href || payload.href === "/m.html#/notifs") payload.href = defaultNotifsHref(en);
+      if (!payload.href || payload.href.indexOf("/m.html") !== -1) payload.href = defaultNotifsHref(en);
       var tag = payload.tag || payload.id || [payload.title || "", payload.body || payload.message || ""].join("|") || "talendus";
       return self.registration.showNotification(payload.title || "Talendus", {
         body: payload.body || payload.message || "",
@@ -100,7 +100,7 @@ self.addEventListener("push", function (event) {
 
 self.addEventListener("notificationclick", function (event) {
   event.notification.close();
-  var href = (event.notification.data && event.notification.data.href) || "/m.html#/notifs";
+  var href = (event.notification.data && event.notification.data.href) || defaultNotifsHref(false);
   if (href.indexOf("http") !== 0) {
     href = self.location.origin + (href.charAt(0) === "/" ? href : "/" + href);
   }
@@ -108,7 +108,8 @@ self.addEventListener("notificationclick", function (event) {
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(function (list) {
       for (var i = 0; i < list.length; i++) {
         var client = list[i];
-        if (client.url && client.url.indexOf("/m.html") !== -1 && "focus" in client) {
+        var url = client.url || "";
+        if ((url.indexOf("/espace.html") !== -1 || url.indexOf("/espace-employeur.html") !== -1 || url.indexOf("/account") !== -1) && "focus" in client) {
           if (client.navigate) client.navigate(href);
           return client.focus();
         }

@@ -3,12 +3,23 @@
 from __future__ import annotations
 
 import base64
+import json
+from urllib.parse import urlparse
 
 from app.config import get_settings
 from app.integrations import http
 from app.integrations.errors import IntegrationError
 from app.integrations.payments.base import PaymentProvider, PaymentResult
 from app.integrations.registry import require_active
+
+_PAYPAL_CERT_HOSTS = frozenset(
+    {
+        "api.paypal.com",
+        "api.sandbox.paypal.com",
+        "api-m.paypal.com",
+        "api-m.sandbox.paypal.com",
+    }
+)
 
 
 class PayPalService:
@@ -153,6 +164,71 @@ class PayPalService:
 
 def service() -> PaymentProvider:
     return PayPalService()
+
+
+def verify_paypal_transmission(headers: dict[str, str], payload: bytes) -> None:
+    """Refuse un événement PayPal dont la transmission n’est pas confirmée par PayPal."""
+    settings = get_settings()
+    webhook_id = (settings.paypal_webhook_id or "").strip()
+    if not webhook_id:
+        raise IntegrationError("Secret webhook paypal manquant.", "INTEGRATION_NOT_CONFIGURED", provider="paypal")
+    lowered = {str(key).lower(): str(value or "") for key, value in (headers or {}).items()}
+    auth_algo = lowered.get("paypal-auth-algo") or ""
+    cert_url = lowered.get("paypal-cert-url") or ""
+    transmission_id = lowered.get("paypal-transmission-id") or ""
+    transmission_sig = lowered.get("paypal-transmission-sig") or ""
+    transmission_time = lowered.get("paypal-transmission-time") or ""
+    if not all([auth_algo, cert_url, transmission_id, transmission_sig, transmission_time]):
+        raise IntegrationError(
+            "En-têtes de transmission PayPal manquants.",
+            "INTEGRATION_SIGNATURE_INVALID",
+            provider="paypal",
+            details=[{"field": "paypal-transmission-id", "message": "Transmission incomplète."}],
+        )
+    host = (urlparse(cert_url).hostname or "").lower()
+    if host not in _PAYPAL_CERT_HOSTS:
+        raise IntegrationError(
+            "Certificat PayPal refusé.",
+            "INTEGRATION_SIGNATURE_INVALID",
+            provider="paypal",
+            details=[{"field": "paypal-cert-url", "message": "Hôte non autorisé."}],
+        )
+    try:
+        event = json.loads((payload or b"{}").decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+        raise IntegrationError(
+            "Événement PayPal illisible.",
+            "INTEGRATION_SIGNATURE_INVALID",
+            provider="paypal",
+        ) from exc
+    if not isinstance(event, dict):
+        raise IntegrationError("Événement PayPal invalide.", "INTEGRATION_SIGNATURE_INVALID", provider="paypal")
+    token = PayPalService()._token()
+    if not token:
+        raise IntegrationError("PayPal n'a pas renvoyé de jeton.", "INTEGRATION_AUTH", provider="paypal")
+    response = http.request(
+        "POST",
+        f"{settings.paypal_api_base_url.rstrip('/')}/v1/notifications/verify-webhook-signature",
+        provider="paypal",
+        operation="verify_webhook",
+        headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+        json={
+            "auth_algo": auth_algo,
+            "cert_url": cert_url,
+            "transmission_id": transmission_id,
+            "transmission_sig": transmission_sig,
+            "transmission_time": transmission_time,
+            "webhook_id": webhook_id,
+            "webhook_event": event,
+        },
+    )
+    status = str((response.json() or {}).get("verification_status") or "").upper()
+    if status != "SUCCESS":
+        raise IntegrationError(
+            "Signature de webhook PayPal invalide.",
+            "INTEGRATION_SIGNATURE_INVALID",
+            provider="paypal",
+        )
 
 
 def apply_paypal_event(db, payload: bytes) -> None:

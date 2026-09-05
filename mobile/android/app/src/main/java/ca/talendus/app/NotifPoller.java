@@ -158,7 +158,7 @@ public final class NotifPoller {
         }
         String safeTitle = title == null || title.isEmpty() ? "Talendus" : title;
         String safeBody = body == null ? "" : body;
-        String safeHref = href == null || href.isEmpty() ? "/m.html#/notifs" : href;
+        String safeHref = href == null || href.isEmpty() ? "/espace.html#/notifs" : href;
         String key = notifId != null && !notifId.isEmpty() ? notifId : (safeTitle + "\n" + safeBody);
         List<String> seen = seenIds(ctx);
         if (seen.contains(key)) {
@@ -199,9 +199,10 @@ public final class NotifPoller {
 
     static String appHref(String href) {
         if (href == null || href.isEmpty()) {
-            return "/m.html#/notifs";
+            return "/espace.html#/notifs";
         }
-        if (href.startsWith("/m.html")) {
+        if (href.startsWith("/espace-employeur.html") || href.startsWith("/en/account-employer.html")
+                || href.startsWith("/espace.html") || href.startsWith("/en/account.html")) {
             return href;
         }
         String hash = "";
@@ -213,18 +214,15 @@ public final class NotifPoller {
             hash = hash.substring(1);
         }
         if (hash.isEmpty()) {
-            return "/m.html#/notifs";
+            return "/espace.html#/notifs";
         }
-        if (hash.startsWith("dashboard")) {
-            hash = "home" + hash.substring("dashboard".length());
-        } else if (hash.startsWith("documents")) {
-            hash = "cv" + hash.substring("documents".length());
-        } else if (hash.startsWith("applications")) {
-            hash = "apps" + hash.substring("applications".length());
-        } else if (hash.startsWith("application")) {
-            hash = "app" + hash.substring("application".length());
+        String path = hash.split("\\?", 2)[0];
+        if (path.startsWith("hiring") || path.startsWith("need") || path.startsWith("inbox")
+                || path.startsWith("invoices") || path.startsWith("company") || path.startsWith("pipeline")
+                || path.startsWith("contracts")) {
+            return "/espace-employeur.html#/" + hash;
         }
-        return "/m.html#/" + hash;
+        return "/espace.html#/" + hash;
     }
 
     private static List<String> seenIds(Context ctx) {

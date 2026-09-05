@@ -8,18 +8,34 @@
   <script>
   (function () {
     var raw = (location.hash || "").replace(/^#\/?/, "");
-    var parts = raw.split("/").filter(Boolean);
+    var qIndex = raw.indexOf("?");
+    var path = qIndex >= 0 ? raw.slice(0, qIndex) : raw;
+    var search = qIndex >= 0 ? raw.slice(qIndex) : "";
+    var parts = path.split("/").filter(Boolean);
     var name = parts[0] || "";
     var id = parts.slice(1).join("/");
-    var jobs = '/emplois.html';
-    var portal = '/espace.html';
-    var employer = '/espace-employeur.html';
+    var jobs = "/emplois.html";
+    var portal = "/espace.html";
+    var employer = "/espace-employeur.html";
     var dest = jobs;
+    var query = {};
+    search.replace(/^\?/, "").split("&").forEach(function (part) {
+      var kv = part.split("=");
+      if (kv[0]) {
+        try { query[decodeURIComponent(kv[0])] = decodeURIComponent((kv[1] || "").replace(/\+/g, " ")); }
+        catch (e) { query[kv[0]] = kv[1] || ""; }
+      }
+    });
+    function keep(base) {
+      return base + "#/" + name + (id ? "/" + id : "") + search;
+    }
+    var hireRoutes = { hiring: 1, need: 1, inbox: 1, invoices: 1, company: 1, pipeline: 1, contracts: 1 };
+    var portalRoutes = { login: 1, register: 1, home: 1, apps: 1, saved: 1, settings: 1, profile: 1, messages: 1, notifs: 1, interviews: 1, alerts: 1, cv: 1, jobs: 1, dashboard: 1, application: 1 };
     if (name === "verify" && id) dest = portal + "#/verify/" + encodeURIComponent(id);
-    else if (name === "reset" && id) dest = portal + "#/reset/" + encodeURIComponent(id);
-    else if (name === "forgot") dest = portal + "#/forgot";
-    else if (name === "hiring" || name === "need" || name === "inbox" || name === "invoices" || name === "company" || name === "pipeline") dest = employer;
-    else if (name === "login" || name === "register" || name === "home" || name === "apps" || name === "saved" || name === "settings" || name === "profile" || name === "messages" || name === "notifs") dest = portal;
+    else if (name === "reset" && id) dest = (String(query.role || "").toUpperCase() === "EMPLOYER" ? employer : portal) + "#/reset/" + encodeURIComponent(id);
+    else if (name === "forgot") dest = (String(query.role || "").toUpperCase() === "EMPLOYER" ? employer : portal) + "#/forgot";
+    else if (hireRoutes[name] || String(query.role || "").toUpperCase() === "EMPLOYER") dest = keep(employer);
+    else if (portalRoutes[name]) dest = keep(portal);
     location.replace(dest);
   })();
   </script>
