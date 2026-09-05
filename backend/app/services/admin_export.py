@@ -21,7 +21,7 @@ from app.models import (
     RecruitmentMission,
     User,
 )
-from app.models.enums import ApplicationStatus, InterviewType, InvoiceStatus, JobStatus, MissionStatus, utcnow
+from app.models.enums import ApplicationStatus, InterviewType, InvoiceStatus, JobStatus, MissionStatus, UserRole, utcnow
 from app.services.hiring_requests import STATUS_COPY, serialize_request
 from app.services.interviews import CALL_TYPES, LIVE_CALL_STATUSES, host_in_call
 from app.services.pipeline import stage_for
@@ -114,7 +114,58 @@ SITE_PAGES = [
 ]
 
 
+def _editor_bootstrap(db: Session, user: User) -> dict:
+    users = db.scalars(select(User).order_by(User.created_at.asc())).all()
+    notif_stmt = select(Notification).where(Notification.user_id == user.id).order_by(Notification.created_at.desc())
+    notifications = db.scalars(notif_stmt.limit(100)).all()
+    from app.services.settings import get_json_setting
+
+    testimonials = get_json_setting(db, "cms.testimonials", default=[])
+    faqs = get_json_setting(db, "cms.faq", default=[])
+    unread_messages = int(
+        db.scalar(
+            select(func.count()).select_from(Message).where(Message.recipient_id == user.id, Message.is_read.is_(False))
+        )
+        or 0
+    )
+    return {
+        "live": True,
+        "unreadMessages": unread_messages,
+        "users": [_user(u) for u in users if u.role.value in {"ADMIN", "SUPER_ADMIN", "RECRUITER", "FINANCE", "EDITOR"}],
+        "clients": [],
+        "jobs": [],
+        "candidates": [],
+        "missions": [],
+        "hiringRequests": [],
+        "applications": [],
+        "contracts": [],
+        "notes": [],
+        "notifications": [_notification(n) for n in notifications],
+        "interviews": [],
+        "invoices": [],
+        "payments": [],
+        "documents": [],
+        "pages": [dict(page) for page in SITE_PAGES],
+        "testimonials": testimonials if isinstance(testimonials, list) else [],
+        "faqs": faqs if isinstance(faqs, list) else [],
+        "jobMatches": [],
+        "monthly": _monthly([], []),
+        "stats": {
+            "candidates": 0,
+            "clients": 0,
+            "jobs": 0,
+            "publishedJobs": 0,
+            "applications": 0,
+            "placements": 0,
+            "openMissions": 0,
+        },
+        "activities": [],
+    }
+
+
 def bootstrap(db: Session, user: User | None = None) -> dict:
+    if user and user.role == UserRole.EDITOR:
+        return _editor_bootstrap(db, user)
     users = db.scalars(select(User).order_by(User.created_at.asc())).all()
     companies = db.scalars(select(Company).options(joinedload(Company.owner)).order_by(Company.name.asc())).unique().all()
     jobs = db.scalars(select(JobOffer).options(joinedload(JobOffer.company)).order_by(JobOffer.created_at.desc())).unique().all()

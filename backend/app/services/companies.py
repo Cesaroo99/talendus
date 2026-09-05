@@ -148,6 +148,18 @@ def company_for_employer(db: Session, user: User) -> Company:
     return company
 
 
+def _recruiter_can_update_company(db: Session, user: User, company: Company) -> bool:
+    if not company.assigned_recruiter_id or company.assigned_recruiter_id == user.id:
+        return True
+    mission_id = db.scalar(
+        select(RecruitmentMission.id).where(
+            RecruitmentMission.company_id == company.id,
+            RecruitmentMission.recruiter_id == user.id,
+        )
+    )
+    return mission_id is not None
+
+
 def update_company(db: Session, user: User, company_id: str, data: CompanyIn) -> Company:
     company = db.get(Company, company_id)
     if not company:
@@ -156,6 +168,8 @@ def update_company(db: Session, user: User, company_id: str, data: CompanyIn) ->
         raise AppError(403, "Vous n'avez pas accès à cette entreprise.", "FORBIDDEN")
     if user.role not in {UserRole.EMPLOYER, UserRole.RECRUITER} | ADMINS:
         raise AppError(403, "Permission insuffisante.", "FORBIDDEN")
+    if user.role == UserRole.RECRUITER and not _recruiter_can_update_company(db, user, company):
+        raise AppError(403, "Cette fiche est assignée à un autre recruteur.", "FORBIDDEN")
     for key, value in data.model_dump(exclude_unset=True).items():
         setattr(company, key, value)
     from app.integrations.hooks import apply_coordinates, company_address, maybe_geocode

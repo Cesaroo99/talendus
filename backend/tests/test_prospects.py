@@ -611,7 +611,7 @@ def test_reconcile_resets_old_fake_sends(client, monkeypatch):
     assert contacted["stage"] == "contacte"
 
 
-def test_smtp_auto_enables_when_credentials_are_set(client):
+def test_smtp_does_not_auto_enable_from_credentials(client):
     from app.database import SessionLocal
     from app.models import SystemSetting
     from app.services.email import runtime_email_config
@@ -622,8 +622,13 @@ def test_smtp_auto_enables_when_credentials_are_set(client):
     db.add(SystemSetting(key="smtp.password", value="abcdefghijklmnop"))
     db.commit()
     cfg = runtime_email_config(db)
-    assert cfg.enabled is True
-    db.add(SystemSetting(key="smtp.enabled", value="non"))
+    assert cfg.enabled is False
+    flag = SystemSetting(key="smtp.enabled", value="oui")
+    db.add(flag)
+    db.commit()
+    on = runtime_email_config(db)
+    assert on.enabled is True
+    flag.value = "non"
     db.commit()
     off = runtime_email_config(db)
     assert off.enabled is False

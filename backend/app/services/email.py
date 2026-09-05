@@ -128,8 +128,6 @@ def runtime_email_config(db: Session | None = None) -> SmtpRuntime:
     )
     if enabled_ov is None:
         enabled = bool(env.email_enabled)
-        if not enabled and _smtp_ready(host, username, password):
-            enabled = True
     else:
         enabled = enabled_ov
     return SmtpRuntime(

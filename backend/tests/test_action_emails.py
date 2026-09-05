@@ -202,14 +202,14 @@ def test_smtp_test_email_is_logged(client, monkeypatch):
     disabled = client.post("/api/admin/settings/test-email", headers=admin_h, json={})
     assert disabled.status_code == 502, disabled.text
     assert disabled.json()["code"] == "SMTP_DISABLED"
-    logs = _emails_to(client, admin_h, "cesarmemoli1@gmail.com")
+    logs = _emails_to(client, admin_h, "smtp-test-admin@example.com")
     assert logs
     assert logs[0]["delivered"] is False
     stub_smtp_delivery(monkeypatch)
     sent = client.post("/api/admin/settings/test-email", headers=admin_h, json={})
     assert sent.status_code == 200, sent.text
-    assert sent.json()["data"]["to_email"] == "cesarmemoli1@gmail.com"
-    logs = _emails_to(client, admin_h, "cesarmemoli1@gmail.com")
+    assert sent.json()["data"]["to_email"] == "smtp-test-admin@example.com"
+    logs = _emails_to(client, admin_h, "smtp-test-admin@example.com")
     assert any(row.get("delivered") for row in logs)
     rewritten = client.post(
         "/api/admin/settings/test-email",
@@ -217,7 +217,14 @@ def test_smtp_test_email_is_logged(client, monkeypatch):
         json={"to_email": "lea.super@talendus.ca"},
     )
     assert rewritten.status_code == 200, rewritten.text
-    assert rewritten.json()["data"]["to_email"] == "cesarmemoli1@gmail.com"
+    assert rewritten.json()["data"]["to_email"] == "smtp-test-admin@example.com"
+    other = client.post(
+        "/api/admin/settings/test-email",
+        headers=admin_h,
+        json={"to_email": "ops-test@example.net"},
+    )
+    assert other.status_code == 200, other.text
+    assert other.json()["data"]["to_email"] == "ops-test@example.net"
 
 
 def test_interview_actions_email_and_thread(client):
@@ -319,6 +326,8 @@ def test_admin_ui_explains_smtp_steps():
     assert "info@talendus.ca" in js
     assert "adm-smtp-form" in js
     assert "Envoyer un test" in js
-    assert "cesarmemoli1@gmail.com" in js
+    assert "adm-smtp-test-to" in js
+    assert "cesarmemoli1@gmail.com" not in js
+    assert "EMAIL_ENABLED" in js
     assert "535" in js
     assert "16 lettres" in js

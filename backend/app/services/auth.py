@@ -27,6 +27,15 @@ from app.services.notifications import notify
 settings = get_settings()
 
 ALLOWED_SELF_ROLES = {UserRole.CANDIDATE, UserRole.EMPLOYER}
+_ROLE_ACCOUNT_LABEL = {
+    UserRole.CANDIDATE: "talent",
+    UserRole.EMPLOYER: "employeur",
+    UserRole.RECRUITER: "recruteur",
+    UserRole.ADMIN: "administrateur",
+    UserRole.SUPER_ADMIN: "administrateur",
+    UserRole.FINANCE: "finance",
+    UserRole.EDITOR: "éditeur",
+}
 _LOGIN_FAILS: dict[str, list[float]] = defaultdict(list)
 
 
@@ -213,8 +222,11 @@ def reset_password(db: Session, token: str, new_password: str) -> None:
     if not row or row.used_at or token_expired(row.expires_at):
         raise AppError(400, "Lien de réinitialisation invalide ou expiré.", "INVALID_TOKEN")
     user = db.get(User, row.user_id)
+    if not user:
+        raise AppError(400, "Lien de réinitialisation invalide ou expiré.", "INVALID_TOKEN")
     user.password_hash = hash_password(new_password)
     row.used_at = utcnow()
+    _revoke_user_sessions(db, user)
     audit(db, "auth.password_reset", user, "user", user.id)
     db.commit()
 
@@ -223,6 +235,7 @@ def change_password(db: Session, user: User, current: str, new: str) -> None:
     if not verify_password(current, user.password_hash):
         raise AppError(400, "Mot de passe actuel incorrect.", "INVALID_PASSWORD")
     user.password_hash = hash_password(new)
+    _revoke_user_sessions(db, user)
     audit(db, "auth.password_change", user, "user", user.id)
     db.commit()
 
@@ -232,6 +245,8 @@ def verify_email(db: Session, token: str) -> None:
     if not row or row.used_at or token_expired(row.expires_at):
         raise AppError(400, "Lien de vérification invalide ou expiré.", "INVALID_TOKEN")
     user = db.get(User, row.user_id)
+    if not user:
+        raise AppError(400, "Lien de vérification invalide ou expiré.", "INVALID_TOKEN")
     user.is_email_verified = True
     user.email_verified_at = utcnow()
     row.used_at = utcnow()
@@ -291,12 +306,15 @@ def login_with_identity(
     ip: str | None,
     user_agent: str | None,
     provider: str,
+    email_verified: bool = False,
 ) -> tuple[User, dict]:
     if role not in ALLOWED_SELF_ROLES:
         raise AppError(403, "Ce rôle ne peut pas s'inscrire publiquement.", "ROLE_NOT_ALLOWED")
     email = email.lower()
     user = db.scalar(select(User).where(User.email == email))
+    created = False
     if not user:
+        created = True
         user = User(
             email=email,
             password_hash=hash_password(random_password(16)),
@@ -324,10 +342,18 @@ def login_with_identity(
 
         db.flush()
         touch_from_user(db, user, source="inscription", company_name=company_name or "")
+    elif user.role != role:
+        label = _ROLE_ACCOUNT_LABEL.get(user.role, "existant")
+        raise AppError(
+            409,
+            f"Ce courriel a déjà un compte {label}. Connectez-vous.",
+            "ACCOUNT_EXISTS",
+        )
     if not user.is_active or user.account_status in {AccountStatus.SUSPENDED, AccountStatus.DEACTIVATED}:
         raise AppError(403, "Ce compte est désactivé.", "ACCOUNT_DISABLED")
-    user.is_email_verified = True
-    user.email_verified_at = user.email_verified_at or utcnow()
+    if created or (email_verified and not user.is_email_verified):
+        user.is_email_verified = True
+        user.email_verified_at = user.email_verified_at or utcnow()
     user.last_login_at = utcnow()
     tokens = _issue_tokens(db, user)
     _log_login(db, email, True, user, ip, user_agent)
@@ -365,6 +391,7 @@ def login_google(db: Session, id_token: str, role: UserRole, company_name: str |
         ip=ip,
         user_agent=user_agent,
         provider="google",
+        email_verified=True,
     )
 
 
@@ -398,6 +425,7 @@ def login_linkedin(db: Session, access_token: str, role: UserRole, company_name:
         ip=ip,
         user_agent=user_agent,
         provider="linkedin",
+        email_verified=False,
     )
 
 
@@ -428,13 +456,18 @@ def revoke_session(db: Session, user: User, session_id: str) -> None:
     db.commit()
 
 
-def revoke_all_sessions(db: Session, user: User) -> int:
+def _revoke_user_sessions(db: Session, user: User) -> int:
     rows = list(db.scalars(select(RefreshToken).where(RefreshToken.user_id == user.id, RefreshToken.revoked.is_(False))).all())
     for row in rows:
         row.revoked = True
+    return len(rows)
+
+
+def revoke_all_sessions(db: Session, user: User) -> int:
+    count = _revoke_user_sessions(db, user)
     audit(db, "auth.session_revoke_all", user, "user", user.id)
     db.commit()
-    return len(rows)
+    return count
 
 
 def list_login_events(db: Session, user: User, limit: int = 20) -> list[dict]:

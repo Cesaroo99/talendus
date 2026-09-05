@@ -395,7 +395,6 @@ def patch_setting(
     return ok(serialize_setting(row))
 
 
-TEST_INBOX = "cesarmemoli1@gmail.com"
 _FAKE_TEST_INBOXES = {
     "lea.super@talendus.ca",
     "sophie.admin@talendus.ca",
@@ -406,13 +405,25 @@ _FAKE_TEST_INBOXES = {
 }
 
 
+def _real_inbox(email: str | None) -> str:
+    value = (email or "").strip().lower()
+    if not value or value in _FAKE_TEST_INBOXES or value.endswith("@talendus.ca"):
+        return ""
+    return value
+
+
 def _test_inbox(payload: EmailTestIn, admin: User | None = None) -> str:
-    requested = str(payload.to_email or "").strip().lower()
-    if not requested:
-        return TEST_INBOX
-    if requested in _FAKE_TEST_INBOXES or requested.endswith("@talendus.ca"):
-        return TEST_INBOX
-    return requested
+    requested = _real_inbox(str(payload.to_email or ""))
+    fallback = _real_inbox(admin.email if admin else None)
+    if requested:
+        return requested
+    if fallback:
+        return fallback
+    raise AppError(
+        400,
+        "Indiquez une vraie boîte pour le test SMTP. Les comptes de démo @talendus.ca sont ignorés.",
+        "TEST_EMAIL_REQUIRED",
+    )
 
 
 @router.post("/settings/test-email")
