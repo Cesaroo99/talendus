@@ -51,7 +51,12 @@ def test_production_seed_has_no_direct_employer_or_fake_companies(client, monkey
         assert "j.rivest@metalco.ca" not in emails
         assert "karine.lavoie@email.ca" not in emails
         companies = list(db.scalars(select(Company)))
-        assert [c.name for c in companies] == ["Talendus"]
+        names = {c.name for c in companies}
+        assert "Talendus" in names
+        assert "Métalco" not in names
+        assert "Cascades" in names
+        assert "Olymel" in names
+        assert sum(1 for c in companies if c.name != "Talendus") == 50
         jobs = list(db.scalars(select(JobOffer)))
         slugs = {job.slug for job in jobs}
         assert slugs == {item["slug"] for item in SITE_JOBS}
