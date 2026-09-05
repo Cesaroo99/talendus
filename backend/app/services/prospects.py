@@ -319,14 +319,18 @@ def display_name(row: Prospect) -> str:
     return (row.company_name or "").strip() or row.email
 
 
-def account_links_for(email: str | None, side: str | None) -> dict[str, str]:
+def account_links_for(email: str | None, side: str | None, company_name: str | None = None) -> dict[str, str]:
     encoded = quote((email or "").strip().lower(), safe="")
     portal = EMPLOYEUR if (side or "") == "employer" else ESPACE
     role = "EMPLOYER" if (side or "") == "employer" else "CANDIDATE"
+    register = f"{portal}#/register?email={encoded}&role={role}"
+    company = (company_name or "").strip()
+    if role == "EMPLOYER" and company:
+        register += f"&company={quote(company, safe='')}"
     return {
         "portal_link": portal,
         "login_link": f"{portal}#/login?email={encoded}",
-        "register_link": f"{portal}#/register?email={encoded}&role={role}",
+        "register_link": register,
         "candidate_link": ESPACE,
         "employer_link": EMPLOYEUR,
     }
@@ -371,7 +375,7 @@ def context_for(row: Prospect, actor: User | None = None) -> dict[str, str]:
         "info": INFO,
         "recruiter_name": recruiter or "L’équipe Talendus",
     }
-    ctx.update(account_links_for(row.email, row.side))
+    ctx.update(account_links_for(row.email, row.side, row.company_name))
     return ctx
 
 
@@ -429,7 +433,7 @@ def serialize_prospect(row: Prospect, sent_keys: list[str] | None = None) -> dic
         "created_at": row.created_at.isoformat() if row.created_at else None,
         "display_name": display_name(row),
         "sent_templates": sent_keys or [],
-        **account_links_for(row.email, row.side),
+        **account_links_for(row.email, row.side, row.company_name),
     }
 
 
@@ -742,7 +746,7 @@ def touch_from_user(db: Session, user: User, *, source: str = "inscription", com
         )
     if user.role == UserRole.EMPLOYER:
         company = db.scalar(select(Company).where(Company.owner_user_id == user.id))
-        return upsert_prospect(
+        row = upsert_prospect(
             db,
             side="employer",
             email=user.email,
@@ -756,6 +760,11 @@ def touch_from_user(db: Session, user: User, *, source: str = "inscription", com
             user_id=user.id,
             company_id=company.id if company else None,
         )
+        if company:
+            from app.services.employer_claim import attach_user_to_company_prospects
+
+            attach_user_to_company_prospects(db, user, company)
+        return row
     return None
 
 

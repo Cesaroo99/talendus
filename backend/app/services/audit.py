@@ -30,6 +30,7 @@ ACTION_LABELS = {
     "application.staff_link": "Liaison candidat–offre",
     "application.client_feedback": "Retour employeur sur un dossier",
     "company.create": "Création d’une entreprise",
+    "company.claim": "Rattachement d’un compte à une fiche entreprise",
     "company.update": "Mise à jour d’une entreprise",
     "company.logo": "Logo entreprise",
     "company.member_invite": "Invitation d’un membre entreprise",
