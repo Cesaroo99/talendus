@@ -94,10 +94,11 @@ def templates(side: str | None = None, _staff_user: User = Depends(_staff)):
 def broadcast(payload: ProspectBulkSendIn, db: Session = Depends(get_db), staff: User = Depends(_staff)):
     result = svc.send_bulk(db, staff, payload.ids, _req(payload))
     db.commit()
-    return ok(
-        result,
-        message=f"{len(result['sent'])} envoyé(s), {len(result['skipped'])} déjà contacté(s) pour ce message.",
-    )
+    failed = len(result["failed"])
+    message = f"{len(result['sent'])} parti(s), {len(result['skipped'])} déjà contacté(s) pour ce message."
+    if failed:
+        message += f" {failed} non parti(s) — statut inchangé."
+    return ok(result, message=message)
 
 
 @router.post("")
@@ -121,7 +122,16 @@ def send_one(prospect_id: str, payload: ProspectSendIn, db: Session = Depends(ge
     row = svc.get_prospect(db, prospect_id)
     result = svc.send_to_prospect(db, staff, row, _req(payload))
     db.commit()
-    return ok(result, message=f"Envoyé à {result['to_email']}.")
+    if not result.get("delivered"):
+        raise AppError(
+            502,
+            (
+                f"Le courriel n’a pas quitté le serveur vers {result.get('to_email')}. "
+                f"{result.get('email_error') or ''} Le statut du prospect n’a pas été changé."
+            ).strip(),
+            "SMTP_SEND_FAILED",
+        )
+    return ok(result, message=f"Parti vers {result['to_email']}.")
 
 
 @router.get("/p/{prospect_id}")

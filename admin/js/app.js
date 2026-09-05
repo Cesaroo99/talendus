@@ -2397,15 +2397,19 @@
               var res;
               if (ids.length === 1) {
                 res = await api().request(prospectUrl(firstId, "/send"), { method: "POST", body: payload });
-                U.toast((res && res.message) || "Envoyé.", "ok");
+                if (res && res.data && res.data.delivered === false) {
+                  U.toast((res && res.message) || "Le courriel n’a pas quitté le serveur.", "err");
+                } else {
+                  U.toast((res && res.message) || "Parti.", "ok");
+                }
               } else {
                 var result = await sendProspectBroadcast(ids, payload, function (done, total) {
                   if (btn) btn.textContent = "Envoi " + done + " / " + total + "…";
                 });
-                var parts = [result.sent + " envoyé" + (result.sent > 1 ? "s" : "")];
+                var parts = [result.sent + " parti" + (result.sent > 1 ? "s" : "")];
                 if (result.skipped) parts.push(result.skipped + " déjà contacté" + (result.skipped > 1 ? "s" : ""));
-                if (result.failed) parts.push(result.failed + " échec" + (result.failed > 1 ? "s" : ""));
-                U.toast(parts.join(", ") + ". Chaque personne a reçu son propre courriel, sans voir les autres.", result.failed ? "err" : "ok");
+                if (result.failed) parts.push(result.failed + " non parti" + (result.failed > 1 ? "s" : "") + " (statut inchangé)");
+                U.toast(parts.join(", ") + ".", result.failed || !result.sent ? "err" : "ok");
               }
               close();
               hydrateProspects();
@@ -2462,7 +2466,7 @@
 
   function viewJournal() {
     return `
-      <div class="page-head"><div><h1>Journal d’équipe</h1><p>Toutes les actions des employés Talendus sur la plateforme.</p></div></div>
+      <div class="page-head"><div><h1>Journal d’équipe</h1><p>Toutes les actions des employés Talendus. Un « courriel envoyé » dans ce journal est le clic : le vrai départ SMTP apparaît en sous-ligne (SENT ou non parti).</p></div></div>
       <div class="filters" id="journal-filters">
         <input id="journal-q" placeholder="Rechercher une action" value="${U.esc(journalFilters.q || "")}">
         <select id="journal-actor"><option value="">Tous les employés</option></select>
@@ -2514,6 +2518,17 @@
         var change = "";
         if (r.old_value || r.new_value) {
           change = "<div class='sub'>" + U.esc((r.old_value || "—") + " → " + (r.new_value || "—")).slice(0, 220) + "</div>";
+        }
+        var meta = r.metadata || {};
+        var mailBits = [];
+        if (meta.to) mailBits.push(meta.to);
+        if (meta.email_status) {
+          mailBits.push(meta.delivered === false ? (meta.email_status + " — non parti") : meta.email_status);
+        }
+        if (meta.subject) mailBits.push(meta.subject);
+        if (meta.error && meta.delivered === false) mailBits.push(meta.error);
+        if (mailBits.length) {
+          change += "<div class='sub'>" + U.esc(mailBits.join(" · ")).slice(0, 280) + "</div>";
         }
         return "<tr><td>" + U.dateFr(r.created_at) + "</td><td><b>" + U.esc(r.actor_name || "Système") + "</b><div class='sub'>" + U.esc(r.actor_email || "") + "</div></td><td>" + U.esc(r.action_label || r.action) + change + "</td><td>" + U.esc(r.entity_type || "—") + "</td><td class='sub'>" + U.esc(r.entity_id || "") + "</td></tr>";
       }).join("");
@@ -2665,7 +2680,7 @@
               </ul>
             </li>
             <li>Cliquez <b>Enregistrer le courriel</b>, puis <b>Envoyer un test</b>.</li>
-            <li>Ouvrez Gmail <code>cesarmemoli1@gmail.com</code> (et les spams). Le journal sous le formulaire doit passer à « SENT ». Les réponses des candidats arriveront dans <code>info@talendus.ca</code>.</li>
+            <li>Ouvrez Gmail <code>cesarmemoli1@gmail.com</code> (et les spams). Le journal sous le formulaire doit passer à « SENT » avec au moins 1 tentative. Un statut SENT sans tentative, ou FAILED, signifie que le courriel n’a pas quitté le serveur. Les réponses des candidats arriveront dans <code>info@talendus.ca</code>.</li>
           </ol>
           <p class="sub">Erreur <code>535 5.7.8</code> : Google refuse le login. Le formulaire Talendus est correct ; le couple identifiant + mot de passe n’est pas accepté par Gmail. Vérifiez dans <code>admin.google.com</code> → Annuaire → Utilisateurs que <code>info@talendus.ca</code> est un <b>utilisateur</b> (pas un groupe ni un simple alias). Recréez le mot de passe d’application sur <b>ce compte-là</b>, puis mettez la même adresse en identifiant.</p>
           <p class="sub">Si « Mots de passe d’application » n’apparaît pas : la validation en 2 étapes n’est pas encore active sur info@, ou l’admin Workspace ne l’a pas autorisée. Les deux doivent être ouvertes avant de réessayer le lien <code>myaccount.google.com/apppasswords</code>.</p>
@@ -3858,7 +3873,7 @@
         smtpBox.innerHTML =
           '<form id="adm-smtp-form">' +
           '<label>Activer l’envoi</label><select name="smtp.enabled">' +
-          '<option value="">Utiliser le réglage serveur (EMAIL_ENABLED)</option>' +
+          '<option value="">Auto — envoyer si le serveur et le mot de passe sont remplis</option>' +
           '<option value="oui"' + (val("smtp.enabled") === "oui" ? " selected" : "") + ">Oui — envoyer vraiment</option>" +
           '<option value="non"' + (val("smtp.enabled") === "non" ? " selected" : "") + ">Non — journaliser seulement</option>" +
           "</select>" +
@@ -3919,8 +3934,11 @@
         }
         logBox.innerHTML = '<div class="table-wrap"><table class="data"><thead><tr><th>Date</th><th>Destinataire</th><th>Sujet</th><th>Statut</th><th>Erreur</th></tr></thead><tbody>' +
           rows.map(function (r) {
+            var status = r.status || "";
+            if (r.delivered === false) status = (status || "FAILED") + " — non parti";
+            else if (r.delivered === true) status = "SENT";
             return "<tr><td>" + U.esc((r.created_at || "").replace("T", " ").slice(0, 16)) + "</td><td>" +
-              U.esc(r.to_email || "") + "</td><td>" + U.esc(r.subject || "") + "</td><td>" + U.esc(r.status || "") +
+              U.esc(r.to_email || "") + "</td><td>" + U.esc(r.subject || "") + "</td><td>" + U.esc(status) +
               "</td><td>" + U.esc(r.error || "—") + "</td></tr>";
           }).join("") + "</tbody></table></div>";
       }).catch(function () { logBox.innerHTML = "<p class='sub'>Journal indisponible.</p>"; });

@@ -13,7 +13,7 @@ from app.models.enums import EmailType, UserRole
 from app.schemas import ContactIn, PublicTalentProfileIn
 from app.services.audit import audit
 from app.services.capabilities import public_services
-from app.services.email import send_email
+from app.services.email import email_actually_sent, send_email
 from app.services import candidates as cand_svc
 from app.services.spam import reject_honeypot
 
@@ -199,6 +199,7 @@ def list_emails(
                 "status": r.status.value,
                 "error": r.error,
                 "attempts": r.attempts,
+                "delivered": email_actually_sent(r),
                 "created_at": r.created_at.isoformat() if r.created_at else None,
             }
             for r in rows

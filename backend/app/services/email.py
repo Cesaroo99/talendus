@@ -21,6 +21,8 @@ from app.models import EmailLog
 from app.models.enums import EmailStatus, EmailType, utcnow
 
 logger = logging.getLogger("talendus.email")
+SMTP_DISABLED_ERROR = "SMTP désactivé — le courriel n’a pas quitté le serveur."
+FAKE_SENT_ERROR = "Jamais remis au serveur SMTP (journalisé seulement)."
 EMAIL_DIR = Path(__file__).resolve().parents[1] / "emails"
 TEMPLATE_DIR = EMAIL_DIR / "templates"
 SIGNATURE_IMAGE = EMAIL_DIR / "assets" / "signature.jpg"
@@ -117,21 +119,68 @@ def runtime_email_config(db: Session | None = None) -> SmtpRuntime:
     except ValueError:
         port = int(env.email_port)
     password = normalize_smtp_password(stored.get("smtp.password")) or normalize_smtp_password(env.email_password)
+    host = (stored.get("smtp.host") or "").strip() or env.email_server
+    username = normalize_smtp_username(stored.get("smtp.username")) or (env.email_username or "").strip()
     from_addr = (
         (stored.get("smtp.from") or "").strip()
         or (env.email_from or "").strip()
         or "Talendus <info@talendus.ca>"
     )
+    if enabled_ov is None:
+        enabled = bool(env.email_enabled)
+        if not enabled and _smtp_ready(host, username, password):
+            enabled = True
+    else:
+        enabled = enabled_ov
     return SmtpRuntime(
-        enabled=env.email_enabled if enabled_ov is None else enabled_ov,
-        host=(stored.get("smtp.host") or "").strip() or env.email_server,
+        enabled=enabled,
+        host=host,
         port=port,
-        username=normalize_smtp_username(stored.get("smtp.username")) or (env.email_username or "").strip(),
+        username=username,
         password=password,
         from_addr=from_addr,
         use_tls=env.email_use_tls if tls_ov is None else tls_ov,
         reply_to=(env.public_email or "info@talendus.ca").strip(),
     )
+
+
+def _smtp_ready(host: str, username: str, password: str) -> bool:
+    target = (host or "").strip().lower()
+    if not target or target in {"localhost", "127.0.0.1", "::1"}:
+        return False
+    return bool((username or "").strip() and (password or "").strip())
+
+
+def email_actually_sent(log: EmailLog | None) -> bool:
+    if log is None:
+        return False
+    return log.status == EmailStatus.SENT and (log.attempts or 0) >= 1
+
+
+def mark_smtp_disabled(log: EmailLog) -> EmailLog:
+    log.status = EmailStatus.FAILED
+    log.error = SMTP_DISABLED_ERROR
+    log.sent_at = None
+    return log
+
+
+def delivery_error(log: EmailLog | None) -> str:
+    if log is None:
+        return SMTP_DISABLED_ERROR
+    return (log.error or SMTP_DISABLED_ERROR).strip() or SMTP_DISABLED_ERROR
+
+
+def mark_fake_sent_logs(db: Session) -> int:
+    rows = list(db.scalars(select(EmailLog).where(EmailLog.status == EmailStatus.SENT)).all())
+    changed = 0
+    for log in rows:
+        if (log.attempts or 0) >= 1:
+            continue
+        log.status = EmailStatus.FAILED
+        log.error = (log.error or FAKE_SENT_ERROR)[:2000]
+        log.sent_at = None
+        changed += 1
+    return changed
 
 
 def _render(template_name: str, **ctx: str) -> tuple[str, str]:
@@ -362,9 +411,8 @@ def send_email(
     db.flush()
     cfg = runtime_email_config(db)
     if not cfg.enabled:
-        log.status = EmailStatus.SENT
-        log.sent_at = utcnow()
-        logger.info("email[dev] to=%s type=%s subject=%s", to_email, email_type, subject)
+        mark_smtp_disabled(log)
+        logger.warning("email[disabled] to=%s type=%s subject=%s", to_email, email_type, subject)
         return log
     if sync:
         _record_smtp_result(log, cfg, fail_fast=True)
@@ -397,9 +445,8 @@ def send_composed_email(
     db.flush()
     cfg = runtime_email_config(db)
     if not cfg.enabled:
-        log.status = EmailStatus.SENT
-        log.sent_at = utcnow()
-        logger.info("email[composed] to=%s subject=%s", to_email, subject)
+        mark_smtp_disabled(log)
+        logger.warning("email[composed-disabled] to=%s subject=%s", to_email, subject)
         return log
     if attachments and not sync:
         sync = True
@@ -465,9 +512,13 @@ def _deliver(session_factory, log_id: str) -> None:
             if log is None:
                 time.sleep(0.1 * (attempt + 1))
                 continue
-            if log.status == EmailStatus.SENT:
+            if email_actually_sent(log):
                 return
             cfg = runtime_email_config(db)
+            if not cfg.enabled:
+                mark_smtp_disabled(log)
+                db.commit()
+                return
             _record_smtp_result(log, cfg, fail_fast=False)
             db.commit()
             return

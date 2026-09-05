@@ -437,8 +437,20 @@ def send_test_email(
     )
     db.commit()
     status = log.status.value if log.status else EmailStatus.QUEUED.value
-    if log.status == EmailStatus.FAILED:
-        from app.services.email import is_smtp_bad_credentials, runtime_email_config
+    from app.services.email import SMTP_DISABLED_ERROR, email_actually_sent, is_smtp_bad_credentials, runtime_email_config
+
+    if not email_actually_sent(log) or log.status == EmailStatus.FAILED:
+        raw = log.error or "erreur SMTP"
+        if raw == SMTP_DISABLED_ERROR or "SMTP désactivé" in raw:
+            raise AppError(
+                502,
+                (
+                    "L’envoi SMTP est désactivé : le test n’a pas quitté le serveur. "
+                    "Dans Réglages → Courriel, choisissez « Oui — envoyer vraiment », "
+                    "enregistrez, puis renvoyez le test."
+                ),
+                "SMTP_DISABLED",
+            )
 
         raw = log.error or "erreur SMTP"
         if is_smtp_bad_credentials(raw):

@@ -194,14 +194,23 @@ def test_smtp_test_maps_gmail_535(client, monkeypatch):
     assert "smtp.gmail.com:587" in body["message"]
 
 
-def test_smtp_test_email_is_logged(client):
+def test_smtp_test_email_is_logged(client, monkeypatch):
+    from tests.conftest import stub_smtp_delivery
+
     admin = promote_admin(client, "smtp-test-admin@example.com")
     admin_h = auth_header(admin)
+    disabled = client.post("/api/admin/settings/test-email", headers=admin_h, json={})
+    assert disabled.status_code == 502, disabled.text
+    assert disabled.json()["code"] == "SMTP_DISABLED"
+    logs = _emails_to(client, admin_h, "cesarmemoli1@gmail.com")
+    assert logs
+    assert logs[0]["delivered"] is False
+    stub_smtp_delivery(monkeypatch)
     sent = client.post("/api/admin/settings/test-email", headers=admin_h, json={})
     assert sent.status_code == 200, sent.text
     assert sent.json()["data"]["to_email"] == "cesarmemoli1@gmail.com"
     logs = _emails_to(client, admin_h, "cesarmemoli1@gmail.com")
-    assert any("test" in (row.get("subject") or "").lower() for row in logs)
+    assert any(row.get("delivered") for row in logs)
     rewritten = client.post(
         "/api/admin/settings/test-email",
         headers=admin_h,

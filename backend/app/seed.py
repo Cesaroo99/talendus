@@ -12,6 +12,7 @@ from app.config import get_settings
 from app.database import SessionLocal, init_db
 from app.site_jobs import ensure_site_catalog
 from app.services.employer_leads import ensure_quebec_employer_leads
+from app.services.prospects import reconcile_undelivered_prospect_mails
 from app.models import (
     Application,
     ApplicationStatusHistory,
@@ -235,20 +236,25 @@ def seed_if_empty() -> None:
             bootstrap_production_admin(db)
             ensure_site_catalog(db)
             ensure_quebec_employer_leads(db)
+            stats = reconcile_undelivered_prospect_mails(db)
             db.commit()
+            logger.info("Réconciliation courriels prospects %s", stats)
             return
         if db.scalar(select(User).limit(1)):
             seed_rbac(db)
             seed_blog_defaults(db)
             ensure_site_catalog(db)
             ensure_quebec_employer_leads(db)
+            stats = reconcile_undelivered_prospect_mails(db)
             db.commit()
+            logger.info("Réconciliation courriels prospects %s", stats)
             return
         _seed(db)
         ensure_site_catalog(db)
         ensure_quebec_employer_leads(db)
+        stats = reconcile_undelivered_prospect_mails(db)
         db.commit()
-        logger.info("Base Talendus initialisée (seed).")
+        logger.info("Base Talendus initialisée (seed). courriels=%s", stats)
     except Exception:
         db.rollback()
         logger.exception("Échec du seed")
