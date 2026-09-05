@@ -22,11 +22,11 @@ DEMO_FAKES = {
 
 
 def test_lead_catalog_is_fifty_real_and_unique():
-    assert len(QUEBEC_EMPLOYER_LEADS) == 300
+    assert len(QUEBEC_EMPLOYER_LEADS) == 324
     names = [row["name"].casefold() for row in QUEBEC_EMPLOYER_LEADS]
-    assert len(set(names)) == 300
+    assert len(set(names)) == 324
     websites = [row["website"] for row in QUEBEC_EMPLOYER_LEADS]
-    assert len(set(websites)) == 300
+    assert len(set(websites)) == 324
     emails = [row["email"].casefold() for row in QUEBEC_EMPLOYER_LEADS if row.get("email")]
     assert len(set(emails)) == len(emails)
     assert emails, "Au moins un courriel public RH/info doit être présent."
@@ -34,10 +34,21 @@ def test_lead_catalog_is_fifty_real_and_unique():
     assert len(wave2) == 50
     assert all(row.get("email") for row in wave2), "La 2e vague doit toutes avoir un courriel public."
     extra = QUEBEC_EMPLOYER_LEADS[100:]
-    assert len(extra) == 200
-    assert all(row.get("email") for row in extra), "Les 200 fiches suivantes doivent toutes avoir un courriel public vérifié."
+    assert len(extra) == 224
+    assert all(row.get("email") for row in extra), "Les fiches suivantes doivent toutes avoir un courriel public vérifié."
     sectors = {row["sector"] for row in QUEBEC_EMPLOYER_LEADS[50:]}
     assert len(sectors) >= 8, "Les vagues avec courriel doivent couvrir plusieurs secteurs, pas seulement l’usine."
+    wave5 = QUEBEC_EMPLOYER_LEADS[300:]
+    assert len(wave5) == 24
+    assert all(row.get("email") for row in wave5)
+    assert {row["sector"] for row in wave5} >= {
+        "Construction",
+        "Industrie",
+        "Manufacturier",
+        "Commerce",
+        "Hôtellerie et tourisme",
+        "Entrepôt et logistique",
+    }
     for row in QUEBEC_EMPLOYER_LEADS:
         assert row["name"] not in DEMO_FAKES
         assert row["city"]
@@ -57,12 +68,12 @@ def test_ensure_creates_prospect_clients_without_employer_accounts(client, db):
     promote_admin(client, "leads-admin@talendus.ca")
     created = ensure_quebec_employer_leads(db)
     db.commit()
-    assert created == 300
+    assert created == 324
     assert ensure_quebec_employer_leads(db) == 0
     db.commit()
 
     leads = list(db.scalars(select(Company).where(Company.name.in_([r["name"] for r in QUEBEC_EMPLOYER_LEADS]))))
-    assert len(leads) == 300
+    assert len(leads) == 324
     assert all(c.status == CompanyStatus.PROSPECT for c in leads)
     assert all(c.province == "Québec" for c in leads)
     assert all(not c.owner_user_id for c in leads)
