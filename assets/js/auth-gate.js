@@ -36,7 +36,10 @@
       googleFail: "Google Sign-In could not load. Use email instead.",
       signedIn: "You are already signed in.",
       goWorkspace: "Open my workspace",
-      linkedinFail: "LinkedIn Sign-In could not start. Use email instead."
+      linkedinFail: "LinkedIn Sign-In could not start. Use email instead.",
+      unverified: "Verify your email before signing in.",
+      resendVerify: "Resend verification email",
+      resendVerifyOk: "If the account is not verified yet, we sent a new email."
     } : {
       login: "Connexion", register: "Créer un compte", email: "Courriel", password: "Mot de passe",
       first: "Prénom", last: "Nom", submitLogin: "Me connecter", submitRegister: "Créer mon compte",
@@ -65,7 +68,10 @@
       googleFail: "La connexion Google n'a pas pu s'afficher. Utilisez le courriel.",
       signedIn: "Vous êtes déjà connecté.",
       goWorkspace: "Ouvrir mon espace",
-      linkedinFail: "La connexion LinkedIn n'a pas pu démarrer. Utilisez le courriel."
+      linkedinFail: "La connexion LinkedIn n'a pas pu démarrer. Utilisez le courriel.",
+      unverified: "Vérifiez votre courriel avant de vous connecter.",
+      resendVerify: "Renvoyer le courriel de vérification",
+      resendVerifyOk: "Si le compte n'est pas encore vérifié, un courriel a été envoyé."
     };
 
     function esc(v) {
@@ -220,6 +226,31 @@
       el.className = ok === false ? "tl-success tl-error" : "tl-success";
     }
 
+    function authError(err) {
+      if (err && err.code === "EMAIL_NOT_VERIFIED") return t.unverified;
+      return (err && err.message) || t.err;
+    }
+
+    function showResend(email) {
+      var box = overlay.querySelector(".tl-success");
+      if (!box || overlay.querySelector("[data-resend-verify]")) return;
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "tl-text-btn";
+      btn.setAttribute("data-resend-verify", "1");
+      btn.textContent = t.resendVerify;
+      btn.onclick = function () {
+        if (!api.resendVerificationEmail) return;
+        api.resendVerificationEmail(email).then(function () {
+          flashBox(".tl-success", t.resendVerifyOk, true);
+        }).catch(function (err) {
+          flashBox(".tl-success", authError(err), false);
+        });
+      };
+      box.appendChild(document.createTextNode(" "));
+      box.appendChild(btn);
+    }
+
     function hintSave(msg) {
       var btn = document.querySelector("[data-save-job]");
       var host = (btn && btn.parentNode) || document.querySelector(".tl-job-save-row") || document.querySelector(".tl-job-apply-card");
@@ -304,7 +335,8 @@
             }).then(function (json) {
               afterAuth(json.data && json.data.user);
             }).catch(function (err) {
-              flashBox(".tl-success", (err && err.message) || t.err, false);
+              flashBox(".tl-success", authError(err), false);
+              if (err && err.code === "EMAIL_NOT_VERIFIED") showResend("");
             });
           },
           ux_mode: "popup",
@@ -382,7 +414,8 @@
         }).then(function (json) {
           afterAuth(json.data && json.data.user);
         }).catch(function (err) {
-          flashBox(".tl-success", (err && err.message) || t.err, false);
+          flashBox(".tl-success", authError(err), false);
+          if (err && err.code === "EMAIL_NOT_VERIFIED") showResend("");
         });
       }
       window.addEventListener("message", onMsg);
@@ -438,7 +471,8 @@
           afterAuth(json.data && json.data.user);
         }).catch(function (err) {
           busy(login, false);
-          flashBox(".tl-success", (err && err.message) || t.err, false);
+          flashBox(".tl-success", authError(err), false);
+          if (err && err.code === "EMAIL_NOT_VERIFIED") showResend(d.email);
         });
       });
       var register = overlay.querySelector("#tl-auth-register");
@@ -448,12 +482,13 @@
         busy(register, true);
         api.register({
           email: d.email, password: d.password, first_name: d.first_name, last_name: d.last_name,
-          role: role || "CANDIDATE", company_name: d.company_name || null, website_url: d.website_url || ""
+          role: role || "CANDIDATE", company_name: d.company_name || null, website_url: d.website_url || "",
+          locale: isEn ? "en-CA" : "fr-CA"
         }).then(function (json) {
           afterAuth(json.data && json.data.user);
         }).catch(function (err) {
           busy(register, false);
-          flashBox(".tl-success", (err && err.message) || t.err, false);
+          flashBox(".tl-success", authError(err), false);
         });
       });
       var forgot = overlay.querySelector("#tl-auth-forgot");

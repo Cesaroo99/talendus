@@ -727,7 +727,7 @@ def cta_band(lang="fr", persona="gateway"):
 
 def footer(lang="fr", persona="gateway"):
     t, h, a = COPY[lang], HREFS[lang], pfx(lang)
-    search_label = "Chasse de têtes" if lang == "fr" else "Search mandates"
+    search_label = "Chasse de têtes" if lang == "fr" else "Executive search"
     return f"""
 {call_fab(lang)}
 {whatsapp_fab(lang, persona)}

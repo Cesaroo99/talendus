@@ -122,7 +122,7 @@
       notifyPresented: "Presented files", notifyPresentedHint: "When Talendus shares a shortlist for one of your mandates.",
       notifyInterview: "Interviews", notifyInterviewHint: "Reminders and changes to interview times.",
       notifyMessage: "Messages from your consultant", notifyMessageHint: "When Talendus writes to you in the workspace.",
-      notifyChannels: "How we reach you", notifyChannelsHint: "Talendus writes by email, in this workspace, and by push on your phone. SMS and WhatsApp are not offered.",
+      notifyChannels: "How we reach you", notifyChannelsHint: "Talendus writes by email and in this workspace. SMS, WhatsApp and push notifications are not offered.",
       privacyHint: "Your file is followed by a consultant. Contact us whenever you want to move forward.",
       privacyTalendus: "Talendus may use a short professional summary when presenting you to a company.",
       dangerHint: "This deactivates the account. Your consultant can no longer consider you for mandates.",
@@ -289,7 +289,7 @@
       notifyPresented: "Dossiers présentés", notifyPresentedHint: "Quand Talendus vous transmet une shortlist pour un mandat.",
       notifyInterview: "Entretiens", notifyInterviewHint: "Rappels et changements d’horaire.",
       notifyMessage: "Messages de votre conseiller", notifyMessageHint: "Quand Talendus vous écrit dans l’espace.",
-      notifyChannels: "Comment on vous joint", notifyChannelsHint: "Talendus vous écrit par courriel, dans cet espace, et par notifications push sur votre téléphone. SMS et WhatsApp ne sont pas proposés.",
+      notifyChannels: "Comment on vous joint", notifyChannelsHint: "Talendus vous écrit par courriel et dans cet espace. SMS, WhatsApp et notifications push ne sont pas proposés.",
       privacyHint: "Votre dossier est suivi par un conseiller. Contactez-nous dès que vous voulez avancer.",
       privacyTalendus: "Talendus peut utiliser un court résumé professionnel au moment de vous présenter à une entreprise.",
       dangerHint: "Cette action désactive le compte. Votre conseiller ne pourra plus vous considérer pour des mandats.",
@@ -1434,7 +1434,7 @@
           settingsCard(t.notifyChannels, t.notifyChannelsHint,
             settingsCheck("notify_email", prefs.notify_email !== false, t.emailNotif, "") +
             settingsCheck("notify_in_app", prefs.notify_in_app !== false, t.inApp, "") +
-            settingsCheck("notify_push", !!prefs.notify_push, t.push, "")) +
+            (window.__tlPushEnabled === true ? settingsCheck("notify_push", !!prefs.notify_push, t.push, "") : "")) +
           '<button class="tl-btn" type="submit">' + esc(t.save) + '</button><div class="tl-success"></div></form>';
       } else if (tab === "privacy") {
         body = '<form class="tl-form" id="acc-privacy">' +

@@ -181,8 +181,17 @@ def mark_fake_sent_logs(db: Session) -> int:
     return changed
 
 
+def _template_locale(ctx: dict) -> str:
+    raw = str(ctx.get("locale") or ctx.get("lang") or "fr").strip().lower()
+    return "en" if raw.startswith("en") else "fr"
+
+
 def _render(template_name: str, **ctx: str) -> tuple[str, str]:
-    path = TEMPLATE_DIR / f"{template_name}.txt"
+    locale = _template_locale(ctx)
+    path = TEMPLATE_DIR / f"{template_name}.en.txt" if locale == "en" else TEMPLATE_DIR / f"{template_name}.txt"
+    if not path.exists():
+        path = TEMPLATE_DIR / f"{template_name}.txt"
+    ctx = {k: v for k, v in ctx.items() if k not in {"locale", "lang"}}
     if not path.exists():
         body = "\n".join(f"{k}: {v}" for k, v in ctx.items())
         return ctx.get("subject", "Talendus"), body
@@ -275,11 +284,15 @@ def _text_to_html_blocks(core: str) -> str:
     return "".join(blocks) or '<p style="margin:0;"></p>'
 
 
-def signed_html(body: str) -> str:
+def signed_html(body: str, lang: str = "fr-CA") -> str:
     core = strip_legacy_footer(body)
     inner = _text_to_html_blocks(core)
+    raw_lang = str(lang or "").strip()
+    if not raw_lang or raw_lang.lower().startswith("fr"):
+        raw_lang = "en-CA" if "/en/" in (body or "") else "fr-CA"
+    html_lang = "en-CA" if raw_lang.lower().startswith("en") else "fr-CA"
     return (
-        "<!DOCTYPE html><html lang=\"fr-CA\"><head><meta charset=\"utf-8\">"
+        f"<!DOCTYPE html><html lang=\"{html_lang}\"><head><meta charset=\"utf-8\">"
         '<meta name="viewport" content="width=device-width,initial-scale=1"></head>'
         '<body style="margin:0;padding:0;background:#e8edf4;">'
         '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#e8edf4;">'
@@ -316,6 +329,7 @@ def build_email_message(
     subject: str,
     body: str,
     attachments: list[EmailAttachment] | None = None,
+    lang: str = "fr-CA",
 ) -> EmailMessage:
     plain = signed_plain(body)
     msg = EmailMessage()
@@ -325,7 +339,7 @@ def build_email_message(
     if cfg.reply_to:
         msg["Reply-To"] = cfg.reply_to
     msg.set_content(plain, charset="utf-8")
-    msg.add_alternative(signed_html(body), subtype="html", charset="utf-8")
+    msg.add_alternative(signed_html(body, lang=lang), subtype="html", charset="utf-8")
     image = SIGNATURE_IMAGE.read_bytes() if SIGNATURE_IMAGE.is_file() else b""
     if image:
         for part in msg.iter_parts():
@@ -356,8 +370,9 @@ def _smtp_send(
     subject: str,
     body: str,
     attachments: list[EmailAttachment] | None = None,
+    lang: str = "fr-CA",
 ) -> None:
-    msg = build_email_message(cfg, to_email, subject, body, attachments)
+    msg = build_email_message(cfg, to_email, subject, body, attachments, lang=lang)
     with smtplib.SMTP(cfg.host, cfg.port, timeout=15) as smtp:
         if cfg.use_tls:
             smtp.starttls()
@@ -374,7 +389,8 @@ def _record_smtp_result(
     attachments: list[EmailAttachment] | None = None,
 ) -> None:
     try:
-        _smtp_send(cfg, log.to_email, log.subject, log.body or "", attachments)
+        lang = "en-CA" if "/en/" in (log.body or "") else "fr-CA"
+        _smtp_send(cfg, log.to_email, log.subject, log.body or "", attachments, lang=lang)
         log.status = EmailStatus.SENT
         log.error = None
         log.sent_at = utcnow()

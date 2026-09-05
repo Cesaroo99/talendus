@@ -32,6 +32,7 @@ class RegisterIn(BaseModel):
     phone: str | None = None
     role: UserRole = UserRole.CANDIDATE
     company_name: str | None = Field(default=None, max_length=160)
+    locale: str | None = Field(default=None, max_length=12)
     website_url: str | None = None  # honeypot anti-spam
 
     @field_validator("email", mode="before")
@@ -89,6 +90,15 @@ class PasswordResetIn(BaseModel):
 
 class EmailVerifyIn(BaseModel):
     token: str
+
+
+class EmailResendIn(BaseModel):
+    email: EmailStr
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def _email(cls, value: Any) -> Any:
+        return _clean_email(value)
 
 
 class UserPublic(ORMModel):

@@ -19,6 +19,25 @@ def _run(conn, sql: str) -> None:
         logger.info("schema skip: %s (%s)", sql.split("\n")[0][:80], exc)
 
 
+def ensure_users_schema(engine: Engine) -> None:
+    """Ajoute session_version pour invalider les JWT après révocation. Idempotent."""
+    try:
+        inspector = inspect(engine)
+        if "users" not in inspector.get_table_names():
+            return
+        existing = {col["name"] for col in inspector.get_columns("users")}
+        if "session_version" in existing:
+            return
+        with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
+            dialect = engine.dialect.name
+            if dialect == "sqlite":
+                _run(conn, "ALTER TABLE users ADD COLUMN session_version INTEGER NOT NULL DEFAULT 0")
+            else:
+                _run(conn, "ALTER TABLE users ADD COLUMN session_version INTEGER NOT NULL DEFAULT 0")
+    except Exception:
+        logger.exception("Réparation du schéma utilisateurs incomplète")
+
+
 def ensure_interviews_schema(engine: Engine) -> None:
     """Ajoute les droits d’appel (lancer / rejoindre) sur interviews. Idempotent."""
     try:

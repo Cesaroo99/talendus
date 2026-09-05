@@ -23,10 +23,16 @@ def verify_password(password: str, password_hash: str) -> bool:
         return False
 
 
-def create_access_token(user_id: str, role: str) -> str:
+def create_access_token(user_id: str, role: str, session_version: int = 0) -> str:
     exp = utcnow() + timedelta(minutes=settings.access_token_minutes)
     return jwt.encode(
-        {"sub": user_id, "role": role, "exp": exp, "typ": "access"},
+        {
+            "sub": user_id,
+            "role": role,
+            "exp": exp,
+            "typ": "access",
+            "ver": int(session_version or 0),
+        },
         settings.jwt_secret,
         algorithm=settings.jwt_algorithm,
     )

@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from urllib.parse import quote
 
 from sqlalchemy import func, or_, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.errors import AppError
@@ -916,25 +917,29 @@ def create_prospect(db: Session, actor: User, data: dict) -> Prospect:
     existing = db.scalar(select(Prospect).where(Prospect.side == side, Prospect.email == email))
     if existing:
         raise AppError(409, "Ce prospect existe déjà de ce côté.", "PROSPECT_EXISTS")
-    row = upsert_prospect(
-        db,
-        side=side,
-        email=email,
-        source=data.get("source") or "prospection",
-        first_name=data.get("first_name") or "",
-        last_name=data.get("last_name") or "",
-        phone=data.get("phone") or "",
-        company_name=data.get("company_name") or "",
-        title=data.get("title") or "",
-        city=data.get("city") or "",
-        sector=data.get("sector") or "",
-        source_detail=data.get("source_detail") or "Ajout admin",
-        message=data.get("message") or "",
-        assigned_recruiter_id=data.get("assigned_recruiter_id") or actor.id,
-        stage=data.get("stage") or "nouveau",
-    )
-    if row is None:
-        raise AppError(400, "Impossible de créer ce prospect.", "VALIDATION_ERROR")
+    try:
+        row = upsert_prospect(
+            db,
+            side=side,
+            email=email,
+            source=data.get("source") or "prospection",
+            first_name=data.get("first_name") or "",
+            last_name=data.get("last_name") or "",
+            phone=data.get("phone") or "",
+            company_name=data.get("company_name") or "",
+            title=data.get("title") or "",
+            city=data.get("city") or "",
+            sector=data.get("sector") or "",
+            source_detail=data.get("source_detail") or "Ajout admin",
+            message=data.get("message") or "",
+            assigned_recruiter_id=data.get("assigned_recruiter_id") or actor.id,
+            stage=data.get("stage") or "nouveau",
+        )
+        if row is None:
+            raise AppError(400, "Impossible de créer ce prospect.", "VALIDATION_ERROR")
+        db.flush()
+    except IntegrityError:
+        raise AppError(409, "Ce prospect existe déjà de ce côté.", "PROSPECT_EXISTS") from None
     from app.services.audit import audit
 
     audit(db, "prospect.create", actor, "prospect", row.id, metadata={"side": row.side, "email": row.email})

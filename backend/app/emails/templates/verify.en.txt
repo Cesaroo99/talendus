@@ -1,0 +1,5 @@
+Subject: Verify your email address
+{{name}},
+
+Confirm your email by opening this link (valid 24 hours):
+{{link}}

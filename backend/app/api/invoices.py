@@ -112,6 +112,4 @@ def refund_invoice(
     user: User = Depends(require_roles(UserRole.ADMIN, UserRole.FINANCE)),
 ):
     data = payload or RefundIn()
-    if data.provider == "paypal":
-        return ok(invoices_service.paypal_refund(db, user, invoice_id, data.amount))
-    return ok(stripe_billing.refund_invoice(db, user, invoice_id, data.amount))
+    return ok(invoices_service.refund_invoice(db, user, invoice_id, data.amount, data.provider))

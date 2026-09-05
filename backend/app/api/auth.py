@@ -6,6 +6,7 @@ from app.deps import client_ip, get_current_user, get_current_user_unverified
 from app.errors import ok
 from app.models import User
 from app.schemas import (
+    EmailResendIn,
     EmailVerifyIn,
     LoginIn,
     OAuthGoogleIn,
@@ -109,6 +110,14 @@ def verify(payload: EmailVerifyIn, db: Session = Depends(get_db)):
 def resend_verification(user: User = Depends(get_current_user_unverified), db: Session = Depends(get_db)):
     auth_service.resend_verification(db, user)
     return ok(message="Si le compte n'est pas encore vérifié, un courriel a été envoyé.")
+
+
+@router.post("/resend-verification-email")
+def resend_verification_email(payload: EmailResendIn, request: Request, db: Session = Depends(get_db)):
+    email = str(payload.email).strip().lower()
+    auth_service._assert_not_locked(email, client_ip(request), db)
+    auth_service.resend_verification_by_email(db, email)
+    return ok(message="Si un compte existe et n'est pas encore vérifié, un courriel a été envoyé.")
 
 
 @router.get("/sessions")
