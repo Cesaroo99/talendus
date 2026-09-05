@@ -935,7 +935,7 @@
         "<div><label>" + esc(t.birth) + '</label><input name="birth_date" type="date" value="' + esc(profile.birth_date || "") + '"></div></div></section>' +
         '<section class="tl-profile-card"><h3>' + esc(t.profilePro) + "</h3>" +
         '<div class="tl-row-2"><div><label>' + esc(t.title) + '</label>' + choiceSelect("title", (jobOptions || {}).occupations, profile.title, t.pick) + '</div>' +
-        "<div><label>" + esc(t.experience) + '</label><input name="years_experience" type="number" min="0" value="' + esc(profile.years_experience || "") + '"></div></div>" +
+        "<div><label>" + esc(t.experience) + '</label><input name="years_experience" type="number" min="0" value="' + esc(profile.years_experience || "") + '"></div></div>' +
         "<label>" + esc(t.workStatus) + '</label>' + choiceSelect("work_status", (jobOptions || {}).work_statuses, profile.work_status, t.pick) +
         "<label>" + esc(t.sector) + '</label>' + choiceSelect("sector", (jobOptions || {}).sectors, profile.sector, t.pick) +
         "<label>" + esc(t.bio) + '</label><textarea name="bio" rows="4">' + esc(profile.bio || "") + "</textarea>" +

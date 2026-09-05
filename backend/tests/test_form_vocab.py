@@ -53,3 +53,9 @@ def test_english_forms_split_contract_and_hours():
     assert "Full-time / permanent" not in types
     assert "Permanent" in types
     assert 'value="remote"' not in _block(jobs, "job-city")
+
+
+def test_contact_js_sends_shift_and_schedule():
+    js = (ROOT / "assets" / "js" / "talendus.js").read_text(encoding="utf-8")
+    assert 'formValue(form, ["quart", "shift"])' in js
+    assert 'formValue(form, ["horaire", "schedule"])' in js

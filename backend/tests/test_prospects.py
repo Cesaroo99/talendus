@@ -81,6 +81,32 @@ def test_list_persists_synced_prospects(client, monkeypatch):
     assert send.json()["data"]["to_email"] == "ghost.sync@example.com"
 
 
+def test_list_does_not_mark_active_company_as_client(client):
+    from app.database import SessionLocal
+    from app.models import Company
+    from app.models.enums import CompanyStatus
+
+    admin = promote_admin(client, "crm-stage@example.com")
+    admin_h = auth_header(admin)
+    db = SessionLocal()
+    db.add(
+        Company(
+            name="Usine Veille",
+            email="rh@usine-veille.example",
+            status=CompanyStatus.ACTIVE,
+            city="Laval",
+            sector="Manufacturier",
+        )
+    )
+    db.commit()
+    db.close()
+    listed = client.get("/api/admin/prospects?side=employer", headers=admin_h)
+    assert listed.status_code == 200, listed.text
+    row = next(item for item in listed.json()["data"] if item["email"] == "rh@usine-veille.example")
+    assert row["stage"] != "client"
+    assert row["stage"] in {"nouveau", "a-contacter"}
+
+
 def test_contact_and_manual_prospect(client):
     admin = promote_admin(client, "crm-contact@example.com")
     admin_h = auth_header(admin)
@@ -95,6 +121,11 @@ def test_contact_and_manual_prospect(client):
         },
     )
     assert posted.status_code == 200, posted.text
+    from tests.test_action_emails import _emails_to
+
+    mails = _emails_to(client, admin_h, "info@talendus.ca")
+    assert any("Nouveau message site" in (row.get("subject") or "") for row in mails)
+    assert not any("Bienvenue chez Talendus" in (row.get("subject") or "") for row in mails)
     rows = client.get("/api/admin/prospects?side=employer", headers=admin_h).json()["data"]
     luc = next(row for row in rows if row["email"] == "luc.forge@example.com")
     assert luc["company_name"] == "Forge Mauricie"

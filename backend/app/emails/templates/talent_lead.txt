@@ -1,0 +1,4 @@
+Subject: Nouveau profil talent — {{name}}
+Un profil talent a été soumis ou mis à jour sur talendus.ca.
+
+{{link}}

@@ -240,9 +240,10 @@ def test_preview_and_save_follow_chosen_dates(client):
     assert blocked.status_code == 409
 
 
-def test_persist_retries_active_when_draft_is_rejected(monkeypatch):
+def test_persist_retries_draft_without_optional_columns(monkeypatch):
     from sqlalchemy.exc import DataError
 
+    from app.errors import AppError
     from app.models.enums import ContractStatus
     from app.services import contracts as svc
 
@@ -250,9 +251,10 @@ def test_persist_retries_active_when_draft_is_rejected(monkeypatch):
 
     class FakeDB:
         def execute(self, _sql, params=None):
-            calls.append(dict(params or {}))
-            if params and params.get("status") == "DRAFT":
-                raise DataError("INSERT", {}, Exception("invalid input value for enum contractstatus: DRAFT"))
+            payload = dict(params or {})
+            calls.append(payload)
+            if payload.get("recruiter_id"):
+                raise DataError("INSERT", {}, Exception("column recruiter_id does not exist"))
 
         def flush(self):
             return None
@@ -261,7 +263,7 @@ def test_persist_retries_active_when_draft_is_rejected(monkeypatch):
             return None
 
         def get(self, _model, pk):
-            return type("Row", (), {"id": pk, "status": ContractStatus.ACTIVE, "company_id": "company-1"})()
+            return type("Row", (), {"id": pk, "status": ContractStatus.DRAFT, "company_id": "company-1"})()
 
         def get_bind(self):
             return None
@@ -281,9 +283,50 @@ def test_persist_retries_active_when_draft_is_rejected(monkeypatch):
         company_name="Métalco",
         document_name=None,
     )
-    assert any(item.get("status") == "DRAFT" for item in calls)
-    assert any(item.get("status") == "ACTIVE" and "created_at" in item for item in calls)
-    assert row.company_id == "company-1"
+    assert any(item.get("status") == "DRAFT" and item.get("recruiter_id") for item in calls)
+    assert any(item.get("status") == "DRAFT" and "recruiter_id" not in item for item in calls)
+    assert all(item.get("status") != "ACTIVE" for item in calls)
+    assert row.status == ContractStatus.DRAFT
+
+    calls.clear()
+
+    class AlwaysFail:
+        def execute(self, _sql, params=None):
+            calls.append(dict(params or {}))
+            raise DataError("INSERT", {}, Exception("broken"))
+
+        def flush(self):
+            return None
+
+        def rollback(self):
+            return None
+
+        def get(self, _model, pk):
+            return None
+
+        def get_bind(self):
+            return None
+
+    try:
+        svc._persist_contract(
+            AlwaysFail(),
+            company_id="company-1",
+            mandate_type="Mandat",
+            start=None,
+            end=None,
+            percent=None,
+            terms="ok",
+            status=ContractStatus.DRAFT,
+            recruiter_id=None,
+            template_key=None,
+            company_name="Métalco",
+            document_name=None,
+        )
+        raise AssertionError("expected CONTRACT_SAVE_FAILED")
+    except AppError as exc:
+        assert exc.status_code == 400
+        assert exc.code == "CONTRACT_SAVE_FAILED"
+    assert all(item.get("status") != "ACTIVE" for item in calls)
 
 
 def test_admin_ui_sends_mandate_for_signature():

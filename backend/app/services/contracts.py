@@ -511,7 +511,7 @@ def _persist_contract(
 
     safe = dict(full)
     safe["id"] = uid()
-    safe["status"] = "ACTIVE"
+    safe["status"] = "DRAFT"
     safe["type"] = (mandate_type or "Mandat")[:24]
     safe.pop("recruiter_id", None)
     safe.pop("template_key", None)
@@ -521,24 +521,7 @@ def _persist_contract(
             return row
     except SQLAlchemyError as exc:
         last_error = exc
-        logger.warning("Insert mandat ACTIVE en échec: %s", exc)
-        db.rollback()
-
-    bare = {
-        "id": uid(),
-        "company_id": company_id,
-        "type": "Mandat",
-        "terms": terms or mandate_terms(company_name=company_name or "le client"),
-        "status": "ACTIVE",
-        "created_at": now,
-        "updated_at": now,
-    }
-    try:
-        row = attempt(bare)
-        if row:
-            return row
-    except SQLAlchemyError as exc:
-        last_error = exc
+        logger.warning("Insert mandat DRAFT (colonnes réduites) en échec: %s", exc)
         db.rollback()
     logger.exception("Mandat impossible à enregistrer: %s", last_error)
     detail = str(getattr(last_error, "orig", last_error) or last_error)[:220]

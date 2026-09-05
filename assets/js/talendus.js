@@ -460,7 +460,9 @@
               contact_role: formValue(form, ["fonction", "role"]) || null,
               contact_email: formValue(form, ["courriel", "email"]) || null,
               contact_phone: formValue(form, ["tel", "telephone", "phone"]) || null,
-              company_size: formValue(form, ["taille", "size"]) || null
+              company_size: formValue(form, ["taille", "size"]) || null,
+              shift: formValue(form, ["quart", "shift"]) || null,
+              schedule: formValue(form, ["horaire", "schedule"]) || null
             }
           }).then(function () {
             showFormMessage(form, hiringOk, false);
@@ -487,6 +489,8 @@
           skills: formValue(form, ["competences", "skills"]) || null,
           contact_role: formValue(form, ["fonction", "role"]) || null,
           company_size: formValue(form, ["taille", "size"]) || null,
+          shift: formValue(form, ["quart", "shift"]) || null,
+          schedule: formValue(form, ["horaire", "schedule"]) || null,
           website_url: formValue(form, ["website_url"]) || ""
         }).then(function () {
           showFormMessage(form, isHiring ? hiringOk : fallback, false);

@@ -354,7 +354,7 @@ def submit_public_talent(
         db,
         "info@talendus.ca",
         EmailType.ADMIN,
-        "welcome",
+        "talent_lead",
         name=f"{user.first_name} {user.last_name}".strip() or user.email,
         link=body[:1500],
     )
