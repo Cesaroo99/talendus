@@ -1796,7 +1796,12 @@
   }
 
   function prospectLabel(row) {
-    return row.display_name || ((row.first_name || "") + " " + (row.last_name || "")).trim() || row.email;
+    return row.display_name || ((row.first_name || "") + " " + (row.last_name || "")).trim() || row.company_name || row.email;
+  }
+
+  function isGenericContactLabel(value) {
+    var v = String(value || "").trim().toLowerCase();
+    return !v || v === "ressources humaines" || v === "ressource humaine" || v === "rh" || v === "recrutement" || v === "service des ressources humaines";
   }
 
   function sourceLabel(key) {
@@ -1922,12 +1927,13 @@
         }).join("");
         var lieu = [r.city, r.sector].filter(Boolean).join(" · ") || "—";
         var envois = r.sent_templates && r.sent_templates.length ? r.sent_templates.length + " envoi(s)" : "Aucun";
-        var personSub = employer ? (r.title || "") : (r.company_name || r.title || "");
+        var personSub = employer ? "" : (r.title || "");
+        var role = isGenericContactLabel(r.title) ? "" : (r.title || "");
         return "<tr>" +
           '<td class="check"><input type="checkbox" data-pcheck="' + U.esc(r.id) + '"></td>' +
           "<td class='person-cell'><b>" + U.esc(prospectLabel(r)) + "</b>" + (personSub ? "<div class='sub'>" + U.esc(personSub) + "</div>" : "") + "</td>" +
           "<td>" + U.esc(r.email) + (r.phone ? "<div class='sub'>" + U.esc(r.phone) + "</div>" : "") + "</td>" +
-          "<td>" + U.esc(r.title || "—") + "</td>" +
+          "<td>" + U.esc(role || "—") + "</td>" +
           "<td>" + U.esc(lieu) + "</td>" +
           "<td>" + U.esc(sourceLabel(r.source)) + "</td>" +
           '<td class="prospect-stage">' + U.badge(r.stage) + '<select data-pstage="' + U.esc(r.id) + '">' + stageOpts + "</select></td>" +
