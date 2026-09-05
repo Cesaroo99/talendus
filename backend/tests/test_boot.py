@@ -69,6 +69,29 @@ def test_production_seed_has_no_direct_employer_or_fake_companies(client, monkey
         db.close()
 
 
+def test_dev_seed_links_mission_jobs(client):
+    from sqlalchemy import select
+
+    from app.seed import _seed
+    from app.database import SessionLocal
+    from app.models import RecruitmentMission
+
+    db = SessionLocal()
+    try:
+        _seed(db)
+        db.commit()
+        mission = db.scalar(select(RecruitmentMission).where(RecruitmentMission.title.like("Caristes%")))
+        assert mission is not None
+        from app.models.company import mission_jobs
+
+        linked_id = db.execute(
+            select(mission_jobs.c.job_id).where(mission_jobs.c.mission_id == mission.id)
+        ).scalar_one()
+        assert linked_id == mission.job_id
+    finally:
+        db.close()
+
+
 def test_production_admin_created_when_candidates_already_exist(client, monkeypatch):
     from sqlalchemy import select
 

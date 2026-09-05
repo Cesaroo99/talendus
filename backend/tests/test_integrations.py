@@ -195,6 +195,75 @@ def test_geocode_zero_results(monkeypatch):
                 assert getattr(exc, "code", None) == "INTEGRATION_NOT_FOUND"
 
 
+def _paypal_headers() -> dict[str, str]:
+    return {
+        "paypal-auth-algo": "SHA256withRSA",
+        "paypal-cert-url": "https://api.sandbox.paypal.com/cert.pem",
+        "paypal-transmission-id": "tx-1",
+        "paypal-transmission-sig": "c2ln",
+        "paypal-transmission-time": "2026-09-05T00:00:00Z",
+    }
+
+
+def test_paypal_webhook_rejects_unsigned_payload(client, monkeypatch):
+    settings = get_settings()
+    monkeypatch.setattr(settings, "paypal_webhook_id", "WH-1")
+    monkeypatch.setattr(settings, "paypal_client_id", "paypal-id")
+    monkeypatch.setattr(settings, "paypal_client_secret", "paypal-secret")
+    missing = client.post("/api/webhooks/paypal", content=b'{"event_type":"PAYMENT.CAPTURE.COMPLETED"}')
+    assert missing.status_code == 400
+    assert missing.json()["code"] == "INTEGRATION_SIGNATURE_INVALID"
+    bad_host = client.post(
+        "/api/webhooks/paypal",
+        content=b'{"event_type":"PAYMENT.CAPTURE.COMPLETED"}',
+        headers={**_paypal_headers(), "paypal-cert-url": "https://evil.example/cert.pem"},
+    )
+    assert bad_host.status_code == 400
+    assert bad_host.json()["code"] == "INTEGRATION_SIGNATURE_INVALID"
+
+
+def test_paypal_webhook_requires_paypal_confirmation(client, monkeypatch):
+    settings = get_settings()
+    monkeypatch.setattr(settings, "paypal_webhook_id", "WH-1")
+    monkeypatch.setattr(settings, "paypal_client_id", "paypal-id")
+    monkeypatch.setattr(settings, "paypal_client_secret", "paypal-secret")
+    monkeypatch.setattr(settings, "paypal_api_base_url", "https://api-m.sandbox.paypal.com")
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        path = request.url.path
+        if path.endswith("/v1/oauth2/token"):
+            return httpx.Response(200, json={"access_token": "tok"})
+        if path.endswith("/v1/notifications/verify-webhook-signature"):
+            return httpx.Response(200, json={"verification_status": "FAILURE"})
+        return httpx.Response(404, json={})
+
+    with override_client(httpx.Client(transport=httpx.MockTransport(handler))):
+        refused = client.post(
+            "/api/webhooks/paypal",
+            content=b'{"event_type":"PAYMENT.CAPTURE.COMPLETED","resource":{"id":"CAP-1"}}',
+            headers=_paypal_headers(),
+        )
+    assert refused.status_code == 400
+    assert refused.json()["code"] == "INTEGRATION_SIGNATURE_INVALID"
+
+    def ok_handler(request: httpx.Request) -> httpx.Response:
+        path = request.url.path
+        if path.endswith("/v1/oauth2/token"):
+            return httpx.Response(200, json={"access_token": "tok"})
+        if path.endswith("/v1/notifications/verify-webhook-signature"):
+            return httpx.Response(200, json={"verification_status": "SUCCESS"})
+        return httpx.Response(404, json={})
+
+    with override_client(httpx.Client(transport=httpx.MockTransport(ok_handler))):
+        accepted = client.post(
+            "/api/webhooks/paypal",
+            content=b'{"event_type":"PAYMENT.CAPTURE.COMPLETED","resource":{"id":"CAP-1"}}',
+            headers=_paypal_headers(),
+        )
+    assert accepted.status_code == 200, accepted.text
+    assert accepted.json()["data"]["received"] is True
+
+
 def test_webhooks_unconfigured_and_hmac(client, monkeypatch):
     assert client.post("/api/webhooks/paypal", content=b"{}").status_code == 503
     assert client.post("/api/webhooks/whatsapp", content=b"{}").status_code == 503

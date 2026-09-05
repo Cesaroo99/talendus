@@ -8,7 +8,7 @@ from app.errors import ok
 from app.integrations.errors import IntegrationError
 from app.integrations.inbound import ingest, require_webhook_secret, verify_hmac
 from app.integrations.esignature.service import apply_esignature_event
-from app.integrations.payments.paypal import apply_paypal_event
+from app.integrations.payments.paypal import apply_paypal_event, verify_paypal_transmission
 from app.services import stripe_billing
 
 router = APIRouter(prefix="/webhooks", tags=["webhooks"])
@@ -31,16 +31,18 @@ async def paypal_webhook(request: Request, db: Session = Depends(get_db)):
     settings = get_settings()
     require_webhook_secret("paypal", settings.paypal_webhook_id)
     payload = await request.body()
+    verify_paypal_transmission(dict(request.headers), payload)
     transmission_id = request.headers.get("paypal-transmission-id") or ""
-    ingest(
+    meta = ingest(
         db,
         provider="paypal",
         event_id=transmission_id,
-        event_type=request.headers.get("paypal-auth-algo"),
+        event_type=request.headers.get("paypal-event-type") or request.headers.get("paypal-auth-algo"),
         payload=payload,
     )
-    apply_paypal_event(db, payload)
-    return ok({"received": True})
+    if not meta["duplicate"]:
+        apply_paypal_event(db, payload)
+    return ok({"received": True, "duplicate": meta["duplicate"]})
 
 
 @router.get("/whatsapp")

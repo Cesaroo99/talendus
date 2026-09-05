@@ -431,7 +431,9 @@ def _seed(db: Session) -> None:
     )
     db.add(mission)
     db.flush()
-    mission.linked_jobs.append(jobs["cariste"])
+    from app.models.company import mission_jobs
+
+    db.execute(mission_jobs.insert().values(mission_id=mission.id, job_id=jobs["cariste"].id))
 
     candidates: dict[str, Candidate] = {}
     applications: dict[str, Application] = {}
