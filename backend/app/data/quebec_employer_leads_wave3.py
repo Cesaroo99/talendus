@@ -64,7 +64,7 @@ QUEBEC_EMPLOYER_LEADS_WAVE3: tuple[dict, ...] = (
         "linkedin_url": "https://www.linkedin.com/company/ciusss-mcq",
         "employees": 18000,
         "careers_url": "https://www.ciusssmcq.ca/emplois-et-stages/rejoindre-l-equipe-du-ciusss-mcq/equipe-des-services-de-ressources-humaines-de-proximite",
-        "hiring": "Embauche Trois-Rivières : 04embauchescentre@ssss.gouv.qc.ca (bureaux RH de proximité). Source : page officielle RH de proximité CIUSSS MCQ.",
+        "hiring": "Embauche Trois-Rivières : 04embauchescentre@ssss.gouv.qc.ca (bureaux RH de proximité). Source : https://www.ciusssmcq.ca/emplois-et-stages/rejoindre-l-equipe-du-ciusss-mcq/equipe-des-services-de-ressources-humaines-de-proximite",
     },
     {
         "name": "Santé Québec Est-de-l'Île-de-Montréal",
@@ -162,7 +162,7 @@ QUEBEC_EMPLOYER_LEADS_WAVE3: tuple[dict, ...] = (
         "linkedin_url": None,
         "employees": 800,
         "careers_url": "https://www.quebec.ca/gouvernement/travailler-gouvernement/sante-services-sociaux/programmes-bourses-etudes/responsables",
-        "hiring": "Recrutement publié : recrutement.cisssdesiles@ssss.gouv.qc.ca. Source officielle quebec.ca (responsables programmes / recrutement Îles).",
+        "hiring": "Recrutement publié : recrutement.cisssdesiles@ssss.gouv.qc.ca. Source : https://www.quebec.ca/gouvernement/travailler-gouvernement/sante-services-sociaux/programmes-bourses-etudes/responsables",
     },
     {
         "name": "CHU Sainte-Justine",
@@ -204,7 +204,7 @@ QUEBEC_EMPLOYER_LEADS_WAVE3: tuple[dict, ...] = (
         "linkedin_url": "https://www.linkedin.com/company/chu-de-quebec",
         "employees": 14000,
         "careers_url": "https://portailrh.chudequebec.ca/",
-        "hiring": "Recrutement cadres : emploicadre@chudequebec.ca (portail RH officiel). Source : portailrh.chudequebec.ca",
+        "hiring": "Recrutement cadres : emploicadre@chudequebec.ca (portail RH officiel). Source : https://portailrh.chudequebec.ca/",
     },
     {
         "name": "Santé Québec Montérégie-Centre",
@@ -442,7 +442,7 @@ QUEBEC_EMPLOYER_LEADS_WAVE3: tuple[dict, ...] = (
         "linkedin_url": "https://www.linkedin.com/company/uqat",
         "employees": 800,
         "careers_url": "https://www.uqat.ca/services/service/fiche.asp?RefEntite=321&RefPav=RN",
-        "hiring": "SRH : ress.humaines@uqat.ca (pas le recrutement étudiant). Source : fiche officielle Service des ressources humaines UQAT.",
+        "hiring": "SRH : ress.humaines@uqat.ca (pas le recrutement étudiant). Source : https://www.uqat.ca/services/service/fiche.asp?RefEntite=321&RefPav=RN",
     },
     {
         "name": "Université TÉLUQ",
