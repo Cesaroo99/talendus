@@ -307,6 +307,7 @@ def test_greeting_without_person_name_and_attachment_note(client):
     assert "info.usine%40example.com" in emp["login_link"]
     assert emp["register_link"].startswith("https://talendus.ca/espace-employeur.html#/register")
     assert "role=EMPLOYER" in emp["register_link"]
+    assert "company=Usine%20Nord" in emp["register_link"]
     early_keys = {"emp_first_contact", "emp_followup", "emp_discovery", "emp_mandate", "emp_search_start"}
     amateur = ("répondez simplement « oui »", "sans frais pour vous", "profils qui tiennent", "sans engagement")
     for row in proposals:
@@ -435,6 +436,8 @@ def test_admin_ui_has_prospects_module():
     assert "{{percent}}" not in reminder
     auth = (Path(__file__).resolve().parents[2] / "assets" / "js" / "auth-gate.js").read_text(encoding="utf-8")
     assert "prefEmail" in auth
+    assert "prefCompany" in auth
+    assert "hash.query.company" in auth
     assert 'autocomplete="username" value="' in auth
 
 

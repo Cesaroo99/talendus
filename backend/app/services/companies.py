@@ -15,6 +15,16 @@ def create_company(db: Session, user: User, data: CompanyIn) -> Company:
         existing = first_employer_company(db, user)
         if existing:
             return update_company(db, user, existing.id, data)
+        from app.services.employer_claim import find_unclaimed_employer_company, claim_employer_company
+
+        claimed = find_unclaimed_employer_company(
+            db,
+            email=user.email,
+            company_name=data.name or "",
+        )
+        if claimed:
+            claim_employer_company(db, user, claimed)
+            return update_company(db, user, claimed.id, data)
     payload = data.model_dump()
     company = Company(
         name=payload["name"],

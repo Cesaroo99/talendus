@@ -7,8 +7,8 @@ from sqlalchemy.orm import Session
 
 from app.config import get_settings
 from app.errors import AppError
-from app.models import Candidate, Company, CompanyMembership, EmailToken, Recruiter, RefreshToken, User, UserPreference
-from app.models.enums import AccountStatus, CompanyMemberRole, EmailType, NotificationType, UserRole, utcnow
+from app.models import Candidate, EmailToken, Recruiter, RefreshToken, User, UserPreference
+from app.models.enums import AccountStatus, EmailType, NotificationType, UserRole, utcnow
 from app.models.portal import LoginEvent
 from app.schemas import LoginIn, RegisterIn
 from app.security import (
@@ -105,7 +105,7 @@ def register(db: Session, data: RegisterIn, ip: str | None = None, user_agent: s
         raise AppError(403, "Ce rôle ne peut pas s'inscrire publiquement.", "ROLE_NOT_ALLOWED")
     existing = db.scalar(select(User).where(User.email == data.email.lower()))
     if existing:
-        raise AppError(409, "Un compte existe déjà avec ce courriel.", "EMAIL_TAKEN")
+        raise AppError(409, "Un compte existe déjà avec ce courriel. Connectez-vous.", "EMAIL_TAKEN")
     user = User(
         email=data.email.lower(),
         password_hash=hash_password(data.password),
@@ -120,20 +120,9 @@ def register(db: Session, data: RegisterIn, ip: str | None = None, user_agent: s
     if user.role == UserRole.CANDIDATE:
         db.add(Candidate(user_id=user.id, country="Canada", province="Québec"))
     elif user.role == UserRole.EMPLOYER:
-        company_name = (data.company_name or "").strip() or f"{user.last_name} Inc."
-        company = Company(
-            name=company_name,
-            legal_name=company_name,
-            trade_name=company_name,
-            owner_user_id=user.id,
-            contact_name=user.full_name,
-            email=user.email,
-            province="Québec",
-            country="Canada",
-        )
-        db.add(company)
-        db.flush()
-        db.add(CompanyMembership(company_id=company.id, user_id=user.id, member_role=CompanyMemberRole.OWNER))
+        from app.services.employer_claim import claim_or_create_employer_company
+
+        claim_or_create_employer_company(db, user, data.company_name or "")
     elif user.role == UserRole.RECRUITER:
         db.add(Recruiter(user_id=user.id))
     token = _make_email_token(db, user, "verify", 24)
@@ -276,23 +265,9 @@ def _provision_role(db: Session, user: User, company_name: str | None = None) ->
         if not db.scalar(select(Candidate).where(Candidate.user_id == user.id)):
             db.add(Candidate(user_id=user.id, country="Canada", province="Québec"))
     elif user.role == UserRole.EMPLOYER:
-        existing = db.scalar(select(Company).where(Company.owner_user_id == user.id))
-        if existing:
-            return
-        name = (company_name or "").strip() or f"{user.last_name} Inc."
-        company = Company(
-            name=name,
-            legal_name=name,
-            trade_name=name,
-            owner_user_id=user.id,
-            contact_name=user.full_name,
-            email=user.email,
-            province="Québec",
-            country="Canada",
-        )
-        db.add(company)
-        db.flush()
-        db.add(CompanyMembership(company_id=company.id, user_id=user.id, member_role=CompanyMemberRole.OWNER))
+        from app.services.employer_claim import claim_or_create_employer_company
+
+        claim_or_create_employer_company(db, user, company_name or "")
 
 
 def auth_providers() -> dict:

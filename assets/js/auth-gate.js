@@ -194,6 +194,7 @@
     var pending = null;
     var authRole = "";
     var prefEmail = "";
+    var prefCompany = "";
     var providers = { password: true, google: false, linkedin: false, google_client_id: "" };
     var providersReady = api.providers().then(function (json) {
       providers = Object.assign(providers, json.data || {});
@@ -346,11 +347,11 @@
 
     function bindAuthForm(mode, role) {
       overlay.querySelectorAll("[data-auth-goto]").forEach(function (btn) {
-        btn.onclick = function () { openAuth(btn.getAttribute("data-auth-goto"), { role: role, email: prefEmail }); };
+        btn.onclick = function () { openAuth(btn.getAttribute("data-auth-goto"), { role: role, email: prefEmail, company: prefCompany }); };
       });
       overlay.querySelectorAll("[data-auth-role]").forEach(function (btn) {
         btn.onclick = function () {
-          openAuth("register", { role: btn.getAttribute("data-auth-role"), email: prefEmail });
+          openAuth("register", { role: btn.getAttribute("data-auth-role"), email: prefEmail, company: prefCompany });
         };
       });
       var closeBtn = overlay.querySelector("[data-auth-close]");
@@ -418,6 +419,7 @@
     function openAuth(mode, opts) {
       opts = opts || {};
       if (opts.email) prefEmail = String(opts.email || "").trim();
+      if (opts.company) prefCompany = String(opts.company || "").trim();
       var role = (opts.role || authRole || defaultRole()).toUpperCase();
       if (pending && pending.type === "save") role = "CANDIDATE";
       if (role !== "EMPLOYER") role = "CANDIDATE";
@@ -491,7 +493,7 @@
                 "<div><label>" + esc(t.first) + '</label><input name="first_name" required autocomplete="given-name"></div>' +
                 "<div><label>" + esc(t.last) + '</label><input name="last_name" required autocomplete="family-name"></div>' +
               "</div>" +
-              (isHire ? "<label>" + esc(t.company) + '</label><input name="company_name" required autocomplete="organization">' : "") +
+              (isHire ? "<label>" + esc(t.company) + '</label><input name="company_name" required autocomplete="organization" value="' + esc(opts.company || prefCompany || "") + '">' : "") +
               "<label>" + esc(t.email) + '</label><input name="email" type="email" required autocomplete="email" value="' + esc(opts.email || prefEmail || "") + '">' +
               "<label>" + esc(t.password) + '</label><input name="password" type="password" required minlength="8" autocomplete="new-password">' +
               '<button class="tl-btn tl-btn-lg" type="submit">' + esc(t.submitRegister) + "</button>" +
@@ -794,7 +796,7 @@
         } else if (hash.name === "reset" || hash.name === "verify") {
           try { token = sessionStorage.getItem("tl-auth-" + hash.name) || ""; } catch (e) { token = ""; }
         }
-        openAuth(hash.name, { token: token, role: hash.query.role, email: hash.query.email });
+        openAuth(hash.name, { token: token, role: hash.query.role, email: hash.query.email, company: hash.query.company });
       }
     }
 
