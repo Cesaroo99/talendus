@@ -58,7 +58,14 @@ def oauth_google(payload: OAuthGoogleIn, request: Request, db: Session = Depends
 @router.post("/oauth/linkedin")
 def oauth_linkedin(payload: OAuthLinkedInIn, request: Request, db: Session = Depends(get_db)):
     user, tokens = auth_service.login_linkedin(
-        db, payload.access_token, payload.role, payload.company_name, client_ip(request), _ua(request)
+        db,
+        payload.access_token,
+        payload.role,
+        payload.company_name,
+        client_ip(request),
+        _ua(request),
+        code=payload.code,
+        redirect_uri=payload.redirect_uri,
     )
     return _token_payload(user, tokens)
 

@@ -316,11 +316,13 @@ def _provision_role(db: Session, user: User, company_name: str | None = None) ->
 
 def auth_providers() -> dict:
     google_client_id = get_settings().google_oauth_client_id or ""
+    linkedin_client_id = get_settings().linkedin_oauth_client_id or ""
     return {
         "password": True,
         "google": bool(google_client_id),
         "google_client_id": google_client_id,
-        "linkedin": bool(get_settings().linkedin_oauth_client_id),
+        "linkedin": bool(linkedin_client_id),
+        "linkedin_client_id": linkedin_client_id,
     }
 
 
@@ -424,16 +426,59 @@ def login_google(db: Session, id_token: str, role: UserRole, company_name: str |
     )
 
 
-def login_linkedin(db: Session, access_token: str, role: UserRole, company_name: str | None, ip: str | None, user_agent: str | None) -> tuple[User, dict]:
+def _linkedin_access_token(code: str, redirect_uri: str) -> str:
+    import httpx
+
+    env = get_settings()
+    client_id = env.linkedin_oauth_client_id
+    secret = env.linkedin_oauth_client_secret or env.linkedin_client_secret
+    if not client_id or not secret:
+        raise AppError(503, "La connexion LinkedIn n'est pas configurée.", "OAUTH_UNAVAILABLE")
+    try:
+        res = httpx.post(
+            "https://www.linkedin.com/oauth/v2/accessToken",
+            data={
+                "grant_type": "authorization_code",
+                "code": code,
+                "redirect_uri": redirect_uri,
+                "client_id": client_id,
+                "client_secret": secret,
+            },
+            timeout=10,
+        )
+        payload = res.json()
+    except Exception as exc:
+        raise AppError(401, "Jeton LinkedIn invalide.", "OAUTH_INVALID") from exc
+    token = payload.get("access_token")
+    if res.status_code >= 400 or not token:
+        raise AppError(401, "Jeton LinkedIn invalide.", "OAUTH_INVALID")
+    return str(token)
+
+
+def login_linkedin(
+    db: Session,
+    access_token: str | None,
+    role: UserRole,
+    company_name: str | None,
+    ip: str | None,
+    user_agent: str | None,
+    code: str | None = None,
+    redirect_uri: str | None = None,
+) -> tuple[User, dict]:
     import httpx
 
     client_id = get_settings().linkedin_oauth_client_id
     if not client_id:
         raise AppError(503, "La connexion LinkedIn n'est pas configurée.", "OAUTH_UNAVAILABLE")
+    token = (access_token or "").strip()
+    if not token and code:
+        token = _linkedin_access_token(code.strip(), (redirect_uri or "").strip())
+    if not token:
+        raise AppError(400, "Jeton ou code LinkedIn manquant.", "OAUTH_INVALID")
     try:
         res = httpx.get(
             "https://api.linkedin.com/v2/userinfo",
-            headers={"Authorization": f"Bearer {access_token}"},
+            headers={"Authorization": f"Bearer {token}"},
             timeout=10,
         )
         payload = res.json()

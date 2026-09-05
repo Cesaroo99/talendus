@@ -10,7 +10,7 @@ from app.models.enums import UserRole
 from app.schemas import CompanyIn, CompanyMemberIn, CompanyMemberPatchIn, RecruiterInviteIn
 from app.services import companies as companies_service
 from app.rbac import company_can
-from app.services.access import member_role_for, user_belongs_to_company
+from app.services.access import member_role_for, recruiter_can_access_company, user_belongs_to_company
 from app.services.portal import (
     employer_dashboard,
     invite_member,
@@ -113,6 +113,8 @@ def get_company(
         raise AppError(404, "Entreprise introuvable.", "COMPANY_NOT_FOUND")
     if user.role == UserRole.EMPLOYER and not user_belongs_to_company(db, user, company.id):
         raise AppError(403, "Accès refusé à cette entreprise.", "FORBIDDEN")
+    if user.role == UserRole.RECRUITER and not recruiter_can_access_company(db, user, company):
+        raise AppError(403, "Cette fiche est assignée à un autre recruteur.", "FORBIDDEN")
     if user.role not in {UserRole.EMPLOYER, UserRole.RECRUITER, UserRole.ADMIN}:
         raise AppError(403, "Accès refusé à cette entreprise.", "FORBIDDEN")
     return ok(companies_service.serialize_company(company))
@@ -168,6 +170,8 @@ def company_logo(
         raise AppError(404, "Logo introuvable.", "NOT_FOUND")
     if user.role == UserRole.EMPLOYER and not user_belongs_to_company(db, user, company.id):
         raise AppError(403, "Accès refusé à cette entreprise.", "FORBIDDEN")
+    if user.role == UserRole.RECRUITER and not recruiter_can_access_company(db, user, company):
+        raise AppError(403, "Cette fiche est assignée à un autre recruteur.", "FORBIDDEN")
     url, path = open_stored(company.logo_path, None, "logos")
     if url:
         return RedirectResponse(url)

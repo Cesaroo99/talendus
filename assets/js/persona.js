@@ -46,10 +46,16 @@
     try { window.dispatchEvent(new CustomEvent("talendus:persona", { detail: persona })); } catch (err) {}
   }
 
+  function wantsDoors() {
+    var body = document.body;
+    return !!(body && body.getAttribute("data-persona-doors") === "1");
+  }
+
   function init() {
     var page = pagePersona();
     if (page !== "gateway" && !userPersona()) persist(page);
-    apply(effective());
+    if (wantsDoors() && !userPersona()) apply("gateway");
+    else apply(effective());
 
     document.addEventListener("click", function (event) {
       var trigger = event.target.closest("[data-set-persona]");

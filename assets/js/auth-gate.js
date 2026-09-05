@@ -35,7 +35,8 @@
       noAccount: "No account yet? Create one",
       googleFail: "Google Sign-In could not load. Use email instead.",
       signedIn: "You are already signed in.",
-      goWorkspace: "Open my workspace"
+      goWorkspace: "Open my workspace",
+      linkedinFail: "LinkedIn Sign-In could not start. Use email instead."
     } : {
       login: "Connexion", register: "Créer un compte", email: "Courriel", password: "Mot de passe",
       first: "Prénom", last: "Nom", submitLogin: "Me connecter", submitRegister: "Créer mon compte",
@@ -63,7 +64,8 @@
       noAccount: "Pas encore de compte ? Créer un compte",
       googleFail: "La connexion Google n'a pas pu s'afficher. Utilisez le courriel.",
       signedIn: "Vous êtes déjà connecté.",
-      goWorkspace: "Ouvrir mon espace"
+      goWorkspace: "Ouvrir mon espace",
+      linkedinFail: "La connexion LinkedIn n'a pas pu démarrer. Utilisez le courriel."
     };
 
     function esc(v) {
@@ -195,7 +197,7 @@
     var authRole = "";
     var prefEmail = "";
     var prefCompany = "";
-    var providers = { password: true, google: false, linkedin: false, google_client_id: "" };
+    var providers = { password: true, google: false, linkedin: false, google_client_id: "", linkedin_client_id: "" };
     var providersReady = api.providers().then(function (json) {
       providers = Object.assign(providers, json.data || {});
       return providers;
@@ -250,6 +252,13 @@
             '<button type="button" class="tl-oauth-btn tl-oauth-google" disabled>' +
               '<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.707A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.039l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.163 6.656 3.58 9 3.58z"/></svg>' +
               "<span>" + esc(t.google) + "</span></button></div>"
+        );
+      }
+      if (providers.linkedin && providers.linkedin_client_id) {
+        bits.push(
+          '<button type="button" class="tl-oauth-btn tl-oauth-linkedin" id="auth-linkedin-btn">' +
+            '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="#fff" d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.12 20.45H3.56V9h3.56v11.45zM22.23 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.46c.98 0 1.77-.77 1.77-1.73V1.73C24 .77 23.21 0 22.23 0z"/></svg>' +
+            "<span>" + esc(t.linkedin) + "</span></button>"
         );
       }
       if (!bits.length) return "";
@@ -317,6 +326,66 @@
       }).catch(function () {
         if (slot) slot.innerHTML = '<p class="tl-oauth-fallback">' + esc(t.googleFail) + "</p>";
       });
+    }
+
+    function linkedinRedirect() {
+      return location.origin + (location.pathname.indexOf("/en/") === 0 ? "/en/oauth-linkedin.html" : "/oauth-linkedin.html");
+    }
+
+    function startLinkedIn() {
+      var clientId = providers.linkedin_client_id;
+      if (!clientId || !api.oauthLinkedIn) {
+        flashBox(".tl-success", t.linkedinFail, false);
+        return;
+      }
+      var redirect = linkedinRedirect();
+      var state = Math.random().toString(36).slice(2);
+      try {
+        sessionStorage.setItem("tl_li_state", state);
+        sessionStorage.setItem("tl_li_role", currentAuthRole());
+        var company = overlay.querySelector("[name=company_name]");
+        sessionStorage.setItem("tl_li_company", company ? company.value : "");
+      } catch (e) { /* private mode */ }
+      var url = "https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=" +
+        encodeURIComponent(clientId) + "&redirect_uri=" + encodeURIComponent(redirect) +
+        "&scope=" + encodeURIComponent("openid profile email") + "&state=" + encodeURIComponent(state);
+      var popup = window.open(url, "talendus-linkedin", "width=600,height=720");
+      if (!popup) {
+        flashBox(".tl-success", t.linkedinFail, false);
+        return;
+      }
+      function onMsg(ev) {
+        if (ev.origin !== location.origin) return;
+        if (!ev.data || ev.data.type !== "talendus-linkedin") return;
+        window.removeEventListener("message", onMsg);
+        var expected = "";
+        try { expected = sessionStorage.getItem("tl_li_state") || ""; } catch (e) {}
+        if (ev.data.state && expected && ev.data.state !== expected) {
+          flashBox(".tl-success", t.err, false);
+          return;
+        }
+        if (ev.data.error || !ev.data.code) {
+          flashBox(".tl-success", t.linkedinFail, false);
+          return;
+        }
+        var role = currentAuthRole();
+        var companyName = "";
+        try {
+          role = sessionStorage.getItem("tl_li_role") || role;
+          companyName = sessionStorage.getItem("tl_li_company") || "";
+        } catch (e) {}
+        api.oauthLinkedIn({
+          code: ev.data.code,
+          redirect_uri: redirect,
+          role: role,
+          company_name: companyName || null
+        }).then(function (json) {
+          afterAuth(json.data && json.data.user);
+        }).catch(function (err) {
+          flashBox(".tl-success", (err && err.message) || t.err, false);
+        });
+      }
+      window.addEventListener("message", onMsg);
     }
 
     function afterAuth(user) {
@@ -414,6 +483,8 @@
         });
       });
       mountGoogleButton();
+      var liBtn = overlay.querySelector("#auth-linkedin-btn");
+      if (liBtn) liBtn.onclick = startLinkedIn;
     }
 
     function openAuth(mode, opts) {

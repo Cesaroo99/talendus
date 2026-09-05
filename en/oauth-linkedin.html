@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en-CA">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>LinkedIn — Talendus</title>
+</head>
+<body>
+  <p>LinkedIn sign-in…</p>
+  <script>
+  (function () {
+    var params = new URLSearchParams(location.search);
+    var payload = {
+      type: "talendus-linkedin",
+      code: params.get("code") || "",
+      state: params.get("state") || "",
+      error: params.get("error") || ""
+    };
+    try {
+      if (window.opener && window.opener !== window) {
+        window.opener.postMessage(payload, location.origin);
+      }
+    } catch (e) {}
+    window.close();
+  })();
+  </script>
+</body>
+</html>

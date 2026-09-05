@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.data.quebec_employer_leads import QUEBEC_EMPLOYER_LEADS
@@ -49,15 +49,31 @@ def _recruiters(db: Session) -> list[User]:
     return [staff] if staff else []
 
 
-def _find_company(db: Session, lead: dict[str, Any]) -> Company | None:
+def _company_name_index(db: Session) -> dict[str, Company]:
+    index: dict[str, Company] = {}
+    for row in db.scalars(select(Company)).all():
+        raw = (row.name or "").strip()
+        if not raw:
+            continue
+        index[raw] = row
+        index[raw.casefold()] = row
+    return index
+
+
+def _find_company(db: Session, lead: dict[str, Any], index: dict[str, Company] | None = None) -> Company | None:
     name = (lead.get("name") or "").strip()
     if not name:
         return None
-    # SQLite lower() est ASCII-only : « École » / « Île » ne matchent pas casefold().
+    if index is not None:
+        return index.get(name) or index.get(name.casefold())
     exact = db.scalar(select(Company).where(Company.name == name))
     if exact:
         return exact
-    return db.scalar(select(Company).where(func.lower(Company.name) == name.casefold()))
+    wanted = name.casefold()
+    for row in db.scalars(select(Company)).all():
+        if (row.name or "").strip().casefold() == wanted:
+            return row
+    return None
 
 
 def _fill_empty(company: Company, **values: Any) -> None:
@@ -137,6 +153,7 @@ def ensure_quebec_employer_leads(db: Session) -> int:
     """Crée ou complète les fiches de veille. Idempotent. Aucun compte employeur."""
     recruiters = _recruiters(db)
     staff = recruiters[0] if recruiters else _staff_user(db)
+    names = _company_name_index(db)
     created = 0
     for index, lead in enumerate(QUEBEC_EMPLOYER_LEADS):
         name = (lead.get("name") or "").strip()
@@ -144,7 +161,7 @@ def ensure_quebec_employer_leads(db: Session) -> int:
             continue
         recruiter = recruiters[index % len(recruiters)] if recruiters else None
         employees = lead.get("employees")
-        company = _find_company(db, lead)
+        company = _find_company(db, lead, names)
         if company is None:
             company = Company(
                 name=name,
@@ -168,6 +185,8 @@ def ensure_quebec_employer_leads(db: Session) -> int:
             )
             db.add(company)
             db.flush()
+            names[name] = company
+            names[name.casefold()] = company
             created += 1
         else:
             _fill_empty(

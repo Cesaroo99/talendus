@@ -156,6 +156,9 @@ def test_whatsapp_prefill_follows_persona():
     assert "talendus:persona" in js
     persona = (ROOT / "assets" / "js" / "persona.js").read_text(encoding="utf-8")
     assert "talendus:persona" in persona
+    assert "data-persona-doors" in persona
+    assert 'data-persona-doors="1"' in (ROOT / "contact.html").read_text(encoding="utf-8")
+    assert 'data-persona-doors="1"' in (ROOT / "en" / "contact.html").read_text(encoding="utf-8")
 
 
 def test_employer_guest_auth_points_to_employer_space():

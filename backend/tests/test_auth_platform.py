@@ -9,6 +9,7 @@ def test_auth_providers(client):
     assert data["google"] is False
     assert data["linkedin"] is False
     assert data["google_client_id"] == ""
+    assert data["linkedin_client_id"] == ""
 
 
 def test_oauth_unavailable_without_config(client):
@@ -416,3 +417,61 @@ def test_unverified_jwt_blocked_when_email_sending_is_on(client, monkeypatch):
     finally:
         monkeypatch.setenv("EMAIL_ENABLED", "false")
         get_settings.cache_clear()
+
+
+def test_linkedin_oauth_exchanges_code(client, monkeypatch):
+    from app.config import get_settings
+
+    monkeypatch.setenv("LINKEDIN_OAUTH_CLIENT_ID", "li-client")
+    monkeypatch.setenv("LINKEDIN_OAUTH_CLIENT_SECRET", "li-secret")
+    get_settings.cache_clear()
+
+    class FakeResp:
+        def __init__(self, status, payload):
+            self.status_code = status
+            self._payload = payload
+
+        def json(self):
+            return self._payload
+
+    def fake_post(url, data=None, timeout=10):
+        assert "accessToken" in url
+        assert data["code"] == "li-code-abc"
+        assert data["redirect_uri"] == "https://talendus.ca/oauth-linkedin.html"
+        return FakeResp(200, {"access_token": "li-access"})
+
+    def fake_get(url, headers=None, timeout=10):
+        assert "userinfo" in url
+        assert headers["Authorization"] == "Bearer li-access"
+        return FakeResp(200, {"email": "li.user@example.com", "given_name": "Luc", "family_name": "Roy"})
+
+    monkeypatch.setattr("httpx.post", fake_post)
+    monkeypatch.setattr("httpx.get", fake_get)
+    try:
+        res = client.post(
+            "/api/auth/oauth/linkedin",
+            json={
+                "code": "li-code-abc",
+                "redirect_uri": "https://talendus.ca/oauth-linkedin.html",
+                "role": "CANDIDATE",
+            },
+        )
+        assert res.status_code == 200, res.text
+        assert res.json()["data"]["user"]["email"] == "li.user@example.com"
+        assert res.json()["data"]["access_token"]
+    finally:
+        monkeypatch.delenv("LINKEDIN_OAUTH_CLIENT_ID", raising=False)
+        monkeypatch.delenv("LINKEDIN_OAUTH_CLIENT_SECRET", raising=False)
+        get_settings.cache_clear()
+
+
+def test_auth_gate_wires_linkedin_button():
+    from pathlib import Path
+
+    auth = (Path(__file__).resolve().parents[2] / "assets" / "js" / "auth-gate.js").read_text(encoding="utf-8")
+    assert "auth-linkedin-btn" in auth
+    assert "oauth/v2/authorization" in auth
+    assert "oauthLinkedIn" in auth
+    assert "talendus-linkedin" in auth
+    page = (Path(__file__).resolve().parents[2] / "oauth-linkedin.html").read_text(encoding="utf-8")
+    assert "talendus-linkedin" in page

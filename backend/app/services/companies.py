@@ -6,7 +6,12 @@ from app.models import Company, CompanyMembership, InternalNote, Recruiter, Recr
 from app.models.enums import CompanyMemberRole, UserRole
 from app.rbac import ADMINS, is_admin
 from app.schemas import CompanyIn, NoteIn
-from app.services.access import company_ids_for_employer, first_employer_company, user_belongs_to_company
+from app.services.access import (
+    company_ids_for_employer,
+    first_employer_company,
+    recruiter_can_access_company,
+    user_belongs_to_company,
+)
 from app.services.audit import audit
 
 
@@ -108,6 +113,8 @@ def create_mission(db: Session, user: User, data) -> RecruitmentMission:
         raise AppError(404, "Entreprise introuvable.", "COMPANY_NOT_FOUND")
     if user.role == UserRole.EMPLOYER and not user_belongs_to_company(db, user, company.id):
         raise AppError(403, "Vous n'avez pas accès à cette entreprise.", "FORBIDDEN")
+    if user.role == UserRole.RECRUITER and not recruiter_can_access_company(db, user, company):
+        raise AppError(403, "Cette fiche est assignée à un autre recruteur.", "FORBIDDEN")
     mission = RecruitmentMission(
         company_id=data.company_id,
         job_id=data.job_id,
@@ -148,18 +155,6 @@ def company_for_employer(db: Session, user: User) -> Company:
     return company
 
 
-def _recruiter_can_update_company(db: Session, user: User, company: Company) -> bool:
-    if not company.assigned_recruiter_id or company.assigned_recruiter_id == user.id:
-        return True
-    mission_id = db.scalar(
-        select(RecruitmentMission.id).where(
-            RecruitmentMission.company_id == company.id,
-            RecruitmentMission.recruiter_id == user.id,
-        )
-    )
-    return mission_id is not None
-
-
 def update_company(db: Session, user: User, company_id: str, data: CompanyIn) -> Company:
     company = db.get(Company, company_id)
     if not company:
@@ -168,7 +163,7 @@ def update_company(db: Session, user: User, company_id: str, data: CompanyIn) ->
         raise AppError(403, "Vous n'avez pas accès à cette entreprise.", "FORBIDDEN")
     if user.role not in {UserRole.EMPLOYER, UserRole.RECRUITER} | ADMINS:
         raise AppError(403, "Permission insuffisante.", "FORBIDDEN")
-    if user.role == UserRole.RECRUITER and not _recruiter_can_update_company(db, user, company):
+    if user.role == UserRole.RECRUITER and not recruiter_can_access_company(db, user, company):
         raise AppError(403, "Cette fiche est assignée à un autre recruteur.", "FORBIDDEN")
     for key, value in data.model_dump(exclude_unset=True).items():
         setattr(company, key, value)

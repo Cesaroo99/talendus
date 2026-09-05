@@ -269,6 +269,36 @@ def test_broadcast_accepts_the_full_employer_list(client, monkeypatch):
         assert all(other not in (row.get("body") or "") and other not in (row.get("subject") or "") for other in others)
 
 
+def test_broadcast_stops_at_daily_prospect_cap(client, monkeypatch):
+    stub_smtp_delivery(monkeypatch)
+    monkeypatch.setattr("app.services.prospects.BULK_SEND_DAILY_MAX", 1)
+    admin = promote_admin(client, "bulk-cap@example.com")
+    admin_h = auth_header(admin)
+    first = client.post(
+        "/api/admin/prospects",
+        headers=admin_h,
+        json={"side": "employer", "email": "rh1@cap.example.com", "company_name": "Cap 1"},
+    ).json()["data"]
+    second = client.post(
+        "/api/admin/prospects",
+        headers=admin_h,
+        json={"side": "employer", "email": "rh2@cap.example.com", "company_name": "Cap 2"},
+    ).json()["data"]
+    ok = client.post(
+        "/api/admin/prospects/broadcast",
+        headers=admin_h,
+        json={"ids": [first["id"]], "template_key": "emp_first_contact"},
+    )
+    assert ok.status_code == 200, ok.text
+    blocked = client.post(
+        "/api/admin/prospects/broadcast",
+        headers=admin_h,
+        json={"ids": [second["id"]], "template_key": "emp_first_contact"},
+    )
+    assert blocked.status_code == 400
+    assert blocked.json()["code"] == "BULK_DAILY_LIMIT"
+
+
 def test_generic_rh_name_is_not_used_in_greeting():
     from app.models.prospect import Prospect
     from app.services.prospects import context_for, display_name, fill_tokens, get_template
