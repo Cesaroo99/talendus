@@ -61,6 +61,7 @@ _ROLE_ACCOUNT_LABEL = {
     UserRole.EDITOR: "éditeur",
 }
 _LOGIN_FAILS: dict[str, list[float]] = defaultdict(list)
+_RESEND_HITS: dict[str, list[float]] = defaultdict(list)
 
 
 def _login_key(email: str, ip: str | None = None) -> str:
@@ -316,13 +317,15 @@ def reset_password(db: Session, token: str, new_password: str) -> None:
     db.commit()
 
 
-def change_password(db: Session, user: User, current: str, new: str) -> None:
+def change_password(db: Session, user: User, current: str, new: str) -> dict:
     if not verify_password(current, user.password_hash):
         raise AppError(400, "Mot de passe actuel incorrect.", "INVALID_PASSWORD")
     user.password_hash = hash_password(new)
     _revoke_user_sessions(db, user)
+    tokens = _issue_tokens(db, user)
     audit(db, "auth.password_change", user, "user", user.id)
     db.commit()
+    return tokens
 
 
 def verify_email(db: Session, token: str) -> None:
@@ -352,7 +355,15 @@ def resend_verification(db: Session, user: User) -> None:
 
 
 def resend_verification_by_email(db: Session, email: str) -> None:
-    user = db.scalar(select(User).where(User.email == (email or "").strip().lower()))
+    key = (email or "").strip().lower()
+    now = time.time()
+    window = (get_settings().login_lockout_minutes or 15) * 60
+    hits = [ts for ts in _RESEND_HITS.get(key, []) if now - ts < window]
+    if len(hits) >= (get_settings().login_max_attempts or 5):
+        _RESEND_HITS[key] = hits
+        return
+    _RESEND_HITS[key] = hits + [now]
+    user = db.scalar(select(User).where(User.email == key))
     if user and not user.is_email_verified:
         resend_verification(db, user)
 
@@ -609,11 +620,12 @@ def _revoke_user_sessions(db: Session, user: User) -> int:
     return len(rows)
 
 
-def revoke_all_sessions(db: Session, user: User) -> int:
+def revoke_all_sessions(db: Session, user: User) -> dict:
     count = _revoke_user_sessions(db, user)
+    tokens = _issue_tokens(db, user)
     audit(db, "auth.session_revoke_all", user, "user", user.id)
     db.commit()
-    return count
+    return {"revoked": count, **tokens}
 
 
 def list_login_events(db: Session, user: User, limit: int = 20) -> list[dict]:

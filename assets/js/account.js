@@ -1465,7 +1465,10 @@
       if (pass) pass.addEventListener("submit", function (e) {
         e.preventDefault();
         var d = Object.fromEntries(new FormData(pass).entries());
-        api.request("/auth/change-password", { method: "POST", body: d }).then(function () { flash(pass.querySelector(".tl-success"), t.saved, true); })
+        api.request("/auth/change-password", { method: "POST", body: d }).then(function (json) {
+          if (json && json.data && json.data.access_token) api.setSession(json.data);
+          flash(pass.querySelector(".tl-success"), t.saved, true);
+        })
           .catch(function (err) { flash(pass.querySelector(".tl-success"), (err && err.message) || t.err, false); });
       });
       function savePrefs(form, keys) {
@@ -1531,7 +1534,12 @@
                 "</span>" + (s.active ? '<button type="button" class="tl-text-btn" data-revoke="' + esc(s.id) + '">' + esc(t.revoke) + "</button>" : "") + "</div>";
             }).join("") : '<p class="tl-meta">' + esc(t.noSessions) + "</p>"));
           var all = document.getElementById("acc-revoke-all");
-          if (all) all.onclick = function () { api.request("/auth/sessions/revoke-all", { method: "POST" }).then(function () { go("settings", "security"); }); };
+          if (all) all.onclick = function () {
+            api.request("/auth/sessions/revoke-all", { method: "POST" }).then(function (json) {
+              if (json && json.data && json.data.access_token) api.setSession(json.data);
+              go("settings", "security");
+            });
+          };
           sessBox.querySelectorAll("[data-revoke]").forEach(function (b) {
             b.onclick = function () { api.request("/auth/sessions/" + b.getAttribute("data-revoke"), { method: "DELETE" }).then(function () { go("settings", "security"); }); };
           });

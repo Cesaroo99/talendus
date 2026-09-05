@@ -1816,7 +1816,7 @@
       '<button class="tn-btn" type="submit">' + esc(t.changePass) + "</button></form>" +
       '<form class="tn-form" data-prefs><p class="tn-meta">' + esc(t.prefs) + "</p>" +
       check("notify_in_app", t.notifyApp, p.notify_in_app !== false) +
-      check("notify_push", t.notifyPush, p.notify_push || pushAllowed()) +
+      (INSTALL_LIVE || nativePush() ? check("notify_push", t.notifyPush, p.notify_push || pushAllowed()) : "") +
       check("notify_email", t.notifyEmail, p.notify_email !== false) +
       check("notify_application", t.notifyApps, p.notify_application !== false) +
       check("notify_message", t.notifyMsgs, p.notify_message !== false) +
@@ -2645,7 +2645,11 @@
     } else if (form.matches("[data-password]")) {
       e.preventDefault();
       api.request("/auth/change-password", { method: "POST", body: Object.fromEntries(new FormData(form).entries()) })
-        .then(function () { form.reset(); done(t.saved); }).catch(fail);
+        .then(function (json) {
+          if (json && json.data && json.data.access_token) api.setSession(json.data);
+          form.reset();
+          done(t.saved);
+        }).catch(fail);
     } else if (form.matches("[data-prefs]")) {
       e.preventDefault();
       var prefs = {
@@ -2774,6 +2778,7 @@
     return typeof Notification !== "undefined" && Notification.permission === "granted";
   }
   function pushBanner() {
+    if (!INSTALL_LIVE && !nativePush()) return "";
     if (!state.user) return "";
     if (pushAllowed()) return "";
     try { if (localStorage.getItem("talendus_push_ok") === "1" && pushAllowed()) return ""; } catch (e) {}

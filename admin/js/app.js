@@ -3817,7 +3817,8 @@
       passForm.onsubmit = function (e) {
         e.preventDefault();
         var d = U.formData(passForm);
-        api().request("/auth/change-password", { method: "POST", body: d }).then(function () {
+        api().request("/auth/change-password", { method: "POST", body: d }).then(function (json) {
+          if (json && json.data && json.data.access_token) api().setSession(json.data);
           U.toast("Mot de passe mis à jour.", "ok");
           passForm.reset();
         }).catch(function (err) { U.toast((err && err.message) || "Impossible de changer le mot de passe.", "err"); });
@@ -3833,7 +3834,8 @@
           '<p style="margin-top:12px"><button type="button" class="btn btn-ghost" id="adm-revoke-all">Déconnecter partout</button></p>';
         var all = document.getElementById("adm-revoke-all");
         if (all) all.onclick = function () {
-          api().request("/auth/sessions/revoke-all", { method: "POST" }).then(function () {
+          api().request("/auth/sessions/revoke-all", { method: "POST" }).then(function (json) {
+            if (json && json.data && json.data.access_token) api().setSession(json.data);
             U.toast("Sessions révoquées.", "ok");
             render();
           });
