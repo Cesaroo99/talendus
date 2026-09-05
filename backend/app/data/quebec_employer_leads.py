@@ -11,6 +11,8 @@ Vague 1 : 50 fiches (surtout transformation / logistique) — courriel absent si
 Vague 2 : 50 fiches multi-secteurs, toutes avec un courriel public vérifié.
 Vagues suivantes : 200 fiches supplémentaires, toutes avec un courriel public vérifié
 (villes, privé, OBNL, santé, universités, CSS, cégeps).
+Vague 5 : construction, industrie, commerce, hôtellerie-tourisme, entrepôt,
+manufacturier — secteurs à recrutement continu, toutes avec courriel public.
 """
 
 from __future__ import annotations
@@ -21,6 +23,7 @@ from app.data.quebec_employer_leads_more import QUEBEC_EMPLOYER_LEADS_MORE
 from app.data.quebec_employer_leads_private import QUEBEC_EMPLOYER_LEADS_PRIVATE
 from app.data.quebec_employer_leads_wave3 import QUEBEC_EMPLOYER_LEADS_WAVE3
 from app.data.quebec_employer_leads_wave4 import QUEBEC_EMPLOYER_LEADS_WAVE4
+from app.data.quebec_employer_leads_wave5 import QUEBEC_EMPLOYER_LEADS_WAVE5
 
 # name est la clé d’idempotence (insensible à la casse).
 _WAVE1: tuple[dict, ...] = (
@@ -736,4 +739,5 @@ QUEBEC_EMPLOYER_LEADS: tuple[dict, ...] = (
     + QUEBEC_EMPLOYER_LEADS_PRIVATE
     + QUEBEC_EMPLOYER_LEADS_CSS
     + QUEBEC_EMPLOYER_LEADS_CEGEPS
+    + QUEBEC_EMPLOYER_LEADS_WAVE5
 )
