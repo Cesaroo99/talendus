@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import time
 from collections import defaultdict, deque
 
@@ -12,6 +13,8 @@ from app.config import get_settings
 from app.deps import client_ip
 from app.errors import error_body
 from app.services.seo import PRIVATE_PATHS, REDIRECTS
+
+logger = logging.getLogger("talendus")
 
 CSP = (
     "default-src 'self'; "
@@ -49,6 +52,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         except Exception:
             from app.errors import html_error, wants_html
 
+            logger.exception("Requête interrompue %s %s", request.method, request.url.path)
             if wants_html(request):
                 return html_error(503)
             return JSONResponse(
