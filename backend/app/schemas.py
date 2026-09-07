@@ -757,4 +757,4 @@ class ProspectSendIn(BaseModel):
 
 
 class ProspectBulkSendIn(ProspectSendIn):
-    ids: list[str] = Field(min_length=1, max_length=500)
+    ids: list[str] = Field(min_length=1, max_length=20000)

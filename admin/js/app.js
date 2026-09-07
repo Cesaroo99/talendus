@@ -2480,7 +2480,7 @@
         title: ids.length > 1 ? "Envoyer à " + ids.length + " fiches" : "Écrire à " + prospectLabel(detail),
         wide: true,
         body: '<div class="prospect-composer">' +
-          (others > 0 ? "<p class='sub'>Chaque fiche reçoit son propre courriel, personnalisé à son nom d’entreprise. Aucune autre adresse n’apparaît en destinataire, copie ou CCI. Les centaines d’envois sont mis en file : la page n’attend pas le SMTP.</p>" : "") +
+          (others > 0 ? "<p class='sub'>Chaque fiche reçoit son propre courriel, personnalisé à son nom d’entreprise. Aucune autre adresse n’apparaît en destinataire, copie ou CCI. Toute la sélection part en file, sans plafond quotidien : la page n’attend pas le SMTP.</p>" : "") +
           '<label>Modèle</label><select id="pc-tpl">' + tplOptions + '<option value="custom">Message libre</option></select>' +
           '<p class="sub" id="pc-intent"></p>' +
           '<label>Sujet</label><input id="pc-subject">' +
@@ -4073,7 +4073,7 @@
           '<option value="non"' + (val("smtp.use_tls") === "non" ? " selected" : "") + ">non</option>" +
           "</select>" +
           '<label>Envoyer le test à une vraie boîte</label><input id="adm-smtp-test-to" type="email" value="' + U.esc((function () { var me = TLStore.me() || {}; var mail = (me.email || "").trim(); return /@talendus\.ca$/i.test(mail) ? "" : mail; })()) + '" placeholder="vous@votreboite.com">' +
-          '<p class="sub">« Suivre EMAIL_ENABLED » n’envoie rien si la variable Render est off, même avec un serveur et un mot de passe. Choisissez une fois « Oui — envoyer vraiment » : le réglage reste après une pause, pas besoin de le refaire à chaque campagne. Les envois de masse partent en file, même pour des centaines de destinataires.</p>' +
+          '<p class="sub">« Suivre EMAIL_ENABLED » n’envoie rien si la variable Render est off, même avec un serveur et un mot de passe. Choisissez une fois « Oui — envoyer vraiment » : le réglage reste après une pause, pas besoin de le refaire à chaque campagne. Les envois de masse partent en file, sans limite quotidienne : toute la base peut partir le même jour.</p>' +
           '<p class="sub">Le test part vers cette adresse (la vôtre par défaut). Les comptes de démo @talendus.ca sont ignorés.</p>' +
           '<p style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">' +
           '<button class="btn btn-orange" type="submit">Enregistrer le courriel</button>' +
