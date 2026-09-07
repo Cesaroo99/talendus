@@ -129,7 +129,7 @@ def test_prospect_email_and_ready_filters(client):
     listed = client.get("/api/admin/prospects?side=employer", headers=admin_h)
     assert listed.status_code == 200, listed.text
     meta = listed.json()["meta"]
-    assert {row["key"] for row in meta["email_filters"]} >= {"with", "without", "verified", "unverified", "found"}
+    assert {row["key"] for row in meta["email_filters"]} >= {"with", "without", "verified", "unverified", "found", "high"}
     assert {row["key"] for row in meta["ready_filters"]} >= {"ready"}
     ready = client.get("/api/admin/prospects?side=employer&ready=ready", headers=admin_h)
     assert ready.status_code == 200, ready.text
@@ -245,8 +245,10 @@ def test_personalized_send_dedup_and_isolation(client, monkeypatch):
     )
     assert bulk.status_code == 200, bulk.text
     data = bulk.json()["data"]
-    assert len(data["sent"]) == 1
-    assert data["sent"][0]["to_email"] == "b.talent@example.com"
+    queued = data.get("queued") or []
+    sent = data.get("sent") or []
+    assert len(queued) + len(sent) == 1
+    assert (queued or sent)[0]["to_email"] == "b.talent@example.com"
     assert any(row["email"] == "a.talent@example.com" for row in data["skipped"])
     logs = client.get("/api/emails", headers=admin_h).json()["data"]
     to_a = [row for row in logs if row["to_email"] == "a.talent@example.com"]
@@ -281,7 +283,7 @@ def test_broadcast_accepts_the_full_employer_list(client, monkeypatch):
     too_many = client.post(
         "/api/admin/prospects/broadcast",
         headers=admin_h,
-        json={"ids": created + [f"x{i}" for i in range(311)], "template_key": "emp_first_contact"},
+        json={"ids": created + [f"x{i}" for i in range(411)], "template_key": "emp_first_contact"},
     )
     assert too_many.status_code == 422, too_many.text
     assert too_many.json()["message"] == "Les données envoyées sont invalides."
@@ -292,9 +294,9 @@ def test_broadcast_accepts_the_full_employer_list(client, monkeypatch):
     )
     assert bulk.status_code == 200, bulk.text
     data = bulk.json()["data"]
-    assert len(data["sent"]) == 90
+    assert len(data.get("queued") or []) == 90
     assert not data["failed"]
-    logs = client.get("/api/emails?limit=200", headers=admin_h).json()["data"]
+    logs = client.get("/api/emails?limit=300", headers=admin_h).json()["data"]
     targets = {f"rh{i}@usine-bulk.example.com" for i in range(90)}
     sent_logs = [row for row in logs if row["to_email"] in targets]
     assert len(sent_logs) == 90
@@ -505,6 +507,7 @@ def test_admin_ui_has_prospects_module():
     js = (Path(__file__).resolve().parents[2] / "admin" / "js" / "app.js").read_text(encoding="utf-8")
     store = (Path(__file__).resolve().parents[2] / "admin" / "js" / "store.js").read_text(encoding="utf-8")
     css = (Path(__file__).resolve().parents[2] / "admin" / "css" / "admin.css").read_text(encoding="utf-8")
+    api_js = (Path(__file__).resolve().parents[2] / "assets" / "js" / "api.js").read_text(encoding="utf-8")
     assert '["prospects", "Prospects"' in js
     assert "prospect-kanban" not in js
     assert "prospect-kanban" not in css
@@ -517,6 +520,14 @@ def test_admin_ui_has_prospects_module():
     assert "/admin/prospects/broadcast" in js
     assert "sendProspectBroadcast" in js
     assert "chunkProspectIds" in js
+    assert "data-write-client" in js
+    assert "openClientWrite" in js
+    assert "chunkProspectIds(uniqueProspectIds(ids), 250)" in js
+    assert "employer-leads/refresh" in js
+    assert "Charger le catalogue (460+)" in js
+    assert "Oui — envoyer vraiment" in js
+    assert "gatewayTimeoutMsg" in api_js
+    assert "plus petits lots" in api_js
     assert "Chaque fiche reçoit son propre courriel" in js
     assert "non parti" in js
     assert "email_status" in js
@@ -574,13 +585,12 @@ def test_smtp_off_does_not_mark_prospect_contacted(client):
         headers=admin_h,
         json={"ids": [pid], "template_key": "emp_first_contact"},
     )
-    assert bulk.status_code == 200, bulk.text
-    data = bulk.json()["data"]
-    assert data["sent"] == []
-    assert data["failed"]
-    assert data["failed"][0]["email"] == "memolicesar1@gmail.com"
+    assert bulk.status_code == 502, bulk.text
+    assert bulk.json()["code"] == "SMTP_DISABLED"
+    assert "Oui — envoyer vraiment" in bulk.json()["message"]
     again = client.get(f"/api/admin/prospects/p/{pid}", headers=admin_h).json()["data"]
     assert again["stage"] == "a-contacter"
+    assert again["sends"] == []
 
 
 def test_reconcile_resets_old_fake_sends(client, monkeypatch):
@@ -709,6 +719,49 @@ def test_reconcile_resets_old_fake_sends(client, monkeypatch):
     assert ok_send.json()["data"]["delivered"] is True
     contacted = client.get(f"/api/admin/prospects/p/{old['id']}", headers=admin_h).json()["data"]
     assert contacted["stage"] == "contacte"
+
+
+def test_queued_broadcast_survives_reconcile(client, monkeypatch):
+    from app.database import SessionLocal
+    from app.services.prospects import reconcile_undelivered_prospect_mails
+
+    stub_smtp_delivery(monkeypatch)
+    admin = promote_admin(client, "queue-pause@example.com")
+    admin_h = auth_header(admin)
+    created = client.post(
+        "/api/admin/prospects",
+        headers=admin_h,
+        json={"side": "employer", "email": "rh@file-attente.example", "company_name": "File Attente", "stage": "a-contacter"},
+    ).json()["data"]
+    bulk = client.post(
+        "/api/admin/prospects/broadcast",
+        headers=admin_h,
+        json={"ids": [created["id"]], "template_key": "emp_first_contact"},
+    )
+    assert bulk.status_code == 200, bulk.text
+    assert len(bulk.json()["data"].get("queued") or []) == 1
+    before = client.get(f"/api/admin/prospects/p/{created['id']}", headers=admin_h).json()["data"]
+    assert before["stage"] in {"nouveau", "a-contacter", "contacte"}
+    assert before["sends"]
+    db = SessionLocal()
+    stats = reconcile_undelivered_prospect_mails(db)
+    db.commit()
+    db.close()
+    assert stats["removed_sends"] == 0
+    after = client.get(f"/api/admin/prospects/p/{created['id']}", headers=admin_h).json()["data"]
+    assert after["sends"]
+    assert after["stage"] == "a-contacter"
+
+
+def test_smtp_send_block_reason_is_explicit(client):
+    from app.database import SessionLocal
+    from app.services.email import smtp_send_block_reason
+
+    db = SessionLocal()
+    reason = smtp_send_block_reason(db)
+    db.close()
+    assert reason
+    assert "Oui — envoyer vraiment" in reason
 
 
 def test_smtp_does_not_auto_enable_from_credentials(client):

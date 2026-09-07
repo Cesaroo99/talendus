@@ -99,6 +99,7 @@ def list_prospects(
                 {"key": "verified", "label": "Courriel vérifié"},
                 {"key": "unverified", "label": "Courriel non vérifié"},
                 {"key": "found", "label": "Courriels trouvés"},
+                {"key": "high", "label": "Courriel haute confiance"},
             ],
             "ready_filters": [
                 {"key": "", "label": "Tous les contacts"},
@@ -119,8 +120,22 @@ def templates(side: str | None = None, _staff_user: User = Depends(_staff)):
 def broadcast(payload: ProspectBulkSendIn, db: Session = Depends(get_db), staff: User = Depends(_staff)):
     result = svc.send_bulk(db, staff, payload.ids, _req(payload))
     db.commit()
+    from app.config import get_settings
+    from app.services.email import enqueue_email
+
+    if get_settings().app_env != "test":
+        for item in result.get("queued") or []:
+            log_id = item.get("email_log_id")
+            if log_id:
+                enqueue_email(log_id)
+    queued = len(result.get("queued") or [])
     failed = len(result["failed"])
-    message = f"{len(result['sent'])} parti(s), {len(result['skipped'])} déjà contacté(s) pour ce message."
+    message = (
+        f"{len(result['sent'])} parti(s), {queued} en file, "
+        f"{len(result['skipped'])} déjà contacté(s) pour ce message."
+    )
+    if queued:
+        message += " L’envoi continue en arrière-plan : vous pouvez quitter la page."
     if failed:
         message += f" {failed} non parti(s) — statut inchangé."
     return ok(result, message=message)
@@ -152,11 +167,15 @@ def send_one(prospect_id: str, payload: ProspectSendIn, db: Session = Depends(ge
     result = svc.send_to_prospect(db, staff, row, _req(payload))
     db.commit()
     if not result.get("delivered"):
+        extra = (result.get("email_error") or "").strip()
+        hint = ""
+        if "SMTP désactivé" in extra:
+            hint = " Dans Paramètres → Courriel, choisissez « Oui — envoyer vraiment », puis renvoyez."
         raise AppError(
             502,
             (
                 f"Le courriel n’a pas quitté le serveur vers {result.get('to_email')}. "
-                f"{result.get('email_error') or ''} Le statut du prospect n’a pas été changé."
+                f"{extra}{hint} Le statut du prospect n’a pas été changé."
             ).strip(),
             "SMTP_SEND_FAILED",
         )

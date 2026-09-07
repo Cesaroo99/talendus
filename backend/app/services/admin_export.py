@@ -22,6 +22,7 @@ from app.models import (
     User,
 )
 from app.models.enums import ApplicationStatus, InterviewType, InvoiceStatus, JobStatus, MissionStatus, UserRole, utcnow
+from app.models.prospect import Prospect
 from app.services.contact_email import lead_email_meta
 from app.services.hiring_requests import STATUS_COPY, serialize_request
 from app.services.interviews import CALL_TYPES, LIVE_CALL_STATUSES, host_in_call
@@ -220,13 +221,13 @@ def bootstrap(db: Session, user: User | None = None) -> dict:
         return _editor_bootstrap(db, user)
     if user and user.role == UserRole.FINANCE:
         return _finance_bootstrap(db, user)
-    from app.services.employer_leads import sync_catalog_emails_to_crm
+    from app.services.employer_leads import catalog_stats, refresh_employer_directory
 
     try:
-        sync_catalog_emails_to_crm(db)
+        refresh_employer_directory(db)
         db.commit()
     except Exception:
-        logger.exception("bootstrap: recopie des courriels publics impossible")
+        logger.exception("bootstrap: import des employeurs québécois impossible")
         db.rollback()
     users = db.scalars(select(User).order_by(User.created_at.asc())).all()
     companies = db.scalars(select(Company).options(joinedload(Company.owner)).order_by(Company.name.asc())).unique().all()
@@ -301,6 +302,15 @@ def bootstrap(db: Session, user: User | None = None) -> dict:
                 }
             )
 
+    prospect_by_company: dict[str, str] = {}
+    prospect_by_email: dict[str, str] = {}
+    for row in db.scalars(select(Prospect).where(Prospect.side == "employer")).all():
+        if row.company_id:
+            prospect_by_company[row.company_id] = row.id
+        email_key = (row.email or "").strip().lower()
+        if email_key:
+            prospect_by_email[email_key] = row.id
+
     published = sum(1 for j in jobs if j.status == JobStatus.PUBLISHED)
     placed = sum(1 for a in applications if a.status == ApplicationStatus.HIRED)
     open_missions = sum(
@@ -313,7 +323,7 @@ def bootstrap(db: Session, user: User | None = None) -> dict:
         "live": True,
         "unreadMessages": unread_messages,
         "users": [_user(u) for u in users if u.role.value in {"ADMIN", "SUPER_ADMIN", "RECRUITER", "FINANCE", "EDITOR"}],
-        "clients": [_company(c) for c in companies],
+        "clients": [_company(c, prospect_by_company, prospect_by_email) for c in companies],
         "jobs": [_job(j, applications) for j in jobs],
         "candidates": [_candidate(c) for c in candidates],
         "missions": [_mission(m, applications) for m in missions],
@@ -331,6 +341,7 @@ def bootstrap(db: Session, user: User | None = None) -> dict:
         "faqs": faqs if isinstance(faqs, list) else [],
         "jobMatches": job_matches,
         "monthly": _monthly(applications, invoices),
+        "employerCatalog": catalog_stats(db),
         "stats": {
             "candidates": len(candidates),
             "clients": len(companies),
@@ -364,9 +375,19 @@ def _user(u: User) -> dict:
     }
 
 
-def _company(c: Company) -> dict:
+def _company(
+    c: Company,
+    prospect_by_company: dict[str, str] | None = None,
+    prospect_by_email: dict[str, str] | None = None,
+) -> dict:
     owner = c.owner
     email_meta = lead_email_meta(c.name, c.email)
+    email_key = (c.email or "").strip().lower()
+    prospect_id = ""
+    if prospect_by_company and c.id in prospect_by_company:
+        prospect_id = prospect_by_company[c.id]
+    elif prospect_by_email and email_key:
+        prospect_id = prospect_by_email.get(email_key, "")
     return {
         "id": c.id,
         "name": c.name,
@@ -379,8 +400,10 @@ def _company(c: Company) -> dict:
         "contact": c.contact_name or "",
         "email": c.email or "",
         "phone": c.phone or "",
+        "prospectId": prospect_id,
         "contactEmailVerified": bool(email_meta.get("email_verified")),
         "emailVerifiedAt": email_meta.get("email_verified_at") or "",
+        "emailConfidence": email_meta.get("email_confidence") or "",
         "readyToContact": bool(email_meta.get("ready_to_contact")),
         "status": "Actif" if c.status and c.status.value == "ACTIVE" else "Prospect",
         "recruiterId": c.assigned_recruiter_id or "",

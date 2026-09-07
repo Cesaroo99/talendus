@@ -22,3 +22,6 @@ def test_email_filter_meanings():
     assert matches_email_filter("info@x.ca", wanted="found", verified=True, verified_at="2026-09-07")
     assert not matches_email_filter("info@x.ca", wanted="found", verified=True, verified_at="")
     assert not matches_email_filter("", wanted="found", verified=True, verified_at="2026-09-07")
+    assert matches_email_filter("info@x.ca", wanted="high", confidence="VERIFIED_HIGH")
+    assert not matches_email_filter("info@x.ca", wanted="high", confidence="VERIFIED_MEDIUM")
+    assert not matches_email_filter("", wanted="high", confidence="VERIFIED_HIGH")

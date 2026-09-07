@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from urllib.parse import urlparse
@@ -277,6 +277,50 @@ def _ensure_prospect(db: Session, company: Company, lead: dict[str, Any], recrui
         sanitize_generic_person(row)
         db.flush()
         db.expunge(row)
+
+
+def catalog_emails() -> set[str]:
+    return {
+        (lead.get("email") or "").strip().lower()
+        for lead in QUEBEC_EMPLOYER_LEADS
+        if (lead.get("email") or "").strip() and "@" in (lead.get("email") or "")
+    }
+
+
+def catalog_stats(db: Session) -> dict[str, int]:
+    emails = catalog_emails()
+    company_emails = {
+        (value or "").strip().lower()
+        for value in db.scalars(select(Company.email)).all()
+        if (value or "").strip()
+    }
+    prospect_emails = {
+        (value or "").strip().lower()
+        for value in db.scalars(select(Prospect.email).where(Prospect.side == "employer")).all()
+        if (value or "").strip()
+    }
+    return {
+        "catalog": len(QUEBEC_EMPLOYER_LEADS),
+        "catalog_with_email": len(emails),
+        "companies": int(db.scalar(select(func.count()).select_from(Company)) or 0),
+        "companies_with_catalog_email": len(emails & company_emails),
+        "prospects_with_catalog_email": len(emails & prospect_emails),
+        "missing_company_emails": len(emails - company_emails),
+        "missing_prospects": len(emails - prospect_emails),
+    }
+
+
+def refresh_employer_directory(db: Session, *, force: bool = False) -> dict[str, int | bool]:
+    """Crée les fiches manquantes et recopie les courriels publics. Idempotent."""
+    stats = catalog_stats(db)
+    need = force or stats["missing_prospects"] > 5 or stats["missing_company_emails"] > 5
+    if need:
+        ensure_quebec_employer_leads(db)
+    else:
+        sync_catalog_emails_to_crm(db)
+    out: dict[str, int | bool] = dict(catalog_stats(db))
+    out["imported"] = need
+    return out
 
 
 def sync_catalog_emails_to_crm(db: Session) -> int:

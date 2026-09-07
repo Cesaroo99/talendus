@@ -18,7 +18,7 @@ INVALID_MARKERS = (
     "@email.",
     "you@company.",
 )
-EMAIL_FILTERS = ("", "with", "without", "verified", "unverified", "found")
+EMAIL_FILTERS = ("", "with", "without", "verified", "unverified", "found", "high")
 READY_FILTERS = ("", "ready")
 
 
@@ -99,6 +99,10 @@ def matches_email_filter(
     if key == "unverified" and not (present and not verified):
         return False
     if key == "found" and not (valid and verified and (verified_at or "").strip()):
+        return False
+    if key == "high" and not (
+        valid and (confidence or "").upper() in {"VERIFIED_HIGH", "HIGH"}
+    ):
         return False
     if ready_key in {"1", "true", "ready"} and not is_ready_to_contact(email, confidence):
         return False

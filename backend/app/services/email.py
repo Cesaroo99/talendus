@@ -22,6 +22,16 @@ from app.models.enums import EmailStatus, EmailType, utcnow
 
 logger = logging.getLogger("talendus.email")
 SMTP_DISABLED_ERROR = "SMTP désactivé — le courriel n’a pas quitté le serveur."
+SMTP_OFF_HELP = (
+    "L’envoi SMTP est désactivé : aucun courriel n’a quitté le serveur. "
+    "Dans Paramètres → Courriel, choisissez « Oui — envoyer vraiment », "
+    "enregistrez, puis renvoyez. Un serveur et un mot de passe ne suffisent pas "
+    "si l’envoi n’est pas explicitement activé."
+)
+SMTP_NOT_READY_HELP = (
+    "Le serveur SMTP n’est pas prêt (hôte local, identifiant ou mot de passe manquant). "
+    "Complétez Paramètres → Courriel, puis choisissez « Oui — envoyer vraiment »."
+)
 FAKE_SENT_ERROR = "Jamais remis au serveur SMTP (journalisé seulement)."
 EMAIL_DIR = Path(__file__).resolve().parents[1] / "emails"
 TEMPLATE_DIR = EMAIL_DIR / "templates"
@@ -147,6 +157,16 @@ def _smtp_ready(host: str, username: str, password: str) -> bool:
     if not target or target in {"localhost", "127.0.0.1", "::1"}:
         return False
     return bool((username or "").strip() and (password or "").strip())
+
+
+def smtp_send_block_reason(db: Session | None = None) -> str | None:
+    """Pourquoi un envoi admin ne doit pas démarrer (message affichable)."""
+    cfg = runtime_email_config(db)
+    if not cfg.enabled:
+        return SMTP_OFF_HELP
+    if not _smtp_ready(cfg.host, cfg.username, cfg.password):
+        return SMTP_NOT_READY_HELP
+    return None
 
 
 def email_actually_sent(log: EmailLog | None) -> bool:
@@ -436,6 +456,11 @@ def send_email(
     return log
 
 
+def enqueue_email(log_id: str) -> None:
+    _queue.put(log_id)
+    start_worker()
+
+
 def send_composed_email(
     db: Session,
     to_email: str,
@@ -444,6 +469,7 @@ def send_composed_email(
     *,
     email_type: EmailType = EmailType.ADMIN,
     sync: bool = True,
+    enqueue: bool = True,
     attachments: list[EmailAttachment] | None = None,
 ) -> EmailLog:
     body = signed_plain(body)
@@ -467,13 +493,15 @@ def send_composed_email(
     if sync:
         _record_smtp_result(log, cfg, fail_fast=True, attachments=attachments)
         return log
-    _queue.put(log.id)
-    start_worker()
+    if enqueue:
+        enqueue_email(log.id)
     return log
 
 
 def start_worker() -> None:
     global _worker_started
+    if get_settings().app_env == "test":
+        return
     with _worker_lock:
         if _worker_started:
             return
@@ -509,7 +537,7 @@ def _reap(session_factory) -> None:
     try:
         ids = list(
             db.scalars(
-                select(EmailLog.id).where(EmailLog.status == EmailStatus.QUEUED).order_by(EmailLog.created_at.asc()).limit(20)
+                select(EmailLog.id).where(EmailLog.status == EmailStatus.QUEUED).order_by(EmailLog.created_at.asc()).limit(40)
             ).all()
         )
     finally:
@@ -534,6 +562,10 @@ def _deliver(session_factory, log_id: str) -> None:
                 db.commit()
                 return
             _record_smtp_result(log, cfg, fail_fast=False)
+            if email_actually_sent(log):
+                from app.services.prospects import finalize_prospect_delivery
+
+                finalize_prospect_delivery(db, log)
             db.commit()
             return
         finally:

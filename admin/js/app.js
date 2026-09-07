@@ -5,7 +5,7 @@
   const $ = TLUI.$;
   const app = document.getElementById("app");
   let page = 1, sortKey = "lastActivity", sortDir = "desc", selected = new Set();
-  let filters = {};
+  let filters = { email: "with" };
   let period = "mois";
   let analyticsRecruiter = "";
   let analyticsSector = "";
@@ -467,7 +467,7 @@
     q = (q || "").toLowerCase().trim();
     var groups = [
       ["Candidats", S().candidates.map(function (c) { return { t: c.firstName + " " + c.lastName + " · " + c.title, s: c.city, h: "#/candidates/" + c.id, hay: (c.firstName + c.lastName + c.title + c.city + c.sector).toLowerCase() }; })],
-      ["Clients", S().clients.map(function (c) { return { t: c.name, s: c.city, h: "#/clients/" + c.id, hay: (c.name + c.city + c.sector + c.contact).toLowerCase() }; })],
+      ["Clients", S().clients.map(function (c) { return { t: c.name, s: (c.email || c.city || ""), h: "#/clients/" + c.id, hay: (c.name + c.city + c.sector + c.contact + (c.email || "")).toLowerCase() }; })],
       ["Offres", S().jobs.map(function (j) { return { t: j.title, s: j.city, h: "#/jobs/" + j.id, hay: (j.title + j.city + j.sector).toLowerCase() }; })],
       ["Missions", S().missions.map(function (m) { return { t: m.title, s: U.dateFr(m.due), h: "#/missions/" + m.id, hay: m.title.toLowerCase() }; })],
       ["Besoins", hiringList().map(function (h) { return { t: h.title, s: h.company_name || "", h: "#/hiring/" + h.id, hay: (h.title + " " + (h.company_name || "")).toLowerCase() }; })],
@@ -768,11 +768,13 @@
       var hasEmail = !!(c.email || "").trim();
       var verified = !!(c.contactEmailVerified || c.email_verified);
       var foundAt = (c.emailVerifiedAt || c.email_verified_at || "").trim();
+      var confidence = String(c.emailConfidence || c.email_confidence || "").toUpperCase();
       if (filters.email === "with" && !hasEmail) return false;
       if (filters.email === "without" && hasEmail) return false;
       if (filters.email === "verified" && !verified) return false;
       if (filters.email === "unverified" && (!hasEmail || verified)) return false;
       if (filters.email === "found" && !(hasEmail && verified && foundAt)) return false;
+      if (filters.email === "high" && !(hasEmail && (confidence === "VERIFIED_HIGH" || confidence === "HIGH"))) return false;
       if (filters.ready === "ready" && !(c.readyToContact || hasEmail)) return false;
       return true;
     });
@@ -783,25 +785,37 @@
       var ae = (a.email || "").trim() ? 1 : 0;
       var be = (b.email || "").trim() ? 1 : 0;
       if (ae !== be) return be - ae;
+      var av = (a.contactEmailVerified || a.email_verified) ? 1 : 0;
+      var bv = (b.contactEmailVerified || b.email_verified) ? 1 : 0;
+      if (av !== bv) return bv - av;
+      var ah = String(a.emailConfidence || "").toUpperCase() === "VERIFIED_HIGH" ? 1 : 0;
+      var bh = String(b.emailConfidence || "").toUpperCase() === "VERIFIED_HIGH" ? 1 : 0;
+      if (ah !== bh) return bh - ah;
       var af = (a.emailVerifiedAt || "").trim() ? 1 : 0;
       var bf = (b.emailVerifiedAt || "").trim() ? 1 : 0;
       if (af !== bf) return bf - af;
       return String(a.name || "").localeCompare(String(b.name || ""), "fr");
     });
-    var pg = U.paginate(list, page, 25);
+    var pg = U.paginate(list, page, 100);
     var rows = pg.items.map(function (c) {
       var missions = S().missions.filter(function (m) { return m.clientId === c.id; }).length;
       var placed = S().candidates.filter(function (x) { return x.clientId === c.id && x.status === "place"; }).length;
       var found = !!(c.emailVerifiedAt || c.email_verified_at);
+      var mail = (c.email || "").trim();
       var mailHint = c.readyToContact ? "Prêt à contacter" : (found ? "Courriel public trouvé" : "");
-      return `<tr data-go="#/clients/${c.id}"><td><b>${U.esc(c.name)}</b></td><td>${U.esc(c.sector)}</td><td>${U.esc(c.city)}</td><td>${U.esc(c.contact)}</td><td>${U.esc(c.email || "—")}${mailHint ? "<div class='sub'>" + mailHint + "</div>" : ""}</td><td>${missions}</td><td>${placed}</td><td>${U.badge(c.status)}</td><td>${U.esc(TLStore.name(c.recruiterId))}</td></tr>`;
+      var write = mail
+        ? ('<div class="prospect-actions">' +
+          '<button type="button" class="btn btn-orange btn-sm" data-write-client="' + U.esc(c.id) + '">Écrire</button>' +
+          '<a class="btn btn-ghost btn-sm" href="mailto:' + U.esc(mail) + '" data-mailto="' + U.esc(c.id) + '">Courriel</a></div>')
+        : "—";
+      return `<tr data-go="#/clients/${c.id}"><td><b>${U.esc(c.name)}</b></td><td>${U.esc(c.sector)}</td><td>${U.esc(c.city)}</td><td>${U.esc(c.contact)}</td><td>${U.esc(mail || "—")}${mailHint ? "<div class='sub'>" + mailHint + "</div>" : ""}</td><td>${write}</td><td>${missions}</td><td>${placed}</td><td>${U.badge(c.status)}</td><td>${U.esc(TLStore.name(c.recruiterId))}</td></tr>`;
     }).join("");
     var pages = Array.from({ length: pg.pages }, function (_, i) {
       return '<button class="btn btn-ghost btn-sm' + (pg.page === i + 1 ? " btn-orange" : "") + '" data-page="' + (i + 1) + '">' + (i + 1) + "</button>";
     }).join("");
     return `
-      <div class="page-head"><div><h1>Clients</h1><p>${withEmailTotal} avec courriel public · ${readyTotal} prêts à contacter · ${all.length} fiches</p></div>
-        <div class="actions"><button class="btn btn-ghost" data-export-cli>Exporter</button><button class="btn btn-orange" data-create="client">Nouveau client</button></div></div>
+      <div class="page-head"><div><h1>Clients</h1><p>${withEmailTotal} avec courriel public · ${readyTotal} prêts à contacter · ${all.length} fiches catalogue. Écrire ouvre le message Talendus ; Courriel ouvre votre boîte.</p></div>
+        <div class="actions"><button type="button" class="btn btn-ghost" data-refresh-employers>Charger le catalogue (460+)</button><a class="btn btn-ghost" href="#/prospects/employers">Recruteurs / employeurs</a><button class="btn btn-ghost" data-export-cli>Exporter</button><button class="btn btn-orange" data-create="client">Nouveau client</button></div></div>
       <div class="filters">
         <input data-f="q" placeholder="Nom, ville ou courriel" value="${U.esc(filters.q || "")}">
         <select data-f="sector"><option value="">Secteur</option>${unique(S().clients, "sector").map(function (s) { return "<option" + (filters.sector === s ? " selected" : "") + ">" + s + "</option>"; }).join("")}</select>
@@ -813,6 +827,7 @@
           <option value="verified"${filters.email === "verified" ? " selected" : ""}>Courriel vérifié</option>
           <option value="unverified"${filters.email === "unverified" ? " selected" : ""}>Courriel non vérifié</option>
           <option value="found"${filters.email === "found" ? " selected" : ""}>Courriels trouvés</option>
+          <option value="high"${filters.email === "high" ? " selected" : ""}>Courriel haute confiance</option>
         </select>
         <select data-f="ready">
           <option value="">Tous les contacts</option>
@@ -820,8 +835,8 @@
         </select>
       </div>
       <div class="card"><div class="table-wrap"><table class="data">
-        <thead><tr><th>Entreprise</th><th>Secteur</th><th>Localisation</th><th>Contact principal</th><th>Courriel</th><th>Missions</th><th>Recrutements</th><th>Statut</th><th>Recruteur</th></tr></thead>
-        <tbody>${rows || '<tr><td colspan="9">' + U.empty("Aucun client", "Créez une entreprise ou attendez qu’un employeur ouvre un espace.") + "</td></tr>"}</tbody></table></div></div>
+        <thead><tr><th>Entreprise</th><th>Secteur</th><th>Localisation</th><th>Contact principal</th><th>Courriel</th><th>Contacter</th><th>Missions</th><th>Recrutements</th><th>Statut</th><th>Recruteur</th></tr></thead>
+        <tbody>${rows || '<tr><td colspan="10">' + U.empty("Aucun client", "Créez une entreprise ou attendez qu’un employeur ouvre un espace.") + "</td></tr>"}</tbody></table></div></div>
       <div class="pager"><span>${pg.total} résultats</span><div class="pages">${pages}</div></div>`;
   }
 
@@ -1052,6 +1067,8 @@
       <div class="crumbs"><a href="#/clients">Clients</a> / ${U.esc(c.name)}</div>
       <div class="page-head"><div><h1>${U.esc(c.name)}</h1><p>${U.esc(c.sector)} · ${U.esc(c.city)} · ${U.badge(c.status)}</p></div>
         <div class="actions">
+          ${c.email ? '<button class="btn btn-orange" data-write-client="' + id + '">Écrire</button>' : ""}
+          ${c.email ? '<a class="btn btn-ghost" href="mailto:' + U.esc(c.email) + '" data-mailto="' + id + '">Courriel</a>' : ""}
           <button class="btn btn-ghost" data-edit-client="${id}">Modifier</button>
           <button class="btn btn-orange" data-add-contract="${id}">Préparer le mandat</button>
         </div></div>
@@ -1068,7 +1085,7 @@
           <div class="row"><span>Site</span><b>${U.esc(c.website || "—")}</b></div>
           <div class="row"><span>Adresse</span><b>${U.esc([c.address, c.city, c.province].filter(Boolean).join(", ") || "—")}</b></div>
           <h3 style="margin-top:16px">Contact / compte</h3>
-          <p><b>${U.esc(c.contact)}</b><br>${U.esc(c.email)}<br>${U.esc(c.phone)}</p>
+          <p><b>${U.esc(c.contact)}</b><br>${c.email ? '<a href="mailto:' + U.esc(c.email) + '">' + U.esc(c.email) + "</a>" : "—"}<br>${U.esc(c.phone)}</p>
           ${c.ownerEmail ? "<p class='sub'>Espace : " + U.esc(c.ownerEmail) + "</p>" : ""}
           ${c.description ? "<p>" + U.esc(c.description) + "</p>" : ""}
         </div>
@@ -1855,11 +1872,11 @@
   function viewProspects() {
     if (route().extra) return viewProspectFiche(route().extra);
     var side = prospectSide();
+    var employer = side === "employer";
     if (viewProspects._side !== side) {
       viewProspects._side = side;
-      prospectFilters = { q: "", stage: "", source: "", city: "", sector: "", email: "", ready: "" };
+      prospectFilters = { q: "", stage: "", source: "", city: "", sector: "", email: employer ? "with" : "", ready: "" };
     }
-    var employer = side === "employer";
     return `
       <div class="page-head">
         <div>
@@ -1867,6 +1884,7 @@
           <p id="prospect-lead">${employer ? "Entreprises avec courriel public à démarcher. Les candidats sont dans l’autre onglet." : "Base candidats uniquement. Les entreprises avec courriel sont dans Recruteurs / employeurs."}</p>
         </div>
         <div class="actions">
+          ${employer ? '<button type="button" class="btn btn-ghost" id="prospect-refresh-catalog">Charger le catalogue (460+)</button>' : ""}
           <button type="button" class="btn btn-ghost" id="prospect-select-all">Tout sélectionner</button>
           <button type="button" class="btn btn-ghost" id="prospect-bulk">Écrire aux sélectionnés</button>
           <button type="button" class="btn btn-orange" id="prospect-new">Ajouter</button>
@@ -1910,7 +1928,8 @@
       { key: "without", label: "Sans courriel" },
       { key: "verified", label: "Courriel vérifié" },
       { key: "unverified", label: "Courriel non vérifié" },
-      { key: "found", label: "Courriels trouvés" }
+      { key: "found", label: "Courriels trouvés" },
+      { key: "high", label: "Courriel haute confiance" }
     ];
     var readies = prospectMeta.ready_filters || [
       { key: "", label: "Tous les contacts" },
@@ -1945,7 +1964,7 @@
     });
     var clear = document.getElementById("pf-clear");
     if (clear) clear.onclick = function () {
-      prospectFilters = { q: "", stage: "", source: "", city: "", sector: "", email: "", ready: "" };
+      prospectFilters = { q: "", stage: "", source: "", city: "", sector: "", email: prospectSide() === "employer" ? "with" : "", ready: "" };
       hydrateProspects();
     };
   }
@@ -1961,6 +1980,29 @@
     hydrateProspects();
   }
 
+  var employerCatalogTried = false;
+
+  async function hydrateEmployerClients() {
+    if (!api() || !live()) return;
+    var withEmail = (S().clients || []).filter(function (c) { return !!(c.email || "").trim(); }).length;
+    if (withEmail >= 400 || employerCatalogTried) return;
+    employerCatalogTried = true;
+    var stats = await refreshEmployerDirectory(true);
+    if (stats && (stats.companies_with_catalog_email || 0) > withEmail) render();
+  }
+
+  async function refreshEmployerDirectory(forceReload) {
+    if (!api()) return null;
+    try {
+      var json = await api().request("/admin/employer-leads/refresh", { method: "POST" });
+      if (forceReload && TLStore.hydrateFromApi) await TLStore.hydrateFromApi();
+      return (json && json.data) || null;
+    } catch (err) {
+      U.toast((err && err.message) || "Catalogue employeurs impossible à charger.", "err");
+      return null;
+    }
+  }
+
   async function hydrateProspects() {
     var root = document.getElementById("prospects-root");
     if (!root) return;
@@ -1969,6 +2011,10 @@
       return;
     }
     try {
+      if (prospectSide() === "employer") {
+        root.innerHTML = "<p class='sub'>Chargement du catalogue employeurs (environ 460 courriels publics)…</p>";
+        await refreshEmployerDirectory(false);
+      }
       var json = await api().request("/admin/prospects?" + prospectQuery());
       var rows = (json && json.data) || [];
       prospectMeta = (json && json.meta) || prospectMeta;
@@ -2054,6 +2100,18 @@
   function bindProspectList(root) {
     var addBtn = document.getElementById("prospect-new");
     if (addBtn) addBtn.onclick = function () { openProspectCreate(); };
+    var catalogBtn = document.getElementById("prospect-refresh-catalog");
+    if (catalogBtn) catalogBtn.onclick = async function () {
+      catalogBtn.disabled = true;
+      catalogBtn.textContent = "Chargement…";
+      var stats = await refreshEmployerDirectory(true);
+      catalogBtn.disabled = false;
+      catalogBtn.textContent = "Charger le catalogue (460+)";
+      if (stats) {
+        U.toast((stats.prospects_with_catalog_email || 0) + " employeurs avec courriel public.", "ok");
+        hydrateProspects();
+      }
+    };
     var toggle = document.getElementById("prospect-select-all");
     if (toggle) toggle.onclick = function () {
       var boxes = prospectChecks(root);
@@ -2327,14 +2385,15 @@
 
   function chunkProspectIds(ids, size) {
     var out = [];
-    var step = size || 40;
+    var step = size || 3;
     for (var i = 0; i < ids.length; i += step) out.push(ids.slice(i, i + step));
     return out;
   }
 
   async function sendProspectBroadcast(ids, payload, onProgress) {
-    var chunks = chunkProspectIds(uniqueProspectIds(ids), 40);
+    var chunks = chunkProspectIds(uniqueProspectIds(ids), 250);
     var sent = 0;
+    var queued = 0;
     var skipped = 0;
     var failed = 0;
     for (var i = 0; i < chunks.length; i++) {
@@ -2345,19 +2404,58 @@
       });
       var data = (res && res.data) || {};
       sent += (data.sent || []).length;
+      queued += (data.queued || []).length;
       skipped += (data.skipped || []).length;
       failed += (data.failed || []).length;
     }
-    return { sent: sent, skipped: skipped, failed: failed };
+    return { sent: sent, queued: queued, skipped: skipped, failed: failed };
   }
 
-  function openProspectComposer(ids) {
+  async function openClientWrite(clientId) {
+    var c = TLStore.client(clientId);
+    if (!c) {
+      U.toast("Fiche introuvable.", "err");
+      return;
+    }
+    var email = (c.email || "").trim();
+    var prospectId = (c.prospectId || c.prospect_id || "").trim();
+    if (!email && !prospectId) {
+      U.toast("Aucun courriel public sur cette fiche.", "err");
+      return;
+    }
+    if (!api()) {
+      if (email) window.location.href = "mailto:" + email;
+      return;
+    }
+    try {
+      if (!prospectId && email) {
+        var json = await api().request("/admin/prospects?side=employer&q=" + encodeURIComponent(email));
+        var rows = (json && json.data) || [];
+        var match = rows.filter(function (r) {
+          return String(r.email || "").toLowerCase() === email.toLowerCase();
+        })[0];
+        prospectId = match ? match.id : "";
+      }
+      if (prospectId) {
+        openProspectComposer([prospectId], { ignoreSide: true });
+        return;
+      }
+      if (email) window.location.href = "mailto:" + email;
+      else U.toast("Aucun prospect employeur lié à ce courriel.", "err");
+    } catch (err) {
+      if (email) window.location.href = "mailto:" + email;
+      else U.toast((err && err.message) || "Impossible d’ouvrir le message.", "err");
+    }
+  }
+
+  function openProspectComposer(ids, opts) {
     ids = uniqueProspectIds(ids);
+    opts = opts || {};
     if (!api() || !ids.length) return;
     var firstId = ids[0];
     api().request(prospectUrl(firstId)).then(function (json) {
       var detail = (json && json.data) || {};
-      if (detail.side && detail.side !== prospectSide()) {
+      if (detail.side && !opts.ignoreSide && detail.side !== prospectSide()) {
         U.toast("Ce prospect n’appartient pas à cette base.", "err");
         return;
       }
@@ -2381,7 +2479,7 @@
         title: ids.length > 1 ? "Envoyer à " + ids.length + " fiches" : "Écrire à " + prospectLabel(detail),
         wide: true,
         body: '<div class="prospect-composer">' +
-          (others > 0 ? "<p class='sub'>Chaque fiche reçoit son propre courriel, personnalisé à son nom d’entreprise. Aucune autre adresse n’apparaît en destinataire, copie ou CCI. Les envois partent un par un.</p>" : "") +
+          (others > 0 ? "<p class='sub'>Chaque fiche reçoit son propre courriel, personnalisé à son nom d’entreprise. Aucune autre adresse n’apparaît en destinataire, copie ou CCI. Les centaines d’envois sont mis en file : la page n’attend pas le SMTP.</p>" : "") +
           '<label>Modèle</label><select id="pc-tpl">' + opts + '<option value="custom">Message libre</option></select>' +
           '<p class="sub" id="pc-intent"></p>' +
           '<label>Sujet</label><input id="pc-subject">' +
@@ -2470,12 +2568,14 @@
                 }
               } else {
                 var result = await sendProspectBroadcast(ids, payload, function (done, total) {
-                  if (btn) btn.textContent = "Envoi " + done + " / " + total + "…";
+                  if (btn) btn.textContent = "Mise en file " + done + " / " + total + "…";
                 });
-                var parts = [result.sent + " parti" + (result.sent > 1 ? "s" : "")];
+                var parts = [];
+                if (result.sent) parts.push(result.sent + " parti" + (result.sent > 1 ? "s" : ""));
+                if (result.queued) parts.push(result.queued + " en file (l’envoi continue, vous pouvez quitter)");
                 if (result.skipped) parts.push(result.skipped + " déjà contacté" + (result.skipped > 1 ? "s" : ""));
                 if (result.failed) parts.push(result.failed + " non parti" + (result.failed > 1 ? "s" : "") + " (statut inchangé)");
-                U.toast(parts.join(", ") + ".", result.failed || !result.sent ? "err" : "ok");
+                U.toast(parts.join(", ") + ".", result.failed && !result.queued && !result.sent ? "err" : "ok");
               }
               close();
               hydrateProspects();
@@ -3117,6 +3217,23 @@
         })();
         return;
       }
+      if (t.closest("[data-refresh-employers]")) {
+        (async function () {
+          U.toast("Chargement du catalogue employeurs…", "ok");
+          var stats = await refreshEmployerDirectory(true);
+          if (stats) {
+            U.toast((stats.prospects_with_catalog_email || 0) + " employeurs avec courriel public.", "ok");
+            render();
+          }
+        })();
+        return;
+      }
+      var writeCli = t.closest("[data-write-client]");
+      if (writeCli) {
+        openClientWrite(writeCli.getAttribute("data-write-client"));
+        return;
+      }
+      if (t.closest("[data-mailto]")) return;
       var goEl = t.closest("[data-go]");
       if (goEl) { go(goEl.getAttribute("data-go")); return; }
       var sort = t.closest("[data-sort]");
@@ -3143,7 +3260,7 @@
         U.toast("Export CSV prêt.", "ok");
       }
       if (t.closest("[data-export-cli]")) {
-        U.csv("clients-talendus.csv", [["Nom","Secteur","Ville"]].concat(S().clients.map(function (c) { return [c.name, c.sector, c.city]; })));
+        U.csv("clients-talendus.csv", [["Nom","Secteur","Ville","Courriel","Contact"]].concat(S().clients.map(function (c) { return [c.name, c.sector, c.city, c.email || "", c.contact || ""]; })));
         U.toast("Export CSV prêt.", "ok");
       }
       if (t.closest("[data-export-fin]") || t.closest("[data-export-an]") || t.closest("[data-export-dash]")) {
@@ -3955,6 +4072,7 @@
           '<option value="non"' + (val("smtp.use_tls") === "non" ? " selected" : "") + ">non</option>" +
           "</select>" +
           '<label>Envoyer le test à une vraie boîte</label><input id="adm-smtp-test-to" type="email" value="' + U.esc((function () { var me = TLStore.me() || {}; var mail = (me.email || "").trim(); return /@talendus\.ca$/i.test(mail) ? "" : mail; })()) + '" placeholder="vous@votreboite.com">' +
+          '<p class="sub">« Suivre EMAIL_ENABLED » n’envoie rien si la variable Render est off, même avec un serveur et un mot de passe. Choisissez une fois « Oui — envoyer vraiment » : le réglage reste après une pause, pas besoin de le refaire à chaque campagne. Les envois de masse partent en file, même pour des centaines de destinataires.</p>' +
           '<p class="sub">Le test part vers cette adresse (la vôtre par défaut). Les comptes de démo @talendus.ca sont ignorés.</p>' +
           '<p style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">' +
           '<button class="btn btn-orange" type="submit">Enregistrer le courriel</button>' +
@@ -4111,6 +4229,7 @@
       if (r.name === "services") hydrateServices();
       if (r.name === "analytics") hydrateAnalytics();
       if (r.name === "settings") hydrateTeam();
+      if (r.name === "clients" && !r.id) hydrateEmployerClients();
       if (r.name === "prospects" && r.extra) hydrateProspectFiche(r.extra);
       else if (r.name === "prospects") hydrateProspects();
       if (r.name === "journal") hydrateJournal();

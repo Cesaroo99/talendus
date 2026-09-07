@@ -62,7 +62,8 @@ def test_lead_catalog_is_fifty_real_and_unique():
     assert all(row.get("lead_priority") in {"A+", "A", "B", "C"} for row in wave6)
     assert all(row.get("researched_at") == "2026-09-07" for row in wave6)
     assert sum(1 for row in wave6 if row.get("email")) >= 40
-    assert sum(1 for row in wave6 if not row.get("email")) >= 80
+    # Géants formulaire-only : on n’invente pas d’adresse pour forcer le quota.
+    assert sum(1 for row in wave6 if not row.get("email")) >= 20
     assert {row["sector"] for row in wave6} >= {
         "Manufacturier",
         "Aérospatial",
@@ -363,10 +364,14 @@ def test_crm_lists_show_enriched_company_after_sync(client, db):
     clients = boot.json()["data"]["clients"]
     exceldor = next(row for row in clients if row["name"] == "Exceldor")
     avior = next(row for row in clients if row["name"] == "Avior Integrated Products")
+    olymel = next(row for row in clients if row["name"] == "Olymel")
     assert exceldor["email"] == "info@exceldor.com"
     assert exceldor["readyToContact"] is True
+    assert exceldor.get("prospectId")
     assert avior["email"] == "rh_laval@avior.ca"
     assert avior["readyToContact"] is True
+    assert olymel["email"] == "talent@olymel.com"
+    assert olymel.get("prospectId")
     listed = client.get("/api/admin/prospects?side=employer", headers=headers)
     assert listed.status_code == 200, listed.text
     rows = listed.json()["data"]
@@ -378,3 +383,19 @@ def test_crm_lists_show_enriched_company_after_sync(client, db):
     found_emails = {row["email"] for row in found.json()["data"]}
     assert "info@exceldor.com" in found_emails
     assert "rh_laval@avior.ca" in found_emails
+    refresh = client.post("/api/admin/employer-leads/refresh", headers=headers)
+    assert refresh.status_code == 200, refresh.text
+    stats = refresh.json()["data"]
+    assert stats["catalog_with_email"] >= 460
+    assert stats["prospects_with_catalog_email"] >= 460
+    assert stats["companies_with_catalog_email"] >= 460
+    boot2 = client.get("/api/admin/bootstrap", headers=headers)
+    assert boot2.status_code == 200, boot2.text
+    catalog = boot2.json()["data"].get("employerCatalog") or {}
+    assert catalog.get("catalog_with_email", 0) >= 460
+    clients2 = boot2.json()["data"]["clients"]
+    with_email = [row for row in clients2 if (row.get("email") or "").strip()]
+    assert len(with_email) >= 460
+    listed2 = client.get("/api/admin/prospects?side=employer&email=with", headers=headers)
+    assert listed2.status_code == 200, listed2.text
+    assert len(listed2.json()["data"]) >= 460
