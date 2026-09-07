@@ -1304,8 +1304,22 @@ def finalize_prospect_delivery(db: Session, log: EmailLog) -> None:
         row.stage = "contacte"
 
 
+def _bulk_template_key(req: SendRequest) -> str:
+    key = (req.template_key or "").strip()
+    if key and not key.startswith("custom"):
+        get_template(key)
+        return key
+    subject = (req.subject or "").strip()
+    body = (req.body or "").strip()
+    if not subject or not body:
+        raise AppError(400, "Sujet et message sont requis pour un courriel libre.", "VALIDATION_ERROR")
+    return custom_template_key(subject)
+
+
 def send_bulk(db: Session, actor: User, ids: list[str], req: SendRequest) -> dict:
-    from app.services.email import smtp_send_block_reason
+    from app.models.identity import uid
+    from app.services.audit import audit
+    from app.services.email import signed_plain, smtp_send_block_reason
 
     ids = list(dict.fromkeys((prospect_id or "").strip() for prospect_id in ids if (prospect_id or "").strip()))
     if not ids:
@@ -1315,34 +1329,109 @@ def send_bulk(db: Session, actor: User, ids: list[str], req: SendRequest) -> dic
         raise AppError(502, blocked, "SMTP_DISABLED")
     if len(ids) > BULK_SEND_MAX:
         raise AppError(400, f"Maximum {BULK_SEND_MAX} destinataires à la fois.", "VALIDATION_ERROR")
-    sent, queued, skipped, failed = [], [], [], []
-    found = [db.get(Prospect, prospect_id) for prospect_id in ids]
-    sides = {row.side for row in found if row}
+    key = _bulk_template_key(req)
+    tpl = None
+    if key and not key.startswith("custom"):
+        tpl = get_template(key)
+    rows = list(db.scalars(select(Prospect).where(Prospect.id.in_(ids))).all())
+    by_id = {row.id: row for row in rows}
+    sides = {row.side for row in rows}
     if len(sides) > 1:
         raise AppError(400, "Impossible d’envoyer aux deux bases en même temps.", "SIDE_MIXED")
-    for prospect_id, row in zip(ids, found):
+    if tpl and sides and tpl["side"] not in sides:
+        raise AppError(400, "Ce modèle ne correspond pas à ce côté.", "VALIDATION_ERROR")
+    existing_map = {}
+    if by_id:
+        existing_map = {
+            row.prospect_id: row
+            for row in db.scalars(
+                select(ProspectSend).where(
+                    ProspectSend.prospect_id.in_(list(by_id)),
+                    ProspectSend.template_key == key,
+                )
+            ).all()
+        }
+    existing_log_ids = [row.email_log_id for row in existing_map.values() if row.email_log_id]
+    existing_logs = {
+        log.id: log
+        for log in db.scalars(select(EmailLog).where(EmailLog.id.in_(existing_log_ids))).all()
+    } if existing_log_ids else {}
+    sent, queued, skipped, failed = [], [], [], []
+    stale: list[ProspectSend] = []
+    prepared: list[tuple[Prospect, str, str]] = []
+    for prospect_id in ids:
+        row = by_id.get(prospect_id)
         if not row:
             failed.append({"id": prospect_id, "reason": "introuvable"})
             continue
-        try:
-            result = send_to_prospect(db, actor, row, req, sync=False)
-            if result.get("delivered"):
-                sent.append(result)
-            elif result.get("queued"):
-                queued.append(result)
-            else:
-                failed.append(
-                    {
-                        "id": row.id,
-                        "email": row.email,
-                        "reason": result.get("email_error") or "Le courriel n’a pas quitté le serveur.",
-                    }
-                )
-        except AppError as exc:
-            if exc.code in {"ALREADY_SENT", "ALREADY_QUEUED"}:
-                skipped.append({"id": row.id, "email": row.email, "reason": exc.message})
-            else:
-                failed.append({"id": row.id, "email": row.email, "reason": exc.message})
+        existing = existing_map.get(row.id)
+        if existing:
+            prior = existing_logs.get(existing.email_log_id) if existing.email_log_id else None
+            delivered = bool(prior and email_actually_sent(prior))
+            pending = bool(prior and prior.status == EmailStatus.QUEUED)
+            if delivered and not req.force:
+                skipped.append({"id": row.id, "email": row.email, "reason": f"{display_name(row)} a déjà reçu ce message."})
+                continue
+            if pending and not req.force:
+                skipped.append({"id": row.id, "email": row.email, "reason": f"{display_name(row)} a déjà ce message en file d’envoi."})
+                continue
+            stale.append(existing)
+        ctx = context_for(row, actor)
+        if tpl:
+            subject = fill_tokens((req.subject or "").strip() or tpl["subject"], ctx)
+            body = fill_tokens((req.body or "").strip() or tpl["body"], ctx)
+        else:
+            subject = fill_tokens((req.subject or "").strip(), ctx)
+            body = fill_tokens((req.body or "").strip(), ctx)
+        prepared.append((row, subject, signed_plain(body)))
+    for row in stale:
+        db.delete(row)
+    if stale:
+        db.flush()
+    for row, subject, body in prepared:
+        log = EmailLog(
+            id=uid(),
+            to_email=row.email,
+            type=EmailType.ADMIN,
+            subject=subject[:180],
+            body=body,
+            status=EmailStatus.QUEUED,
+            attempts=0,
+        )
+        db.add(log)
+        db.add(
+            ProspectSend(
+                prospect_id=row.id,
+                template_key=key,
+                subject=subject[:180],
+                body=body,
+                to_email=row.email,
+                email_log_id=log.id,
+                attachment_names="",
+                sent_by_id=actor.id,
+            )
+        )
+        queued.append(
+            {
+                "prospect_id": row.id,
+                "to_email": row.email,
+                "template_key": key,
+                "subject": subject,
+                "email_status": "QUEUED",
+                "email_log_id": log.id,
+                "delivered": False,
+                "queued": True,
+                "attachments": [],
+            }
+        )
+    audit(
+        db,
+        "prospect.send",
+        actor,
+        "prospect",
+        "broadcast",
+        metadata={"template": key, "queued": len(queued), "skipped": len(skipped), "failed": len(failed)},
+    )
     return {"sent": sent, "queued": queued, "skipped": skipped, "failed": failed}
 
 

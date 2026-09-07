@@ -109,8 +109,8 @@
 
   function gatewayTimeoutMsg() {
     return pageIsEn()
-      ? "The server took too long. Send fewer emails at once, or check Settings → Email (« Yes — actually send »)."
-      : "Le serveur a trop tardé. Envoyez de plus petits lots, ou vérifiez Paramètres → Courriel (« Oui — envoyer vraiment »).";
+      ? "The server took too long to queue the emails. Retry — messages already queued will keep sending. This is not the SMTP setting."
+      : "Le serveur a trop tardé à mettre les courriels en file. Réessayez : ceux déjà en file continueront de partir. Ce n’est pas le réglage « Oui — envoyer vraiment ».";
   }
 
   function localizedApiMessage(json, res) {

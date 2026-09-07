@@ -2391,25 +2391,50 @@
     return out;
   }
 
+  function tallyBroadcast(res, acc) {
+    var data = (res && res.data) || {};
+    acc.sent += (data.sent || []).length;
+    acc.queued += (data.queued || []).length;
+    acc.skipped += (data.skipped || []).length;
+    acc.failed += (data.failed || []).length;
+    return acc;
+  }
+
+  function isBroadcastTimeout(err) {
+    var status = err && err.status;
+    return status === 503 || status === 504 || status === 524;
+  }
+
   async function sendProspectBroadcast(ids, payload, onProgress) {
-    var chunks = chunkProspectIds(uniqueProspectIds(ids), 250);
-    var sent = 0;
-    var queued = 0;
-    var skipped = 0;
-    var failed = 0;
-    for (var i = 0; i < chunks.length; i++) {
-      if (onProgress) onProgress(i + 1, chunks.length);
-      var res = await api().request("/admin/prospects/broadcast", {
+    var all = uniqueProspectIds(ids);
+    var acc = { sent: 0, queued: 0, skipped: 0, failed: 0 };
+    if (onProgress) onProgress(1, 1);
+    try {
+      return tallyBroadcast(await api().request("/admin/prospects/broadcast", {
         method: "POST",
-        body: Object.assign({}, payload, { ids: chunks[i] })
-      });
-      var data = (res && res.data) || {};
-      sent += (data.sent || []).length;
-      queued += (data.queued || []).length;
-      skipped += (data.skipped || []).length;
-      failed += (data.failed || []).length;
+        body: Object.assign({}, payload, { ids: all })
+      }), acc);
+    } catch (err) {
+      if (!isBroadcastTimeout(err) || all.length <= 40) throw err;
+      var chunks = chunkProspectIds(all, 40);
+      for (var i = 0; i < chunks.length; i++) {
+        if (onProgress) onProgress(i + 1, chunks.length);
+        var attempt = 0;
+        while (attempt < 2) {
+          try {
+            tallyBroadcast(await api().request("/admin/prospects/broadcast", {
+              method: "POST",
+              body: Object.assign({}, payload, { ids: chunks[i] })
+            }), acc);
+            break;
+          } catch (chunkErr) {
+            attempt += 1;
+            if (!isBroadcastTimeout(chunkErr) || attempt >= 2) throw chunkErr;
+          }
+        }
+      }
+      return acc;
     }
-    return { sent: sent, queued: queued, skipped: skipped, failed: failed };
   }
 
   async function openClientWrite(clientId) {

@@ -518,7 +518,8 @@ def test_admin_ui_has_prospects_module():
     assert "opts.ignoreSide" in js
     assert "var opts = proposals.map" not in js
     assert "var tplOptions = proposals.map" in js
-    assert "chunkProspectIds(uniqueProspectIds(ids), 250)" in js
+    assert "chunkProspectIds(all, 40)" in js
+    assert "isBroadcastTimeout" in js
     assert "employer-leads/refresh" in js
     assert "Charger le catalogue (740+)" in js
     assert "withEmail >= 400" not in js
@@ -527,7 +528,8 @@ def test_admin_ui_has_prospects_module():
     assert "forceEnsure" in js
     assert "Oui — envoyer vraiment" in js
     assert "gatewayTimeoutMsg" in api_js
-    assert "plus petits lots" in api_js
+    assert "déjà en file" in api_js
+    assert "Oui — envoyer vraiment" in api_js
     assert "Chaque fiche reçoit son propre courriel" in js
     assert "non parti" in js
     assert "email_status" in js
