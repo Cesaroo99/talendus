@@ -221,13 +221,14 @@ def bootstrap(db: Session, user: User | None = None) -> dict:
         return _editor_bootstrap(db, user)
     if user and user.role == UserRole.FINANCE:
         return _finance_bootstrap(db, user)
-    from app.services.employer_leads import catalog_stats, refresh_employer_directory
+    from app.services.employer_leads import catalog_stats, sync_catalog_emails_to_crm
 
     try:
-        refresh_employer_directory(db)
+        # Sync seul : l’ensure complet (524 fiches) expire le proxy en prod.
+        sync_catalog_emails_to_crm(db)
         db.commit()
     except Exception:
-        logger.exception("bootstrap: import des employeurs québécois impossible")
+        logger.exception("bootstrap: recopie des courriels employeurs impossible")
         db.rollback()
     users = db.scalars(select(User).order_by(User.created_at.asc())).all()
     companies = db.scalars(select(Company).options(joinedload(Company.owner)).order_by(Company.name.asc())).unique().all()

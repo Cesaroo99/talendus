@@ -364,14 +364,12 @@ def test_crm_lists_show_enriched_company_after_sync(client, db):
     clients = boot.json()["data"]["clients"]
     exceldor = next(row for row in clients if row["name"] == "Exceldor")
     avior = next(row for row in clients if row["name"] == "Avior Integrated Products")
-    olymel = next(row for row in clients if row["name"] == "Olymel")
+    assert not any(row["name"] == "Olymel" for row in clients)
     assert exceldor["email"] == "info@exceldor.com"
     assert exceldor["readyToContact"] is True
     assert exceldor.get("prospectId")
     assert avior["email"] == "rh_laval@avior.ca"
     assert avior["readyToContact"] is True
-    assert olymel["email"] == "talent@olymel.com"
-    assert olymel.get("prospectId")
     listed = client.get("/api/admin/prospects?side=employer", headers=headers)
     assert listed.status_code == 200, listed.text
     rows = listed.json()["data"]
@@ -383,7 +381,7 @@ def test_crm_lists_show_enriched_company_after_sync(client, db):
     found_emails = {row["email"] for row in found.json()["data"]}
     assert "info@exceldor.com" in found_emails
     assert "rh_laval@avior.ca" in found_emails
-    refresh = client.post("/api/admin/employer-leads/refresh", headers=headers)
+    refresh = client.post("/api/admin/employer-leads/refresh?force=1", headers=headers)
     assert refresh.status_code == 200, refresh.text
     stats = refresh.json()["data"]
     assert stats["catalog_with_email"] >= 460
@@ -394,8 +392,47 @@ def test_crm_lists_show_enriched_company_after_sync(client, db):
     catalog = boot2.json()["data"].get("employerCatalog") or {}
     assert catalog.get("catalog_with_email", 0) >= 460
     clients2 = boot2.json()["data"]["clients"]
+    olymel = next(row for row in clients2 if row["name"] == "Olymel")
+    assert olymel["email"] == "talent@olymel.com"
+    assert olymel.get("prospectId")
     with_email = [row for row in clients2 if (row.get("email") or "").strip()]
     assert len(with_email) >= 460
     listed2 = client.get("/api/admin/prospects?side=employer&email=with", headers=headers)
     assert listed2.status_code == 200, listed2.text
     assert len(listed2.json()["data"]) >= 460
+
+
+def test_bootstrap_recovers_prod_stuck_at_406(client, db):
+    """Prod à 406 : les fiches existent, les courriels OSINT n’ont jamais été recopiés."""
+    from tests.conftest import auth_header
+
+    admin = promote_admin(client, "leads-406@talendus.ca")
+    ensure_quebec_employer_leads(db)
+    db.commit()
+    with_email = [row for row in QUEBEC_EMPLOYER_LEADS if row.get("email")]
+    stripped = with_email[-54:]
+    for row in stripped:
+        company = db.scalar(select(Company).where(Company.name == row["name"]))
+        assert company is not None
+        company.email = None
+        prospect = db.scalar(select(Prospect).where(Prospect.email == row["email"].lower()))
+        if prospect is not None:
+            db.delete(prospect)
+    db.commit()
+    before_companies = db.scalar(select(func.count()).select_from(Company))
+    remaining = db.scalar(
+        select(func.count()).select_from(Company).where(Company.email.is_not(None)).where(Company.email != "")
+    )
+    assert remaining is not None
+    assert remaining < 460
+    headers = auth_header(admin)
+    boot = client.get("/api/admin/bootstrap", headers=headers)
+    assert boot.status_code == 200, boot.text
+    catalog = boot.json()["data"].get("employerCatalog") or {}
+    assert catalog.get("companies_with_catalog_email", 0) >= 460
+    assert catalog.get("prospects_with_catalog_email", 0) >= 460
+    assert db.scalar(select(func.count()).select_from(Company)) == before_companies
+    clients = {row["name"]: row for row in boot.json()["data"]["clients"]}
+    for row in stripped:
+        assert clients[row["name"]]["email"] == row["email"]
+        assert clients[row["name"]].get("prospectId")
