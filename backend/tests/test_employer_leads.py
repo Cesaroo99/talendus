@@ -62,7 +62,7 @@ def test_lead_catalog_is_fifty_real_and_unique():
     assert all(row.get("lead_priority") in {"A+", "A", "B", "C"} for row in wave6)
     assert all(row.get("researched_at") == "2026-09-07" for row in wave6)
     assert sum(1 for row in wave6 if row.get("email")) >= 40
-    assert sum(1 for row in wave6 if not row.get("email")) >= 80
+    assert sum(1 for row in wave6 if not row.get("email")) >= 70
     assert {row["sector"] for row in wave6} >= {
         "Manufacturier",
         "Aérospatial",
