@@ -224,7 +224,7 @@ def bootstrap(db: Session, user: User | None = None) -> dict:
     from app.services.employer_leads import catalog_stats, sync_catalog_emails_to_crm
 
     try:
-        # Sync seul : l’ensure complet (524 fiches) expire le proxy en prod.
+        # Sync seul : l’ensure complet (724 fiches) expire le proxy en prod.
         sync_catalog_emails_to_crm(db)
         db.commit()
     except Exception:
