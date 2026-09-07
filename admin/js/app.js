@@ -335,7 +335,7 @@
           }).length;
           if (pending) count = '<span class="count">' + pending + "</span>";
         }
-        var href = i[0] === "prospects" ? "prospects/candidates" : i[0];
+        var href = i[0] === "prospects" ? "prospects/employers" : i[0];
         return '<a class="nav-item' + active + '" href="#/' + href + '"><i class="' + i[2] + '"></i>' + i[1] + count + "</a>";
       }).join("") + "</div>";
     }).join("");
@@ -758,28 +758,71 @@
 
   /* ---------- Clients ---------- */
   function viewClients() {
-    var list = S().clients.filter(function (c) {
-      if (filters.q && (c.name + c.city).toLowerCase().indexOf((filters.q || "").toLowerCase()) === -1) return false;
+    var all = S().clients || [];
+    var withEmailTotal = all.filter(function (c) { return !!(c.email || "").trim(); }).length;
+    var readyTotal = all.filter(function (c) { return !!(c.readyToContact); }).length;
+    var list = all.filter(function (c) {
+      if (filters.q && (c.name + c.city + (c.email || "")).toLowerCase().indexOf((filters.q || "").toLowerCase()) === -1) return false;
       if (filters.sector && c.sector !== filters.sector) return false;
       if (filters.status && c.status !== filters.status) return false;
+      var hasEmail = !!(c.email || "").trim();
+      var verified = !!(c.contactEmailVerified || c.email_verified);
+      var foundAt = (c.emailVerifiedAt || c.email_verified_at || "").trim();
+      if (filters.email === "with" && !hasEmail) return false;
+      if (filters.email === "without" && hasEmail) return false;
+      if (filters.email === "verified" && !verified) return false;
+      if (filters.email === "unverified" && (!hasEmail || verified)) return false;
+      if (filters.email === "found" && !(hasEmail && verified && foundAt)) return false;
+      if (filters.ready === "ready" && !(c.readyToContact || hasEmail)) return false;
       return true;
     });
-    var rows = list.map(function (c) {
+    list.sort(function (a, b) {
+      var ar = a.readyToContact ? 1 : 0;
+      var br = b.readyToContact ? 1 : 0;
+      if (ar !== br) return br - ar;
+      var ae = (a.email || "").trim() ? 1 : 0;
+      var be = (b.email || "").trim() ? 1 : 0;
+      if (ae !== be) return be - ae;
+      var af = (a.emailVerifiedAt || "").trim() ? 1 : 0;
+      var bf = (b.emailVerifiedAt || "").trim() ? 1 : 0;
+      if (af !== bf) return bf - af;
+      return String(a.name || "").localeCompare(String(b.name || ""), "fr");
+    });
+    var pg = U.paginate(list, page, 25);
+    var rows = pg.items.map(function (c) {
       var missions = S().missions.filter(function (m) { return m.clientId === c.id; }).length;
       var placed = S().candidates.filter(function (x) { return x.clientId === c.id && x.status === "place"; }).length;
-      return `<tr data-go="#/clients/${c.id}"><td><b>${U.esc(c.name)}</b></td><td>${U.esc(c.sector)}</td><td>${U.esc(c.city)}</td><td>${U.esc(c.contact)}</td><td>${missions}</td><td>${placed}</td><td>${U.badge(c.status)}</td><td>${U.esc(TLStore.name(c.recruiterId))}</td></tr>`;
+      var found = !!(c.emailVerifiedAt || c.email_verified_at);
+      var mailHint = c.readyToContact ? "Prêt à contacter" : (found ? "Courriel public trouvé" : "");
+      return `<tr data-go="#/clients/${c.id}"><td><b>${U.esc(c.name)}</b></td><td>${U.esc(c.sector)}</td><td>${U.esc(c.city)}</td><td>${U.esc(c.contact)}</td><td>${U.esc(c.email || "—")}${mailHint ? "<div class='sub'>" + mailHint + "</div>" : ""}</td><td>${missions}</td><td>${placed}</td><td>${U.badge(c.status)}</td><td>${U.esc(TLStore.name(c.recruiterId))}</td></tr>`;
+    }).join("");
+    var pages = Array.from({ length: pg.pages }, function (_, i) {
+      return '<button class="btn btn-ghost btn-sm' + (pg.page === i + 1 ? " btn-orange" : "") + '" data-page="' + (i + 1) + '">' + (i + 1) + "</button>";
     }).join("");
     return `
-      <div class="page-head"><div><h1>Clients</h1><p>Entreprises opérationnelles du Québec</p></div>
+      <div class="page-head"><div><h1>Clients</h1><p>${withEmailTotal} avec courriel public · ${readyTotal} prêts à contacter · ${all.length} fiches</p></div>
         <div class="actions"><button class="btn btn-ghost" data-export-cli>Exporter</button><button class="btn btn-orange" data-create="client">Nouveau client</button></div></div>
       <div class="filters">
-        <input data-f="q" placeholder="Nom ou ville" value="${U.esc(filters.q || "")}">
+        <input data-f="q" placeholder="Nom, ville ou courriel" value="${U.esc(filters.q || "")}">
         <select data-f="sector"><option value="">Secteur</option>${unique(S().clients, "sector").map(function (s) { return "<option" + (filters.sector === s ? " selected" : "") + ">" + s + "</option>"; }).join("")}</select>
-        <select data-f="status"><option value="">Statut</option><option>Actif</option><option>Prospect</option></select>
+        <select data-f="status"><option value="">Statut</option><option${filters.status === "Actif" ? " selected" : ""}>Actif</option><option${filters.status === "Prospect" ? " selected" : ""}>Prospect</option></select>
+        <select data-f="email">
+          <option value="">Tous les courriels</option>
+          <option value="with"${filters.email === "with" ? " selected" : ""}>Avec courriel</option>
+          <option value="without"${filters.email === "without" ? " selected" : ""}>Sans courriel</option>
+          <option value="verified"${filters.email === "verified" ? " selected" : ""}>Courriel vérifié</option>
+          <option value="unverified"${filters.email === "unverified" ? " selected" : ""}>Courriel non vérifié</option>
+          <option value="found"${filters.email === "found" ? " selected" : ""}>Courriels trouvés</option>
+        </select>
+        <select data-f="ready">
+          <option value="">Tous les contacts</option>
+          <option value="ready"${filters.ready === "ready" ? " selected" : ""}>Prêt à contacter</option>
+        </select>
       </div>
       <div class="card"><div class="table-wrap"><table class="data">
-        <thead><tr><th>Entreprise</th><th>Secteur</th><th>Localisation</th><th>Contact principal</th><th>Missions</th><th>Recrutements</th><th>Statut</th><th>Recruteur</th></tr></thead>
-        <tbody>${rows || '<tr><td colspan="8">' + U.empty("Aucun client", "Créez une entreprise ou attendez qu’un employeur ouvre un espace.") + "</td></tr>"}</tbody></table></div></div>`;
+        <thead><tr><th>Entreprise</th><th>Secteur</th><th>Localisation</th><th>Contact principal</th><th>Courriel</th><th>Missions</th><th>Recrutements</th><th>Statut</th><th>Recruteur</th></tr></thead>
+        <tbody>${rows || '<tr><td colspan="9">' + U.empty("Aucun client", "Créez une entreprise ou attendez qu’un employeur ouvre un espace.") + "</td></tr>"}</tbody></table></div></div>
+      <div class="pager"><span>${pg.total} résultats</span><div class="pages">${pages}</div></div>`;
   }
 
   function clientStatusLabel(ct) {
@@ -1786,7 +1829,7 @@
     }
   }
 
-  var prospectFilters = { q: "", stage: "", source: "", city: "", sector: "" };
+  var prospectFilters = { q: "", stage: "", source: "", city: "", sector: "", email: "", ready: "" };
   var prospectMeta = { stages: [], catalog: [], sources: [], cities: [], sectors: [] };
   var prospectCache = [];
 
@@ -1814,14 +1857,14 @@
     var side = prospectSide();
     if (viewProspects._side !== side) {
       viewProspects._side = side;
-      prospectFilters = { q: "", stage: "", source: "", city: "", sector: "" };
+      prospectFilters = { q: "", stage: "", source: "", city: "", sector: "", email: "", ready: "" };
     }
     var employer = side === "employer";
     return `
       <div class="page-head">
         <div>
           <h1>${employer ? "Prospects employeurs" : "Prospects candidats"}</h1>
-          <p id="prospect-lead">${employer ? "Base recruteurs / entreprises uniquement. Les candidats sont dans l’autre onglet." : "Base candidats uniquement. Les employeurs sont dans l’autre onglet."}</p>
+          <p id="prospect-lead">${employer ? "Entreprises avec courriel public à démarcher. Les candidats sont dans l’autre onglet." : "Base candidats uniquement. Les entreprises avec courriel sont dans Recruteurs / employeurs."}</p>
         </div>
         <div class="actions">
           <button type="button" class="btn btn-ghost" id="prospect-select-all">Tout sélectionner</button>
@@ -1845,6 +1888,8 @@
     if (prospectFilters.source) parts.push("source=" + encodeURIComponent(prospectFilters.source));
     if (prospectFilters.city) parts.push("city=" + encodeURIComponent(prospectFilters.city));
     if (prospectFilters.sector) parts.push("sector=" + encodeURIComponent(prospectFilters.sector));
+    if (prospectFilters.email) parts.push("email=" + encodeURIComponent(prospectFilters.email));
+    if (prospectFilters.ready) parts.push("ready=" + encodeURIComponent(prospectFilters.ready));
     return parts.join("&");
   }
 
@@ -1859,6 +1904,18 @@
     var sources = prospectMeta.sources || [];
     var cities = prospectMeta.cities || [];
     var sectors = prospectMeta.sectors || [];
+    var emails = prospectMeta.email_filters || [
+      { key: "", label: "Tous les courriels" },
+      { key: "with", label: "Avec courriel" },
+      { key: "without", label: "Sans courriel" },
+      { key: "verified", label: "Courriel vérifié" },
+      { key: "unverified", label: "Courriel non vérifié" },
+      { key: "found", label: "Courriels trouvés" }
+    ];
+    var readies = prospectMeta.ready_filters || [
+      { key: "", label: "Tous les contacts" },
+      { key: "ready", label: "Prêt à contacter" }
+    ];
     box.innerHTML =
       '<input id="pf-q" placeholder="Nom, courriel, téléphone, entreprise" value="' + U.esc(prospectFilters.q || "") + '">' +
       '<select id="pf-stage"><option value="">Tous les statuts</option>' + stages.map(function (s) {
@@ -1873,8 +1930,14 @@
       '<select id="pf-sector"><option value="">Tous les secteurs</option>' + sectors.map(function (c) {
         return '<option value="' + U.esc(c) + '"' + (prospectFilters.sector === c ? " selected" : "") + ">" + U.esc(c) + "</option>";
       }).join("") + "</select>" +
+      '<select id="pf-email">' + emails.map(function (s) {
+        return '<option value="' + U.esc(s.key) + '"' + (prospectFilters.email === s.key ? " selected" : "") + ">" + U.esc(s.label) + "</option>";
+      }).join("") + "</select>" +
+      '<select id="pf-ready">' + readies.map(function (s) {
+        return '<option value="' + U.esc(s.key) + '"' + (prospectFilters.ready === s.key ? " selected" : "") + ">" + U.esc(s.label) + "</option>";
+      }).join("") + "</select>" +
       '<button type="button" class="btn btn-ghost" id="pf-clear">Effacer</button>';
-    ["pf-q", "pf-stage", "pf-source", "pf-city", "pf-sector"].forEach(function (id) {
+    ["pf-q", "pf-stage", "pf-source", "pf-city", "pf-sector", "pf-email", "pf-ready"].forEach(function (id) {
       var el = document.getElementById(id);
       if (!el) return;
       el.onchange = function () { applyProspectFilters(); };
@@ -1882,7 +1945,7 @@
     });
     var clear = document.getElementById("pf-clear");
     if (clear) clear.onclick = function () {
-      prospectFilters = { q: "", stage: "", source: "", city: "", sector: "" };
+      prospectFilters = { q: "", stage: "", source: "", city: "", sector: "", email: "", ready: "" };
       hydrateProspects();
     };
   }
@@ -1893,6 +1956,8 @@
     prospectFilters.source = (document.getElementById("pf-source") || {}).value || "";
     prospectFilters.city = (document.getElementById("pf-city") || {}).value || "";
     prospectFilters.sector = (document.getElementById("pf-sector") || {}).value || "";
+    prospectFilters.email = (document.getElementById("pf-email") || {}).value || "";
+    prospectFilters.ready = (document.getElementById("pf-ready") || {}).value || "";
     hydrateProspects();
   }
 
@@ -1927,12 +1992,13 @@
         }).join("");
         var lieu = [r.city, r.sector].filter(Boolean).join(" · ") || "—";
         var envois = r.sent_templates && r.sent_templates.length ? r.sent_templates.length + " envoi(s)" : "Aucun";
-        var personSub = employer ? "" : (r.title || "");
+        var personSub = employer ? (r.company_name && r.company_name !== prospectLabel(r) ? r.company_name : "") : (r.title || "");
         var role = isGenericContactLabel(r.title) ? "" : (r.title || "");
+        var mailHint = r.ready_to_contact ? "Prêt à contacter" : (r.email_verified ? "Courriel public" : "");
         return "<tr>" +
           '<td class="check"><input type="checkbox" data-pcheck="' + U.esc(r.id) + '"></td>' +
           "<td class='person-cell'><b>" + U.esc(prospectLabel(r)) + "</b>" + (personSub ? "<div class='sub'>" + U.esc(personSub) + "</div>" : "") + "</td>" +
-          "<td>" + U.esc(r.email) + (r.phone ? "<div class='sub'>" + U.esc(r.phone) + "</div>" : "") + "</td>" +
+          "<td>" + U.esc(r.email) + (r.phone ? "<div class='sub'>" + U.esc(r.phone) + "</div>" : "") + (mailHint ? "<div class='sub'>" + mailHint + "</div>" : "") + "</td>" +
           "<td>" + U.esc(role || "—") + "</td>" +
           "<td>" + U.esc(lieu) + "</td>" +
           "<td>" + U.esc(sourceLabel(r.source)) + "</td>" +

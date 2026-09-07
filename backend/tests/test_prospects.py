@@ -107,6 +107,43 @@ def test_list_does_not_mark_active_company_as_client(client):
     assert row["stage"] in {"nouveau", "a-contacter"}
 
 
+def test_prospect_email_and_ready_filters(client):
+    from app.database import SessionLocal
+    from app.models import Company
+    from app.models.enums import CompanyStatus
+
+    admin = promote_admin(client, "crm-email-filter@example.com")
+    admin_h = auth_header(admin)
+    db = SessionLocal()
+    db.add(
+        Company(
+            name="Atelier Filtre Courriel",
+            email="rh@atelier-filtre.example",
+            status=CompanyStatus.PROSPECT,
+            city="Laval",
+            sector="Manufacturier",
+        )
+    )
+    db.commit()
+    db.close()
+    listed = client.get("/api/admin/prospects?side=employer", headers=admin_h)
+    assert listed.status_code == 200, listed.text
+    meta = listed.json()["meta"]
+    assert {row["key"] for row in meta["email_filters"]} >= {"with", "without", "verified", "unverified", "found"}
+    assert {row["key"] for row in meta["ready_filters"]} >= {"ready"}
+    ready = client.get("/api/admin/prospects?side=employer&ready=ready", headers=admin_h)
+    assert ready.status_code == 200, ready.text
+    rows = ready.json()["data"]
+    assert rows
+    assert all(row.get("ready_to_contact") and row.get("email") for row in rows)
+    with_email = client.get("/api/admin/prospects?side=employer&email=with", headers=admin_h)
+    assert with_email.status_code == 200, with_email.text
+    assert all(row.get("email") for row in with_email.json()["data"])
+    without = client.get("/api/admin/prospects?side=employer&email=without", headers=admin_h)
+    assert without.status_code == 200, without.text
+    assert without.json()["data"] == []
+
+
 def test_contact_and_manual_prospect(client):
     admin = promote_admin(client, "crm-contact@example.com")
     admin_h = auth_header(admin)
@@ -474,6 +511,8 @@ def test_admin_ui_has_prospects_module():
     assert "prospect-list" in js
     assert "data-pcheck" in js
     assert "Prospects candidats" in js
+    assert "Courriels trouvés" in js
+    assert "prospects/employers" in js
     assert "/admin/prospects/p/" in js
     assert "/admin/prospects/broadcast" in js
     assert "sendProspectBroadcast" in js

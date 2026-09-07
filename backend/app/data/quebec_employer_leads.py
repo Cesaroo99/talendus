@@ -19,6 +19,7 @@ uniquement s’il est publié ; sinon vide. Score et justification dans hiring.
 
 from __future__ import annotations
 
+from app.data.quebec_employer_email_enrichment import apply_public_emails
 from app.data.quebec_employer_leads_cegeps import QUEBEC_EMPLOYER_LEADS_CEGEPS
 from app.data.quebec_employer_leads_css import QUEBEC_EMPLOYER_LEADS_CSS
 from app.data.quebec_employer_leads_more import QUEBEC_EMPLOYER_LEADS_MORE
@@ -734,7 +735,7 @@ _WAVE1: tuple[dict, ...] = (
     },
 )
 
-QUEBEC_EMPLOYER_LEADS: tuple[dict, ...] = (
+QUEBEC_EMPLOYER_LEADS: tuple[dict, ...] = apply_public_emails(
     _WAVE1
     + QUEBEC_EMPLOYER_LEADS_MORE
     + QUEBEC_EMPLOYER_LEADS_WAVE4

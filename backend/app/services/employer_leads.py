@@ -194,7 +194,16 @@ def _note_text(lead: dict[str, Any]) -> str:
     source = lead.get("source") or "veille publique"
     score_line = f"Score : {score} ({priority}).\n" if score else ""
     email_src = lead.get("email_source")
-    email_line = f"Courriel public : {lead.get('email')} — source {email_src}.\n" if lead.get("email") else "Courriel : non publié (laissé vide).\n"
+    confidence = lead.get("email_confidence")
+    if lead.get("email"):
+        email_line = f"Courriel public : {lead.get('email')} — source {email_src}"
+        if confidence:
+            email_line += f" ({confidence})"
+        if lead.get("email_source_url"):
+            email_line += f" {lead.get('email_source_url')}"
+        email_line += ".\n"
+    else:
+        email_line = "Courriel : non publié (laissé vide).\n"
     return (
         f"{LEAD_NOTE_MARK}.\n"
         f"{score_line}"
@@ -210,23 +219,32 @@ def _note_text(lead: dict[str, Any]) -> str:
 def _ensure_note(db: Session, company: Company, author: User | None, lead: dict[str, Any]) -> None:
     if not author:
         return
-    exists = db.scalar(
-        select(InternalNote.id).where(
+    existing = db.scalar(
+        select(InternalNote).where(
             InternalNote.entity_type == "company",
             InternalNote.entity_id == company.id,
             InternalNote.text.like(f"{LEAD_NOTE_MARK}%"),
         )
     )
-    if exists:
-        return
-    db.add(
-        InternalNote(
-            entity_type="company",
-            entity_id=company.id,
-            author_id=author.id,
-            text=_note_text(lead)[:4000],
+    text = _note_text(lead)[:4000]
+    if existing is None:
+        db.add(
+            InternalNote(
+                entity_type="company",
+                entity_id=company.id,
+                author_id=author.id,
+                text=text,
+            )
         )
-    )
+        return
+    previous = existing.text or ""
+    email = (lead.get("email") or "").strip()
+    if email and "Courriel : non publié" in previous and email not in previous:
+        journal = (
+            f"\nJournal 2026-09-07 : courriel ajouté {email} "
+            f"(avant vide, source {lead.get('email_source') or 'recherche publique'})."
+        )
+        existing.text = (text + journal)[:4000]
 
 
 def _ensure_prospect(db: Session, company: Company, lead: dict[str, Any], recruiter: User | None) -> None:
@@ -259,6 +277,54 @@ def _ensure_prospect(db: Session, company: Company, lead: dict[str, Any], recrui
         sanitize_generic_person(row)
         db.flush()
         db.expunge(row)
+
+
+def sync_catalog_emails_to_crm(db: Session) -> int:
+    """Recopie les courriels publics du catalogue sur les fiches déjà en base.
+
+    Ne crée aucune entreprise. N’écrase jamais un courriel déjà présent.
+    Crée le prospect employeur dès qu’un courriel public est disponible.
+    """
+    _forget_session_prospects(db)
+    recruiters = _recruiters(db)
+    staff = recruiters[0] if recruiters else _staff_user(db)
+    names = _company_name_index(db)
+    known_emails = {
+        (value or "").strip().lower()
+        for value in db.scalars(select(Prospect.email).where(Prospect.side == "employer")).all()
+        if value
+    }
+    filled = 0
+    for index, lead in enumerate(QUEBEC_EMPLOYER_LEADS):
+        email = (lead.get("email") or "").strip()
+        if not email or "@" not in email:
+            continue
+        company = _find_company(db, lead, names)
+        if company is None:
+            continue
+        if company.owner_user_id and not _owned_company_is_this_lead(company, lead):
+            continue
+        before = (company.email or "").strip()
+        if not before:
+            _fill_empty(
+                company,
+                email=email,
+                phone=lead.get("phone"),
+                contact_name=lead.get("contact_name") or None,
+            )
+            filled += 1
+        current = (company.email or "").strip().lower()
+        if current != email.lower():
+            continue
+        recruiter = recruiters[index % len(recruiters)] if recruiters else None
+        email_key = email.lower()
+        if email_key not in known_emails:
+            _ensure_note(db, company, staff, lead)
+            _ensure_prospect(db, company, lead, recruiter)
+            known_emails.add(email_key)
+    if filled:
+        logger.info("%s courriels publics recopiés sur des fiches existantes.", filled)
+    return filled
 
 
 def ensure_quebec_employer_leads(db: Session) -> int:
