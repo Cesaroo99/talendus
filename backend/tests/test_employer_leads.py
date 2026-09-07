@@ -4,6 +4,7 @@ from app.data.quebec_employer_leads import QUEBEC_EMPLOYER_LEADS
 from app.models import Company, User
 from app.models.enums import CompanyStatus, UserRole
 from app.models.prospect import Prospect
+from app.services.employer_claim import normalize_company_name
 from app.services.employer_leads import ensure_quebec_employer_leads
 from tests.conftest import promote_admin
 
@@ -22,23 +23,23 @@ DEMO_FAKES = {
 
 
 def test_lead_catalog_is_fifty_real_and_unique():
-    assert len(QUEBEC_EMPLOYER_LEADS) == 324
+    assert len(QUEBEC_EMPLOYER_LEADS) == 524
     names = [row["name"].casefold() for row in QUEBEC_EMPLOYER_LEADS]
-    assert len(set(names)) == 324
+    assert len(set(names)) == 524
     websites = [row["website"] for row in QUEBEC_EMPLOYER_LEADS]
-    assert len(set(websites)) == 324
+    assert len(set(websites)) == 524
     emails = [row["email"].casefold() for row in QUEBEC_EMPLOYER_LEADS if row.get("email")]
     assert len(set(emails)) == len(emails)
     assert emails, "Au moins un courriel public RH/info doit être présent."
     wave2 = QUEBEC_EMPLOYER_LEADS[50:100]
     assert len(wave2) == 50
     assert all(row.get("email") for row in wave2), "La 2e vague doit toutes avoir un courriel public."
-    extra = QUEBEC_EMPLOYER_LEADS[100:]
+    extra = QUEBEC_EMPLOYER_LEADS[100:324]
     assert len(extra) == 224
-    assert all(row.get("email") for row in extra), "Les fiches suivantes doivent toutes avoir un courriel public vérifié."
+    assert all(row.get("email") for row in extra), "Les fiches 101-324 doivent toutes avoir un courriel public vérifié."
     sectors = {row["sector"] for row in QUEBEC_EMPLOYER_LEADS[50:]}
     assert len(sectors) >= 8, "Les vagues avec courriel doivent couvrir plusieurs secteurs, pas seulement l’usine."
-    wave5 = QUEBEC_EMPLOYER_LEADS[300:]
+    wave5 = QUEBEC_EMPLOYER_LEADS[300:324]
     assert len(wave5) == 24
     assert all(row.get("email") for row in wave5)
     assert {row["sector"] for row in wave5} >= {
@@ -48,6 +49,20 @@ def test_lead_catalog_is_fifty_real_and_unique():
         "Commerce",
         "Hôtellerie et tourisme",
         "Entrepôt et logistique",
+    }
+    wave6 = QUEBEC_EMPLOYER_LEADS[324:]
+    assert len(wave6) == 200
+    assert all(row.get("lead_score") for row in wave6)
+    assert all(row.get("lead_priority") in {"A+", "A", "B", "C"} for row in wave6)
+    assert all(row.get("researched_at") == "2026-09-07" for row in wave6)
+    assert sum(1 for row in wave6 if row.get("email")) >= 40
+    assert sum(1 for row in wave6 if not row.get("email")) >= 80
+    assert {row["sector"] for row in wave6} >= {
+        "Manufacturier",
+        "Aérospatial",
+        "Transformation alimentaire",
+        "Logistique",
+        "Pharmaceutique",
     }
     for row in QUEBEC_EMPLOYER_LEADS:
         assert row["name"] not in DEMO_FAKES
@@ -62,18 +77,23 @@ def test_lead_catalog_is_fifty_real_and_unique():
         if row.get("email"):
             assert "@" in row["email"]
             assert not row["email"].startswith("j.")
+            local = row["email"].split("@", 1)[0]
+            assert local not in {"jean.tremblay", "prenom.nom", "john.doe"}
+    keys = [normalize_company_name(row["name"]) for row in QUEBEC_EMPLOYER_LEADS]
+    assert all(keys)
+    assert len(set(keys)) == len(keys)
 
 
 def test_ensure_creates_prospect_clients_without_employer_accounts(client, db):
     promote_admin(client, "leads-admin@talendus.ca")
     created = ensure_quebec_employer_leads(db)
     db.commit()
-    assert created == 324
+    assert created == 524
     assert ensure_quebec_employer_leads(db) == 0
     db.commit()
 
     leads = list(db.scalars(select(Company).where(Company.name.in_([r["name"] for r in QUEBEC_EMPLOYER_LEADS]))))
-    assert len(leads) == 324
+    assert len(leads) == 524
     assert all(c.status == CompanyStatus.PROSPECT for c in leads)
     assert all(c.province == "Québec" for c in leads)
     assert all(not c.owner_user_id for c in leads)
@@ -146,3 +166,25 @@ def test_register_employer_not_confused_with_leads(client, db):
     assert "Usine Jade" in names
     assert "Cascades" in names
     assert "Métalco" not in names
+
+
+def test_ensure_dedupes_normalized_name_and_keeps_empty_email(client, db):
+    promote_admin(client, "leads-dedupe@talendus.ca")
+    db.add(
+        Company(
+            name="Velan Inc.",
+            legal_name="Velan inc.",
+            status=CompanyStatus.PROSPECT,
+            province="Québec",
+            country="Canada",
+        )
+    )
+    db.commit()
+    created = ensure_quebec_employer_leads(db)
+    db.commit()
+    assert created == 523
+    velans = list(db.scalars(select(Company).where(Company.name.ilike("%velan%"))))
+    assert len(velans) == 1
+    assert velans[0].name == "Velan Inc."
+    assert not db.scalar(select(Prospect.id).where(Prospect.company_name == "Velan"))
+    assert ensure_quebec_employer_leads(db) == 0
