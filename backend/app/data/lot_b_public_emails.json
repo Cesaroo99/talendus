@@ -736,6 +736,22 @@
     "signal": "mauricie@mesar.qc.ca publié sur la page Nous joindre officielle"
   },
   {
+    "name": "Géos (Groupe)",
+    "legal_name": "Groupe GÉOS",
+    "website": "https://groupegeos.ca",
+    "email": null,
+    "email_source_url": null,
+    "email_type": null,
+    "contact_name": null,
+    "contact_title": null,
+    "phone": "1 844 979-4367",
+    "city": "Québec",
+    "linkedin_url": "https://www.linkedin.com/company/groupegeos",
+    "employees": 135,
+    "sector": "génie / environnement",
+    "signal": "Fetch du site officiel en timeout; aucun courriel confirmé par WebFetch"
+  },
+  {
     "name": "Can-Explore",
     "legal_name": "Can-Explore",
     "website": "https://www.can-explore.com",
