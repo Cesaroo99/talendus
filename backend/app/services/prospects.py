@@ -700,7 +700,7 @@ def upsert_prospect(
     if created:
         row = Prospect(side=side, email=email, source=source[:40], stage="nouveau")
         db.add(row)
-        db.flush([row])
+        db.flush()
     updates = {
         "first_name": first_name,
         "last_name": last_name,

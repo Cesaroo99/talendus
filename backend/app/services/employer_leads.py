@@ -122,11 +122,6 @@ def _forget_session_prospects(db: Session) -> None:
             db.expunge(obj)
 
 
-def _flush(db: Session, *objects: object) -> None:
-    """Flush ciblé : un flush global mettrait à jour d’autres Prospect de la session."""
-    db.flush(list(objects))
-
-
 def _same_company(lead: dict[str, Any], company: Company) -> bool:
     return _names_similar(lead.get("name"), company.name) or _names_similar(
         lead.get("legal_name"), company.legal_name or company.name
@@ -245,9 +240,6 @@ def _ensure_prospect(db: Session, company: Company, lead: dict[str, Any], recrui
     )
     if row is not None:
         sanitize_generic_person(row)
-        if row in db.dirty:
-            _flush(db, row)
-        db.expire(row)
 
 
 def ensure_quebec_employer_leads(db: Session) -> int:
@@ -286,7 +278,7 @@ def ensure_quebec_employer_leads(db: Session) -> int:
                 assigned_recruiter_id=recruiter.id if recruiter else None,
             )
             db.add(company)
-            _flush(db, company)
+            db.flush()
             _index_company(names, company)
             created += 1
         else:
