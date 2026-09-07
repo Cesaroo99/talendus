@@ -18,6 +18,8 @@ uniquement s’il est publié ; sinon vide. Score et justification dans hiring.
 Vague 7 : 200 PME québécoises (5–500) — croissance, services B2B, cabinets,
 techno, saisonnalité, multi-sites, owner-led. Courriel uniquement s’il est
 publié ; sinon vide. Score, catégories et priorité commerciale dans hiring.
+Vague 8 : 200 PME québécoises — 3e génération (terrain, certifications,
+régions, horaires, relève, SAV). Courriel uniquement s’il est publié.
 """
 
 from __future__ import annotations
@@ -32,6 +34,7 @@ from app.data.quebec_employer_leads_wave4 import QUEBEC_EMPLOYER_LEADS_WAVE4
 from app.data.quebec_employer_leads_wave5 import QUEBEC_EMPLOYER_LEADS_WAVE5
 from app.data.quebec_employer_leads_wave6 import QUEBEC_EMPLOYER_LEADS_WAVE6
 from app.data.quebec_employer_leads_wave7 import QUEBEC_EMPLOYER_LEADS_WAVE7
+from app.data.quebec_employer_leads_wave8 import QUEBEC_EMPLOYER_LEADS_WAVE8
 
 # name est la clé d’idempotence (insensible à la casse).
 _WAVE1: tuple[dict, ...] = (
@@ -750,4 +753,5 @@ QUEBEC_EMPLOYER_LEADS: tuple[dict, ...] = apply_public_emails(
     + QUEBEC_EMPLOYER_LEADS_WAVE5
     + QUEBEC_EMPLOYER_LEADS_WAVE6
     + QUEBEC_EMPLOYER_LEADS_WAVE7
+    + QUEBEC_EMPLOYER_LEADS_WAVE8
 )

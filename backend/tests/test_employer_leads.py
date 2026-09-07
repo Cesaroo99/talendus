@@ -29,11 +29,11 @@ DEMO_FAKES = {
 
 
 def test_lead_catalog_is_fifty_real_and_unique():
-    assert len(QUEBEC_EMPLOYER_LEADS) == 724
+    assert len(QUEBEC_EMPLOYER_LEADS) == 924
     names = [row["name"].casefold() for row in QUEBEC_EMPLOYER_LEADS]
-    assert len(set(names)) == 724
+    assert len(set(names)) == 924
     websites = [row["website"] for row in QUEBEC_EMPLOYER_LEADS]
-    assert len(set(websites)) == 724
+    assert len(set(websites)) == 924
     emails = [row["email"].casefold() for row in QUEBEC_EMPLOYER_LEADS if row.get("email")]
     assert len(set(emails)) == len(emails)
     assert emails, "Au moins un courriel public RH/info doit être présent."
@@ -71,7 +71,7 @@ def test_lead_catalog_is_fifty_real_and_unique():
         "Logistique",
         "Pharmaceutique",
     }
-    wave7 = QUEBEC_EMPLOYER_LEADS[524:]
+    wave7 = QUEBEC_EMPLOYER_LEADS[524:724]
     assert len(wave7) == 200
     assert all(row.get("lead_score") for row in wave7)
     assert all(row.get("lead_priority") in {"A+", "A", "B", "C"} for row in wave7)
@@ -88,6 +88,31 @@ def test_lead_catalog_is_fifty_real_and_unique():
     }
     # Nouvel angle : pas seulement l’usine / l’entrepôt.
     assert sum(1 for row in wave7 if row["sector"] in {"Technologie", "Services professionnels", "Assurance"}) >= 40
+    wave8 = QUEBEC_EMPLOYER_LEADS[724:]
+    assert len(wave8) == 200
+    assert all(row.get("lead_score") for row in wave8)
+    assert all(row.get("lead_priority") in {"A+", "A", "B", "C"} for row in wave8)
+    assert all(row.get("researched_at") == "2026-09-07" for row in wave8)
+    assert all(5 <= (row.get("employees") or 0) <= 500 for row in wave8)
+    assert sum(1 for row in wave8 if row.get("email")) >= 120
+    assert sum(1 for row in wave8 if not row.get("email")) >= 20
+    assert all(row.get("commercial_priority") in {"A", "B", "C", "D"} for row in wave8)
+    fieldish = {
+        "Protection incendie / gicleurs",
+        "Maintenance industrielle",
+        "Électricité industrielle",
+        "Plomberie CMMTQ",
+        "NDT / essais",
+        "Restauration après sinistre",
+    }
+    assert {row["sector"] for row in wave8} & fieldish
+    # 3e génération : terrain / certifications, pas seulement usine ou techno.
+    assert sum(
+        1
+        for row in wave8
+        if "FIELD_WORK" in (row.get("lead_categories") or "")
+        or "CERTIFICATION_REQUIRED" in (row.get("lead_categories") or "")
+    ) >= 80
     for row in QUEBEC_EMPLOYER_LEADS:
         assert row["name"] not in DEMO_FAKES
         assert row["city"]
@@ -128,12 +153,12 @@ def test_ensure_creates_prospect_clients_without_employer_accounts(client, db):
     promote_admin(client, "leads-admin@talendus.ca")
     created = ensure_quebec_employer_leads(db)
     db.commit()
-    assert created == 724
+    assert created == 924
     assert ensure_quebec_employer_leads(db) == 0
     db.commit()
 
     leads = list(db.scalars(select(Company).where(Company.name.in_([r["name"] for r in QUEBEC_EMPLOYER_LEADS]))))
-    assert len(leads) == 724
+    assert len(leads) == 924
     assert all(c.status == CompanyStatus.PROSPECT for c in leads)
     assert all(c.province == "Québec" for c in leads)
     assert all(not c.owner_user_id for c in leads)
@@ -264,7 +289,7 @@ def test_ensure_survives_stale_prospect_left_in_caller_session(client, db):
     row.city = "Montréal"
     created = ensure_quebec_employer_leads(db)
     db.commit()
-    assert created == 724
+    assert created == 924
 
 
 def test_ensure_dedupes_normalized_name_and_keeps_empty_email(client, db):
@@ -283,7 +308,7 @@ def test_ensure_dedupes_normalized_name_and_keeps_empty_email(client, db):
     created = ensure_quebec_employer_leads(db)
     db.expire_all()
     db.commit()
-    assert created == 723
+    assert created == 923
     velans = list(db.scalars(select(Company).where(Company.name.ilike("%velan%"))))
     assert len(velans) == 1
     assert velans[0].name == "Velan Inc."
