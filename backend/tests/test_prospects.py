@@ -280,22 +280,15 @@ def test_broadcast_accepts_the_full_employer_list(client, monkeypatch):
         )
         assert row.status_code == 200, row.text
         created.append(row.json()["data"]["id"])
-    too_many = client.post(
+    bulk = client.post(
         "/api/admin/prospects/broadcast",
         headers=admin_h,
         json={"ids": created + [f"x{i}" for i in range(411)], "template_key": "emp_first_contact"},
     )
-    assert too_many.status_code == 422, too_many.text
-    assert too_many.json()["message"] == "Les données envoyées sont invalides."
-    bulk = client.post(
-        "/api/admin/prospects/broadcast",
-        headers=admin_h,
-        json={"ids": created, "template_key": "emp_first_contact"},
-    )
     assert bulk.status_code == 200, bulk.text
     data = bulk.json()["data"]
     assert len(data.get("queued") or []) == 90
-    assert not data["failed"]
+    assert len(data.get("failed") or []) == 411
     logs = client.get("/api/emails?limit=300", headers=admin_h).json()["data"]
     targets = {f"rh{i}@usine-bulk.example.com" for i in range(90)}
     sent_logs = [row for row in logs if row["to_email"] in targets]
@@ -308,9 +301,8 @@ def test_broadcast_accepts_the_full_employer_list(client, monkeypatch):
         assert all(other not in (row.get("body") or "") and other not in (row.get("subject") or "") for other in others)
 
 
-def test_broadcast_stops_at_daily_prospect_cap(client, monkeypatch):
+def test_broadcast_has_no_daily_prospect_cap(client, monkeypatch):
     stub_smtp_delivery(monkeypatch)
-    monkeypatch.setattr("app.services.prospects.BULK_SEND_DAILY_MAX", 1)
     admin = promote_admin(client, "bulk-cap@example.com")
     admin_h = auth_header(admin)
     first = client.post(
@@ -329,13 +321,14 @@ def test_broadcast_stops_at_daily_prospect_cap(client, monkeypatch):
         json={"ids": [first["id"]], "template_key": "emp_first_contact"},
     )
     assert ok.status_code == 200, ok.text
-    blocked = client.post(
+    again = client.post(
         "/api/admin/prospects/broadcast",
         headers=admin_h,
         json={"ids": [second["id"]], "template_key": "emp_first_contact"},
     )
-    assert blocked.status_code == 400
-    assert blocked.json()["code"] == "BULK_DAILY_LIMIT"
+    assert again.status_code == 200, again.text
+    assert again.json().get("code") != "BULK_DAILY_LIMIT"
+    assert len((again.json()["data"].get("queued") or [])) == 1
 
 
 def test_generic_rh_name_is_not_used_in_greeting():
