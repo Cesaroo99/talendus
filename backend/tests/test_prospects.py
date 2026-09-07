@@ -522,6 +522,9 @@ def test_admin_ui_has_prospects_module():
     assert "chunkProspectIds" in js
     assert "data-write-client" in js
     assert "openClientWrite" in js
+    assert "opts.ignoreSide" in js
+    assert "var opts = proposals.map" not in js
+    assert "var tplOptions = proposals.map" in js
     assert "chunkProspectIds(uniqueProspectIds(ids), 250)" in js
     assert "employer-leads/refresh" in js
     assert "Charger le catalogue (460+)" in js

@@ -2463,7 +2463,7 @@
       var proposals = detail.proposals || [];
       var attachments = ids.length === 1 ? (detail.attachments || { invoices: [], contracts: [] }) : { invoices: [], contracts: [] };
       var others = ids.length - 1;
-      var opts = proposals.map(function (p) {
+      var tplOptions = proposals.map(function (p) {
         return '<option value="' + U.esc(p.key) + '">' + U.esc(p.label) + (p.already_sent ? " — déjà envoyé" : "") + "</option>";
       }).join("");
       var attFilename = function (label, fallback) {
@@ -2481,7 +2481,7 @@
         wide: true,
         body: '<div class="prospect-composer">' +
           (others > 0 ? "<p class='sub'>Chaque fiche reçoit son propre courriel, personnalisé à son nom d’entreprise. Aucune autre adresse n’apparaît en destinataire, copie ou CCI. Les centaines d’envois sont mis en file : la page n’attend pas le SMTP.</p>" : "") +
-          '<label>Modèle</label><select id="pc-tpl">' + opts + '<option value="custom">Message libre</option></select>' +
+          '<label>Modèle</label><select id="pc-tpl">' + tplOptions + '<option value="custom">Message libre</option></select>' +
           '<p class="sub" id="pc-intent"></p>' +
           '<label>Sujet</label><input id="pc-subject">' +
           '<label>Message</label><textarea id="pc-body" rows="8"></textarea>' +
