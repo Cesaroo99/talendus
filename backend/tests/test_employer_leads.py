@@ -466,7 +466,9 @@ def test_bootstrap_recovers_prod_stuck_at_406(client, db):
         select(func.count()).select_from(Company).where(Company.email.is_not(None)).where(Company.email != "")
     )
     assert remaining is not None
-    assert remaining < 460
+    # Les 200 derniers courriels du catalogue ont été retirés : on est
+    # clairement sous le total (752 après la vague 8), pas sous un seuil figé.
+    assert remaining < len(with_email) - 150
     headers = auth_header(admin)
     boot = client.get("/api/admin/bootstrap", headers=headers)
     assert boot.status_code == 200, boot.text
