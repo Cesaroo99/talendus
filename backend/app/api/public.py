@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.config import get_settings
 from app.database import get_db
 from app.deps import client_ip, require_roles
-from app.errors import ok
+from app.errors import AppError, ok
 from app.models import EmailLog, User
 from app.models.enums import EmailType, UserRole
 from app.schemas import ContactIn, PublicTalentProfileIn
@@ -181,6 +181,27 @@ def ops_tick(_: User = Depends(require_roles(UserRole.ADMIN, UserRole.FINANCE, U
 
 
 emails_router = APIRouter(prefix="/emails", tags=["emails"])
+
+
+@emails_router.post("/flush")
+def flush_emails(
+    db: Session = Depends(get_db),
+    _: User = Depends(require_roles(UserRole.ADMIN, UserRole.RECRUITER)),
+):
+    from app.services.email import flush_outbound_queue, smtp_send_block_reason
+
+    blocked = smtp_send_block_reason(db)
+    if blocked:
+        raise AppError(502, blocked, "SMTP_DISABLED")
+    stats = flush_outbound_queue(db)
+    db.commit()
+    pending = stats["pending"]
+    message = (
+        f"{pending} courriel(s) remis en file. L’envoi continue en arrière-plan."
+        if pending
+        else "Aucun courriel en attente : tout est déjà parti ou définitivement en échec."
+    )
+    return ok(stats, message=message)
 
 
 @emails_router.get("")

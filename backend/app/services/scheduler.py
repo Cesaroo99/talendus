@@ -23,7 +23,11 @@ def run_ops_tick() -> dict:
     try:
         result["overdue"] = invoices_service.mark_overdue(db)
         result["reminders"] = dispatch_due_reminders(db)
-        logger.info("ops tick overdue=%s reminders=%s", result["overdue"], result["reminders"])
+        from app.services.email import flush_outbound_queue
+
+        result["mail"] = flush_outbound_queue(db)
+        db.commit()
+        logger.info("ops tick overdue=%s reminders=%s mail=%s", result["overdue"], result["reminders"], result["mail"])
     except Exception:
         logger.exception("ops tick failed")
         db.rollback()

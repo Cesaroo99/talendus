@@ -11,6 +11,7 @@ from app.models.enums import UserRole
 from app.models.prospect import ProspectSend
 from app.schemas import ProspectBulkSendIn, ProspectIn, ProspectNoteIn, ProspectPatchIn, ProspectSendIn
 from app.services import prospects as svc
+from app.services.email import pending_outbound_count
 
 router = APIRouter(prefix="/admin/prospects", tags=["prospects"])
 
@@ -105,6 +106,7 @@ def list_prospects(
                 {"key": "", "label": "Tous les contacts"},
                 {"key": "ready", "label": "Prêt à contacter"},
             ],
+            "mail_pending": pending_outbound_count(db),
         },
     )
 
@@ -121,13 +123,11 @@ def broadcast(payload: ProspectBulkSendIn, db: Session = Depends(get_db), staff:
     result = svc.send_bulk(db, staff, payload.ids, _req(payload))
     db.commit()
     from app.config import get_settings
-    from app.services.email import enqueue_email
+    from app.services.email import flush_outbound_queue
 
     if get_settings().app_env != "test":
-        for item in result.get("queued") or []:
-            log_id = item.get("email_log_id")
-            if log_id:
-                enqueue_email(log_id)
+        flush_outbound_queue(db)
+        db.commit()
     queued = len(result.get("queued") or [])
     failed = len(result["failed"])
     message = (

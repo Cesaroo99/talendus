@@ -512,6 +512,11 @@ def test_admin_ui_has_prospects_module():
     assert "/admin/prospects/p/" in js
     assert "/admin/prospects/broadcast" in js
     assert "sendProspectBroadcast" in js
+    assert "flushPendingOutboundMail" in js
+    assert "prospect-retry-mail" in js
+    assert "/emails/flush" in js
+    assert "Relancer les envois en attente" in js
+    assert "mail_pending" in js
     assert "chunkProspectIds" in js
     assert "data-write-client" in js
     assert "openClientWrite" in js
@@ -753,6 +758,162 @@ def test_queued_broadcast_survives_reconcile(client, monkeypatch):
     after = client.get(f"/api/admin/prospects/p/{created['id']}", headers=admin_h).json()["data"]
     assert after["sends"]
     assert after["stage"] == "a-contacter"
+
+
+def test_is_retryable_email_classifies_errors():
+    from app.models import EmailLog
+    from app.models.enums import EmailStatus, EmailType
+    from app.services.email import SMTP_DISABLED_ERROR, is_retryable_email
+
+    queued = EmailLog(to_email="a@b.c", type=EmailType.ADMIN, status=EmailStatus.QUEUED)
+    assert is_retryable_email(queued)
+    timeout = EmailLog(
+        to_email="a@b.c",
+        type=EmailType.ADMIN,
+        status=EmailStatus.FAILED,
+        error="SMTP server timed out",
+        attempts=6,
+    )
+    assert is_retryable_email(timeout)
+    quota = EmailLog(
+        to_email="a@b.c",
+        type=EmailType.ADMIN,
+        status=EmailStatus.FAILED,
+        error="421 4.7.0 Temporary System Problem. Try again later. Daily sending quota exceeded",
+        attempts=8,
+    )
+    assert is_retryable_email(quota)
+    unknown = EmailLog(
+        to_email="a@b.c",
+        type=EmailType.ADMIN,
+        status=EmailStatus.FAILED,
+        error="550 5.1.1 The email account that you tried to reach does not exist",
+        attempts=1,
+    )
+    assert not is_retryable_email(unknown)
+    disabled = EmailLog(
+        to_email="a@b.c",
+        type=EmailType.ADMIN,
+        status=EmailStatus.FAILED,
+        error=SMTP_DISABLED_ERROR,
+        attempts=0,
+    )
+    assert not is_retryable_email(disabled)
+    sent = EmailLog(to_email="a@b.c", type=EmailType.ADMIN, status=EmailStatus.SENT, attempts=1)
+    assert not is_retryable_email(sent)
+
+
+def test_flush_outbound_queue_retries_failed_smtp(client):
+    from app.database import SessionLocal
+    from app.models import EmailLog
+    from app.models.enums import EmailStatus, EmailType
+    from app.services.email import SMTP_DISABLED_ERROR, flush_outbound_queue, pending_outbound_count
+
+    db = SessionLocal()
+    retryable = EmailLog(
+        to_email="relance@usine.example",
+        type=EmailType.ADMIN,
+        subject="Recrutement",
+        body="Bonjour",
+        status=EmailStatus.FAILED,
+        error="Connection timed out",
+        attempts=5,
+    )
+    quota = EmailLog(
+        to_email="quota@usine.example",
+        type=EmailType.ADMIN,
+        subject="Recrutement",
+        body="Bonjour",
+        status=EmailStatus.FAILED,
+        error="454 4.7.0 Too many messages. Daily sending quota exceeded",
+        attempts=7,
+    )
+    unknown = EmailLog(
+        to_email="inconnu@usine.example",
+        type=EmailType.ADMIN,
+        subject="Recrutement",
+        body="Bonjour",
+        status=EmailStatus.FAILED,
+        error="550 5.1.1 User unknown",
+        attempts=1,
+    )
+    disabled = EmailLog(
+        to_email="off@usine.example",
+        type=EmailType.ADMIN,
+        subject="Recrutement",
+        body="Bonjour",
+        status=EmailStatus.FAILED,
+        error=SMTP_DISABLED_ERROR,
+        attempts=0,
+    )
+    queued = EmailLog(
+        to_email="file@usine.example",
+        type=EmailType.ADMIN,
+        subject="Recrutement",
+        body="Bonjour",
+        status=EmailStatus.QUEUED,
+        attempts=0,
+    )
+    db.add_all([retryable, quota, unknown, disabled, queued])
+    db.commit()
+    stats = flush_outbound_queue(db)
+    db.close()
+    assert stats["pending"] == 3
+    assert stats["requeued"] == 2
+    check = SessionLocal()
+    assert check.get(EmailLog, retryable.id).status == EmailStatus.QUEUED
+    assert check.get(EmailLog, retryable.id).attempts == 4
+    assert check.get(EmailLog, quota.id).status == EmailStatus.QUEUED
+    assert check.get(EmailLog, quota.id).attempts == 4
+    assert check.get(EmailLog, queued.id).status == EmailStatus.QUEUED
+    assert check.get(EmailLog, unknown.id).status == EmailStatus.FAILED
+    assert check.get(EmailLog, disabled.id).status == EmailStatus.FAILED
+    assert pending_outbound_count(check) == 3
+    check.close()
+
+
+def test_flush_endpoint_requeues_retryable_mail(client, monkeypatch):
+    from app.database import SessionLocal
+    from app.models import EmailLog
+    from app.models.enums import EmailStatus, EmailType
+
+    stub_smtp_delivery(monkeypatch)
+    admin = promote_admin(client, "flush-admin@example.com")
+    admin_h = auth_header(admin)
+    db = SessionLocal()
+    stuck = EmailLog(
+        to_email="bloque@usine.example",
+        type=EmailType.ADMIN,
+        subject="Recrutement",
+        body="Bonjour",
+        status=EmailStatus.FAILED,
+        error="Broken pipe",
+        attempts=6,
+    )
+    db.add(stuck)
+    db.commit()
+    log_id = stuck.id
+    db.close()
+    listed = client.get("/api/admin/prospects?side=employer", headers=admin_h)
+    assert listed.status_code == 200, listed.text
+    assert listed.json()["meta"]["mail_pending"] >= 1
+    res = client.post("/api/emails/flush", headers=admin_h)
+    assert res.status_code == 200, res.text
+    assert res.json()["data"]["pending"] >= 1
+    assert res.json()["data"]["requeued"] >= 1
+    assert "file" in (res.json().get("message") or "").lower()
+    again = SessionLocal()
+    row = again.get(EmailLog, log_id)
+    assert row.status == EmailStatus.QUEUED
+    assert row.attempts == 4
+    again.close()
+
+
+def test_flush_endpoint_blocked_when_smtp_off(client):
+    admin = promote_admin(client, "flush-off@example.com")
+    blocked = client.post("/api/emails/flush", headers=auth_header(admin))
+    assert blocked.status_code == 502
+    assert blocked.json()["code"] == "SMTP_DISABLED"
 
 
 def test_smtp_send_block_reason_is_explicit(client):

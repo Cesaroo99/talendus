@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from email.message import EmailMessage
 from pathlib import Path
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
@@ -48,10 +48,23 @@ _LEGACY_FOOTER = re.compile(
     re.IGNORECASE,
 )
 _URL_RE = re.compile(r"(https?://[^\s<]+)")
+_RETRYABLE_SMTP = re.compile(
+    r"timeout|timed out|temporar|try again|later|connection|reset|refused|unavailable|"
+    r"quota|rate|limit|throttl|4\.2\.1|4\.7\.0|4\.3\.|421|451|454|please wait|too many|"
+    r"broken pipe|eof|deadline|network",
+    re.IGNORECASE,
+)
+_PERMANENT_SMTP = re.compile(
+    r"5\.1\.1|user unknown|does not exist|mailbox unavailable|authentication failed|"
+    r"invalid login|SMTP désactivé|Jamais remis",
+    re.IGNORECASE,
+)
 
 _queue: queue.Queue[str] = queue.Queue()
 _worker_lock = threading.Lock()
 _worker_started = False
+_worker_thread: threading.Thread | None = None
+_IN_FLIGHT_ERROR = "envoi en cours"
 
 
 @dataclass(frozen=True)
@@ -418,7 +431,13 @@ def _record_smtp_result(
     except Exception as exc:  # noqa: BLE001
         log.attempts = (log.attempts or 0) + 1
         log.error = str(exc)[:2000]
-        log.status = EmailStatus.FAILED if fail_fast or log.attempts >= 5 else EmailStatus.QUEUED
+        retryable = bool(_RETRYABLE_SMTP.search(log.error)) and not _PERMANENT_SMTP.search(log.error)
+        if fail_fast and not retryable:
+            log.status = EmailStatus.FAILED
+        elif retryable or log.attempts < 8:
+            log.status = EmailStatus.QUEUED
+        else:
+            log.status = EmailStatus.FAILED
         logger.warning("email failed to=%s attempt=%s: %s", log.to_email, log.attempts, exc)
 
 
@@ -461,6 +480,78 @@ def enqueue_email(log_id: str) -> None:
     start_worker()
 
 
+def is_retryable_email(log: EmailLog | None) -> bool:
+    if log is None or email_actually_sent(log):
+        return False
+    error = (log.error or "").strip()
+    if error == _IN_FLIGHT_ERROR:
+        return True
+    if _PERMANENT_SMTP.search(error) or error.startswith(SMTP_DISABLED_ERROR[:20]):
+        return False
+    if log.status == EmailStatus.QUEUED:
+        return True
+    if log.status == EmailStatus.FAILED:
+        return bool(_RETRYABLE_SMTP.search(error) or not error)
+    return False
+
+
+def pending_outbound_logs(db: Session, *, limit: int = 2000) -> list[EmailLog]:
+    rows = list(
+        db.scalars(
+            select(EmailLog)
+            .where(EmailLog.status.in_((EmailStatus.QUEUED, EmailStatus.FAILED)))
+            .order_by(EmailLog.created_at.asc())
+            .limit(limit)
+        ).all()
+    )
+    return [row for row in rows if is_retryable_email(row)]
+
+
+def pending_outbound_count(db: Session) -> int:
+    return len(pending_outbound_logs(db))
+
+
+def flush_outbound_queue(db: Session) -> dict[str, int]:
+    """Remet en file tout courriel encore récupérable et réveille le worker."""
+    rows = pending_outbound_logs(db)
+    requeued = 0
+    for log in rows:
+        if log.status != EmailStatus.QUEUED:
+            log.status = EmailStatus.QUEUED
+            requeued += 1
+        if (log.attempts or 0) >= 5:
+            log.attempts = 4
+        if (log.error or "").strip() == _IN_FLIGHT_ERROR:
+            log.error = None
+    ids = [log.id for log in rows]
+    db.flush()
+    db.commit()
+    if get_settings().app_env != "test":
+        for log_id in ids:
+            enqueue_email(log_id)
+        start_worker()
+    return {"pending": len(ids), "requeued": requeued}
+
+
+def resume_outbound_queue() -> dict[str, int]:
+    if get_settings().app_env == "test":
+        return {"pending": 0, "requeued": 0}
+    from app.database import SessionLocal
+
+    db = SessionLocal()
+    try:
+        stats = flush_outbound_queue(db)
+        db.commit()
+        logger.info("file SMTP reprise pending=%s requeued=%s", stats["pending"], stats["requeued"])
+        return stats
+    except Exception:
+        db.rollback()
+        logger.exception("reprise file SMTP")
+        return {"pending": 0, "requeued": 0}
+    finally:
+        db.close()
+
+
 def send_composed_email(
     db: Session,
     to_email: str,
@@ -499,14 +590,16 @@ def send_composed_email(
 
 
 def start_worker() -> None:
-    global _worker_started
+    global _worker_started, _worker_thread
     if get_settings().app_env == "test":
         return
     with _worker_lock:
-        if _worker_started:
+        if _worker_thread is not None and _worker_thread.is_alive():
+            _worker_started = True
             return
         thread = threading.Thread(target=_loop, name="talendus-email", daemon=True)
         thread.start()
+        _worker_thread = thread
         _worker_started = True
         logger.info("email worker started (file persistée)")
 
@@ -517,7 +610,7 @@ def _loop() -> None:
     while True:
         log_id = None
         try:
-            log_id = _queue.get(timeout=8)
+            log_id = _queue.get(timeout=3)
         except queue.Empty:
             pass
         try:
@@ -535,14 +628,20 @@ def _loop() -> None:
 def _reap(session_factory) -> None:
     db = session_factory()
     try:
-        ids = list(
-            db.scalars(
-                select(EmailLog.id).where(EmailLog.status == EmailStatus.QUEUED).order_by(EmailLog.created_at.asc()).limit(40)
-            ).all()
-        )
+        rows = pending_outbound_logs(db, limit=200)
+        for log in rows:
+            if log.status != EmailStatus.QUEUED:
+                log.status = EmailStatus.QUEUED
+        db.commit()
+        ids = [row.id for row in rows]
+    except Exception:
+        db.rollback()
+        raise
     finally:
         db.close()
-    for log_id in ids:
+    for index, log_id in enumerate(ids):
+        if index:
+            time.sleep(0.35)
         _deliver(session_factory, log_id)
 
 
@@ -556,6 +655,21 @@ def _deliver(session_factory, log_id: str) -> None:
                 continue
             if email_actually_sent(log):
                 return
+            if log.status == EmailStatus.FAILED and not is_retryable_email(log):
+                return
+            claimed = db.execute(
+                update(EmailLog)
+                .where(
+                    EmailLog.id == log_id,
+                    EmailLog.status.in_((EmailStatus.QUEUED, EmailStatus.FAILED)),
+                    EmailLog.attempts == (log.attempts or 0),
+                )
+                .values(status=EmailStatus.QUEUED, error=_IN_FLIGHT_ERROR)
+            )
+            if claimed.rowcount != 1:
+                db.rollback()
+                return
+            db.refresh(log)
             cfg = runtime_email_config(db)
             if not cfg.enabled:
                 mark_smtp_disabled(log)

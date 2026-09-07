@@ -1885,6 +1885,7 @@
         </div>
         <div class="actions">
           ${employer ? '<button type="button" class="btn btn-ghost" id="prospect-refresh-catalog">Charger le catalogue (740+)</button>' : ""}
+          ${employer ? '<button type="button" class="btn btn-orange" id="prospect-retry-mail">Relancer les envois en attente</button>' : ""}
           <button type="button" class="btn btn-ghost" id="prospect-select-all">Tout sélectionner</button>
           <button type="button" class="btn btn-ghost" id="prospect-bulk">Écrire aux sélectionnés</button>
           <button type="button" class="btn btn-orange" id="prospect-new">Ajouter</button>
@@ -2028,10 +2029,13 @@
       var employer = prospectSide() === "employer";
       var lead = document.getElementById("prospect-lead");
       if (lead) {
+        var pending = Number(prospectMeta.mail_pending || 0);
         lead.textContent = rows.length + " fiche" + (rows.length > 1 ? "s" : "") + " dans cette base" +
           (employer ? " employeur." : " candidat.") +
-          " Tout sélectionner coche uniquement les fiches affichées après filtre.";
+          " Tout sélectionner coche uniquement les fiches affichées après filtre." +
+          (employer && pending ? " " + pending + " courriel(s) n’ont pas encore quitté le serveur : cliquez Relancer les envois en attente." : "");
       }
+      if (employer) flushPendingOutboundMail(false);
       var stages = prospectMeta.stages || [];
       var body = rows.map(function (r) {
         var stageOpts = stages.map(function (s) {
@@ -2101,6 +2105,8 @@
   function bindProspectList(root) {
     var addBtn = document.getElementById("prospect-new");
     if (addBtn) addBtn.onclick = function () { openProspectCreate(); };
+    var retryMail = document.getElementById("prospect-retry-mail");
+    if (retryMail) retryMail.onclick = function () { flushPendingOutboundMail(true); };
     var catalogBtn = document.getElementById("prospect-refresh-catalog");
     if (catalogBtn) catalogBtn.onclick = async function () {
       catalogBtn.disabled = true;
@@ -2405,6 +2411,25 @@
     return status === 503 || status === 504 || status === 524;
   }
 
+  async function flushPendingOutboundMail(manual) {
+    if (!api()) return;
+    try {
+      var res = await api().request("/emails/flush", { method: "POST" });
+      var pending = Number((res && res.data && res.data.pending) || 0);
+      if (manual) {
+        U.toast((res && res.message) || (pending ? pending + " courriel(s) remis en file." : "Rien à relancer."), pending ? "ok" : "ok");
+        hydrateProspects();
+      } else if (pending) {
+        var lead = document.getElementById("prospect-lead");
+        if (lead && lead.textContent.indexOf("quitté le serveur") < 0) {
+          lead.textContent += " " + pending + " courriel(s) remis en file automatiquement.";
+        }
+      }
+    } catch (err) {
+      if (manual) U.toast((err && err.message) || "Relance impossible.", "err");
+    }
+  }
+
   async function sendProspectBroadcast(ids, payload, onProgress) {
     var all = uniqueProspectIds(ids);
     var acc = { sent: 0, queued: 0, skipped: 0, failed: 0 };
@@ -2604,6 +2629,7 @@
                 U.toast(parts.join(", ") + ".", result.failed && !result.queued && !result.sent ? "err" : "ok");
               }
               close();
+              flushPendingOutboundMail(false);
               hydrateProspects();
             } catch (err) {
               if (btn) { btn.disabled = false; btn.textContent = "Envoyer"; }

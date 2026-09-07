@@ -15,7 +15,7 @@ from app.database import init_db
 from app.errors import AppError, app_error_handler, http_error_handler, unhandled_handler, validation_handler
 from app.middleware import RateLimitMiddleware, SecurityHeadersMiddleware, SeoRedirectMiddleware
 from app.seed import seed_if_empty
-from app.services.email import start_worker
+from app.services.email import resume_outbound_queue, start_worker
 from app.services.scheduler import start_ops_worker
 from app.static_guard import is_hidden_static_path
 
@@ -59,6 +59,7 @@ async def lifespan(_app: FastAPI):
         try:
             start_worker()
             start_ops_worker()
+            resume_outbound_queue()
         except Exception:
             logger.exception("Workers email/ops en échec")
     logger.info("Talendus API ready env=%s db=%s", settings.app_env, db_ok)
