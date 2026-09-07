@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 
 from app.errors import AppError
 from app.models import Application, AuditLog, Candidate, Company, Contract, EmailLog, InternalNote, Interview, Invoice, RecruitmentMission, User
-from app.models.enums import EmailType, UserRole, utcnow
+from app.models.enums import EmailStatus, EmailType, UserRole, utcnow
 from app.models.prospect import Prospect, ProspectSend
 from app.services.contact_email import lead_email_meta, matches_email_filter
 from app.services.email import (
@@ -23,12 +23,11 @@ from app.services.email import (
     email_actually_sent,
     mark_fake_sent_logs,
     send_composed_email,
-    start_worker,
 )
 
 logger = logging.getLogger("talendus.prospects")
-BULK_SEND_MAX = 400
-BULK_SEND_DAILY_MAX = 400
+BULK_SEND_MAX = 500
+BULK_SEND_DAILY_MAX = 500
 
 SIDES = ("candidate", "employer")
 
@@ -832,11 +831,15 @@ def list_prospects(
     email: str | None = None,
     ready: str | None = None,
 ) -> list[Prospect]:
-    from app.services.employer_leads import sync_catalog_emails_to_crm
+    from app.config import get_settings
+    from app.services.employer_leads import refresh_employer_directory, sync_catalog_emails_to_crm
 
-    sync_catalog_emails_to_crm(db)
-    sync_known_people(db)
     wanted = normalize_side(side)
+    if wanted == "employer" and get_settings().app_env != "test":
+        refresh_employer_directory(db)
+    else:
+        sync_catalog_emails_to_crm(db)
+    sync_known_people(db)
     stmt = select(Prospect).where(Prospect.side == wanted).order_by(Prospect.updated_at.desc())
     if stage:
         stmt = stmt.where(Prospect.stage == stage)
@@ -1183,6 +1186,13 @@ def send_to_prospect(db: Session, actor: User, row: Prospect, req: SendRequest, 
             "ALREADY_SENT",
         )
     if existing and not _send_was_delivered(db, existing):
+        pending = db.get(EmailLog, existing.email_log_id) if existing.email_log_id else None
+        if pending is not None and pending.status == EmailStatus.QUEUED and not req.force:
+            raise AppError(
+                409,
+                f"{display_name(row)} a déjà ce message en file d’envoi. Attendez qu’il parte, ou forcez l’envoi.",
+                "ALREADY_QUEUED",
+            )
         db.delete(existing)
         db.flush()
         existing = None
@@ -1194,10 +1204,12 @@ def send_to_prospect(db: Session, actor: User, row: Prospect, req: SendRequest, 
         subject,
         body,
         email_type=EmailType.ADMIN,
-        sync=True,
+        sync=sync,
+        enqueue=sync,
         attachments=attachments,
     )
     delivered = email_actually_sent(log)
+    queued = (not delivered) and log.status == EmailStatus.QUEUED
     names = "|".join(att.filename for att in attachments)
     from app.services.audit import audit
 
@@ -1213,10 +1225,11 @@ def send_to_prospect(db: Session, actor: User, row: Prospect, req: SendRequest, 
             "subject": subject[:180],
             "email_status": log.status.value if log.status else "QUEUED",
             "delivered": delivered,
+            "queued": queued,
             "error": log.error or "",
         },
     )
-    if not delivered:
+    if not delivered and not queued:
         db.flush()
         return {
             "prospect_id": row.id,
@@ -1225,6 +1238,7 @@ def send_to_prospect(db: Session, actor: User, row: Prospect, req: SendRequest, 
             "subject": subject,
             "email_status": log.status.value if log.status else "QUEUED",
             "delivered": False,
+            "queued": False,
             "email_error": delivery_error(log),
             "attachments": [att.filename for att in attachments],
         }
@@ -1248,6 +1262,19 @@ def send_to_prospect(db: Session, actor: User, row: Prospect, req: SendRequest, 
                 sent_by_id=actor.id,
             )
         )
+    if queued:
+        db.flush()
+        return {
+            "prospect_id": row.id,
+            "to_email": row.email,
+            "template_key": key,
+            "subject": subject,
+            "email_status": "QUEUED",
+            "email_log_id": log.id,
+            "delivered": False,
+            "queued": True,
+            "attachments": [att.filename for att in attachments],
+        }
     row.last_contacted_at = utcnow()
     if row.stage in {"nouveau", "a-contacter"}:
         row.stage = "contacte"
@@ -1257,10 +1284,26 @@ def send_to_prospect(db: Session, actor: User, row: Prospect, req: SendRequest, 
         "to_email": row.email,
         "template_key": key,
         "subject": subject,
-        "email_status": log.status.value if log.status else "QUEUED",
+        "email_status": log.status.value if log.status else "SENT",
         "delivered": True,
+        "queued": False,
         "attachments": [att.filename for att in attachments],
     }
+
+
+def finalize_prospect_delivery(db: Session, log: EmailLog) -> None:
+    """Passe la fiche à « contacté » seulement quand le SMTP a vraiment accepté le courriel."""
+    if not email_actually_sent(log):
+        return
+    send = db.scalar(select(ProspectSend).where(ProspectSend.email_log_id == log.id))
+    if send is None:
+        return
+    row = db.get(Prospect, send.prospect_id)
+    if row is None:
+        return
+    row.last_contacted_at = log.sent_at or utcnow()
+    if row.stage in {"nouveau", "a-contacter"}:
+        row.stage = "contacte"
 
 
 def _prospect_sends_today(db: Session) -> int:
@@ -1286,7 +1329,7 @@ def send_bulk(db: Session, actor: User, ids: list[str], req: SendRequest) -> dic
             f"Plafond quotidien atteint ({BULK_SEND_DAILY_MAX} courriels prospects / jour). Réessayez demain ou envoyez un lot plus petit.",
             "BULK_DAILY_LIMIT",
         )
-    sent, skipped, failed = [], [], []
+    sent, queued, skipped, failed = [], [], [], []
     found = [db.get(Prospect, prospect_id) for prospect_id in ids]
     sides = {row.side for row in found if row}
     if len(sides) > 1:
@@ -1296,9 +1339,11 @@ def send_bulk(db: Session, actor: User, ids: list[str], req: SendRequest) -> dic
             failed.append({"id": prospect_id, "reason": "introuvable"})
             continue
         try:
-            result = send_to_prospect(db, actor, row, req, sync=True)
+            result = send_to_prospect(db, actor, row, req, sync=False)
             if result.get("delivered"):
                 sent.append(result)
+            elif result.get("queued"):
+                queued.append(result)
             else:
                 failed.append(
                     {
@@ -1308,12 +1353,11 @@ def send_bulk(db: Session, actor: User, ids: list[str], req: SendRequest) -> dic
                     }
                 )
         except AppError as exc:
-            if exc.code == "ALREADY_SENT":
+            if exc.code in {"ALREADY_SENT", "ALREADY_QUEUED"}:
                 skipped.append({"id": row.id, "email": row.email, "reason": exc.message})
             else:
                 failed.append({"id": row.id, "email": row.email, "reason": exc.message})
-    start_worker()
-    return {"sent": sent, "skipped": skipped, "failed": failed}
+    return {"sent": sent, "queued": queued, "skipped": skipped, "failed": failed}
 
 
 def reconcile_undelivered_prospect_mails(db: Session) -> dict[str, int]:
@@ -1321,9 +1365,16 @@ def reconcile_undelivered_prospect_mails(db: Session) -> dict[str, int]:
     fake_logs = mark_fake_sent_logs(db)
     sends = list(db.scalars(select(ProspectSend)).all())
     delivered_logs = _delivered_send_logs(db, sends)
+    log_ids = [row.email_log_id for row in sends if row.email_log_id]
+    queued_ids = {
+        log.id
+        for log in db.scalars(select(EmailLog).where(EmailLog.id.in_(log_ids), EmailLog.status == EmailStatus.QUEUED)).all()
+    } if log_ids else set()
     removed = 0
     for send in sends:
         if send.email_log_id and send.email_log_id in delivered_logs:
+            continue
+        if send.email_log_id and send.email_log_id in queued_ids:
             continue
         db.delete(send)
         removed += 1

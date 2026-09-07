@@ -120,8 +120,22 @@ def templates(side: str | None = None, _staff_user: User = Depends(_staff)):
 def broadcast(payload: ProspectBulkSendIn, db: Session = Depends(get_db), staff: User = Depends(_staff)):
     result = svc.send_bulk(db, staff, payload.ids, _req(payload))
     db.commit()
+    from app.config import get_settings
+    from app.services.email import enqueue_email
+
+    if get_settings().app_env != "test":
+        for item in result.get("queued") or []:
+            log_id = item.get("email_log_id")
+            if log_id:
+                enqueue_email(log_id)
+    queued = len(result.get("queued") or [])
     failed = len(result["failed"])
-    message = f"{len(result['sent'])} parti(s), {len(result['skipped'])} déjà contacté(s) pour ce message."
+    message = (
+        f"{len(result['sent'])} parti(s), {queued} en file, "
+        f"{len(result['skipped'])} déjà contacté(s) pour ce message."
+    )
+    if queued:
+        message += " L’envoi continue en arrière-plan : vous pouvez quitter la page."
     if failed:
         message += f" {failed} non parti(s) — statut inchangé."
     return ok(result, message=message)

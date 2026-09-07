@@ -796,7 +796,7 @@
       if (af !== bf) return bf - af;
       return String(a.name || "").localeCompare(String(b.name || ""), "fr");
     });
-    var pg = U.paginate(list, page, 25);
+    var pg = U.paginate(list, page, 100);
     var rows = pg.items.map(function (c) {
       var missions = S().missions.filter(function (m) { return m.clientId === c.id; }).length;
       var placed = S().candidates.filter(function (x) { return x.clientId === c.id && x.status === "place"; }).length;
@@ -814,8 +814,8 @@
       return '<button class="btn btn-ghost btn-sm' + (pg.page === i + 1 ? " btn-orange" : "") + '" data-page="' + (i + 1) + '">' + (i + 1) + "</button>";
     }).join("");
     return `
-      <div class="page-head"><div><h1>Clients</h1><p>${withEmailTotal} avec courriel public · ${readyTotal} prêts à contacter · ${all.length} fiches. Écrire ouvre le message Talendus ; Courriel ouvre votre boîte.</p></div>
-        <div class="actions"><a class="btn btn-ghost" href="#/prospects/employers">Recruteurs / employeurs</a><button class="btn btn-ghost" data-export-cli>Exporter</button><button class="btn btn-orange" data-create="client">Nouveau client</button></div></div>
+      <div class="page-head"><div><h1>Clients</h1><p>${withEmailTotal} avec courriel public · ${readyTotal} prêts à contacter · ${all.length} fiches catalogue. Écrire ouvre le message Talendus ; Courriel ouvre votre boîte.</p></div>
+        <div class="actions"><button type="button" class="btn btn-ghost" data-refresh-employers>Charger le catalogue (460+)</button><a class="btn btn-ghost" href="#/prospects/employers">Recruteurs / employeurs</a><button class="btn btn-ghost" data-export-cli>Exporter</button><button class="btn btn-orange" data-create="client">Nouveau client</button></div></div>
       <div class="filters">
         <input data-f="q" placeholder="Nom, ville ou courriel" value="${U.esc(filters.q || "")}">
         <select data-f="sector"><option value="">Secteur</option>${unique(S().clients, "sector").map(function (s) { return "<option" + (filters.sector === s ? " selected" : "") + ">" + s + "</option>"; }).join("")}</select>
@@ -1884,6 +1884,7 @@
           <p id="prospect-lead">${employer ? "Entreprises avec courriel public à démarcher. Les candidats sont dans l’autre onglet." : "Base candidats uniquement. Les entreprises avec courriel sont dans Recruteurs / employeurs."}</p>
         </div>
         <div class="actions">
+          ${employer ? '<button type="button" class="btn btn-ghost" id="prospect-refresh-catalog">Charger le catalogue (460+)</button>' : ""}
           <button type="button" class="btn btn-ghost" id="prospect-select-all">Tout sélectionner</button>
           <button type="button" class="btn btn-ghost" id="prospect-bulk">Écrire aux sélectionnés</button>
           <button type="button" class="btn btn-orange" id="prospect-new">Ajouter</button>
@@ -1979,6 +1980,29 @@
     hydrateProspects();
   }
 
+  var employerCatalogTried = false;
+
+  async function hydrateEmployerClients() {
+    if (!api() || !live()) return;
+    var withEmail = (S().clients || []).filter(function (c) { return !!(c.email || "").trim(); }).length;
+    if (withEmail >= 400 || employerCatalogTried) return;
+    employerCatalogTried = true;
+    var stats = await refreshEmployerDirectory(true);
+    if (stats && (stats.companies_with_catalog_email || 0) > withEmail) render();
+  }
+
+  async function refreshEmployerDirectory(forceReload) {
+    if (!api()) return null;
+    try {
+      var json = await api().request("/admin/employer-leads/refresh", { method: "POST" });
+      if (forceReload && TLStore.hydrateFromApi) await TLStore.hydrateFromApi();
+      return (json && json.data) || null;
+    } catch (err) {
+      U.toast((err && err.message) || "Catalogue employeurs impossible à charger.", "err");
+      return null;
+    }
+  }
+
   async function hydrateProspects() {
     var root = document.getElementById("prospects-root");
     if (!root) return;
@@ -1987,6 +2011,10 @@
       return;
     }
     try {
+      if (prospectSide() === "employer") {
+        root.innerHTML = "<p class='sub'>Chargement du catalogue employeurs (environ 460 courriels publics)…</p>";
+        await refreshEmployerDirectory(false);
+      }
       var json = await api().request("/admin/prospects?" + prospectQuery());
       var rows = (json && json.data) || [];
       prospectMeta = (json && json.meta) || prospectMeta;
@@ -2072,6 +2100,18 @@
   function bindProspectList(root) {
     var addBtn = document.getElementById("prospect-new");
     if (addBtn) addBtn.onclick = function () { openProspectCreate(); };
+    var catalogBtn = document.getElementById("prospect-refresh-catalog");
+    if (catalogBtn) catalogBtn.onclick = async function () {
+      catalogBtn.disabled = true;
+      catalogBtn.textContent = "Chargement…";
+      var stats = await refreshEmployerDirectory(true);
+      catalogBtn.disabled = false;
+      catalogBtn.textContent = "Charger le catalogue (460+)";
+      if (stats) {
+        U.toast((stats.prospects_with_catalog_email || 0) + " employeurs avec courriel public.", "ok");
+        hydrateProspects();
+      }
+    };
     var toggle = document.getElementById("prospect-select-all");
     if (toggle) toggle.onclick = function () {
       var boxes = prospectChecks(root);
@@ -2351,8 +2391,9 @@
   }
 
   async function sendProspectBroadcast(ids, payload, onProgress) {
-    var chunks = chunkProspectIds(uniqueProspectIds(ids), 3);
+    var chunks = chunkProspectIds(uniqueProspectIds(ids), 250);
     var sent = 0;
+    var queued = 0;
     var skipped = 0;
     var failed = 0;
     for (var i = 0; i < chunks.length; i++) {
@@ -2363,10 +2404,11 @@
       });
       var data = (res && res.data) || {};
       sent += (data.sent || []).length;
+      queued += (data.queued || []).length;
       skipped += (data.skipped || []).length;
       failed += (data.failed || []).length;
     }
-    return { sent: sent, skipped: skipped, failed: failed };
+    return { sent: sent, queued: queued, skipped: skipped, failed: failed };
   }
 
   async function openClientWrite(clientId) {
@@ -2437,7 +2479,7 @@
         title: ids.length > 1 ? "Envoyer à " + ids.length + " fiches" : "Écrire à " + prospectLabel(detail),
         wide: true,
         body: '<div class="prospect-composer">' +
-          (others > 0 ? "<p class='sub'>Chaque fiche reçoit son propre courriel, personnalisé à son nom d’entreprise. Aucune autre adresse n’apparaît en destinataire, copie ou CCI. Les envois partent un par un.</p>" : "") +
+          (others > 0 ? "<p class='sub'>Chaque fiche reçoit son propre courriel, personnalisé à son nom d’entreprise. Aucune autre adresse n’apparaît en destinataire, copie ou CCI. Les centaines d’envois sont mis en file : la page n’attend pas le SMTP.</p>" : "") +
           '<label>Modèle</label><select id="pc-tpl">' + opts + '<option value="custom">Message libre</option></select>' +
           '<p class="sub" id="pc-intent"></p>' +
           '<label>Sujet</label><input id="pc-subject">' +
@@ -2526,12 +2568,14 @@
                 }
               } else {
                 var result = await sendProspectBroadcast(ids, payload, function (done, total) {
-                  if (btn) btn.textContent = "Envoi " + done + " / " + total + "…";
+                  if (btn) btn.textContent = "Mise en file " + done + " / " + total + "…";
                 });
-                var parts = [result.sent + " parti" + (result.sent > 1 ? "s" : "")];
+                var parts = [];
+                if (result.sent) parts.push(result.sent + " parti" + (result.sent > 1 ? "s" : ""));
+                if (result.queued) parts.push(result.queued + " en file (l’envoi continue, vous pouvez quitter)");
                 if (result.skipped) parts.push(result.skipped + " déjà contacté" + (result.skipped > 1 ? "s" : ""));
                 if (result.failed) parts.push(result.failed + " non parti" + (result.failed > 1 ? "s" : "") + " (statut inchangé)");
-                U.toast(parts.join(", ") + ".", result.failed || !result.sent ? "err" : "ok");
+                U.toast(parts.join(", ") + ".", result.failed && !result.queued && !result.sent ? "err" : "ok");
               }
               close();
               hydrateProspects();
@@ -3169,6 +3213,17 @@
             render();
           } catch (err) {
             U.toast((err && err.message) || "Mise à jour impossible.", "err");
+          }
+        })();
+        return;
+      }
+      if (t.closest("[data-refresh-employers]")) {
+        (async function () {
+          U.toast("Chargement du catalogue employeurs…", "ok");
+          var stats = await refreshEmployerDirectory(true);
+          if (stats) {
+            U.toast((stats.prospects_with_catalog_email || 0) + " employeurs avec courriel public.", "ok");
+            render();
           }
         })();
         return;
@@ -4017,7 +4072,7 @@
           '<option value="non"' + (val("smtp.use_tls") === "non" ? " selected" : "") + ">non</option>" +
           "</select>" +
           '<label>Envoyer le test à une vraie boîte</label><input id="adm-smtp-test-to" type="email" value="' + U.esc((function () { var me = TLStore.me() || {}; var mail = (me.email || "").trim(); return /@talendus\.ca$/i.test(mail) ? "" : mail; })()) + '" placeholder="vous@votreboite.com">' +
-          '<p class="sub">« Suivre EMAIL_ENABLED » n’envoie rien si la variable Render est off, même avec un serveur et un mot de passe. Pour contacter les entreprises, choisissez « Oui — envoyer vraiment ».</p>' +
+          '<p class="sub">« Suivre EMAIL_ENABLED » n’envoie rien si la variable Render est off, même avec un serveur et un mot de passe. Choisissez une fois « Oui — envoyer vraiment » : le réglage reste après une pause, pas besoin de le refaire à chaque campagne. Les envois de masse partent en file, même pour des centaines de destinataires.</p>' +
           '<p class="sub">Le test part vers cette adresse (la vôtre par défaut). Les comptes de démo @talendus.ca sont ignorés.</p>' +
           '<p style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">' +
           '<button class="btn btn-orange" type="submit">Enregistrer le courriel</button>' +
@@ -4174,6 +4229,7 @@
       if (r.name === "services") hydrateServices();
       if (r.name === "analytics") hydrateAnalytics();
       if (r.name === "settings") hydrateTeam();
+      if (r.name === "clients" && !r.id) hydrateEmployerClients();
       if (r.name === "prospects" && r.extra) hydrateProspectFiche(r.extra);
       else if (r.name === "prospects") hydrateProspects();
       if (r.name === "journal") hydrateJournal();

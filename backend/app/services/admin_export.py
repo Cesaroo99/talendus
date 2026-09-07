@@ -221,10 +221,10 @@ def bootstrap(db: Session, user: User | None = None) -> dict:
         return _editor_bootstrap(db, user)
     if user and user.role == UserRole.FINANCE:
         return _finance_bootstrap(db, user)
-    from app.services.employer_leads import ensure_quebec_employer_leads
+    from app.services.employer_leads import catalog_stats, refresh_employer_directory
 
     try:
-        ensure_quebec_employer_leads(db)
+        refresh_employer_directory(db)
         db.commit()
     except Exception:
         logger.exception("bootstrap: import des employeurs québécois impossible")
@@ -341,6 +341,7 @@ def bootstrap(db: Session, user: User | None = None) -> dict:
         "faqs": faqs if isinstance(faqs, list) else [],
         "jobMatches": job_matches,
         "monthly": _monthly(applications, invoices),
+        "employerCatalog": catalog_stats(db),
         "stats": {
             "candidates": len(candidates),
             "clients": len(companies),

@@ -383,3 +383,19 @@ def test_crm_lists_show_enriched_company_after_sync(client, db):
     found_emails = {row["email"] for row in found.json()["data"]}
     assert "info@exceldor.com" in found_emails
     assert "rh_laval@avior.ca" in found_emails
+    refresh = client.post("/api/admin/employer-leads/refresh", headers=headers)
+    assert refresh.status_code == 200, refresh.text
+    stats = refresh.json()["data"]
+    assert stats["catalog_with_email"] >= 460
+    assert stats["prospects_with_catalog_email"] >= 460
+    assert stats["companies_with_catalog_email"] >= 460
+    boot2 = client.get("/api/admin/bootstrap", headers=headers)
+    assert boot2.status_code == 200, boot2.text
+    catalog = boot2.json()["data"].get("employerCatalog") or {}
+    assert catalog.get("catalog_with_email", 0) >= 460
+    clients2 = boot2.json()["data"]["clients"]
+    with_email = [row for row in clients2 if (row.get("email") or "").strip()]
+    assert len(with_email) >= 460
+    listed2 = client.get("/api/admin/prospects?side=employer&email=with", headers=headers)
+    assert listed2.status_code == 200, listed2.text
+    assert len(listed2.json()["data"]) >= 460

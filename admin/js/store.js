@@ -230,11 +230,10 @@
           var mapped = d.users.filter(function (u) { return ["admin", "recruiter", "finance", "editor"].indexOf(u.role) !== -1; });
           if (mapped.length) state.users = mapped;
         }
+        if (d.employerCatalog && typeof d.employerCatalog === "object") state.employerCatalog = d.employerCatalog;
         persist();
         return true;
       } catch (e) {
-        this._clearSeededLists();
-        persist();
         return false;
       }
     },

@@ -59,6 +59,24 @@ def bootstrap(db: Session = Depends(get_db), user: User = Depends(_staff)):
     return ok(admin_export.bootstrap(db, user))
 
 
+@router.post("/employer-leads/refresh")
+def refresh_employer_leads(
+    db: Session = Depends(get_db),
+    _user: User = Depends(require_roles(UserRole.RECRUITER, UserRole.ADMIN)),
+):
+    from app.services.employer_leads import refresh_employer_directory
+
+    stats = refresh_employer_directory(db, force=True)
+    db.commit()
+    return ok(
+        stats,
+        message=(
+            f"{stats['prospects_with_catalog_email']} employeurs avec courriel public "
+            f"sur {stats['catalog_with_email']} fiches catalogue."
+        ),
+    )
+
+
 @router.post("/candidates")
 def create_candidate(
     payload: AdminCandidateIn,

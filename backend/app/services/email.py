@@ -456,6 +456,11 @@ def send_email(
     return log
 
 
+def enqueue_email(log_id: str) -> None:
+    _queue.put(log_id)
+    start_worker()
+
+
 def send_composed_email(
     db: Session,
     to_email: str,
@@ -464,6 +469,7 @@ def send_composed_email(
     *,
     email_type: EmailType = EmailType.ADMIN,
     sync: bool = True,
+    enqueue: bool = True,
     attachments: list[EmailAttachment] | None = None,
 ) -> EmailLog:
     body = signed_plain(body)
@@ -487,13 +493,15 @@ def send_composed_email(
     if sync:
         _record_smtp_result(log, cfg, fail_fast=True, attachments=attachments)
         return log
-    _queue.put(log.id)
-    start_worker()
+    if enqueue:
+        enqueue_email(log.id)
     return log
 
 
 def start_worker() -> None:
     global _worker_started
+    if get_settings().app_env == "test":
+        return
     with _worker_lock:
         if _worker_started:
             return
@@ -529,7 +537,7 @@ def _reap(session_factory) -> None:
     try:
         ids = list(
             db.scalars(
-                select(EmailLog.id).where(EmailLog.status == EmailStatus.QUEUED).order_by(EmailLog.created_at.asc()).limit(20)
+                select(EmailLog.id).where(EmailLog.status == EmailStatus.QUEUED).order_by(EmailLog.created_at.asc()).limit(40)
             ).all()
         )
     finally:
@@ -554,6 +562,10 @@ def _deliver(session_factory, log_id: str) -> None:
                 db.commit()
                 return
             _record_smtp_result(log, cfg, fail_fast=False)
+            if email_actually_sent(log):
+                from app.services.prospects import finalize_prospect_delivery
+
+                finalize_prospect_delivery(db, log)
             db.commit()
             return
         finally:
