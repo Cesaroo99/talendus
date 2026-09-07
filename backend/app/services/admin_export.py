@@ -22,6 +22,7 @@ from app.models import (
     User,
 )
 from app.models.enums import ApplicationStatus, InterviewType, InvoiceStatus, JobStatus, MissionStatus, UserRole, utcnow
+from app.services.contact_email import lead_email_meta
 from app.services.hiring_requests import STATUS_COPY, serialize_request
 from app.services.interviews import CALL_TYPES, LIVE_CALL_STATUSES, host_in_call
 from app.services.pipeline import stage_for
@@ -357,6 +358,7 @@ def _user(u: User) -> dict:
 
 def _company(c: Company) -> dict:
     owner = c.owner
+    email_meta = lead_email_meta(c.name, c.email)
     return {
         "id": c.id,
         "name": c.name,
@@ -369,6 +371,8 @@ def _company(c: Company) -> dict:
         "contact": c.contact_name or "",
         "email": c.email or "",
         "phone": c.phone or "",
+        "contactEmailVerified": bool(email_meta.get("email_verified")),
+        "readyToContact": bool(email_meta.get("ready_to_contact")),
         "status": "Actif" if c.status and c.status.value == "ACTIVE" else "Prospect",
         "recruiterId": c.assigned_recruiter_id or "",
         "employees": c.employees or 0,

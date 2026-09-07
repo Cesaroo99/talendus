@@ -16,6 +16,7 @@ from app.errors import AppError
 from app.models import Application, AuditLog, Candidate, Company, Contract, EmailLog, InternalNote, Interview, Invoice, RecruitmentMission, User
 from app.models.enums import EmailType, UserRole, utcnow
 from app.models.prospect import Prospect, ProspectSend
+from app.services.contact_email import lead_email_meta, matches_email_filter
 from app.services.email import (
     EmailAttachment,
     delivery_error,
@@ -412,6 +413,7 @@ def custom_template_key(subject: str) -> str:
 
 def serialize_prospect(row: Prospect, sent_keys: list[str] | None = None) -> dict:
     generic = is_generic_person_name(row.first_name or "", row.last_name or "")
+    meta = lead_email_meta(row.company_name, row.email)
     return {
         "id": row.id,
         "side": row.side,
@@ -435,6 +437,10 @@ def serialize_prospect(row: Prospect, sent_keys: list[str] | None = None) -> dic
         "created_at": row.created_at.isoformat() if row.created_at else None,
         "display_name": display_name(row),
         "sent_templates": sent_keys or [],
+        "email_verified": meta["email_verified"],
+        "email_confidence": meta["email_confidence"],
+        "email_source": meta["email_source"],
+        "ready_to_contact": meta["ready_to_contact"],
         **account_links_for(row.email, row.side, row.company_name),
     }
 
@@ -822,6 +828,8 @@ def list_prospects(
     source: str | None = None,
     city: str | None = None,
     sector: str | None = None,
+    email: str | None = None,
+    ready: str | None = None,
 ) -> list[Prospect]:
     sync_known_people(db)
     wanted = normalize_side(side)
@@ -846,7 +854,21 @@ def list_prospects(
                 Prospect.phone.ilike(like),
             )
         )
-    return list(db.scalars(stmt).all())
+    rows = list(db.scalars(stmt).all())
+    if not email and not ready:
+        return rows
+    filtered: list[Prospect] = []
+    for row in rows:
+        meta = lead_email_meta(row.company_name, row.email)
+        if matches_email_filter(
+            row.email,
+            wanted=email,
+            verified=meta["email_verified"],
+            ready=ready,
+            confidence=meta["email_confidence"],
+        ):
+            filtered.append(row)
+    return filtered
 
 
 def filter_options(db: Session, side: str) -> dict[str, list[str]]:

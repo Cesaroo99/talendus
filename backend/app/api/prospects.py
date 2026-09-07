@@ -60,11 +60,23 @@ def list_prospects(
     source: str | None = None,
     city: str | None = None,
     sector: str | None = None,
+    email: str | None = None,
+    ready: str | None = None,
     db: Session = Depends(get_db),
     _staff_user: User = Depends(_staff),
 ):
     side = svc.normalize_side(side)
-    rows = svc.list_prospects(db, side=side, stage=stage, q=q, source=source, city=city, sector=sector)
+    rows = svc.list_prospects(
+        db,
+        side=side,
+        stage=stage,
+        q=q,
+        source=source,
+        city=city,
+        sector=sector,
+        email=email,
+        ready=ready,
+    )
     if any(row.side != side for row in rows):
         raise AppError(500, "Les deux bases ne doivent pas être mélangées.", "SIDE_MIXED")
     # sync_known_people crée des fiches : sans commit, Écrire / Fiche 404 « Prospect introuvable ».
@@ -80,6 +92,17 @@ def list_prospects(
             "sources": [{"key": k, "label": l} for k, l in svc.SOURCE_LABELS],
             "cities": options["cities"],
             "sectors": options["sectors"],
+            "email_filters": [
+                {"key": "", "label": "Tous les courriels"},
+                {"key": "with", "label": "Avec courriel"},
+                {"key": "without", "label": "Sans courriel"},
+                {"key": "verified", "label": "Courriel vérifié"},
+                {"key": "unverified", "label": "Courriel non vérifié"},
+            ],
+            "ready_filters": [
+                {"key": "", "label": "Tous les contacts"},
+                {"key": "ready", "label": "Prêt à contacter"},
+            ],
         },
     )
 

@@ -759,27 +759,45 @@
   /* ---------- Clients ---------- */
   function viewClients() {
     var list = S().clients.filter(function (c) {
-      if (filters.q && (c.name + c.city).toLowerCase().indexOf((filters.q || "").toLowerCase()) === -1) return false;
+      if (filters.q && (c.name + c.city + (c.email || "")).toLowerCase().indexOf((filters.q || "").toLowerCase()) === -1) return false;
       if (filters.sector && c.sector !== filters.sector) return false;
       if (filters.status && c.status !== filters.status) return false;
+      var hasEmail = !!(c.email || "").trim();
+      var verified = !!(c.contactEmailVerified || c.email_verified);
+      if (filters.email === "with" && !hasEmail) return false;
+      if (filters.email === "without" && hasEmail) return false;
+      if (filters.email === "verified" && !verified) return false;
+      if (filters.email === "unverified" && (!hasEmail || verified)) return false;
+      if (filters.ready === "ready" && !(c.readyToContact || hasEmail)) return false;
       return true;
     });
     var rows = list.map(function (c) {
       var missions = S().missions.filter(function (m) { return m.clientId === c.id; }).length;
       var placed = S().candidates.filter(function (x) { return x.clientId === c.id && x.status === "place"; }).length;
-      return `<tr data-go="#/clients/${c.id}"><td><b>${U.esc(c.name)}</b></td><td>${U.esc(c.sector)}</td><td>${U.esc(c.city)}</td><td>${U.esc(c.contact)}</td><td>${missions}</td><td>${placed}</td><td>${U.badge(c.status)}</td><td>${U.esc(TLStore.name(c.recruiterId))}</td></tr>`;
+      return `<tr data-go="#/clients/${c.id}"><td><b>${U.esc(c.name)}</b></td><td>${U.esc(c.sector)}</td><td>${U.esc(c.city)}</td><td>${U.esc(c.contact)}</td><td>${U.esc(c.email || "—")}${c.readyToContact ? "<div class='sub'>Prêt à contacter</div>" : ""}</td><td>${missions}</td><td>${placed}</td><td>${U.badge(c.status)}</td><td>${U.esc(TLStore.name(c.recruiterId))}</td></tr>`;
     }).join("");
     return `
       <div class="page-head"><div><h1>Clients</h1><p>Entreprises opérationnelles du Québec</p></div>
         <div class="actions"><button class="btn btn-ghost" data-export-cli>Exporter</button><button class="btn btn-orange" data-create="client">Nouveau client</button></div></div>
       <div class="filters">
-        <input data-f="q" placeholder="Nom ou ville" value="${U.esc(filters.q || "")}">
+        <input data-f="q" placeholder="Nom, ville ou courriel" value="${U.esc(filters.q || "")}">
         <select data-f="sector"><option value="">Secteur</option>${unique(S().clients, "sector").map(function (s) { return "<option" + (filters.sector === s ? " selected" : "") + ">" + s + "</option>"; }).join("")}</select>
         <select data-f="status"><option value="">Statut</option><option>Actif</option><option>Prospect</option></select>
+        <select data-f="email">
+          <option value="">Tous les courriels</option>
+          <option value="with"${filters.email === "with" ? " selected" : ""}>Avec courriel</option>
+          <option value="without"${filters.email === "without" ? " selected" : ""}>Sans courriel</option>
+          <option value="verified"${filters.email === "verified" ? " selected" : ""}>Courriel vérifié</option>
+          <option value="unverified"${filters.email === "unverified" ? " selected" : ""}>Courriel non vérifié</option>
+        </select>
+        <select data-f="ready">
+          <option value="">Tous les contacts</option>
+          <option value="ready"${filters.ready === "ready" ? " selected" : ""}>Prêt à contacter</option>
+        </select>
       </div>
       <div class="card"><div class="table-wrap"><table class="data">
-        <thead><tr><th>Entreprise</th><th>Secteur</th><th>Localisation</th><th>Contact principal</th><th>Missions</th><th>Recrutements</th><th>Statut</th><th>Recruteur</th></tr></thead>
-        <tbody>${rows || '<tr><td colspan="8">' + U.empty("Aucun client", "Créez une entreprise ou attendez qu’un employeur ouvre un espace.") + "</td></tr>"}</tbody></table></div></div>`;
+        <thead><tr><th>Entreprise</th><th>Secteur</th><th>Localisation</th><th>Contact principal</th><th>Courriel</th><th>Missions</th><th>Recrutements</th><th>Statut</th><th>Recruteur</th></tr></thead>
+        <tbody>${rows || '<tr><td colspan="9">' + U.empty("Aucun client", "Créez une entreprise ou attendez qu’un employeur ouvre un espace.") + "</td></tr>"}</tbody></table></div></div>`;
   }
 
   function clientStatusLabel(ct) {
@@ -1786,7 +1804,7 @@
     }
   }
 
-  var prospectFilters = { q: "", stage: "", source: "", city: "", sector: "" };
+  var prospectFilters = { q: "", stage: "", source: "", city: "", sector: "", email: "", ready: "" };
   var prospectMeta = { stages: [], catalog: [], sources: [], cities: [], sectors: [] };
   var prospectCache = [];
 
@@ -1814,7 +1832,7 @@
     var side = prospectSide();
     if (viewProspects._side !== side) {
       viewProspects._side = side;
-      prospectFilters = { q: "", stage: "", source: "", city: "", sector: "" };
+      prospectFilters = { q: "", stage: "", source: "", city: "", sector: "", email: "", ready: "" };
     }
     var employer = side === "employer";
     return `
@@ -1845,6 +1863,8 @@
     if (prospectFilters.source) parts.push("source=" + encodeURIComponent(prospectFilters.source));
     if (prospectFilters.city) parts.push("city=" + encodeURIComponent(prospectFilters.city));
     if (prospectFilters.sector) parts.push("sector=" + encodeURIComponent(prospectFilters.sector));
+    if (prospectFilters.email) parts.push("email=" + encodeURIComponent(prospectFilters.email));
+    if (prospectFilters.ready) parts.push("ready=" + encodeURIComponent(prospectFilters.ready));
     return parts.join("&");
   }
 
@@ -1859,6 +1879,17 @@
     var sources = prospectMeta.sources || [];
     var cities = prospectMeta.cities || [];
     var sectors = prospectMeta.sectors || [];
+    var emails = prospectMeta.email_filters || [
+      { key: "", label: "Tous les courriels" },
+      { key: "with", label: "Avec courriel" },
+      { key: "without", label: "Sans courriel" },
+      { key: "verified", label: "Courriel vérifié" },
+      { key: "unverified", label: "Courriel non vérifié" }
+    ];
+    var readies = prospectMeta.ready_filters || [
+      { key: "", label: "Tous les contacts" },
+      { key: "ready", label: "Prêt à contacter" }
+    ];
     box.innerHTML =
       '<input id="pf-q" placeholder="Nom, courriel, téléphone, entreprise" value="' + U.esc(prospectFilters.q || "") + '">' +
       '<select id="pf-stage"><option value="">Tous les statuts</option>' + stages.map(function (s) {
@@ -1873,8 +1904,14 @@
       '<select id="pf-sector"><option value="">Tous les secteurs</option>' + sectors.map(function (c) {
         return '<option value="' + U.esc(c) + '"' + (prospectFilters.sector === c ? " selected" : "") + ">" + U.esc(c) + "</option>";
       }).join("") + "</select>" +
+      '<select id="pf-email">' + emails.map(function (s) {
+        return '<option value="' + U.esc(s.key) + '"' + (prospectFilters.email === s.key ? " selected" : "") + ">" + U.esc(s.label) + "</option>";
+      }).join("") + "</select>" +
+      '<select id="pf-ready">' + readies.map(function (s) {
+        return '<option value="' + U.esc(s.key) + '"' + (prospectFilters.ready === s.key ? " selected" : "") + ">" + U.esc(s.label) + "</option>";
+      }).join("") + "</select>" +
       '<button type="button" class="btn btn-ghost" id="pf-clear">Effacer</button>';
-    ["pf-q", "pf-stage", "pf-source", "pf-city", "pf-sector"].forEach(function (id) {
+    ["pf-q", "pf-stage", "pf-source", "pf-city", "pf-sector", "pf-email", "pf-ready"].forEach(function (id) {
       var el = document.getElementById(id);
       if (!el) return;
       el.onchange = function () { applyProspectFilters(); };
@@ -1882,7 +1919,7 @@
     });
     var clear = document.getElementById("pf-clear");
     if (clear) clear.onclick = function () {
-      prospectFilters = { q: "", stage: "", source: "", city: "", sector: "" };
+      prospectFilters = { q: "", stage: "", source: "", city: "", sector: "", email: "", ready: "" };
       hydrateProspects();
     };
   }
@@ -1893,6 +1930,8 @@
     prospectFilters.source = (document.getElementById("pf-source") || {}).value || "";
     prospectFilters.city = (document.getElementById("pf-city") || {}).value || "";
     prospectFilters.sector = (document.getElementById("pf-sector") || {}).value || "";
+    prospectFilters.email = (document.getElementById("pf-email") || {}).value || "";
+    prospectFilters.ready = (document.getElementById("pf-ready") || {}).value || "";
     hydrateProspects();
   }
 

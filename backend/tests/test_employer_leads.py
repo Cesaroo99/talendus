@@ -87,6 +87,22 @@ def test_lead_catalog_is_fifty_real_and_unique():
     keys = [normalize_company_name(row["name"]) for row in QUEBEC_EMPLOYER_LEADS]
     assert all(keys)
     assert len(set(keys)) == len(keys)
+    from app.data.quebec_employer_email_enrichment import PUBLIC_EMAILS, apply_public_emails
+
+    catalog_names = {row["name"] for row in QUEBEC_EMPLOYER_LEADS}
+    assert set(PUBLIC_EMAILS) <= catalog_names
+    for name, patch in PUBLIC_EMAILS.items():
+        lead = next(row for row in QUEBEC_EMPLOYER_LEADS if row["name"] == name)
+        assert lead["email"] == patch["email"]
+        assert lead.get("email_source")
+        assert lead.get("email_source_url")
+        assert lead.get("email_confidence") in {"VERIFIED_HIGH", "VERIFIED_MEDIUM", "PUBLIC_UNVERIFIED"}
+        assert "@" in patch["email"]
+        assert "example." not in patch["email"]
+    dummy = ({"name": "Entreprise Inconnue", "email": None, "hiring": ""},)
+    assert apply_public_emails(dummy)[0]["email"] is None
+    existing = ({"name": "Exceldor", "email": "deja@exceldor.com", "hiring": ""},)
+    assert apply_public_emails(existing)[0]["email"] == "deja@exceldor.com"
 
 
 def test_ensure_creates_prospect_clients_without_employer_accounts(client, db):
@@ -109,6 +125,9 @@ def test_ensure_creates_prospect_clients_without_employer_accounts(client, db):
     emails = {p.email for p in prospects}
     for row in with_email:
         assert row["email"].lower() in emails
+    exceldor = next(p for p in prospects if p.email == "info@exceldor.com")
+    assert exceldor.company_name == "Exceldor"
+    assert exceldor.stage == "a-contacter"
     casc = next(p for p in prospects if p.email == "contact@cascades.com")
     assert casc.company_name == "Cascades"
     assert casc.stage == "a-contacter"

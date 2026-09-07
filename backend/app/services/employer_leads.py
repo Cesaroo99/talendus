@@ -194,7 +194,16 @@ def _note_text(lead: dict[str, Any]) -> str:
     source = lead.get("source") or "veille publique"
     score_line = f"Score : {score} ({priority}).\n" if score else ""
     email_src = lead.get("email_source")
-    email_line = f"Courriel public : {lead.get('email')} — source {email_src}.\n" if lead.get("email") else "Courriel : non publié (laissé vide).\n"
+    confidence = lead.get("email_confidence")
+    if lead.get("email"):
+        email_line = f"Courriel public : {lead.get('email')} — source {email_src}"
+        if confidence:
+            email_line += f" ({confidence})"
+        if lead.get("email_source_url"):
+            email_line += f" {lead.get('email_source_url')}"
+        email_line += ".\n"
+    else:
+        email_line = "Courriel : non publié (laissé vide).\n"
     return (
         f"{LEAD_NOTE_MARK}.\n"
         f"{score_line}"
@@ -210,23 +219,32 @@ def _note_text(lead: dict[str, Any]) -> str:
 def _ensure_note(db: Session, company: Company, author: User | None, lead: dict[str, Any]) -> None:
     if not author:
         return
-    exists = db.scalar(
-        select(InternalNote.id).where(
+    existing = db.scalar(
+        select(InternalNote).where(
             InternalNote.entity_type == "company",
             InternalNote.entity_id == company.id,
             InternalNote.text.like(f"{LEAD_NOTE_MARK}%"),
         )
     )
-    if exists:
-        return
-    db.add(
-        InternalNote(
-            entity_type="company",
-            entity_id=company.id,
-            author_id=author.id,
-            text=_note_text(lead)[:4000],
+    text = _note_text(lead)[:4000]
+    if existing is None:
+        db.add(
+            InternalNote(
+                entity_type="company",
+                entity_id=company.id,
+                author_id=author.id,
+                text=text,
+            )
         )
-    )
+        return
+    previous = existing.text or ""
+    email = (lead.get("email") or "").strip()
+    if email and "Courriel : non publié" in previous and email not in previous:
+        journal = (
+            f"\nJournal 2026-09-07 : courriel ajouté {email} "
+            f"(avant vide, source {lead.get('email_source') or 'recherche publique'})."
+        )
+        existing.text = (text + journal)[:4000]
 
 
 def _ensure_prospect(db: Session, company: Company, lead: dict[str, Any], recruiter: User | None) -> None:
