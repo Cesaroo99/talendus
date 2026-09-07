@@ -129,7 +129,7 @@ def test_prospect_email_and_ready_filters(client):
     listed = client.get("/api/admin/prospects?side=employer", headers=admin_h)
     assert listed.status_code == 200, listed.text
     meta = listed.json()["meta"]
-    assert {row["key"] for row in meta["email_filters"]} >= {"with", "without", "verified", "unverified", "found"}
+    assert {row["key"] for row in meta["email_filters"]} >= {"with", "without", "verified", "unverified", "found", "high"}
     assert {row["key"] for row in meta["ready_filters"]} >= {"ready"}
     ready = client.get("/api/admin/prospects?side=employer&ready=ready", headers=admin_h)
     assert ready.status_code == 200, ready.text

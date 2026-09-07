@@ -768,11 +768,13 @@
       var hasEmail = !!(c.email || "").trim();
       var verified = !!(c.contactEmailVerified || c.email_verified);
       var foundAt = (c.emailVerifiedAt || c.email_verified_at || "").trim();
+      var confidence = String(c.emailConfidence || c.email_confidence || "").toUpperCase();
       if (filters.email === "with" && !hasEmail) return false;
       if (filters.email === "without" && hasEmail) return false;
       if (filters.email === "verified" && !verified) return false;
       if (filters.email === "unverified" && (!hasEmail || verified)) return false;
       if (filters.email === "found" && !(hasEmail && verified && foundAt)) return false;
+      if (filters.email === "high" && !(hasEmail && (confidence === "VERIFIED_HIGH" || confidence === "HIGH"))) return false;
       if (filters.ready === "ready" && !(c.readyToContact || hasEmail)) return false;
       return true;
     });
@@ -783,6 +785,12 @@
       var ae = (a.email || "").trim() ? 1 : 0;
       var be = (b.email || "").trim() ? 1 : 0;
       if (ae !== be) return be - ae;
+      var av = (a.contactEmailVerified || a.email_verified) ? 1 : 0;
+      var bv = (b.contactEmailVerified || b.email_verified) ? 1 : 0;
+      if (av !== bv) return bv - av;
+      var ah = String(a.emailConfidence || "").toUpperCase() === "VERIFIED_HIGH" ? 1 : 0;
+      var bh = String(b.emailConfidence || "").toUpperCase() === "VERIFIED_HIGH" ? 1 : 0;
+      if (ah !== bh) return bh - ah;
       var af = (a.emailVerifiedAt || "").trim() ? 1 : 0;
       var bf = (b.emailVerifiedAt || "").trim() ? 1 : 0;
       if (af !== bf) return bf - af;
@@ -813,6 +821,7 @@
           <option value="verified"${filters.email === "verified" ? " selected" : ""}>Courriel vérifié</option>
           <option value="unverified"${filters.email === "unverified" ? " selected" : ""}>Courriel non vérifié</option>
           <option value="found"${filters.email === "found" ? " selected" : ""}>Courriels trouvés</option>
+          <option value="high"${filters.email === "high" ? " selected" : ""}>Courriel haute confiance</option>
         </select>
         <select data-f="ready">
           <option value="">Tous les contacts</option>
@@ -1910,7 +1919,8 @@
       { key: "without", label: "Sans courriel" },
       { key: "verified", label: "Courriel vérifié" },
       { key: "unverified", label: "Courriel non vérifié" },
-      { key: "found", label: "Courriels trouvés" }
+      { key: "found", label: "Courriels trouvés" },
+      { key: "high", label: "Courriel haute confiance" }
     ];
     var readies = prospectMeta.ready_filters || [
       { key: "", label: "Tous les contacts" },

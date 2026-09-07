@@ -381,6 +381,7 @@ def _company(c: Company) -> dict:
         "phone": c.phone or "",
         "contactEmailVerified": bool(email_meta.get("email_verified")),
         "emailVerifiedAt": email_meta.get("email_verified_at") or "",
+        "emailConfidence": email_meta.get("email_confidence") or "",
         "readyToContact": bool(email_meta.get("ready_to_contact")),
         "status": "Actif" if c.status and c.status.value == "ACTIVE" else "Prospect",
         "recruiterId": c.assigned_recruiter_id or "",

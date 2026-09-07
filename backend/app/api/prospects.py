@@ -99,6 +99,7 @@ def list_prospects(
                 {"key": "verified", "label": "Courriel vérifié"},
                 {"key": "unverified", "label": "Courriel non vérifié"},
                 {"key": "found", "label": "Courriels trouvés"},
+                {"key": "high", "label": "Courriel haute confiance"},
             ],
             "ready_filters": [
                 {"key": "", "label": "Tous les contacts"},
