@@ -5,7 +5,7 @@ from app.models import Company, User
 from app.models.enums import CompanyStatus, UserRole
 from app.models.prospect import Prospect
 from app.services.employer_claim import normalize_company_name
-from app.services.employer_leads import ensure_quebec_employer_leads
+from app.services.employer_leads import _find_company, _names_similar, ensure_quebec_employer_leads
 from tests.conftest import promote_admin
 
 
@@ -168,6 +168,47 @@ def test_register_employer_not_confused_with_leads(client, db):
     assert "Métalco" not in names
 
 
+def test_names_similar_requires_real_overlap():
+    assert _names_similar("Velan Inc.", "Velan")
+    assert _names_similar("Cascades Inc.", "Cascades")
+    assert not _names_similar("Fairmont Le Château Frontenac", "Fairmont Le Château Montebello")
+    assert not _names_similar("Admin Inc.", "CAE")
+    assert not _names_similar("Admin Inc.", "AD")
+    assert not _names_similar("Admin Inc.", "Velan")
+
+
+def test_find_company_matches_normalized_name(client, db):
+    existing = Company(
+        name="Velan Inc.",
+        legal_name="Velan inc.",
+        status=CompanyStatus.PROSPECT,
+        province="Québec",
+        country="Canada",
+    )
+    db.add(existing)
+    db.commit()
+    found = _find_company(db, {"name": "Velan", "legal_name": "Velan inc.", "website": "https://velan.com"})
+    assert found is not None
+    assert found.id == existing.id
+    assert _find_company(db, {"name": "Bombardier", "website": "https://bombardier.com"}) is None
+
+
+def test_ensure_survives_stale_prospect_left_in_caller_session(client, db):
+    from app.database import SessionLocal
+
+    promote_admin(client, "leads-stale@talendus.ca")
+    row = db.scalar(select(Prospect).where(Prospect.email == "leads-stale@talendus.ca"))
+    assert row is not None
+    other = SessionLocal()
+    other.delete(other.get(Prospect, row.id))
+    other.commit()
+    other.close()
+    row.city = "Montréal"
+    created = ensure_quebec_employer_leads(db)
+    db.commit()
+    assert created == 524
+
+
 def test_ensure_dedupes_normalized_name_and_keeps_empty_email(client, db):
     promote_admin(client, "leads-dedupe@talendus.ca")
     db.add(
@@ -180,6 +221,7 @@ def test_ensure_dedupes_normalized_name_and_keeps_empty_email(client, db):
         )
     )
     db.commit()
+    db.expire_all()
     created = ensure_quebec_employer_leads(db)
     db.expire_all()
     db.commit()
@@ -188,4 +230,5 @@ def test_ensure_dedupes_normalized_name_and_keeps_empty_email(client, db):
     assert len(velans) == 1
     assert velans[0].name == "Velan Inc."
     assert not db.scalar(select(Prospect.id).where(Prospect.company_name == "Velan"))
+    assert not db.scalar(select(Prospect.id).where(Prospect.email == "leads-dedupe@talendus.ca", Prospect.source == "prospection"))
     assert ensure_quebec_employer_leads(db) == 0

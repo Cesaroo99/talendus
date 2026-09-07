@@ -101,10 +101,30 @@ def _names_similar(left: str | None, right: str | None) -> bool:
     b = normalize_company_name(right)
     if not a or not b:
         return False
-    if a == b or a in b or b in a:
+    if a == b:
+        return True
+    # Sous-chaîne seulement si le nom est assez long : « ad » ⊂ « admin »
+    # fusionnerait la fiche d’inscription « Admin Inc. » avec un lead.
+    if min(len(a), len(b)) >= 8 and (a in b or b in a):
         return True
     ta, tb = set(a.split()), set(b.split())
     return bool(ta and tb) and len(ta & tb) / len(ta | tb) >= 0.75
+
+
+def _forget_session_prospects(db: Session) -> None:
+    """Oublie les Prospect déjà dans la session (souvent issus d’une autre requête).
+
+    Un flush global tenterait un UPDATE de ces lignes ; avec SQLite StaticPool
+    + sessions HTTP mélangées, la ligne peut ne plus matcher (StaleDataError).
+    """
+    for obj in list(db.identity_map.values()) + list(db.new):
+        if isinstance(obj, Prospect):
+            db.expunge(obj)
+
+
+def _flush(db: Session, *objects: object) -> None:
+    """Flush ciblé : un flush global mettrait à jour d’autres Prospect de la session."""
+    db.flush(list(objects))
 
 
 def _same_company(lead: dict[str, Any], company: Company) -> bool:
@@ -225,10 +245,14 @@ def _ensure_prospect(db: Session, company: Company, lead: dict[str, Any], recrui
     )
     if row is not None:
         sanitize_generic_person(row)
+        if row in db.dirty:
+            _flush(db, row)
+        db.expire(row)
 
 
 def ensure_quebec_employer_leads(db: Session) -> int:
     """Crée ou complète les fiches de veille. Idempotent. Aucun compte employeur."""
+    _forget_session_prospects(db)
     recruiters = _recruiters(db)
     staff = recruiters[0] if recruiters else _staff_user(db)
     names = _company_name_index(db)
@@ -262,7 +286,7 @@ def ensure_quebec_employer_leads(db: Session) -> int:
                 assigned_recruiter_id=recruiter.id if recruiter else None,
             )
             db.add(company)
-            db.flush()
+            _flush(db, company)
             _index_company(names, company)
             created += 1
         else:
