@@ -525,6 +525,10 @@ def test_admin_ui_has_prospects_module():
     assert "chunkProspectIds(uniqueProspectIds(ids), 250)" in js
     assert "employer-leads/refresh" in js
     assert "Charger le catalogue (460+)" in js
+    assert "withEmail >= 400" not in js
+    assert "catalog_with_email" in js
+    assert "?force=1" in js
+    assert "forceEnsure" in js
     assert "Oui — envoyer vraiment" in js
     assert "gatewayTimeoutMsg" in api_js
     assert "plus petits lots" in api_js

@@ -1985,16 +1985,18 @@
   async function hydrateEmployerClients() {
     if (!api() || !live()) return;
     var withEmail = (S().clients || []).filter(function (c) { return !!(c.email || "").trim(); }).length;
-    if (withEmail >= 400 || employerCatalogTried) return;
+    var target = Number((S().employerCatalog || {}).catalog_with_email) || 460;
+    if (withEmail >= target || employerCatalogTried) return;
     employerCatalogTried = true;
-    var stats = await refreshEmployerDirectory(true);
+    var stats = await refreshEmployerDirectory(true, false);
     if (stats && (stats.companies_with_catalog_email || 0) > withEmail) render();
   }
 
-  async function refreshEmployerDirectory(forceReload) {
+  async function refreshEmployerDirectory(forceReload, forceEnsure) {
     if (!api()) return null;
     try {
-      var json = await api().request("/admin/employer-leads/refresh", { method: "POST" });
+      var path = "/admin/employer-leads/refresh" + (forceEnsure ? "?force=1" : "");
+      var json = await api().request(path, { method: "POST" });
       if (forceReload && TLStore.hydrateFromApi) await TLStore.hydrateFromApi();
       return (json && json.data) || null;
     } catch (err) {
@@ -2013,7 +2015,6 @@
     try {
       if (prospectSide() === "employer") {
         root.innerHTML = "<p class='sub'>Chargement du catalogue employeurs (environ 460 courriels publics)…</p>";
-        await refreshEmployerDirectory(false);
       }
       var json = await api().request("/admin/prospects?" + prospectQuery());
       var rows = (json && json.data) || [];
@@ -2104,7 +2105,7 @@
     if (catalogBtn) catalogBtn.onclick = async function () {
       catalogBtn.disabled = true;
       catalogBtn.textContent = "Chargement…";
-      var stats = await refreshEmployerDirectory(true);
+      var stats = await refreshEmployerDirectory(true, true);
       catalogBtn.disabled = false;
       catalogBtn.textContent = "Charger le catalogue (460+)";
       if (stats) {
@@ -3220,7 +3221,7 @@
       if (t.closest("[data-refresh-employers]")) {
         (async function () {
           U.toast("Chargement du catalogue employeurs…", "ok");
-          var stats = await refreshEmployerDirectory(true);
+          var stats = await refreshEmployerDirectory(true, true);
           if (stats) {
             U.toast((stats.prospects_with_catalog_email || 0) + " employeurs avec courriel public.", "ok");
             render();

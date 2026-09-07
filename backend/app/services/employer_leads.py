@@ -216,26 +216,46 @@ def _note_text(lead: dict[str, Any]) -> str:
     )
 
 
-def _ensure_note(db: Session, company: Company, author: User | None, lead: dict[str, Any]) -> None:
-    if not author:
-        return
-    existing = db.scalar(
+def _lead_notes_by_company(db: Session) -> dict[str, InternalNote]:
+    rows = db.scalars(
         select(InternalNote).where(
             InternalNote.entity_type == "company",
-            InternalNote.entity_id == company.id,
             InternalNote.text.like(f"{LEAD_NOTE_MARK}%"),
         )
-    )
-    text = _note_text(lead)[:4000]
-    if existing is None:
-        db.add(
-            InternalNote(
-                entity_type="company",
-                entity_id=company.id,
-                author_id=author.id,
-                text=text,
+    ).all()
+    return {row.entity_id: row for row in rows if row.entity_id}
+
+
+def _ensure_note(
+    db: Session,
+    company: Company,
+    author: User | None,
+    lead: dict[str, Any],
+    notes: dict[str, InternalNote] | None = None,
+) -> None:
+    if not author:
+        return
+    if notes is not None:
+        existing = notes.get(company.id)
+    else:
+        existing = db.scalar(
+            select(InternalNote).where(
+                InternalNote.entity_type == "company",
+                InternalNote.entity_id == company.id,
+                InternalNote.text.like(f"{LEAD_NOTE_MARK}%"),
             )
         )
+    text = _note_text(lead)[:4000]
+    if existing is None:
+        created = InternalNote(
+            entity_type="company",
+            entity_id=company.id,
+            author_id=author.id,
+            text=text,
+        )
+        db.add(created)
+        if notes is not None:
+            notes[company.id] = created
         return
     previous = existing.text or ""
     email = (lead.get("email") or "").strip()
@@ -299,27 +319,47 @@ def catalog_stats(db: Session) -> dict[str, int]:
         for value in db.scalars(select(Prospect.email).where(Prospect.side == "employer")).all()
         if (value or "").strip()
     }
+    catalog_keys = set()
+    for lead in QUEBEC_EMPLOYER_LEADS:
+        key = normalize_company_name(lead.get("name"))
+        if key:
+            catalog_keys.add(key)
+    company_keys = set()
+    for name in db.scalars(select(Company.name)).all():
+        key = normalize_company_name(name)
+        if key:
+            company_keys.add(key)
     return {
         "catalog": len(QUEBEC_EMPLOYER_LEADS),
         "catalog_with_email": len(emails),
         "companies": int(db.scalar(select(func.count()).select_from(Company)) or 0),
         "companies_with_catalog_email": len(emails & company_emails),
         "prospects_with_catalog_email": len(emails & prospect_emails),
+        "missing_companies": len(catalog_keys - company_keys),
         "missing_company_emails": len(emails - company_emails),
         "missing_prospects": len(emails - prospect_emails),
     }
 
 
-def refresh_employer_directory(db: Session, *, force: bool = False) -> dict[str, int | bool]:
-    """Crée les fiches manquantes et recopie les courriels publics. Idempotent."""
+def refresh_employer_directory(
+    db: Session,
+    *,
+    force: bool = False,
+    commit_every: int = 20,
+) -> dict[str, int | bool]:
+    """Recopie d’abord les courriels publics, puis importe seulement si besoin.
+
+    Le bootstrap HTTP ne doit jamais lancer l’ensure complet (timeout prod).
+    L’ensure tourne si `force` ou s’il manque des fiches catalogue.
+    """
+    filled = sync_catalog_emails_to_crm(db)
     stats = catalog_stats(db)
-    need = force or stats["missing_prospects"] > 5 or stats["missing_company_emails"] > 5
+    need = force or stats["missing_companies"] > 0
     if need:
-        ensure_quebec_employer_leads(db)
-    else:
-        sync_catalog_emails_to_crm(db)
+        ensure_quebec_employer_leads(db, commit_every=commit_every)
     out: dict[str, int | bool] = dict(catalog_stats(db))
     out["imported"] = need
+    out["emails_filled"] = filled
     return out
 
 
@@ -333,6 +373,7 @@ def sync_catalog_emails_to_crm(db: Session) -> int:
     recruiters = _recruiters(db)
     staff = recruiters[0] if recruiters else _staff_user(db)
     names = _company_name_index(db)
+    notes = _lead_notes_by_company(db)
     known_emails = {
         (value or "").strip().lower()
         for value in db.scalars(select(Prospect.email).where(Prospect.side == "employer")).all()
@@ -363,7 +404,7 @@ def sync_catalog_emails_to_crm(db: Session) -> int:
         recruiter = recruiters[index % len(recruiters)] if recruiters else None
         email_key = email.lower()
         if email_key not in known_emails:
-            _ensure_note(db, company, staff, lead)
+            _ensure_note(db, company, staff, lead, notes)
             _ensure_prospect(db, company, lead, recruiter)
             known_emails.add(email_key)
     if filled:
@@ -371,14 +412,32 @@ def sync_catalog_emails_to_crm(db: Session) -> int:
     return filled
 
 
-def ensure_quebec_employer_leads(db: Session) -> int:
-    """Crée ou complète les fiches de veille. Idempotent. Aucun compte employeur."""
+def _sanitize_employer_prospects(db: Session) -> set[str]:
+    known: set[str] = set()
+    for row in db.scalars(select(Prospect).where(Prospect.side == "employer")).all():
+        email = (row.email or "").strip().lower()
+        if email:
+            known.add(email)
+        sanitize_generic_person(row)
+    return known
+
+
+def ensure_quebec_employer_leads(db: Session, *, commit_every: int = 0) -> int:
+    """Crée ou complète les fiches de veille. Idempotent. Aucun compte employeur.
+
+    `commit_every` persiste le progrès par lots (boot Render tué = pas de rollback total).
+    """
     _forget_session_prospects(db)
     db.expire_all()
     recruiters = _recruiters(db)
     staff = recruiters[0] if recruiters else _staff_user(db)
     names = _company_name_index(db)
+    notes = _lead_notes_by_company(db)
+    known_emails = _sanitize_employer_prospects(db)
+    db.flush()
+    _forget_session_prospects(db)
     created = 0
+    pending = 0
     for index, lead in enumerate(QUEBEC_EMPLOYER_LEADS):
         name = (lead.get("name") or "").strip()
         if not name:
@@ -435,8 +494,31 @@ def ensure_quebec_employer_leads(db: Session) -> int:
                 company.status = CompanyStatus.PROSPECT
             if not company.assigned_recruiter_id and recruiter:
                 company.assigned_recruiter_id = recruiter.id
-        _ensure_note(db, company, staff, lead)
-        _ensure_prospect(db, company, lead, recruiter)
+            email = (lead.get("email") or "").strip().lower()
+            note = notes.get(company.id)
+            note_text = (note.text if note is not None else "") or ""
+            has_email = not email or (company.email or "").strip().lower() == email
+            has_prospect = not email or email in known_emails
+            has_note = note is not None and not (
+                email and "Courriel : non publié" in note_text and email not in note_text
+            )
+            if has_email and has_prospect and has_note:
+                pending += 1
+                if commit_every and pending >= commit_every:
+                    db.commit()
+                    pending = 0
+                continue
+        _ensure_note(db, company, staff, lead, notes)
+        email = (lead.get("email") or "").strip().lower()
+        if email and email not in known_emails:
+            _ensure_prospect(db, company, lead, recruiter)
+            known_emails.add(email)
+        pending += 1
+        if commit_every and pending >= commit_every:
+            db.commit()
+            pending = 0
+    if commit_every and pending:
+        db.commit()
     if created:
         logger.info("%s fiches employeurs québécois ajoutées (veille).", created)
     return created

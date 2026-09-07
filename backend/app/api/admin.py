@@ -61,12 +61,13 @@ def bootstrap(db: Session = Depends(get_db), user: User = Depends(_staff)):
 
 @router.post("/employer-leads/refresh")
 def refresh_employer_leads(
+    force: bool = Query(False),
     db: Session = Depends(get_db),
     _user: User = Depends(require_roles(UserRole.RECRUITER, UserRole.ADMIN)),
 ):
     from app.services.employer_leads import refresh_employer_directory
 
-    stats = refresh_employer_directory(db, force=True)
+    stats = refresh_employer_directory(db, force=force, commit_every=20)
     db.commit()
     return ok(
         stats,

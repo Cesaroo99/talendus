@@ -831,13 +831,10 @@ def list_prospects(
     email: str | None = None,
     ready: str | None = None,
 ) -> list[Prospect]:
-    from app.config import get_settings
-    from app.services.employer_leads import refresh_employer_directory, sync_catalog_emails_to_crm
+    from app.services.employer_leads import sync_catalog_emails_to_crm
 
     wanted = normalize_side(side)
-    if wanted == "employer" and get_settings().app_env != "test":
-        refresh_employer_directory(db)
-    else:
+    if wanted == "employer":
         sync_catalog_emails_to_crm(db)
     sync_known_people(db)
     stmt = select(Prospect).where(Prospect.side == wanted).order_by(Prospect.updated_at.desc())
