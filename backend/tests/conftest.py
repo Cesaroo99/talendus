@@ -16,7 +16,7 @@ get_settings.cache_clear()
 import pytest
 from fastapi.testclient import TestClient
 
-from app.database import Base, engine, SessionLocal
+from app.database import Base, engine, SessionLocal, get_db
 from app.main import app
 
 
@@ -27,15 +27,24 @@ def client():
     with TestClient(app) as c:
         yield c
     Base.metadata.drop_all(bind=engine)
+    engine.dispose()
 
 
 @pytest.fixture
-def db():
+def db(client):
+    """Une seule session pour le test et le TestClient (évite StaticPool à double)."""
     session = SessionLocal()
+
+    def _override():
+        yield session
+
+    app.dependency_overrides[get_db] = _override
     try:
         yield session
     finally:
+        session.rollback()
         session.close()
+        app.dependency_overrides.pop(get_db, None)
 
 
 def register(client: TestClient, email: str, role: str = "CANDIDATE", **extra) -> dict:
@@ -61,11 +70,18 @@ def promote_admin(client, email: str) -> dict:
     from app.models.enums import UserRole
 
     data = register(client, email, "EMPLOYER", first_name="Sophie", last_name="Admin")
-    db = SessionLocal()
-    user = db.get(User, data["user"]["id"])
-    user.role = UserRole.ADMIN
-    db.commit()
-    db.close()
+    override = app.dependency_overrides.get(get_db)
+    if override:
+        db = next(override())
+        user = db.get(User, data["user"]["id"])
+        user.role = UserRole.ADMIN
+        db.commit()
+    else:
+        db = SessionLocal()
+        user = db.get(User, data["user"]["id"])
+        user.role = UserRole.ADMIN
+        db.commit()
+        db.close()
     res = client.post("/api/auth/login", json={"email": email, "password": "Password1!"})
     assert res.status_code == 200
     return res.json()["data"]

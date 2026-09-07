@@ -169,6 +169,7 @@ def test_register_employer_not_confused_with_leads(client, db):
     assert "Cascades" in names
     assert "Métalco" not in names
     assert {row["name"] for row in QUEBEC_EMPLOYER_LEADS} <= names
+    db.commit()
     from tests.conftest import auth_header
 
     listed = client.get("/api/companies", headers=auth_header(admin))
