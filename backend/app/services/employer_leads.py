@@ -257,6 +257,8 @@ def _ensure_prospect(db: Session, company: Company, lead: dict[str, Any], recrui
     )
     if row is not None:
         sanitize_generic_person(row)
+        db.flush()
+        db.expunge(row)
 
 
 def ensure_quebec_employer_leads(db: Session) -> int:
@@ -298,6 +300,7 @@ def ensure_quebec_employer_leads(db: Session) -> int:
                 assigned_recruiter_id=recruiter.id if recruiter else None,
             )
             db.add(company)
+            _forget_session_prospects(db)
             db.flush()
             _index_company(names, company)
             created += 1

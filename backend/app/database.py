@@ -24,6 +24,12 @@ engine = create_engine(
     **{k: v for k, v in engine_kwargs.items() if v is not False},
 )
 
+if settings.app_env == "test" and engine.dialect.name == "sqlite":
+    # SQLite 3.45+ (Python 3.12.14 CI) peut renvoyer rowcount=0 pour un UPDATE
+    # sans changement réel → StaleDataError alors que la ligne existe.
+    engine.dialect.supports_sane_rowcount = False
+    engine.dialect.supports_sane_multi_rowcount = False
+
 if use_sqlite:
     @event.listens_for(engine, "connect")
     def _sqlite_pragma(dbapi_connection, _connection_record):  # noqa: ANN001
