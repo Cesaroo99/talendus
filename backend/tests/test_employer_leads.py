@@ -181,6 +181,7 @@ def test_ensure_dedupes_normalized_name_and_keeps_empty_email(client, db):
     )
     db.commit()
     created = ensure_quebec_employer_leads(db)
+    db.expire_all()
     db.commit()
     assert created == 523
     velans = list(db.scalars(select(Company).where(Company.name.ilike("%velan%"))))

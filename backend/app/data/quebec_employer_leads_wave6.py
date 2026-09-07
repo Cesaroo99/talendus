@@ -5,7 +5,7 @@ transport, entrepôt). Sources publiques uniquement : sites officiels, portails
 carrières, répertoire STIQ, communiqués.
 
 Aucun courriel inventé. Si aucune adresse n’est publiée, le champ reste vide.
-Aucun contact nominatif fictif. Les tailles et téléphones absents restent vides.
+Pas de personne fictive. Les tailles et téléphones absents restent vides.
 """
 
 from __future__ import annotations
