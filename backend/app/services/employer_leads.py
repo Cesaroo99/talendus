@@ -128,6 +128,23 @@ def _same_company(lead: dict[str, Any], company: Company) -> bool:
     )
 
 
+def _owned_company_is_this_lead(company: Company, lead: dict[str, Any]) -> bool:
+    """Une société déjà titulaire ne fusionne qu’avec le lead du même nom normalisé."""
+    if not company.owner_user_id:
+        return True
+    wanted = normalize_company_name(lead.get("name"))
+    legal = normalize_company_name(lead.get("legal_name") or lead.get("name"))
+    return wanted in {
+        normalize_company_name(company.name),
+        normalize_company_name(company.legal_name),
+        normalize_company_name(company.trade_name),
+    } or legal in {
+        normalize_company_name(company.name),
+        normalize_company_name(company.legal_name),
+        normalize_company_name(company.trade_name),
+    }
+
+
 def _find_company(db: Session, lead: dict[str, Any], index: dict[str, Company] | None = None) -> Company | None:
     name = (lead.get("name") or "").strip()
     if not name:
@@ -245,6 +262,7 @@ def _ensure_prospect(db: Session, company: Company, lead: dict[str, Any], recrui
 def ensure_quebec_employer_leads(db: Session) -> int:
     """Crée ou complète les fiches de veille. Idempotent. Aucun compte employeur."""
     _forget_session_prospects(db)
+    db.expire_all()
     recruiters = _recruiters(db)
     staff = recruiters[0] if recruiters else _staff_user(db)
     names = _company_name_index(db)
@@ -256,6 +274,8 @@ def ensure_quebec_employer_leads(db: Session) -> int:
         recruiter = recruiters[index % len(recruiters)] if recruiters else None
         employees = lead.get("employees")
         company = _find_company(db, lead, names)
+        if company is not None and not _owned_company_is_this_lead(company, lead):
+            company = None
         if company is None:
             company = Company(
                 name=name,

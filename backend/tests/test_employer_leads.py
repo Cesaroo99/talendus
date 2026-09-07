@@ -5,7 +5,12 @@ from app.models import Company, User
 from app.models.enums import CompanyStatus, UserRole
 from app.models.prospect import Prospect
 from app.services.employer_claim import normalize_company_name
-from app.services.employer_leads import _find_company, _names_similar, ensure_quebec_employer_leads
+from app.services.employer_leads import (
+    _find_company,
+    _names_similar,
+    _owned_company_is_this_lead,
+    ensure_quebec_employer_leads,
+)
 from tests.conftest import promote_admin
 
 
@@ -158,14 +163,28 @@ def test_register_employer_not_confused_with_leads(client, db):
     admin = promote_admin(client, "leads-mix@talendus.ca")
     ensure_quebec_employer_leads(db)
     db.commit()
+    db.expire_all()
+    names = set(db.scalars(select(Company.name)))
+    assert "Usine Jade" in names
+    assert "Cascades" in names
+    assert "Métalco" not in names
+    assert {row["name"] for row in QUEBEC_EMPLOYER_LEADS} <= names
     from tests.conftest import auth_header
 
     listed = client.get("/api/companies", headers=auth_header(admin))
     assert listed.status_code == 200
-    names = {row["name"] for row in listed.json()["data"]}
-    assert "Usine Jade" in names
-    assert "Cascades" in names
-    assert "Métalco" not in names
+    api_names = {row["name"] for row in listed.json()["data"]}
+    assert "Usine Jade" in api_names
+    assert "Cascades" in api_names, f"api={len(api_names)} db={len(names)}"
+
+
+def test_owned_company_does_not_absorb_unrelated_lead():
+    owned = Company(name="Usine Jade", legal_name="Usine Jade", owner_user_id="user-1")
+    unowned = Company(name="Usine Jade", legal_name="Usine Jade")
+    lead = {"name": "Cascades", "legal_name": "Cascades inc."}
+    assert not _owned_company_is_this_lead(owned, lead)
+    assert _owned_company_is_this_lead(unowned, lead)
+    assert _owned_company_is_this_lead(owned, {"name": "Usine Jade Inc.", "legal_name": "Usine Jade"})
 
 
 def test_names_similar_requires_real_overlap():
