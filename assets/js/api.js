@@ -107,14 +107,23 @@
     FORBIDDEN: "You do not have access to this resource."
   };
 
-  function localizedApiMessage(json) {
+  function gatewayTimeoutMsg() {
+    return pageIsEn()
+      ? "The server took too long. Send fewer emails at once, or check Settings → Email (« Yes — actually send »)."
+      : "Le serveur a trop tardé. Envoyez de plus petits lots, ou vérifiez Paramètres → Courriel (« Oui — envoyer vraiment »).";
+  }
+
+  function localizedApiMessage(json, res) {
     var code = json && json.code;
     if (pageIsEn() && code && AUTH_CODE_EN[code]) return AUTH_CODE_EN[code];
-    return (json && json.message) || fallbackErr();
+    if (json && json.message) return json.message;
+    var status = res && res.status;
+    if (status === 502 || status === 503 || status === 504 || status === 524) return gatewayTimeoutMsg();
+    return fallbackErr();
   }
 
   function failPayload(res, json) {
-    var err = new Error(localizedApiMessage(json));
+    var err = new Error(localizedApiMessage(json, res));
     err.code = json && json.code;
     err.status = res.status;
     err.payload = json;

@@ -364,10 +364,14 @@ def test_crm_lists_show_enriched_company_after_sync(client, db):
     clients = boot.json()["data"]["clients"]
     exceldor = next(row for row in clients if row["name"] == "Exceldor")
     avior = next(row for row in clients if row["name"] == "Avior Integrated Products")
+    olymel = next(row for row in clients if row["name"] == "Olymel")
     assert exceldor["email"] == "info@exceldor.com"
     assert exceldor["readyToContact"] is True
+    assert exceldor.get("prospectId")
     assert avior["email"] == "rh_laval@avior.ca"
     assert avior["readyToContact"] is True
+    assert olymel["email"] == "talent@olymel.com"
+    assert olymel.get("prospectId")
     listed = client.get("/api/admin/prospects?side=employer", headers=headers)
     assert listed.status_code == 200, listed.text
     rows = listed.json()["data"]

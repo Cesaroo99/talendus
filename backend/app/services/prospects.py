@@ -1269,9 +1269,14 @@ def _prospect_sends_today(db: Session) -> int:
 
 
 def send_bulk(db: Session, actor: User, ids: list[str], req: SendRequest) -> dict:
+    from app.services.email import smtp_send_block_reason
+
     ids = list(dict.fromkeys((prospect_id or "").strip() for prospect_id in ids if (prospect_id or "").strip()))
     if not ids:
         raise AppError(400, "Choisissez au moins un prospect.", "VALIDATION_ERROR")
+    blocked = smtp_send_block_reason(db)
+    if blocked:
+        raise AppError(502, blocked, "SMTP_DISABLED")
     if len(ids) > BULK_SEND_MAX:
         raise AppError(400, f"Maximum {BULK_SEND_MAX} destinataires à la fois.", "VALIDATION_ERROR")
     already = _prospect_sends_today(db)

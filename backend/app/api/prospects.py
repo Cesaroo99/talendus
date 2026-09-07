@@ -153,11 +153,15 @@ def send_one(prospect_id: str, payload: ProspectSendIn, db: Session = Depends(ge
     result = svc.send_to_prospect(db, staff, row, _req(payload))
     db.commit()
     if not result.get("delivered"):
+        extra = (result.get("email_error") or "").strip()
+        hint = ""
+        if "SMTP désactivé" in extra:
+            hint = " Dans Paramètres → Courriel, choisissez « Oui — envoyer vraiment », puis renvoyez."
         raise AppError(
             502,
             (
                 f"Le courriel n’a pas quitté le serveur vers {result.get('to_email')}. "
-                f"{result.get('email_error') or ''} Le statut du prospect n’a pas été changé."
+                f"{extra}{hint} Le statut du prospect n’a pas été changé."
             ).strip(),
             "SMTP_SEND_FAILED",
         )

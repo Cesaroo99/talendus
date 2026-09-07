@@ -505,6 +505,7 @@ def test_admin_ui_has_prospects_module():
     js = (Path(__file__).resolve().parents[2] / "admin" / "js" / "app.js").read_text(encoding="utf-8")
     store = (Path(__file__).resolve().parents[2] / "admin" / "js" / "store.js").read_text(encoding="utf-8")
     css = (Path(__file__).resolve().parents[2] / "admin" / "css" / "admin.css").read_text(encoding="utf-8")
+    api_js = (Path(__file__).resolve().parents[2] / "assets" / "js" / "api.js").read_text(encoding="utf-8")
     assert '["prospects", "Prospects"' in js
     assert "prospect-kanban" not in js
     assert "prospect-kanban" not in css
@@ -517,6 +518,12 @@ def test_admin_ui_has_prospects_module():
     assert "/admin/prospects/broadcast" in js
     assert "sendProspectBroadcast" in js
     assert "chunkProspectIds" in js
+    assert "data-write-client" in js
+    assert "openClientWrite" in js
+    assert "chunkProspectIds(uniqueProspectIds(ids), 3)" in js
+    assert "Oui — envoyer vraiment" in js
+    assert "gatewayTimeoutMsg" in api_js
+    assert "plus petits lots" in api_js
     assert "Chaque fiche reçoit son propre courriel" in js
     assert "non parti" in js
     assert "email_status" in js
@@ -574,13 +581,12 @@ def test_smtp_off_does_not_mark_prospect_contacted(client):
         headers=admin_h,
         json={"ids": [pid], "template_key": "emp_first_contact"},
     )
-    assert bulk.status_code == 200, bulk.text
-    data = bulk.json()["data"]
-    assert data["sent"] == []
-    assert data["failed"]
-    assert data["failed"][0]["email"] == "memolicesar1@gmail.com"
+    assert bulk.status_code == 502, bulk.text
+    assert bulk.json()["code"] == "SMTP_DISABLED"
+    assert "Oui — envoyer vraiment" in bulk.json()["message"]
     again = client.get(f"/api/admin/prospects/p/{pid}", headers=admin_h).json()["data"]
     assert again["stage"] == "a-contacter"
+    assert again["sends"] == []
 
 
 def test_reconcile_resets_old_fake_sends(client, monkeypatch):
@@ -709,6 +715,17 @@ def test_reconcile_resets_old_fake_sends(client, monkeypatch):
     assert ok_send.json()["data"]["delivered"] is True
     contacted = client.get(f"/api/admin/prospects/p/{old['id']}", headers=admin_h).json()["data"]
     assert contacted["stage"] == "contacte"
+
+
+def test_smtp_send_block_reason_is_explicit(client):
+    from app.database import SessionLocal
+    from app.services.email import smtp_send_block_reason
+
+    db = SessionLocal()
+    reason = smtp_send_block_reason(db)
+    db.close()
+    assert reason
+    assert "Oui — envoyer vraiment" in reason
 
 
 def test_smtp_does_not_auto_enable_from_credentials(client):

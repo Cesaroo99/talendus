@@ -5,7 +5,7 @@
   const $ = TLUI.$;
   const app = document.getElementById("app");
   let page = 1, sortKey = "lastActivity", sortDir = "desc", selected = new Set();
-  let filters = {};
+  let filters = { email: "with" };
   let period = "mois";
   let analyticsRecruiter = "";
   let analyticsSector = "";
@@ -467,7 +467,7 @@
     q = (q || "").toLowerCase().trim();
     var groups = [
       ["Candidats", S().candidates.map(function (c) { return { t: c.firstName + " " + c.lastName + " · " + c.title, s: c.city, h: "#/candidates/" + c.id, hay: (c.firstName + c.lastName + c.title + c.city + c.sector).toLowerCase() }; })],
-      ["Clients", S().clients.map(function (c) { return { t: c.name, s: c.city, h: "#/clients/" + c.id, hay: (c.name + c.city + c.sector + c.contact).toLowerCase() }; })],
+      ["Clients", S().clients.map(function (c) { return { t: c.name, s: (c.email || c.city || ""), h: "#/clients/" + c.id, hay: (c.name + c.city + c.sector + c.contact + (c.email || "")).toLowerCase() }; })],
       ["Offres", S().jobs.map(function (j) { return { t: j.title, s: j.city, h: "#/jobs/" + j.id, hay: (j.title + j.city + j.sector).toLowerCase() }; })],
       ["Missions", S().missions.map(function (m) { return { t: m.title, s: U.dateFr(m.due), h: "#/missions/" + m.id, hay: m.title.toLowerCase() }; })],
       ["Besoins", hiringList().map(function (h) { return { t: h.title, s: h.company_name || "", h: "#/hiring/" + h.id, hay: (h.title + " " + (h.company_name || "")).toLowerCase() }; })],
@@ -801,15 +801,21 @@
       var missions = S().missions.filter(function (m) { return m.clientId === c.id; }).length;
       var placed = S().candidates.filter(function (x) { return x.clientId === c.id && x.status === "place"; }).length;
       var found = !!(c.emailVerifiedAt || c.email_verified_at);
+      var mail = (c.email || "").trim();
       var mailHint = c.readyToContact ? "Prêt à contacter" : (found ? "Courriel public trouvé" : "");
-      return `<tr data-go="#/clients/${c.id}"><td><b>${U.esc(c.name)}</b></td><td>${U.esc(c.sector)}</td><td>${U.esc(c.city)}</td><td>${U.esc(c.contact)}</td><td>${U.esc(c.email || "—")}${mailHint ? "<div class='sub'>" + mailHint + "</div>" : ""}</td><td>${missions}</td><td>${placed}</td><td>${U.badge(c.status)}</td><td>${U.esc(TLStore.name(c.recruiterId))}</td></tr>`;
+      var write = mail
+        ? ('<div class="prospect-actions">' +
+          '<button type="button" class="btn btn-orange btn-sm" data-write-client="' + U.esc(c.id) + '">Écrire</button>' +
+          '<a class="btn btn-ghost btn-sm" href="mailto:' + U.esc(mail) + '" data-mailto="' + U.esc(c.id) + '">Courriel</a></div>')
+        : "—";
+      return `<tr data-go="#/clients/${c.id}"><td><b>${U.esc(c.name)}</b></td><td>${U.esc(c.sector)}</td><td>${U.esc(c.city)}</td><td>${U.esc(c.contact)}</td><td>${U.esc(mail || "—")}${mailHint ? "<div class='sub'>" + mailHint + "</div>" : ""}</td><td>${write}</td><td>${missions}</td><td>${placed}</td><td>${U.badge(c.status)}</td><td>${U.esc(TLStore.name(c.recruiterId))}</td></tr>`;
     }).join("");
     var pages = Array.from({ length: pg.pages }, function (_, i) {
       return '<button class="btn btn-ghost btn-sm' + (pg.page === i + 1 ? " btn-orange" : "") + '" data-page="' + (i + 1) + '">' + (i + 1) + "</button>";
     }).join("");
     return `
-      <div class="page-head"><div><h1>Clients</h1><p>${withEmailTotal} avec courriel public · ${readyTotal} prêts à contacter · ${all.length} fiches</p></div>
-        <div class="actions"><button class="btn btn-ghost" data-export-cli>Exporter</button><button class="btn btn-orange" data-create="client">Nouveau client</button></div></div>
+      <div class="page-head"><div><h1>Clients</h1><p>${withEmailTotal} avec courriel public · ${readyTotal} prêts à contacter · ${all.length} fiches. Écrire ouvre le message Talendus ; Courriel ouvre votre boîte.</p></div>
+        <div class="actions"><a class="btn btn-ghost" href="#/prospects/employers">Recruteurs / employeurs</a><button class="btn btn-ghost" data-export-cli>Exporter</button><button class="btn btn-orange" data-create="client">Nouveau client</button></div></div>
       <div class="filters">
         <input data-f="q" placeholder="Nom, ville ou courriel" value="${U.esc(filters.q || "")}">
         <select data-f="sector"><option value="">Secteur</option>${unique(S().clients, "sector").map(function (s) { return "<option" + (filters.sector === s ? " selected" : "") + ">" + s + "</option>"; }).join("")}</select>
@@ -829,8 +835,8 @@
         </select>
       </div>
       <div class="card"><div class="table-wrap"><table class="data">
-        <thead><tr><th>Entreprise</th><th>Secteur</th><th>Localisation</th><th>Contact principal</th><th>Courriel</th><th>Missions</th><th>Recrutements</th><th>Statut</th><th>Recruteur</th></tr></thead>
-        <tbody>${rows || '<tr><td colspan="9">' + U.empty("Aucun client", "Créez une entreprise ou attendez qu’un employeur ouvre un espace.") + "</td></tr>"}</tbody></table></div></div>
+        <thead><tr><th>Entreprise</th><th>Secteur</th><th>Localisation</th><th>Contact principal</th><th>Courriel</th><th>Contacter</th><th>Missions</th><th>Recrutements</th><th>Statut</th><th>Recruteur</th></tr></thead>
+        <tbody>${rows || '<tr><td colspan="10">' + U.empty("Aucun client", "Créez une entreprise ou attendez qu’un employeur ouvre un espace.") + "</td></tr>"}</tbody></table></div></div>
       <div class="pager"><span>${pg.total} résultats</span><div class="pages">${pages}</div></div>`;
   }
 
@@ -1061,6 +1067,8 @@
       <div class="crumbs"><a href="#/clients">Clients</a> / ${U.esc(c.name)}</div>
       <div class="page-head"><div><h1>${U.esc(c.name)}</h1><p>${U.esc(c.sector)} · ${U.esc(c.city)} · ${U.badge(c.status)}</p></div>
         <div class="actions">
+          ${c.email ? '<button class="btn btn-orange" data-write-client="' + id + '">Écrire</button>' : ""}
+          ${c.email ? '<a class="btn btn-ghost" href="mailto:' + U.esc(c.email) + '" data-mailto="' + id + '">Courriel</a>' : ""}
           <button class="btn btn-ghost" data-edit-client="${id}">Modifier</button>
           <button class="btn btn-orange" data-add-contract="${id}">Préparer le mandat</button>
         </div></div>
@@ -1077,7 +1085,7 @@
           <div class="row"><span>Site</span><b>${U.esc(c.website || "—")}</b></div>
           <div class="row"><span>Adresse</span><b>${U.esc([c.address, c.city, c.province].filter(Boolean).join(", ") || "—")}</b></div>
           <h3 style="margin-top:16px">Contact / compte</h3>
-          <p><b>${U.esc(c.contact)}</b><br>${U.esc(c.email)}<br>${U.esc(c.phone)}</p>
+          <p><b>${U.esc(c.contact)}</b><br>${c.email ? '<a href="mailto:' + U.esc(c.email) + '">' + U.esc(c.email) + "</a>" : "—"}<br>${U.esc(c.phone)}</p>
           ${c.ownerEmail ? "<p class='sub'>Espace : " + U.esc(c.ownerEmail) + "</p>" : ""}
           ${c.description ? "<p>" + U.esc(c.description) + "</p>" : ""}
         </div>
@@ -1864,11 +1872,11 @@
   function viewProspects() {
     if (route().extra) return viewProspectFiche(route().extra);
     var side = prospectSide();
+    var employer = side === "employer";
     if (viewProspects._side !== side) {
       viewProspects._side = side;
-      prospectFilters = { q: "", stage: "", source: "", city: "", sector: "", email: "", ready: "" };
+      prospectFilters = { q: "", stage: "", source: "", city: "", sector: "", email: employer ? "with" : "", ready: "" };
     }
-    var employer = side === "employer";
     return `
       <div class="page-head">
         <div>
@@ -1955,7 +1963,7 @@
     });
     var clear = document.getElementById("pf-clear");
     if (clear) clear.onclick = function () {
-      prospectFilters = { q: "", stage: "", source: "", city: "", sector: "", email: "", ready: "" };
+      prospectFilters = { q: "", stage: "", source: "", city: "", sector: "", email: prospectSide() === "employer" ? "with" : "", ready: "" };
       hydrateProspects();
     };
   }
@@ -2337,13 +2345,13 @@
 
   function chunkProspectIds(ids, size) {
     var out = [];
-    var step = size || 40;
+    var step = size || 3;
     for (var i = 0; i < ids.length; i += step) out.push(ids.slice(i, i + step));
     return out;
   }
 
   async function sendProspectBroadcast(ids, payload, onProgress) {
-    var chunks = chunkProspectIds(uniqueProspectIds(ids), 40);
+    var chunks = chunkProspectIds(uniqueProspectIds(ids), 3);
     var sent = 0;
     var skipped = 0;
     var failed = 0;
@@ -2361,13 +2369,51 @@
     return { sent: sent, skipped: skipped, failed: failed };
   }
 
-  function openProspectComposer(ids) {
+  async function openClientWrite(clientId) {
+    var c = TLStore.client(clientId);
+    if (!c) {
+      U.toast("Fiche introuvable.", "err");
+      return;
+    }
+    var email = (c.email || "").trim();
+    var prospectId = (c.prospectId || c.prospect_id || "").trim();
+    if (!email && !prospectId) {
+      U.toast("Aucun courriel public sur cette fiche.", "err");
+      return;
+    }
+    if (!api()) {
+      if (email) window.location.href = "mailto:" + email;
+      return;
+    }
+    try {
+      if (!prospectId && email) {
+        var json = await api().request("/admin/prospects?side=employer&q=" + encodeURIComponent(email));
+        var rows = (json && json.data) || [];
+        var match = rows.filter(function (r) {
+          return String(r.email || "").toLowerCase() === email.toLowerCase();
+        })[0];
+        prospectId = match ? match.id : "";
+      }
+      if (prospectId) {
+        openProspectComposer([prospectId], { ignoreSide: true });
+        return;
+      }
+      if (email) window.location.href = "mailto:" + email;
+      else U.toast("Aucun prospect employeur lié à ce courriel.", "err");
+    } catch (err) {
+      if (email) window.location.href = "mailto:" + email;
+      else U.toast((err && err.message) || "Impossible d’ouvrir le message.", "err");
+    }
+  }
+
+  function openProspectComposer(ids, opts) {
     ids = uniqueProspectIds(ids);
+    opts = opts || {};
     if (!api() || !ids.length) return;
     var firstId = ids[0];
     api().request(prospectUrl(firstId)).then(function (json) {
       var detail = (json && json.data) || {};
-      if (detail.side && detail.side !== prospectSide()) {
+      if (detail.side && !opts.ignoreSide && detail.side !== prospectSide()) {
         U.toast("Ce prospect n’appartient pas à cette base.", "err");
         return;
       }
@@ -3127,6 +3173,12 @@
         })();
         return;
       }
+      var writeCli = t.closest("[data-write-client]");
+      if (writeCli) {
+        openClientWrite(writeCli.getAttribute("data-write-client"));
+        return;
+      }
+      if (t.closest("[data-mailto]")) return;
       var goEl = t.closest("[data-go]");
       if (goEl) { go(goEl.getAttribute("data-go")); return; }
       var sort = t.closest("[data-sort]");
@@ -3153,7 +3205,7 @@
         U.toast("Export CSV prêt.", "ok");
       }
       if (t.closest("[data-export-cli]")) {
-        U.csv("clients-talendus.csv", [["Nom","Secteur","Ville"]].concat(S().clients.map(function (c) { return [c.name, c.sector, c.city]; })));
+        U.csv("clients-talendus.csv", [["Nom","Secteur","Ville","Courriel","Contact"]].concat(S().clients.map(function (c) { return [c.name, c.sector, c.city, c.email || "", c.contact || ""]; })));
         U.toast("Export CSV prêt.", "ok");
       }
       if (t.closest("[data-export-fin]") || t.closest("[data-export-an]") || t.closest("[data-export-dash]")) {
@@ -3965,6 +4017,7 @@
           '<option value="non"' + (val("smtp.use_tls") === "non" ? " selected" : "") + ">non</option>" +
           "</select>" +
           '<label>Envoyer le test à une vraie boîte</label><input id="adm-smtp-test-to" type="email" value="' + U.esc((function () { var me = TLStore.me() || {}; var mail = (me.email || "").trim(); return /@talendus\.ca$/i.test(mail) ? "" : mail; })()) + '" placeholder="vous@votreboite.com">' +
+          '<p class="sub">« Suivre EMAIL_ENABLED » n’envoie rien si la variable Render est off, même avec un serveur et un mot de passe. Pour contacter les entreprises, choisissez « Oui — envoyer vraiment ».</p>' +
           '<p class="sub">Le test part vers cette adresse (la vôtre par défaut). Les comptes de démo @talendus.ca sont ignorés.</p>' +
           '<p style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">' +
           '<button class="btn btn-orange" type="submit">Enregistrer le courriel</button>' +
