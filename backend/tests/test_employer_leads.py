@@ -295,7 +295,7 @@ def test_sync_catalog_emails_fills_existing_only(client, db):
         )
     )
     db.commit()
-    assert db.scalar(select(func.count()).select_from(Company)) == 2
+    before = db.scalar(select(func.count()).select_from(Company))
     filled = sync_catalog_emails_to_crm(db)
     db.commit()
     assert filled == 1
@@ -303,7 +303,8 @@ def test_sync_catalog_emails_fills_existing_only(client, db):
     assert exceldor.email == "info@exceldor.com"
     unknown = db.scalar(select(Company).where(Company.name == "Hors Catalogue"))
     assert not unknown.email
-    assert db.scalar(select(func.count()).select_from(Company)) == 2
+    assert db.scalar(select(func.count()).select_from(Company)) == before
+    assert db.scalar(select(Company).where(Company.name == "Olymel")) is None
     prospect = db.scalar(select(Prospect).where(Prospect.email == "info@exceldor.com"))
     assert prospect is not None
     assert prospect.company_name == "Exceldor"
