@@ -10,6 +10,7 @@ from app.services.employer_leads import (
     _names_similar,
     _owned_company_is_this_lead,
     ensure_quebec_employer_leads,
+    sync_catalog_emails_to_crm,
 )
 from tests.conftest import promote_admin
 
@@ -271,3 +272,108 @@ def test_ensure_dedupes_normalized_name_and_keeps_empty_email(client, db):
     assert not db.scalar(select(Prospect.id).where(Prospect.company_name == "Velan"))
     assert not db.scalar(select(Prospect.id).where(Prospect.email == "leads-dedupe@talendus.ca", Prospect.source == "prospection"))
     assert ensure_quebec_employer_leads(db) == 0
+
+
+def test_sync_catalog_emails_fills_existing_only(client, db):
+    promote_admin(client, "leads-sync@talendus.ca")
+    db.add(
+        Company(
+            name="Exceldor",
+            status=CompanyStatus.PROSPECT,
+            city="Lévis",
+            sector="Transformation alimentaire",
+            province="Québec",
+            country="Canada",
+        )
+    )
+    db.add(
+        Company(
+            name="Hors Catalogue",
+            status=CompanyStatus.PROSPECT,
+            province="Québec",
+            country="Canada",
+        )
+    )
+    db.commit()
+    assert db.scalar(select(func.count()).select_from(Company)) == 2
+    filled = sync_catalog_emails_to_crm(db)
+    db.commit()
+    assert filled == 1
+    exceldor = db.scalar(select(Company).where(Company.name == "Exceldor"))
+    assert exceldor.email == "info@exceldor.com"
+    unknown = db.scalar(select(Company).where(Company.name == "Hors Catalogue"))
+    assert not unknown.email
+    assert db.scalar(select(func.count()).select_from(Company)) == 2
+    prospect = db.scalar(select(Prospect).where(Prospect.email == "info@exceldor.com"))
+    assert prospect is not None
+    assert prospect.company_name == "Exceldor"
+    assert prospect.side == "employer"
+    assert prospect.stage == "a-contacter"
+    assert sync_catalog_emails_to_crm(db) == 0
+
+
+def test_sync_catalog_emails_does_not_overwrite(client, db):
+    promote_admin(client, "leads-keep@talendus.ca")
+    db.add(
+        Company(
+            name="Exceldor",
+            email="deja@exceldor.com",
+            status=CompanyStatus.PROSPECT,
+            province="Québec",
+            country="Canada",
+        )
+    )
+    db.commit()
+    assert sync_catalog_emails_to_crm(db) == 0
+    db.commit()
+    row = db.scalar(select(Company).where(Company.name == "Exceldor"))
+    assert row.email == "deja@exceldor.com"
+    assert not db.scalar(select(Prospect.id).where(Prospect.email == "info@exceldor.com"))
+
+
+def test_crm_lists_show_enriched_company_after_sync(client, db):
+    from tests.conftest import auth_header
+
+    admin = promote_admin(client, "leads-crm-visible@talendus.ca")
+    db.add(
+        Company(
+            name="Exceldor",
+            status=CompanyStatus.PROSPECT,
+            city="Lévis",
+            sector="Transformation alimentaire",
+            province="Québec",
+            country="Canada",
+        )
+    )
+    db.add(
+        Company(
+            name="Avior Integrated Products",
+            status=CompanyStatus.PROSPECT,
+            city="Laval",
+            sector="Aéronautique",
+            province="Québec",
+            country="Canada",
+        )
+    )
+    db.commit()
+    headers = auth_header(admin)
+    boot = client.get("/api/admin/bootstrap", headers=headers)
+    assert boot.status_code == 200, boot.text
+    clients = boot.json()["data"]["clients"]
+    exceldor = next(row for row in clients if row["name"] == "Exceldor")
+    avior = next(row for row in clients if row["name"] == "Avior Integrated Products")
+    assert exceldor["email"] == "info@exceldor.com"
+    assert exceldor["readyToContact"] is True
+    assert avior["email"] == "rh_laval@avior.ca"
+    assert avior["readyToContact"] is True
+    listed = client.get("/api/admin/prospects?side=employer", headers=headers)
+    assert listed.status_code == 200, listed.text
+    rows = listed.json()["data"]
+    emails = {row["email"] for row in rows}
+    assert "info@exceldor.com" in emails
+    assert "rh_laval@avior.ca" in emails
+    found = client.get("/api/admin/prospects?side=employer&email=found", headers=headers)
+    assert found.status_code == 200, found.text
+    found_emails = {row["email"] for row in found.json()["data"]}
+    assert "info@exceldor.com" in found_emails
+    assert "rh_laval@avior.ca" in found_emails

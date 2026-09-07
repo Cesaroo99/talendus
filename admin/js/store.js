@@ -175,7 +175,9 @@
   }
 
   function persist() {
-    localStorage.setItem(KEY, JSON.stringify(state));
+    try {
+      localStorage.setItem(KEY, JSON.stringify(state));
+    } catch (e) {}
     listeners.forEach(function (fn) { fn(state); });
   }
 

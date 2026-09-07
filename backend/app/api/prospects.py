@@ -98,6 +98,7 @@ def list_prospects(
                 {"key": "without", "label": "Sans courriel"},
                 {"key": "verified", "label": "Courriel vérifié"},
                 {"key": "unverified", "label": "Courriel non vérifié"},
+                {"key": "found", "label": "Courriels trouvés"},
             ],
             "ready_filters": [
                 {"key": "", "label": "Tous les contacts"},

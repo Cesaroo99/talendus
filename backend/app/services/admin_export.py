@@ -220,6 +220,14 @@ def bootstrap(db: Session, user: User | None = None) -> dict:
         return _editor_bootstrap(db, user)
     if user and user.role == UserRole.FINANCE:
         return _finance_bootstrap(db, user)
+    from app.services.employer_leads import sync_catalog_emails_to_crm
+
+    try:
+        sync_catalog_emails_to_crm(db)
+        db.commit()
+    except Exception:
+        logger.exception("bootstrap: recopie des courriels publics impossible")
+        db.rollback()
     users = db.scalars(select(User).order_by(User.created_at.asc())).all()
     companies = db.scalars(select(Company).options(joinedload(Company.owner)).order_by(Company.name.asc())).unique().all()
     jobs = db.scalars(select(JobOffer).options(joinedload(JobOffer.company)).order_by(JobOffer.created_at.desc())).unique().all()
@@ -372,6 +380,7 @@ def _company(c: Company) -> dict:
         "email": c.email or "",
         "phone": c.phone or "",
         "contactEmailVerified": bool(email_meta.get("email_verified")),
+        "emailVerifiedAt": email_meta.get("email_verified_at") or "",
         "readyToContact": bool(email_meta.get("ready_to_contact")),
         "status": "Actif" if c.status and c.status.value == "ACTIVE" else "Prospect",
         "recruiterId": c.assigned_recruiter_id or "",

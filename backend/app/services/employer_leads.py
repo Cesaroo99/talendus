@@ -279,6 +279,54 @@ def _ensure_prospect(db: Session, company: Company, lead: dict[str, Any], recrui
         db.expunge(row)
 
 
+def sync_catalog_emails_to_crm(db: Session) -> int:
+    """Recopie les courriels publics du catalogue sur les fiches déjà en base.
+
+    Ne crée aucune entreprise. N’écrase jamais un courriel déjà présent.
+    Crée le prospect employeur dès qu’un courriel public est disponible.
+    """
+    _forget_session_prospects(db)
+    recruiters = _recruiters(db)
+    staff = recruiters[0] if recruiters else _staff_user(db)
+    names = _company_name_index(db)
+    known_emails = {
+        (value or "").strip().lower()
+        for value in db.scalars(select(Prospect.email).where(Prospect.side == "employer")).all()
+        if value
+    }
+    filled = 0
+    for index, lead in enumerate(QUEBEC_EMPLOYER_LEADS):
+        email = (lead.get("email") or "").strip()
+        if not email or "@" not in email:
+            continue
+        company = _find_company(db, lead, names)
+        if company is None:
+            continue
+        if company.owner_user_id and not _owned_company_is_this_lead(company, lead):
+            continue
+        before = (company.email or "").strip()
+        if not before:
+            _fill_empty(
+                company,
+                email=email,
+                phone=lead.get("phone"),
+                contact_name=lead.get("contact_name") or None,
+            )
+            filled += 1
+        current = (company.email or "").strip().lower()
+        if current != email.lower():
+            continue
+        recruiter = recruiters[index % len(recruiters)] if recruiters else None
+        email_key = email.lower()
+        if email_key not in known_emails:
+            _ensure_note(db, company, staff, lead)
+            _ensure_prospect(db, company, lead, recruiter)
+            known_emails.add(email_key)
+    if filled:
+        logger.info("%s courriels publics recopiés sur des fiches existantes.", filled)
+    return filled
+
+
 def ensure_quebec_employer_leads(db: Session) -> int:
     """Crée ou complète les fiches de veille. Idempotent. Aucun compte employeur."""
     _forget_session_prospects(db)

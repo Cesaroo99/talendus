@@ -18,7 +18,7 @@ INVALID_MARKERS = (
     "@email.",
     "you@company.",
 )
-EMAIL_FILTERS = ("", "with", "without", "verified", "unverified")
+EMAIL_FILTERS = ("", "with", "without", "verified", "unverified", "found")
 READY_FILTERS = ("", "ready")
 
 
@@ -62,14 +62,17 @@ def lead_email_meta(company_name: str | None = None, email: str | None = None) -
             "email_verified": False,
             "email_confidence": None,
             "email_source": None,
+            "email_verified_at": None,
             "ready_to_contact": is_ready_to_contact(email),
         }
     confidence = lead.get("email_confidence")
     verified = bool(lead.get("email_verified") or (confidence or "").startswith("VERIFIED"))
+    verified_at = lead.get("email_verified_at") or lead.get("researched_at")
     return {
         "email_verified": verified,
         "email_confidence": confidence,
         "email_source": lead.get("email_source"),
+        "email_verified_at": verified_at,
         "ready_to_contact": is_ready_to_contact(lead.get("email") or email, confidence),
     }
 
@@ -81,6 +84,7 @@ def matches_email_filter(
     verified: bool = False,
     ready: str | None = None,
     confidence: str | None = None,
+    verified_at: str | None = None,
 ) -> bool:
     key = (wanted or "").strip().lower()
     ready_key = (ready or "").strip().lower()
@@ -93,6 +97,8 @@ def matches_email_filter(
     if key == "verified" and not (valid and verified):
         return False
     if key == "unverified" and not (present and not verified):
+        return False
+    if key == "found" and not (valid and verified and (verified_at or "").strip()):
         return False
     if ready_key in {"1", "true", "ready"} and not is_ready_to_contact(email, confidence):
         return False

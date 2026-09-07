@@ -440,6 +440,7 @@ def serialize_prospect(row: Prospect, sent_keys: list[str] | None = None) -> dic
         "email_verified": meta["email_verified"],
         "email_confidence": meta["email_confidence"],
         "email_source": meta["email_source"],
+        "email_verified_at": meta.get("email_verified_at"),
         "ready_to_contact": meta["ready_to_contact"],
         **account_links_for(row.email, row.side, row.company_name),
     }
@@ -831,6 +832,9 @@ def list_prospects(
     email: str | None = None,
     ready: str | None = None,
 ) -> list[Prospect]:
+    from app.services.employer_leads import sync_catalog_emails_to_crm
+
+    sync_catalog_emails_to_crm(db)
     sync_known_people(db)
     wanted = normalize_side(side)
     stmt = select(Prospect).where(Prospect.side == wanted).order_by(Prospect.updated_at.desc())
@@ -866,6 +870,7 @@ def list_prospects(
             verified=meta["email_verified"],
             ready=ready,
             confidence=meta["email_confidence"],
+            verified_at=meta.get("email_verified_at"),
         ):
             filtered.append(row)
     return filtered
