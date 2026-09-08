@@ -1869,7 +1869,101 @@
     return found ? found.label : (key || "—");
   }
 
+  var lisView = "all";
+  var lisCache = null;
+
+  function viewLeadIntelligence() {
+    var extra = (route().extra || lisView || "all").toLowerCase();
+    lisView = extra;
+    return `
+      <div class="page-head">
+        <div>
+          <h1>Lead Intelligence</h1>
+          <p id="lis-lead">Entreprises les plus susceptibles d’avoir besoin de Talendus — signaux croisés, sans scrap.</p>
+        </div>
+        <div class="actions">
+          <a class="btn btn-ghost" href="#/prospects/employers">Retour aux prospects</a>
+        </div>
+      </div>
+      <div class="lis-stats" id="lis-stats"></div>
+      <div class="tabs" id="lis-views"></div>
+      <div id="lis-root"><p class="sub">Chargement…</p></div>`;
+  }
+
+  function hydrateLeadIntelligence() {
+    if (!api()) return;
+    var view = (route().extra || lisView || "all").toLowerCase();
+    lisView = view;
+    var tabs = [
+      ["all", "Tous"],
+      ["hot", "HOT A+"],
+      ["talent_acquisition", "Talent Acquisition"],
+      ["high_volume", "High Volume"],
+      ["difficult", "Difficult Hiring"],
+      ["growing", "Growing"],
+      ["quebec", "Québec"],
+      ["montreal", "Montréal"],
+      ["contactable", "Contactable"]
+    ];
+    var box = document.getElementById("lis-views");
+    if (box) {
+      box.innerHTML = tabs.map(function (t) {
+        return '<a class="tab' + (view === t[0] ? " is-on" : "") + '" href="#/prospects/intelligence/' + t[0] + '">' + t[1] + "</a>";
+      }).join("");
+    }
+    api().request("/admin/employer-leads/intelligence?view=" + encodeURIComponent(view)).then(function (res) {
+      lisCache = res && res.data || {};
+      var report = lisCache.report || {};
+      var leads = lisCache.leads || [];
+      var stats = document.getElementById("lis-stats");
+      if (stats) {
+        stats.innerHTML = [
+          ["Uniques", report.unique_after_dedupe],
+          ["A+", report.priority_a_plus],
+          ["A", report.priority_a],
+          ["B", report.priority_b],
+          ["TA / recruteurs", report.hiring_recruiters],
+          ["10+ offres", report.jobs_10_plus],
+          ["Croissance", report.growth_signals],
+          ["Contactables", report.contactable]
+        ].map(function (item) {
+          return '<div class="lis-stat"><strong>' + U.esc(String(item[1] == null ? "—" : item[1])) + "</strong><span>" + item[0] + "</span></div>";
+        }).join("");
+      }
+      var lead = document.getElementById("lis-lead");
+      if (lead) {
+        lead.textContent = (report.unique_after_dedupe || 0) + " entreprises uniques après déduplication. Vue « " + view + " » : " + leads.length + " fiches. Courriels uniquement s’ils sont publics (sinon NOT_FOUND).";
+      }
+      var root = document.getElementById("lis-root");
+      if (!root) return;
+      if (!leads.length) {
+        root.innerHTML = '<div class="card card-pad"><p>Aucun prospect dans cette vue.</p></div>';
+        return;
+      }
+      root.innerHTML = '<div class="card"><div class="table-wrap"><table class="data lis-table"><thead><tr>' +
+        "<th>Score</th><th>Prio</th><th>Entreprise</th><th>Ville</th><th>Volume</th><th>Sources</th><th>Décideur</th><th>Courriel</th><th>Pourquoi Talendus</th>" +
+        "</tr></thead><tbody>" + leads.map(function (row) {
+          var email = row.professional_email || "NOT_FOUND";
+          var contactable = row.decision_maker_name && email !== "NOT_FOUND";
+          return "<tr>" +
+            "<td><strong>" + U.esc(String(row.lead_score || 0)) + "</strong></td>" +
+            "<td>" + U.badge(row.priority || "D") + "</td>" +
+            "<td>" + U.esc(row.company_name || "") + (row.ats_platform ? '<div class="sub">' + U.esc(row.ats_platform) + "</div>" : "") + "</td>" +
+            "<td>" + U.esc((row.city || "") + (row.province ? " · " + row.province : "")) + "</td>" +
+            "<td>" + U.esc(String(row.recruitment_volume || 0)) + "</td>" +
+            "<td>" + U.esc((row.sources_found || []).join(" + ")) + "</td>" +
+            "<td>" + U.esc(row.decision_maker_name || "—") + (row.decision_maker_title ? '<div class="sub">' + U.esc(row.decision_maker_title) + "</div>" : "") + "</td>" +
+            "<td>" + (contactable ? U.esc(email) : '<span class="sub">NOT_FOUND</span>') + "</td>" +
+            "<td class=\"lis-opp\">" + U.esc(row.talendus_opportunity || "") + "</td>" +
+            "</tr>";
+        }).join("") + "</tbody></table></div></div>";
+    }).catch(function (err) {
+      U.toast((err && err.message) || "Lead Intelligence indisponible.", "err");
+    });
+  }
+
   function viewProspects() {
+    if ((route().id || "").toLowerCase() === "intelligence") return viewLeadIntelligence();
     if (route().extra) return viewProspectFiche(route().extra);
     var side = prospectSide();
     var employer = side === "employer";
@@ -1886,6 +1980,7 @@
         <div class="actions">
           ${employer ? '<button type="button" class="btn btn-ghost" id="prospect-refresh-catalog">Charger le catalogue (1100+)</button>' : ""}
           ${employer ? '<button type="button" class="btn btn-ghost" id="prospect-indeed-watch">Veille Indeed</button>' : ""}
+          ${employer ? '<a class="btn btn-ghost" href="#/prospects/intelligence">Lead Intelligence</a>' : ""}
           <button type="button" class="btn btn-ghost" id="prospect-select-all">Tout sélectionner</button>
           <button type="button" class="btn btn-ghost" id="prospect-bulk">Écrire aux sélectionnés</button>
           <button type="button" class="btn btn-orange" id="prospect-new">Ajouter</button>
@@ -4258,7 +4353,8 @@
       if (r.name === "analytics") hydrateAnalytics();
       if (r.name === "settings") hydrateTeam();
       if (r.name === "clients" && !r.id) hydrateEmployerClients();
-      if (r.name === "prospects" && r.extra) hydrateProspectFiche(r.extra);
+      if (r.name === "prospects" && (r.id || "").toLowerCase() === "intelligence") hydrateLeadIntelligence();
+      else if (r.name === "prospects" && r.extra) hydrateProspectFiche(r.extra);
       else if (r.name === "prospects") hydrateProspects();
       if (r.name === "journal") hydrateJournal();
       loadAtsPanels();

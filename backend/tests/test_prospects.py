@@ -524,6 +524,9 @@ def test_admin_ui_has_prospects_module():
     assert "prospect-indeed-watch" in js
     assert "employer-leads/indeed-watch" in js
     assert "Veille Indeed" in js
+    assert "Lead Intelligence" in js
+    assert "employer-leads/intelligence" in js
+    assert "viewLeadIntelligence" in js
     assert "withEmail >= 400" not in js
     assert "catalog_with_email" in js
     assert "?force=1" in js

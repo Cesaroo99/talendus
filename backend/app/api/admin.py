@@ -78,6 +78,29 @@ def refresh_employer_leads(
     )
 
 
+@router.get("/employer-leads/intelligence")
+def employer_lead_intelligence(
+    view: str = Query("all"),
+    _: User = Depends(require_roles(UserRole.RECRUITER, UserRole.ADMIN)),
+):
+    from app.data.lead_intelligence_bundle import LEAD_INTELLIGENCE, LEAD_INTELLIGENCE_REPORT
+    from app.services.lead_intelligence import VIEWS, filter_view
+
+    key = (view or "all").strip().lower()
+    if key not in VIEWS and key not in {"a+", "ta", "volume", "hard", "growth", "qc", "grand-montreal", "email"}:
+        key = "all"
+    leads = filter_view(LEAD_INTELLIGENCE, key)
+    return ok(
+        {
+            "report": LEAD_INTELLIGENCE_REPORT,
+            "view": key,
+            "views": list(VIEWS),
+            "leads": leads,
+        },
+        message=f"{len(leads)} prospects — vue {key}. {LEAD_INTELLIGENCE_REPORT['unique_after_dedupe']} entreprises uniques.",
+    )
+
+
 @router.get("/employer-leads/indeed-watch")
 def indeed_employer_watch(_: User = Depends(require_roles(UserRole.RECRUITER, UserRole.ADMIN))):
     from app.data.quebec_employer_leads_wave9 import QUEBEC_EMPLOYER_LEADS_WAVE9

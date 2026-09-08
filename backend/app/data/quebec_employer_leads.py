@@ -22,6 +22,8 @@ Vague 8 : 200 PME québécoises — 3e génération (terrain, certifications,
 régions, horaires, relève, SAV). Courriel uniquement s’il est publié.
 Vague 9 : 200+ entreprises découvertes via Indeed (TA / recruteurs /
 volume opérationnel), pages publiquement indexées, sans scrap.
+Vague 10 : Lead Intelligence multi-sources — nouvelles entreprises
+croisées (LinkedIn, Jobillico, ATS, site carrière), sans scrap.
 """
 
 from __future__ import annotations
@@ -38,6 +40,7 @@ from app.data.quebec_employer_leads_wave6 import QUEBEC_EMPLOYER_LEADS_WAVE6
 from app.data.quebec_employer_leads_wave7 import QUEBEC_EMPLOYER_LEADS_WAVE7
 from app.data.quebec_employer_leads_wave8 import QUEBEC_EMPLOYER_LEADS_WAVE8
 from app.data.quebec_employer_leads_wave9 import QUEBEC_EMPLOYER_LEADS_WAVE9
+from app.data.quebec_employer_leads_wave10 import QUEBEC_EMPLOYER_LEADS_WAVE10
 
 # name est la clé d’idempotence (insensible à la casse).
 _WAVE1: tuple[dict, ...] = (
@@ -758,4 +761,5 @@ QUEBEC_EMPLOYER_LEADS: tuple[dict, ...] = apply_public_emails(
     + QUEBEC_EMPLOYER_LEADS_WAVE7
     + QUEBEC_EMPLOYER_LEADS_WAVE8
     + QUEBEC_EMPLOYER_LEADS_WAVE9
+    + QUEBEC_EMPLOYER_LEADS_WAVE10
 )
