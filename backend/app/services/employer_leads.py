@@ -193,6 +193,9 @@ def _note_text(lead: dict[str, Any]) -> str:
     priority = lead.get("lead_priority")
     source = lead.get("source") or "veille publique"
     score_line = f"Score : {score} ({priority}).\n" if score else ""
+    opportunity = lead.get("talendus_opportunity")
+    if opportunity:
+        score_line += f"Opportunité Talendus : {opportunity}\n"
     email_src = lead.get("email_source")
     confidence = lead.get("email_confidence")
     if lead.get("email"):

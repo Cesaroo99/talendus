@@ -78,6 +78,44 @@ def refresh_employer_leads(
     )
 
 
+@router.get("/employer-leads/indeed-watch")
+def indeed_employer_watch(_: User = Depends(require_roles(UserRole.RECRUITER, UserRole.ADMIN))):
+    from app.data.quebec_employer_leads_wave9 import QUEBEC_EMPLOYER_LEADS_WAVE9
+    from app.services.indeed_prospecting import summarize_indeed_leads
+
+    leads = [
+        {
+            "company_name": row["name"],
+            "industry": row.get("sector"),
+            "city": row.get("city"),
+            "province": row.get("province") or "Québec",
+            "website": row.get("website"),
+            "indeed_job_title": row.get("indeed_job_title"),
+            "indeed_job_url": row.get("indeed_job_url"),
+            "job_posting_date": row.get("job_posting_date"),
+            "job_status": row.get("job_status"),
+            "total_active_jobs": row.get("total_active_jobs"),
+            "recruitment_jobs": row.get("recruitment_jobs"),
+            "company_size": row.get("employees"),
+            "recruitment_signal": row.get("recruitment_signal"),
+            "lead_score": row.get("lead_score"),
+            "priority": (row.get("lead_priority") or "").replace("A+", "A"),
+            "contact_name": row.get("contact_name"),
+            "contact_title": row.get("contact_title"),
+            "professional_email": row.get("email"),
+            "linkedin_company": row.get("linkedin_url"),
+            "source": row.get("source"),
+            "talendus_opportunity": row.get("talendus_opportunity"),
+            "notes": row.get("hiring_signal"),
+        }
+        for row in QUEBEC_EMPLOYER_LEADS_WAVE9
+    ]
+    return ok(
+        {"summary": summarize_indeed_leads(QUEBEC_EMPLOYER_LEADS_WAVE9), "leads": leads},
+        message=f"{len(leads)} entreprises découvertes via Indeed (pages publiques indexées).",
+    )
+
+
 @router.post("/candidates")
 def create_candidate(
     payload: AdminCandidateIn,

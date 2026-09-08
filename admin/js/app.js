@@ -815,7 +815,7 @@
     }).join("");
     return `
       <div class="page-head"><div><h1>Clients</h1><p>${withEmailTotal} avec courriel public · ${readyTotal} prêts à contacter · ${all.length} fiches catalogue. Écrire ouvre le message Talendus ; Courriel ouvre votre boîte.</p></div>
-        <div class="actions"><button type="button" class="btn btn-ghost" data-refresh-employers>Charger le catalogue (740+)</button><a class="btn btn-ghost" href="#/prospects/employers">Recruteurs / employeurs</a><button class="btn btn-ghost" data-export-cli>Exporter</button><button class="btn btn-orange" data-create="client">Nouveau client</button></div></div>
+        <div class="actions"><button type="button" class="btn btn-ghost" data-refresh-employers>Charger le catalogue (1100+)</button><a class="btn btn-ghost" href="#/prospects/employers">Recruteurs / employeurs</a><button class="btn btn-ghost" data-export-cli>Exporter</button><button class="btn btn-orange" data-create="client">Nouveau client</button></div></div>
       <div class="filters">
         <input data-f="q" placeholder="Nom, ville ou courriel" value="${U.esc(filters.q || "")}">
         <select data-f="sector"><option value="">Secteur</option>${unique(S().clients, "sector").map(function (s) { return "<option" + (filters.sector === s ? " selected" : "") + ">" + s + "</option>"; }).join("")}</select>
@@ -1884,7 +1884,8 @@
           <p id="prospect-lead">${employer ? "Entreprises avec courriel public à démarcher. Les candidats sont dans l’autre onglet." : "Base candidats uniquement. Les entreprises avec courriel sont dans Recruteurs / employeurs."}</p>
         </div>
         <div class="actions">
-          ${employer ? '<button type="button" class="btn btn-ghost" id="prospect-refresh-catalog">Charger le catalogue (740+)</button>' : ""}
+          ${employer ? '<button type="button" class="btn btn-ghost" id="prospect-refresh-catalog">Charger le catalogue (1100+)</button>' : ""}
+          ${employer ? '<button type="button" class="btn btn-ghost" id="prospect-indeed-watch">Veille Indeed</button>' : ""}
           <button type="button" class="btn btn-ghost" id="prospect-select-all">Tout sélectionner</button>
           <button type="button" class="btn btn-ghost" id="prospect-bulk">Écrire aux sélectionnés</button>
           <button type="button" class="btn btn-orange" id="prospect-new">Ajouter</button>
@@ -1985,7 +1986,7 @@
   async function hydrateEmployerClients() {
     if (!api() || !live()) return;
     var withEmail = (S().clients || []).filter(function (c) { return !!(c.email || "").trim(); }).length;
-    var target = Number((S().employerCatalog || {}).catalog_with_email) || 740;
+    var target = Number((S().employerCatalog || {}).catalog_with_email) || 750;
     if (withEmail >= target || employerCatalogTried) return;
     employerCatalogTried = true;
     var stats = await refreshEmployerDirectory(true, false);
@@ -2014,7 +2015,7 @@
     }
     try {
       if (prospectSide() === "employer") {
-        root.innerHTML = "<p class='sub'>Chargement du catalogue employeurs (environ 740 courriels publics)…</p>";
+        root.innerHTML = "<p class='sub'>Chargement du catalogue employeurs (1100+ fiches, dont la veille Indeed)…</p>";
       }
       var json = await api().request("/admin/prospects?" + prospectQuery());
       var rows = (json && json.data) || [];
@@ -2101,13 +2102,39 @@
   function bindProspectList(root) {
     var addBtn = document.getElementById("prospect-new");
     if (addBtn) addBtn.onclick = function () { openProspectCreate(); };
+    var indeedBtn = document.getElementById("prospect-indeed-watch");
+    if (indeedBtn) indeedBtn.onclick = async function () {
+      if (!api()) return;
+      indeedBtn.disabled = true;
+      try {
+        var res = await api().request("/admin/employer-leads/indeed-watch");
+        var sum = (res && res.data && res.data.summary) || {};
+        U.toast(
+          (sum.total || 0) + " entreprises Indeed · " +
+          (sum.priority_a || 0) + " priorité A · " +
+          (sum.hiring_recruiters || 0) + " recrutent un recruteur · " +
+          (sum.jobs_10_plus || 0) + " avec 10+ offres.",
+          "ok"
+        );
+        var lead = document.getElementById("prospect-lead");
+        if (lead) {
+          lead.textContent = "Veille Indeed (pages publiques, sans scrap) : " +
+            (sum.total || 0) + " entreprises, triées par score. " +
+            (sum.priority_a || 0) + " priorité A, " +
+            (sum.hiring_recruiters || 0) + " signaux TA/recruteur. Chargez le catalogue pour les importer.";
+        }
+      } catch (err) {
+        U.toast((err && err.message) || "Veille Indeed indisponible.", "err");
+      }
+      indeedBtn.disabled = false;
+    };
     var catalogBtn = document.getElementById("prospect-refresh-catalog");
     if (catalogBtn) catalogBtn.onclick = async function () {
       catalogBtn.disabled = true;
       catalogBtn.textContent = "Chargement…";
       var stats = await refreshEmployerDirectory(true, true);
       catalogBtn.disabled = false;
-      catalogBtn.textContent = "Charger le catalogue (740+)";
+      catalogBtn.textContent = "Charger le catalogue (1100+)";
       if (stats) {
         U.toast((stats.prospects_with_catalog_email || 0) + " employeurs avec courriel public.", "ok");
         hydrateProspects();
