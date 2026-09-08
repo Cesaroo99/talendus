@@ -527,6 +527,9 @@ def test_admin_ui_has_prospects_module():
     assert "Lead Intelligence" in js
     assert "employer-leads/intelligence" in js
     assert "viewLeadIntelligence" in js
+    assert "Deep Contact" in js
+    assert "employer-leads/contact-finder" in js
+    assert "viewLeadContacts" in js
     assert "withEmail >= 400" not in js
     assert "catalog_with_email" in js
     assert "?force=1" in js

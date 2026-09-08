@@ -78,6 +78,27 @@ def refresh_employer_leads(
     )
 
 
+@router.get("/employer-leads/contact-finder")
+def employer_contact_finder(
+    view: str = Query("all"),
+    _: User = Depends(require_roles(UserRole.RECRUITER, UserRole.ADMIN)),
+):
+    from app.data.contact_finder_bundle import CONTACT_FINDER, CONTACT_FINDER_REPORT
+    from app.services.contact_finder import filter_view
+
+    key = (view or "all").strip().lower()
+    leads = filter_view(CONTACT_FINDER, key)
+    return ok(
+        {
+            "report": CONTACT_FINDER_REPORT,
+            "view": key,
+            "views": ["all", "now", "contactable", "needs_research", "no_email"],
+            "leads": leads,
+        },
+        message=f"{len(leads)} fiches — vue {key}. {CONTACT_FINDER_REPORT['emails_found']} courriels publics, aucun inventé.",
+    )
+
+
 @router.get("/employer-leads/intelligence")
 def employer_lead_intelligence(
     view: str = Query("all"),

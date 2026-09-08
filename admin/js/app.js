@@ -1962,7 +1962,127 @@
     });
   }
 
+  var dcfView = "all";
+  var dcfCache = null;
+
+  function viewLeadContacts() {
+    var extra = (route().extra || dcfView || "all").toLowerCase();
+    dcfView = extra;
+    return `
+      <div class="page-head">
+        <div>
+          <h1>Deep Contact</h1>
+          <p id="dcf-lead">Meilleur point de contact pour vendre le recrutement — jamais un courriel inventé.</p>
+        </div>
+        <div class="actions">
+          <a class="btn btn-ghost" href="#/prospects/employers">Retour aux prospects</a>
+        </div>
+      </div>
+      <div class="lis-stats" id="dcf-stats"></div>
+      <div class="tabs" id="dcf-views"></div>
+      <div id="dcf-root"><p class="sub">Chargement…</p></div>
+      <div id="dcf-failed"></div>`;
+  }
+
+  function dcfStatusLabel(status) {
+    var map = {
+      FOUND_VERIFIED: "Vérifié",
+      FOUND_HIGH_CONFIDENCE: "Haute confiance",
+      FOUND_MEDIUM_CONFIDENCE: "Confiance moyenne",
+      GENERIC_ONLY: "Générique seulement",
+      CONTACT_FOUND_EMAIL_NOT_FOUND: "Personne sans courriel",
+      NO_EMAIL_FOUND: "Aucun courriel",
+      SEARCH_EXHAUSTED: "Recherche épuisée",
+      EMAIL_PATTERN_GUESSED: "Deviné — non utilisé"
+    };
+    return map[status] || status || "—";
+  }
+
+  function hydrateLeadContacts() {
+    if (!api()) return;
+    var view = (route().extra || dcfView || "all").toLowerCase();
+    dcfView = view;
+    var tabs = [
+      ["all", "Tous"],
+      ["now", "🔥 Contactable now"],
+      ["contactable", "🟠 Contactable"],
+      ["needs_research", "🟡 Needs research"],
+      ["no_email", "🔴 No email"]
+    ];
+    var box = document.getElementById("dcf-views");
+    if (box) {
+      box.innerHTML = tabs.map(function (t) {
+        return '<a class="tab' + (view === t[0] ? " is-on" : "") + '" href="#/prospects/contacts/' + t[0] + '">' + t[1] + "</a>";
+      }).join("");
+    }
+    api().request("/admin/employer-leads/contact-finder?view=" + encodeURIComponent(view)).then(function (res) {
+      dcfCache = res && res.data || {};
+      var report = dcfCache.report || {};
+      var leads = dcfCache.leads || [];
+      var stats = document.getElementById("dcf-stats");
+      if (stats) {
+        stats.innerHTML = [
+          ["Analysées", report.companies_analyzed],
+          ["Courriels", report.emails_found],
+          ["RH / recrutement", report.hr_recruitment_emails],
+          ["Nominatifs", report.named_contacts],
+          ["Haute confiance", report.high_confidence],
+          ["Génériques", report.generic_emails],
+          ["Aucun courriel", report.no_email],
+          ["Récupération", (report.recovery_rate != null ? report.recovery_rate + " %" : "—")]
+        ].map(function (item) {
+          return '<div class="lis-stat"><strong>' + U.esc(String(item[1] == null ? "—" : item[1])) + "</strong><span>" + item[0] + "</span></div>";
+        }).join("");
+      }
+      var lead = document.getElementById("dcf-lead");
+      if (lead) {
+        lead.textContent = (report.companies_analyzed || 0) + " entreprises du catalogue. Vue « " + view + " » : " + leads.length +
+          " fiches. Le bon contact RH d’abord — aucun courriel inventé.";
+      }
+      var root = document.getElementById("dcf-root");
+      if (!root) return;
+      if (!leads.length) {
+        root.innerHTML = '<div class="card card-pad"><p>Aucun prospect dans cette vue.</p></div>';
+      } else {
+        root.innerHTML = '<div class="card"><div class="table-wrap"><table class="data lis-table dcf-table"><thead><tr>' +
+          "<th>Score</th><th>Entreprise</th><th>Contact</th><th>Courriel</th><th>Confiance</th><th>Pertinence</th><th>Source</th><th>Profondeur</th><th>Statut</th><th>Pourquoi</th>" +
+          "</tr></thead><tbody>" + leads.map(function (row) {
+            var email = row.primary_email || "";
+            return "<tr class=\"dcf-row dcf-" + U.esc(row.bucket || "") + "\">" +
+              "<td><strong>" + U.esc(String(row.talendus_score || 0)) + "</strong></td>" +
+              "<td>" + U.esc(row.company_name || "") + (row.city ? '<div class="sub">' + U.esc(row.city) + "</div>" : "") + "</td>" +
+              "<td>" + U.esc(row.primary_contact_name || "—") + (row.primary_contact_title ? '<div class="sub">' + U.esc(row.primary_contact_title) + "</div>" : "") + "</td>" +
+              "<td>" + (email ? U.esc(email) : '<span class="sub">aucun</span>') + "</td>" +
+              "<td>" + (email ? U.esc(String(row.primary_email_confidence || 0)) + "/100" : "—") + "</td>" +
+              "<td>" + U.esc(String(row.contact_relevance_score || 0)) + "/100</td>" +
+              "<td>" + U.esc(row.primary_email_source || "—") + (row.primary_email_source_url ? '<div class="sub">' + U.esc(row.primary_email_source_url) + "</div>" : "") + "</td>" +
+              "<td>" + U.esc(row.search_depth_label || String(row.email_search_depth || "")) + "</td>" +
+              "<td>" + U.esc(dcfStatusLabel(row.email_search_status)) + "</td>" +
+              "<td class=\"lis-opp\">" + U.esc(row.why_this_contact || "") + "</td>" +
+              "</tr>";
+          }).join("") + "</tbody></table></div></div>";
+      }
+      var failed = document.getElementById("dcf-failed");
+      if (failed && view === "all") {
+        var top = report.failed_top20 || [];
+        if (top.length) {
+          failed.innerHTML = '<div class="card card-pad dcf-failed"><h2>20 recherches en échec (traitement manuel)</h2><ol>' +
+            top.map(function (row) {
+              return "<li><strong>" + U.esc(row.company_name || "") + "</strong> — score " +
+                U.esc(String(row.talendus_score || 0)) + " · " + U.esc(dcfStatusLabel(row.status)) +
+                '<div class="sub">' + U.esc(row.why || "") + "</div></li>";
+            }).join("") + "</ol></div>";
+        }
+      } else if (failed) {
+        failed.innerHTML = "";
+      }
+    }).catch(function (err) {
+      U.toast((err && err.message) || "Deep Contact indisponible.", "err");
+    });
+  }
+
   function viewProspects() {
+    if ((route().id || "").toLowerCase() === "contacts") return viewLeadContacts();
     if ((route().id || "").toLowerCase() === "intelligence") return viewLeadIntelligence();
     if (route().extra) return viewProspectFiche(route().extra);
     var side = prospectSide();
@@ -1981,6 +2101,7 @@
           ${employer ? '<button type="button" class="btn btn-ghost" id="prospect-refresh-catalog">Charger le catalogue (1100+)</button>' : ""}
           ${employer ? '<button type="button" class="btn btn-ghost" id="prospect-indeed-watch">Veille Indeed</button>' : ""}
           ${employer ? '<a class="btn btn-ghost" href="#/prospects/intelligence">Lead Intelligence</a>' : ""}
+          ${employer ? '<a class="btn btn-ghost" href="#/prospects/contacts">Deep Contact</a>' : ""}
           <button type="button" class="btn btn-ghost" id="prospect-select-all">Tout sélectionner</button>
           <button type="button" class="btn btn-ghost" id="prospect-bulk">Écrire aux sélectionnés</button>
           <button type="button" class="btn btn-orange" id="prospect-new">Ajouter</button>
@@ -4353,7 +4474,8 @@
       if (r.name === "analytics") hydrateAnalytics();
       if (r.name === "settings") hydrateTeam();
       if (r.name === "clients" && !r.id) hydrateEmployerClients();
-      if (r.name === "prospects" && (r.id || "").toLowerCase() === "intelligence") hydrateLeadIntelligence();
+      if (r.name === "prospects" && (r.id || "").toLowerCase() === "contacts") hydrateLeadContacts();
+      else if (r.name === "prospects" && (r.id || "").toLowerCase() === "intelligence") hydrateLeadIntelligence();
       else if (r.name === "prospects" && r.extra) hydrateProspectFiche(r.extra);
       else if (r.name === "prospects") hydrateProspects();
       if (r.name === "journal") hydrateJournal();

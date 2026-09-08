@@ -136,7 +136,17 @@ def test_lead_catalog_is_fifty_real_and_unique():
     assert all(row.get("source", "").startswith("vague 10") for row in wave10)
     assert all(row.get("lead_score") for row in wave10)
     assert all(row.get("lead_priority") in {"A+", "A", "B", "C", "D"} for row in wave10)
-    assert all(not row.get("email") for row in wave10)
+    from app.data.contact_finder_finds import DEEP_CONTACT_FINDS
+
+    for row in wave10:
+        if not row.get("email"):
+            continue
+        finds = DEEP_CONTACT_FINDS.get(row["name"]) or []
+        assert any((item.get("email") or "").lower() == row["email"].lower() for item in finds), (
+            f"Courriel vague 10 non sourcé Deep Contact : {row['name']} {row['email']}"
+        )
+    stm = next(row for row in wave10 if row["name"] == "STM")
+    assert not stm.get("email"), "STM : portail only, pas d’adresse inventée"
     assert any(row["name"] == "STM" for row in wave10)
     for row in QUEBEC_EMPLOYER_LEADS:
         assert row["name"] not in DEMO_FAKES
@@ -547,3 +557,24 @@ def test_lead_intelligence_endpoint_lists_kraft_as_hot(client):
     assert kraft["professional_email"] == "NOT_FOUND"
     assert "Indeed" in kraft["sources_found"]
     assert kraft["talendus_opportunity"]
+
+
+def test_contact_finder_endpoint_lists_loto_and_keeps_kraft_without_email(client):
+    from tests.conftest import auth_header
+
+    admin = promote_admin(client, "deep-contact@talendus.ca")
+    res = client.get("/api/admin/employer-leads/contact-finder?view=now", headers=auth_header(admin))
+    assert res.status_code == 200, res.text
+    payload = res.json()["data"]
+    report = payload["report"]
+    assert report["companies_analyzed"] == 1433
+    assert report["emails_found"] >= 750
+    assert report["no_email"] >= 1
+    assert len(report["failed_top20"]) == 20
+    assert all(row.get("primary_email") for row in payload["leads"])
+    all_res = client.get("/api/admin/employer-leads/contact-finder?view=all", headers=auth_header(admin))
+    leads = {row["company_name"]: row for row in all_res.json()["data"]["leads"]}
+    assert leads["Loto-Québec"]["primary_email"] == "support.rh@loto-quebec.com"
+    assert leads["Kraft Heinz Canada"]["primary_email"] == ""
+    assert leads["Kraft Heinz Canada"]["email_search_status"] == "CONTACT_FOUND_EMAIL_NOT_FOUND"
+    assert leads["Kraft Heinz Canada"]["primary_contact_name"] == "Heidi Turner"

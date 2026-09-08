@@ -24,10 +24,13 @@ Vague 9 : 200+ entreprises découvertes via Indeed (TA / recruteurs /
 volume opérationnel), pages publiquement indexées, sans scrap.
 Vague 10 : Lead Intelligence multi-sources — nouvelles entreprises
 croisées (LinkedIn, Jobillico, ATS, site carrière), sans scrap.
+Deep Contact : meilleur point de contact RH / recrutement déjà au
+catalogue — courriel uniquement s’il est public, jamais inventé.
 """
 
 from __future__ import annotations
 
+from app.data.contact_finder_apply import apply_deep_contacts
 from app.data.quebec_employer_email_enrichment import apply_public_emails
 from app.data.quebec_employer_leads_cegeps import QUEBEC_EMPLOYER_LEADS_CEGEPS
 from app.data.quebec_employer_leads_css import QUEBEC_EMPLOYER_LEADS_CSS
@@ -748,7 +751,8 @@ _WAVE1: tuple[dict, ...] = (
     },
 )
 
-QUEBEC_EMPLOYER_LEADS: tuple[dict, ...] = apply_public_emails(
+QUEBEC_EMPLOYER_LEADS: tuple[dict, ...] = apply_deep_contacts(
+    apply_public_emails(
     _WAVE1
     + QUEBEC_EMPLOYER_LEADS_MORE
     + QUEBEC_EMPLOYER_LEADS_WAVE4
@@ -762,4 +766,5 @@ QUEBEC_EMPLOYER_LEADS: tuple[dict, ...] = apply_public_emails(
     + QUEBEC_EMPLOYER_LEADS_WAVE8
     + QUEBEC_EMPLOYER_LEADS_WAVE9
     + QUEBEC_EMPLOYER_LEADS_WAVE10
+    )
 )
