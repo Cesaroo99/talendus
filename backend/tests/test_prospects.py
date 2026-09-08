@@ -520,7 +520,10 @@ def test_admin_ui_has_prospects_module():
     assert "var tplOptions = proposals.map" in js
     assert "chunkProspectIds(uniqueProspectIds(ids), 250)" in js
     assert "employer-leads/refresh" in js
-    assert "Charger le catalogue (740+)" in js
+    assert "Charger le catalogue (1100+)" in js
+    assert "prospect-indeed-watch" in js
+    assert "employer-leads/indeed-watch" in js
+    assert "Veille Indeed" in js
     assert "withEmail >= 400" not in js
     assert "catalog_with_email" in js
     assert "?force=1" in js

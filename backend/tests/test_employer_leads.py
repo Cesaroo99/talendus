@@ -29,11 +29,11 @@ DEMO_FAKES = {
 
 
 def test_lead_catalog_is_fifty_real_and_unique():
-    assert len(QUEBEC_EMPLOYER_LEADS) == 924
+    assert len(QUEBEC_EMPLOYER_LEADS) == 1180
     names = [row["name"].casefold() for row in QUEBEC_EMPLOYER_LEADS]
-    assert len(set(names)) == 924
+    assert len(set(names)) == 1180
     websites = [row["website"] for row in QUEBEC_EMPLOYER_LEADS]
-    assert len(set(websites)) == 924
+    assert len(set(websites)) == 1180
     emails = [row["email"].casefold() for row in QUEBEC_EMPLOYER_LEADS if row.get("email")]
     assert len(set(emails)) == len(emails)
     assert emails, "Au moins un courriel public RH/info doit être présent."
@@ -88,7 +88,7 @@ def test_lead_catalog_is_fifty_real_and_unique():
     }
     # Nouvel angle : pas seulement l’usine / l’entrepôt.
     assert sum(1 for row in wave7 if row["sector"] in {"Technologie", "Services professionnels", "Assurance"}) >= 40
-    wave8 = QUEBEC_EMPLOYER_LEADS[724:]
+    wave8 = QUEBEC_EMPLOYER_LEADS[724:924]
     assert len(wave8) == 200
     assert all(row.get("lead_score") for row in wave8)
     assert all(row.get("lead_priority") in {"A+", "A", "B", "C"} for row in wave8)
@@ -113,6 +113,24 @@ def test_lead_catalog_is_fifty_real_and_unique():
         if "FIELD_WORK" in (row.get("lead_categories") or "")
         or "CERTIFICATION_REQUIRED" in (row.get("lead_categories") or "")
     ) >= 80
+    wave9 = QUEBEC_EMPLOYER_LEADS[924:]
+    assert len(wave9) == 256
+    assert all(row.get("lead_score") for row in wave9)
+    assert all(row.get("lead_priority") in {"A+", "A", "B", "C", "D"} for row in wave9)
+    assert all(row.get("researched_at") == "2026-09-08" for row in wave9)
+    assert all(row.get("source", "").startswith("vague 9") for row in wave9)
+    assert all("INDEED_DISCOVERY" in (row.get("lead_categories") or "") for row in wave9)
+    assert any(row["name"] == "Kraft Heinz Canada" for row in wave9)
+    kraft = next(row for row in wave9 if row["name"] == "Kraft Heinz Canada")
+    assert kraft["lead_score"] >= 80
+    assert kraft["lead_priority"] in {"A", "A+"}
+    assert kraft.get("indeed_job_url")
+    assert "Talent Acquisition" in (kraft.get("indeed_job_title") or "")
+    assert kraft.get("talendus_opportunity")
+    assert not kraft.get("email"), "Pas de courriel inventé pour Kraft Heinz"
+    assert sum(1 for row in wave9 if "INTERNAL_TA_HIRE" in (row.get("lead_categories") or "")) >= 40
+    assert sum(1 for row in wave9 if int(row.get("total_active_jobs") or 0) >= 10) >= 40
+    assert {row["city"] for row in wave9} >= {"Montréal", "Québec", "Laval", "Lévis", "Mont-Royal"}
     for row in QUEBEC_EMPLOYER_LEADS:
         assert row["name"] not in DEMO_FAKES
         assert row["city"]
@@ -153,12 +171,12 @@ def test_ensure_creates_prospect_clients_without_employer_accounts(client, db):
     promote_admin(client, "leads-admin@talendus.ca")
     created = ensure_quebec_employer_leads(db)
     db.commit()
-    assert created == 924
+    assert created == 1180
     assert ensure_quebec_employer_leads(db) == 0
     db.commit()
 
     leads = list(db.scalars(select(Company).where(Company.name.in_([r["name"] for r in QUEBEC_EMPLOYER_LEADS]))))
-    assert len(leads) == 924
+    assert len(leads) == 1180
     assert all(c.status == CompanyStatus.PROSPECT for c in leads)
     assert all(c.province == "Québec" for c in leads)
     assert all(not c.owner_user_id for c in leads)
@@ -289,7 +307,7 @@ def test_ensure_survives_stale_prospect_left_in_caller_session(client, db):
     row.city = "Montréal"
     created = ensure_quebec_employer_leads(db)
     db.commit()
-    assert created == 924
+    assert created == 1180
 
 
 def test_ensure_dedupes_normalized_name_and_keeps_empty_email(client, db):
@@ -308,7 +326,7 @@ def test_ensure_dedupes_normalized_name_and_keeps_empty_email(client, db):
     created = ensure_quebec_employer_leads(db)
     db.expire_all()
     db.commit()
-    assert created == 923
+    assert created == 1179
     velans = list(db.scalars(select(Company).where(Company.name.ilike("%velan%"))))
     assert len(velans) == 1
     assert velans[0].name == "Velan Inc."
@@ -480,3 +498,24 @@ def test_bootstrap_recovers_prod_stuck_at_406(client, db):
     for row in stripped:
         assert clients[row["name"]]["email"] == row["email"]
         assert clients[row["name"]].get("prospectId")
+
+
+def test_indeed_watch_endpoint_lists_kraft_heinz_first(client):
+    from tests.conftest import auth_header
+
+    admin = promote_admin(client, "indeed-watch@talendus.ca")
+    res = client.get("/api/admin/employer-leads/indeed-watch", headers=auth_header(admin))
+    assert res.status_code == 200, res.text
+    payload = res.json()["data"]
+    summary = payload["summary"]
+    leads = payload["leads"]
+    assert summary["total"] >= 200
+    assert summary["priority_a"] >= 20
+    assert summary["hiring_recruiters"] >= 40
+    assert leads[0]["lead_score"] >= leads[-1]["lead_score"]
+    kraft = next(row for row in leads if row["company_name"] == "Kraft Heinz Canada")
+    assert kraft["priority"] == "A"
+    assert kraft["professional_email"] in {None, ""}
+    assert kraft["indeed_job_url"]
+    assert kraft["talendus_opportunity"]
+    assert kraft["city"] == "Mont-Royal"
