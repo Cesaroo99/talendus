@@ -29,11 +29,11 @@ DEMO_FAKES = {
 
 
 def test_lead_catalog_is_fifty_real_and_unique():
-    assert len(QUEBEC_EMPLOYER_LEADS) == 1180
+    assert len(QUEBEC_EMPLOYER_LEADS) == 1205
     names = [row["name"].casefold() for row in QUEBEC_EMPLOYER_LEADS]
-    assert len(set(names)) == 1180
+    assert len(set(names)) == 1205
     websites = [row["website"] for row in QUEBEC_EMPLOYER_LEADS]
-    assert len(set(websites)) == 1180
+    assert len(set(websites)) == 1205
     emails = [row["email"].casefold() for row in QUEBEC_EMPLOYER_LEADS if row.get("email")]
     assert len(set(emails)) == len(emails)
     assert emails, "Au moins un courriel public RH/info doit être présent."
@@ -113,7 +113,7 @@ def test_lead_catalog_is_fifty_real_and_unique():
         if "FIELD_WORK" in (row.get("lead_categories") or "")
         or "CERTIFICATION_REQUIRED" in (row.get("lead_categories") or "")
     ) >= 80
-    wave9 = QUEBEC_EMPLOYER_LEADS[924:]
+    wave9 = QUEBEC_EMPLOYER_LEADS[924:1180]
     assert len(wave9) == 256
     assert all(row.get("lead_score") for row in wave9)
     assert all(row.get("lead_priority") in {"A+", "A", "B", "C", "D"} for row in wave9)
@@ -131,6 +131,15 @@ def test_lead_catalog_is_fifty_real_and_unique():
     assert sum(1 for row in wave9 if "INTERNAL_TA_HIRE" in (row.get("lead_categories") or "")) >= 40
     assert sum(1 for row in wave9 if int(row.get("total_active_jobs") or 0) >= 10) >= 40
     assert {row["city"] for row in wave9} >= {"Montréal", "Québec", "Laval", "Lévis", "Mont-Royal"}
+    wave10 = QUEBEC_EMPLOYER_LEADS[1180:]
+    assert len(wave10) == 25
+    assert all(row.get("researched_at") == "2026-09-14" for row in wave10)
+    assert all(row.get("source", "").startswith("vague 10") for row in wave10)
+    assert all("Vague 10 — prospection logistique GMA" in (row.get("hiring") or "") for row in wave10)
+    assert any(row["name"] == "Nationex" for row in wave10)
+    assert any(row["name"] == "Transport Gariépy" for row in wave10)
+    nationex = next(row for row in wave10 if row["name"] == "Nationex")
+    assert nationex.get("email") == "carrieres@nationex.com"
     for row in QUEBEC_EMPLOYER_LEADS:
         assert row["name"] not in DEMO_FAKES
         assert row["city"]
@@ -171,12 +180,13 @@ def test_ensure_creates_prospect_clients_without_employer_accounts(client, db):
     promote_admin(client, "leads-admin@talendus.ca")
     created = ensure_quebec_employer_leads(db)
     db.commit()
-    assert created == 1180
+    assert created == 1205
     assert ensure_quebec_employer_leads(db) == 0
     db.commit()
 
     leads = list(db.scalars(select(Company).where(Company.name.in_([r["name"] for r in QUEBEC_EMPLOYER_LEADS]))))
-    assert len(leads) == 1180
+    assert len(leads) == 1205
+    assert {c.name for c in leads} >= {"Nationex", "Transport Gariépy", "Distribution Stox (Unimax)"}
     assert all(c.status == CompanyStatus.PROSPECT for c in leads)
     assert all(c.province == "Québec" for c in leads)
     assert all(not c.owner_user_id for c in leads)
@@ -307,7 +317,7 @@ def test_ensure_survives_stale_prospect_left_in_caller_session(client, db):
     row.city = "Montréal"
     created = ensure_quebec_employer_leads(db)
     db.commit()
-    assert created == 1180
+    assert created == 1205
 
 
 def test_ensure_dedupes_normalized_name_and_keeps_empty_email(client, db):
@@ -326,7 +336,7 @@ def test_ensure_dedupes_normalized_name_and_keeps_empty_email(client, db):
     created = ensure_quebec_employer_leads(db)
     db.expire_all()
     db.commit()
-    assert created == 1179
+    assert created == 1204
     velans = list(db.scalars(select(Company).where(Company.name.ilike("%velan%"))))
     assert len(velans) == 1
     assert velans[0].name == "Velan Inc."

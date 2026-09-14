@@ -857,6 +857,8 @@ def list_prospects(
                 Prospect.company_name.ilike(like),
                 Prospect.title.ilike(like),
                 Prospect.phone.ilike(like),
+                Prospect.message.ilike(like),
+                Prospect.source_detail.ilike(like),
             )
         )
     rows = list(db.scalars(stmt).all())
