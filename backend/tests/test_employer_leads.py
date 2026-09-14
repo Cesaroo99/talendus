@@ -209,6 +209,53 @@ def test_ensure_creates_prospect_clients_without_employer_accounts(client, db):
     assert all(not (p.first_name or "").casefold().startswith("ressource") for p in prospects)
 
 
+def test_admin_bootstrap_lists_all_wave10_companies_even_without_email(client, db):
+    from tests.conftest import auth_header
+
+    admin = promote_admin(client, "leads-wave10-admin@talendus.ca")
+    ensure_quebec_employer_leads(db)
+    db.commit()
+    headers = auth_header(admin)
+    boot = client.get("/api/admin/bootstrap", headers=headers)
+    assert boot.status_code == 200, boot.text
+    clients = boot.json()["data"]["clients"]
+    wave10 = QUEBEC_EMPLOYER_LEADS[1180:]
+    names = {row["name"] for row in wave10}
+    listed = {row["name"]: row for row in clients if row["name"] in names}
+    assert set(listed) == names
+    visible = []
+    hidden_if_email_with = []
+    for row in listed.values():
+        blob = ((row.get("description") or "") + " " + (row.get("sector") or "")).lower()
+        assert "vague 10" in blob or "prospection logistique gma" in blob
+        visible.append(row["name"])
+        if not (row.get("email") or "").strip():
+            hidden_if_email_with.append(row["name"])
+    assert len(visible) == 25
+    assert hidden_if_email_with, "Le filtre « Avec courriel » masquait encore des fiches à contacter."
+    assert "Distribution Stox (Unimax)" in hidden_if_email_with
+    assert (listed["Nationex"].get("email") or "") == "carrieres@nationex.com"
+    assert (listed["Transport Gariépy"].get("email") or "") == "cv@transportgariepy.com"
+    prospects = client.get("/api/admin/prospects?side=employer", headers=headers)
+    assert prospects.status_code == 200, prospects.text
+    messages = [
+        ((row.get("message") or "") + " " + (row.get("source_detail") or "")).lower()
+        for row in prospects.json()["data"]
+    ]
+    gma = [blob for blob in messages if "vague 10" in blob or "prospection logistique gma" in blob]
+    assert len(gma) >= 10
+    assert catalog_stats_missing_zero(db)
+
+
+def catalog_stats_missing_zero(db):
+    from app.services.employer_leads import catalog_stats
+
+    stats = catalog_stats(db)
+    assert stats["catalog"] == 1205
+    assert stats["missing_companies"] == 0
+    return True
+
+
 def test_ensure_clears_generic_contact_names(client, db):
     promote_admin(client, "leads-generic@talendus.ca")
     ensure_quebec_employer_leads(db)
