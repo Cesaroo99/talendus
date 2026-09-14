@@ -8,7 +8,7 @@ import re
 from dataclasses import dataclass
 from urllib.parse import quote
 
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -813,7 +813,7 @@ def sync_known_people(db: Session) -> int:
             sector=company.sector or "",
             user_id=owner.id if owner else None,
             company_id=company.id,
-            stage=None,
+            stage="a-contacter" if before is None and not owner else None,
         )
         if before is None:
             added += 1
@@ -832,11 +832,11 @@ def list_prospects(
     email: str | None = None,
     ready: str | None = None,
 ) -> list[Prospect]:
-    from app.services.employer_leads import sync_catalog_emails_to_crm
+    from app.services.employer_leads import hydrate_employer_prospects
 
     wanted = normalize_side(side)
     if wanted == "employer":
-        sync_catalog_emails_to_crm(db)
+        hydrate_employer_prospects(db, force=False)
     sync_known_people(db)
     stmt = select(Prospect).where(Prospect.side == wanted).order_by(Prospect.updated_at.desc())
     if stage:
@@ -895,6 +895,14 @@ def filter_options(db: Session, side: str) -> dict[str, list[str]]:
         "cities": sorted(cities, key=str.casefold),
         "sectors": sorted(sectors, key=str.casefold),
     }
+
+
+def stage_counts(db: Session, side: str) -> dict[str, int]:
+    wanted = normalize_side(side)
+    rows = db.execute(
+        select(Prospect.stage, func.count()).where(Prospect.side == wanted).group_by(Prospect.stage)
+    ).all()
+    return {stage: int(n) for stage, n in rows if stage}
 
 
 def _delivered_send_logs(db: Session, sends: list[ProspectSend]) -> dict[str, EmailLog]:

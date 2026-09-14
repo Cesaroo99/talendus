@@ -247,6 +247,58 @@ def test_admin_bootstrap_lists_all_wave10_companies_even_without_email(client, d
     assert catalog_stats_missing_zero(db)
 
 
+def test_list_promotes_nouveau_prospection_to_a_contacter(client, db):
+    from tests.conftest import auth_header
+
+    admin = promote_admin(client, "leads-nouveau-stage@talendus.ca")
+    db.add(
+        Prospect(
+            side="employer",
+            email="rh@jamais-ecrit.example",
+            company_name="Jamais Écrit",
+            source="prospection",
+            stage="nouveau",
+        )
+    )
+    db.commit()
+    listed = client.get("/api/admin/prospects?side=employer", headers=auth_header(admin))
+    assert listed.status_code == 200, listed.text
+    row = next(item for item in listed.json()["data"] if item["email"] == "rh@jamais-ecrit.example")
+    assert row["stage"] == "a-contacter"
+    counts = listed.json()["meta"]["stage_counts"]
+    assert counts.get("a-contacter", 0) >= 1
+
+
+def test_list_imports_missing_wave10_as_a_contacter(client, db):
+    from app.models import InternalNote
+    from tests.conftest import auth_header
+
+    admin = promote_admin(client, "leads-reimport-wave10@talendus.ca")
+    ensure_quebec_employer_leads(db)
+    db.commit()
+    wave10 = QUEBEC_EMPLOYER_LEADS[1180:]
+    names = [row["name"] for row in wave10]
+    emails = [row["email"].lower() for row in wave10 if row.get("email")]
+    companies = list(db.scalars(select(Company).where(Company.name.in_(names))))
+    ids = [row.id for row in companies]
+    for note in db.scalars(select(InternalNote).where(InternalNote.entity_type == "company", InternalNote.entity_id.in_(ids))):
+        db.delete(note)
+    for prospect in db.scalars(select(Prospect).where(Prospect.side == "employer", Prospect.email.in_(emails))):
+        db.delete(prospect)
+    for company in companies:
+        db.delete(company)
+    db.commit()
+    assert db.scalar(select(Company).where(Company.name == "Nationex")) is None
+    listed = client.get("/api/admin/prospects?side=employer", headers=auth_header(admin))
+    assert listed.status_code == 200, listed.text
+    by_email = {row["email"]: row for row in listed.json()["data"]}
+    assert by_email["carrieres@nationex.com"]["stage"] == "a-contacter"
+    assert by_email["cv@transportgariepy.com"]["stage"] == "a-contacter"
+    counts = listed.json()["meta"]["stage_counts"]
+    assert counts.get("a-contacter", 0) >= 14
+    assert db.scalar(select(Company).where(Company.name == "Nationex")) is not None
+
+
 def catalog_stats_missing_zero(db):
     from app.services.employer_leads import catalog_stats
 

@@ -1883,13 +1883,13 @@
     var employer = side === "employer";
     if (viewProspects._side !== side) {
       viewProspects._side = side;
-      prospectFilters = { q: "", stage: "", source: "", city: "", sector: "", email: "", ready: "", wave: employer ? "logistique-gma" : "" };
+      prospectFilters = { q: "", stage: employer ? "a-contacter" : "", source: "", city: "", sector: "", email: "", ready: "", wave: "" };
     }
     return `
       <div class="page-head">
         <div>
           <h1>${employer ? "Prospects employeurs" : "Prospects candidats"}</h1>
-          <p id="prospect-lead">${employer ? "Filtre « Logistique GMA » = nouvelle passe (Nationex, Gariépy, Stox…). Choisissez « Tout le catalogue » pour toutes les fiches avec courriel. Les entreprises sans courriel sont dans Clients." : "Base candidats uniquement. Les entreprises avec courriel sont dans Recruteurs / employeurs."}</p>
+          <p id="prospect-lead">${employer ? "Ouverture sur « À contacter ». « Tous les statuts » montre toute la base. Filtre « Logistique GMA » = Nationex, Gariépy, Stox… Les entreprises sans courriel sont dans Clients." : "Base candidats uniquement. Les entreprises avec courriel sont dans Recruteurs / employeurs."}</p>
         </div>
         <div class="actions">
           ${employer ? '<button type="button" class="btn btn-ghost" id="prospect-refresh-catalog">Charger le catalogue (1200+)</button>' : ""}
@@ -2062,8 +2062,13 @@
       }
       var lead = document.getElementById("prospect-lead");
       if (lead) {
-        lead.textContent = rows.length + " fiche" + (rows.length > 1 ? "s" : "") + " dans cette base" +
-          (employer ? " employeur." : " candidat.") +
+        var counts = prospectMeta.stage_counts || {};
+        var toContact = Number(counts["a-contacter"] || 0);
+        var totalAll = 0;
+        Object.keys(counts).forEach(function (k) { totalAll += Number(counts[k] || 0); });
+        if (!totalAll) totalAll = rows.length;
+        lead.textContent = toContact + " à contacter · " + rows.length + " affichée" + (rows.length > 1 ? "s" : "") +
+          (employer ? " · " + totalAll + " fiches employeur au total." : " dans cette base candidat.") +
           " Tout sélectionner coche uniquement les fiches affichées après filtre.";
       }
       var stages = prospectMeta.stages || [];
