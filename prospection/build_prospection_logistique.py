@@ -1,14 +1,18 @@
 """Prospection B2B logistique Grand Montréal — Talendus.
 
 Courriels uniquement s’ils ont été vus sur une page publique officielle.
-Aucune adresse déduite du prénom. Aucune entreprise déjà au catalogue.
+Aucune adresse déduite du prénom.
+
+Inclut les messageries / 3PL / CD déjà au catalogue (Purolator, UPS, etc.)
+plus les nouvelles entreprises du même genre (Nationex, ICS, Fastfrate).
 """
 
 from __future__ import annotations
 
 import csv
+import re
 import sys
-from datetime import date
+import unicodedata
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -16,9 +20,29 @@ from openpyxl import Workbook
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
-from app.data.quebec_employer_leads import QUEBEC_EMPLOYER_LEADS
-from app.services.employer_claim import normalize_company_name
+HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+
+from hubs_messagerie import HUBS
+
+_LEGAL_SUFFIXES = re.compile(
+    r"\b("
+    r"inc|incorporated|ltd|ltee|ltée|limited|limitee|limitée|"
+    r"corp|corporation|cie|co|company|compagnie|"
+    r"s\.?e\.?c\.?|s\.?e\.?n\.?c\.?|sencrl|senc|sec|"
+    r"s\.?a\.?|sarl|llc"
+    r")\b",
+    re.IGNORECASE,
+)
+
+
+def normalize_company_name(name: str | None) -> str:
+    text = unicodedata.normalize("NFKD", name or "")
+    text = "".join(ch for ch in text if not unicodedata.combining(ch))
+    text = text.casefold()
+    text = _LEGAL_SUFFIXES.sub(" ", text)
+    text = re.sub(r"[^a-z0-9]+", " ", text)
+    return " ".join(text.split())
 
 VERIFIED_ON = "2026-09-14"
 OUT_DIR = Path(__file__).resolve().parent
@@ -65,6 +89,7 @@ COLUMNS = [
     "Taille bande",
     "Emails vérifiés (n)",
     "Score besoin recrutement /5",
+    "Présence Talendus",
 ]
 
 
@@ -554,13 +579,13 @@ COMPANIES: list[dict] = [
         "phone": "514-323-4680",
         "address": "12225, boulevard Industriel, Pointe-aux-Trembles (QC) H1B 5M7",
         "src_co": "https://www.getpaq.ca/en/",
-        "src_job": "",
+        "src_job": "https://www.getpaq.ca/emplois.php — CV à Info@GETPAQ.ca",
         "src_person": "",
-        "src_email": "Site officiel > pied de page",
-        "confidence": "Moyen",
-        "why": "3PL Est de Montréal, taille PME, entrepôt + courtage.",
-        "angle": "Commis d’entrepôt / coordonnateurs transport selon volume.",
-        "notes": "Seulement 1 email vérifiable.",
+        "src_email": "Page Emplois officielle + pied de page",
+        "confidence": "Élevé sur info@ (aussi publié comme destinataire des CV)",
+        "why": "3PL Est de Montréal, taille PME, entrepôt + courtage. Page emplois invite les CV à Info@GETPAQ.ca.",
+        "angle": "Commis d’entrepôt / coordonnateurs transport à info@getpaq.ca.",
+        "notes": "1 email vérifiable, aussi utilisé pour les candidatures.",
     },
     {
         "name": "LPF Logistique",
@@ -872,17 +897,20 @@ COMPANIES: list[dict] = [
         "person1": "Jean-Philippe Boutin",
         "title1": "Direction (signataire public LinkedIn entreprise)",
         "li1": "",
-        "emails": [],
-        "phone": "",
-        "address": "Boucherville (QC)",
-        "src_co": "https://www.boutin3pl.com + page LinkedIn officielle Boutin 3PL",
+        "emails": [
+            {"addr": "info@boutin3pl.com", "kind": "general", "who": "", "proof": "Page Contact officielle boutin3pl.com/en/contact-us/"},
+            {"addr": "renseignements.personnels@boutin3pl.com", "kind": "other", "who": "Jean-Philippe Boutin", "proof": "Politique de confidentialité officielle boutin3pl.com/politique/"},
+        ],
+        "phone": "1-450-906-8900",
+        "address": "1400, Graham-Bell, Boucherville (QC) J4B 6H5",
+        "src_co": "https://www.boutin3pl.com/en/contact-us/",
         "src_job": "",
-        "src_person": "Publication LinkedIn entreprise signée Jean-Philippe Boutin, CPA",
-        "src_email": "info@boutin3pl.com apparaît sur l’annuaire LinkedIn entreprise — NON retenu (pas vu sur le site). Cellule vide.",
-        "confidence": "Moyen",
-        "why": "Petit 3PL alimentaire familial Rive-Sud — décideur nommé.",
-        "angle": "Préparateurs / caristes SQF.",
-        "notes": "0 email retenu (preuve site insuffisante).",
+        "src_person": "Politique de confidentialité — Jean-Philippe Boutin",
+        "src_email": "Site officiel EN contact (info@) + politique (renseignements.personnels@)",
+        "confidence": "Élevé sur info@",
+        "why": "3PL alimentaire Rive-Sud — email officiel confirmé sur la page Contact EN.",
+        "angle": "Préparateurs / caristes SQF à info@.",
+        "notes": "2 emails. Doublon catalogue BOUTIN 3PL fusionné à l’export.",
     },
     {
         "name": "Trans-Pro Logistique",
@@ -1175,13 +1203,6 @@ COMPANIES: list[dict] = [
 ]
 
 
-def catalog_keys() -> tuple[set[str], set[str]]:
-    names = {normalize_company_name(r["name"]) for r in QUEBEC_EMPLOYER_LEADS}
-    hosts = {_host(r.get("website") or "") for r in QUEBEC_EMPLOYER_LEADS}
-    hosts.discard("")
-    return names, hosts
-
-
 def flatten(row: dict, rank: int, score: int) -> dict:
     emails = [e for e in row.get("emails") or [] if e.get("addr")]
     e1 = emails[0] if emails else {}
@@ -1230,21 +1251,28 @@ def flatten(row: dict, rank: int, score: int) -> dict:
         "Taille bande": size_band(int(row.get("employees") or 0)),
         "Emails vérifiés (n)": len(emails),
         "Score besoin recrutement /5": row.get("need_score") or "",
+        "Présence Talendus": {
+            "catalogue": "Catalogue",
+            "indeed": "Veille Indeed",
+            "nouveau": "Nouveau",
+        }.get(row.get("presence") or "", "Nouveau"),
     }
 
 
-def build() -> list[dict]:
-    names, hosts = catalog_keys()
-    kept = []
-    seen = set()
-    for raw in COMPANIES:
+def merged_companies() -> list[dict]:
+    """PME de la 1re passe + hubs catalogue/Indeed/nouveaux. Plus d’emails gagne."""
+    by_key: dict[str, dict] = {}
+    for raw in list(COMPANIES) + list(HUBS):
         key = normalize_company_name(raw["name"])
-        host = _host(raw.get("website") or "")
-        if key in names or (host and host in hosts):
-            continue
-        if key in seen:
-            continue
-        seen.add(key)
+        prev = by_key.get(key)
+        if prev is None or len(raw.get("emails") or []) > len(prev.get("emails") or []):
+            by_key[key] = raw
+    return list(by_key.values())
+
+
+def build() -> list[dict]:
+    kept = []
+    for raw in merged_companies():
         raw = dict(raw)
         raw["_score"] = score_row(raw)
         kept.append(raw)
@@ -1297,7 +1325,10 @@ def write_xlsx(rows: list[dict], path: Path) -> None:
     active = sum(1 for r in rows if int(r["Nombre d'offres actuelles"] or 0) >= 1)
     lines = [
         ("Date", VERIFIED_ON),
-        ("Entreprises (hors catalogue Talendus)", len(rows)),
+        ("Entreprises (catalogue + nouveaux + veille)", len(rows)),
+        ("Dont déjà au catalogue", sum(1 for r in rows if r["Présence Talendus"] == "Catalogue")),
+        ("Dont veille Indeed", sum(1 for r in rows if r["Présence Talendus"] == "Veille Indeed")),
+        ("Dont nouvelles (Nationex, ICS, Fastfrate, PME)", sum(1 for r in rows if r["Présence Talendus"] == "Nouveau")),
         ("Priorité A (80–100)", a),
         ("Priorité B (65–79)", b),
         ("Priorité C (50–64)", c),
