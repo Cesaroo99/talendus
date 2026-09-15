@@ -2525,7 +2525,32 @@
         U.toast("Ce prospect n’appartient pas à cette base.", "err");
         return;
       }
-      var proposals = detail.proposals || [];
+      var EMP_FIRST_SUBJECT = "Et si vos prochains recrutements étaient déjà en cours ?";
+      var stripStickers = function (text) {
+        return String(text || "")
+          .replace(/\u2022\s?/g, "- ")
+          .replace(/[\uFE0F\u200D]/g, "")
+          .replace(/[\u2600-\u27BF]/g, "")
+          .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, "");
+      };
+      var fillEmpFirstBody = function (proposal) {
+        var src = stripStickers((proposal && proposal.body) || "");
+        if (src.indexOf("cette partie que nous prenons en charge") >= 0) return src;
+        var hello = "Bonjour,";
+        var firstLine = src.split("\n")[0].trim();
+        if (/^Bonjour/.test(firstLine)) hello = firstLine;
+        var company = String(detail.company_name || "").trim();
+        var about = company ? " au sujet de " + company : "";
+        var me = (window.TLStore && TLStore.me && TLStore.me()) || {};
+        var recruiter = ((me.firstName || "") + " " + (me.lastName || "")).trim() || "L’équipe Talendus";
+        return hello + "\n\nJe me permets de vous contacter" + about + " au nom de Talendus, une solution de recrutement qui combine l’intelligence artificielle et l’expertise humaine pour aider les entreprises à trouver leurs prochains talents plus rapidement.\n\nAujourd’hui, recruter peut rapidement devenir coûteux en temps : publier des offres, rechercher des candidats, trier des CV, effectuer les présélections, organiser les entrevues… pendant que vos équipes ont déjà leurs propres priorités.\n\nC’est précisément cette partie que nous prenons en charge.\n\nVous nous indiquez les profils dont vous avez besoin, et Talendus s’occupe de rechercher, identifier et présélectionner les candidats correspondant réellement à vos critères.\n\nNotre approche nous permet notamment d’intervenir sur :\n\n- les recrutements urgents\n- les postes difficiles à pourvoir\n- les recrutements de volume\n- les remplacements\n- les postes temporaires ou permanents\n- les profils opérationnels, techniques, administratifs et professionnels\n\nVous n’avez pas besoin de publier vos postes sur Talendus ni de gérer une nouvelle plateforme.\n\nVous nous transmettez simplement votre besoin, et nous travaillons en coulisses pour vous présenter des candidats pertinents.\n\nL’objectif est simple :\n\nmoins de temps consacré au recrutement, moins de candidatures hors profil et davantage de candidats réellement intéressants à rencontrer.\n\nNous serions ravis de vous proposer un premier échange afin de comprendre vos besoins actuels et voir si Talendus peut vous être utile.\n\n15 minutes suffisent pour faire connaissance. Répondez à ce courriel, ou joignez-moi au 263 558 5225.\n\nAu plaisir d’échanger,\n\n" + recruiter + "\nNous recrutons mieux, plus vite et plus intelligemment grâce à l’IA.";
+      };
+      var proposals = (detail.proposals || []).map(function (row) {
+        if (row.key !== "emp_first_contact") {
+          return Object.assign({}, row, { subject: stripStickers(row.subject), body: stripStickers(row.body) });
+        }
+        return Object.assign({}, row, { subject: EMP_FIRST_SUBJECT, body: fillEmpFirstBody(row) });
+      });
       var attachments = ids.length === 1 ? (detail.attachments || { invoices: [], contracts: [] }) : { invoices: [], contracts: [] };
       var others = ids.length - 1;
       var tplOptions = proposals.map(function (p) {
@@ -2610,14 +2635,18 @@
           box.querySelectorAll("[data-inv], [data-ct]").forEach(function (el) {
             el.onchange = syncAttachmentNotes;
           });
+          var preferKey = "emp_first_contact";
+          if ([].some.call(tpl.options, function (opt) { return opt.value === preferKey; })) {
+            tpl.value = preferKey;
+          }
           apply();
           box.querySelector("#pc-send").onclick = async function () {
             var btn = box.querySelector("#pc-send");
             var key = tpl.value;
             var payload = {
               template_key: key === "custom" ? "" : key,
-              subject: (ids.length > 1 && key !== "custom") ? "" : box.querySelector("#pc-subject").value,
-              body: (ids.length > 1 && key !== "custom") ? "" : box.querySelector("#pc-body").value,
+              subject: (ids.length > 1 && key !== "custom") ? "" : stripStickers(box.querySelector("#pc-subject").value),
+              body: (ids.length > 1 && key !== "custom") ? "" : stripStickers(box.querySelector("#pc-body").value),
               invoice_ids: Array.from(box.querySelectorAll("[data-inv]:checked")).map(function (el) { return el.getAttribute("data-inv"); }),
               contract_ids: Array.from(box.querySelectorAll("[data-ct]:checked")).map(function (el) { return el.getAttribute("data-ct"); }),
               force: !!(box.querySelector("#pc-force") && box.querySelector("#pc-force").checked)

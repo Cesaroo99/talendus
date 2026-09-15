@@ -14,6 +14,7 @@ from app.schemas import ContactIn, PublicTalentProfileIn
 from app.services.audit import audit
 from app.services.capabilities import public_services
 from app.services.email import email_actually_sent, send_email
+from app.services.prospects import MAIL_REV
 from app.services import candidates as cand_svc
 from app.services.spam import reject_honeypot
 
@@ -23,7 +24,14 @@ router = APIRouter(tags=["public"])
 @router.get("/health")
 def health():
     """Liveness : ne touche pas la base. Render s'en sert ; un 502 ici coupe tout le site."""
-    return ok({"status": "ok", "service": "talendus-api", "env": get_settings().app_env})
+    return ok(
+        {
+            "status": "ok",
+            "service": "talendus-api",
+            "env": get_settings().app_env,
+            "mail_rev": MAIL_REV,
+        }
+    )
 
 
 @router.get("/services")

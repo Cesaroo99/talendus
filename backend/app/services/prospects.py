@@ -72,6 +72,25 @@ EMPLOYEUR = "https://talendus.ca/espace-employeur.html"
 INFO = "info@talendus.ca"
 PHONE = "263 558 5225"
 ATTACHMENT_HOOK = "Vous trouverez ceci en pièce jointe"
+MAIL_REV = "20260915-mail-cesar"
+EMP_FIRST_CONTACT_SUBJECT = "Et si vos prochains recrutements étaient déjà en cours ?"
+_STICKER_RE = re.compile(
+    "["
+    "\U0001F300-\U0001FAFF"
+    "\U0001F600-\U0001F64F"
+    "\U0001F680-\U0001F6FF"
+    "\U0001F1E0-\U0001F1FF"
+    "\U00002702-\U000027B0"
+    "\U00002600-\U000026FF"
+    "\u200d"
+    "\ufe0f"
+    "]+"
+)
+_LEGACY_FIRST_CONTACT = (
+    "poste encore ouvert",
+    "2 ou 3 profils déjà filtrés",
+    "répondez-moi avec le métier",
+)
 
 TEMPLATES: tuple[dict, ...] = (
     {
@@ -161,8 +180,8 @@ TEMPLATES: tuple[dict, ...] = (
         "stage": "nouveau",
         "label": "1. Premier contact",
         "intent": "Premier contact employeur — Talendus prend en charge la recherche et la présélection. Un échange de 15 minutes. Pas d’honoraires, pas de portail.",
-        "subject": "Et si vos prochains recrutements étaient déjà en cours ?",
-        "body": "{{hello}}\n\nJe me permets de vous contacter{{about_company}} au nom de Talendus, une solution de recrutement qui combine l’intelligence artificielle et l’expertise humaine pour aider les entreprises à trouver leurs prochains talents plus rapidement.\n\nAujourd’hui, recruter peut rapidement devenir coûteux en temps : publier des offres, rechercher des candidats, trier des CV, effectuer les présélections, organiser les entrevues… pendant que vos équipes ont déjà leurs propres priorités.\n\nC’est précisément cette partie que nous prenons en charge.\n\nVous nous indiquez les profils dont vous avez besoin, et Talendus s’occupe de rechercher, identifier et présélectionner les candidats correspondant réellement à vos critères.\n\nNotre approche nous permet notamment d’intervenir sur :\n\n• les recrutements urgents\n• les postes difficiles à pourvoir\n• les recrutements de volume\n• les remplacements\n• les postes temporaires ou permanents\n• les profils opérationnels, techniques, administratifs et professionnels\n\nVous n’avez pas besoin de publier vos postes sur Talendus ni de gérer une nouvelle plateforme.\n\nVous nous transmettez simplement votre besoin, et nous travaillons en coulisses pour vous présenter des candidats pertinents.\n\nL’objectif est simple :\n\nmoins de temps consacré au recrutement, moins de candidatures hors profil et davantage de candidats réellement intéressants à rencontrer.\n\nNous serions ravis de vous proposer un premier échange afin de comprendre vos besoins actuels et voir si Talendus peut vous être utile.\n\n15 minutes suffisent pour faire connaissance. Répondez à ce courriel, ou joignez-moi au {{phone}}.\n\nAu plaisir d’échanger,\n\n{{recruiter_name}}\nNous recrutons mieux, plus vite et plus intelligemment grâce à l’IA.",
+        "subject": EMP_FIRST_CONTACT_SUBJECT,
+        "body": "{{hello}}\n\nJe me permets de vous contacter{{about_company}} au nom de Talendus, une solution de recrutement qui combine l’intelligence artificielle et l’expertise humaine pour aider les entreprises à trouver leurs prochains talents plus rapidement.\n\nAujourd’hui, recruter peut rapidement devenir coûteux en temps : publier des offres, rechercher des candidats, trier des CV, effectuer les présélections, organiser les entrevues… pendant que vos équipes ont déjà leurs propres priorités.\n\nC’est précisément cette partie que nous prenons en charge.\n\nVous nous indiquez les profils dont vous avez besoin, et Talendus s’occupe de rechercher, identifier et présélectionner les candidats correspondant réellement à vos critères.\n\nNotre approche nous permet notamment d’intervenir sur :\n\n- les recrutements urgents\n- les postes difficiles à pourvoir\n- les recrutements de volume\n- les remplacements\n- les postes temporaires ou permanents\n- les profils opérationnels, techniques, administratifs et professionnels\n\nVous n’avez pas besoin de publier vos postes sur Talendus ni de gérer une nouvelle plateforme.\n\nVous nous transmettez simplement votre besoin, et nous travaillons en coulisses pour vous présenter des candidats pertinents.\n\nL’objectif est simple :\n\nmoins de temps consacré au recrutement, moins de candidatures hors profil et davantage de candidats réellement intéressants à rencontrer.\n\nNous serions ravis de vous proposer un premier échange afin de comprendre vos besoins actuels et voir si Talendus peut vous être utile.\n\n15 minutes suffisent pour faire connaissance. Répondez à ce courriel, ou joignez-moi au {{phone}}.\n\nAu plaisir d’échanger,\n\n{{recruiter_name}}\nNous recrutons mieux, plus vite et plus intelligemment grâce à l’IA.",
     },
     {
         "key": "emp_followup",
@@ -382,11 +401,23 @@ def context_for(row: Prospect, actor: User | None = None) -> dict[str, str]:
     return ctx
 
 
+def strip_stickers(text: str) -> str:
+    """Retire puces, émojis et sélecteurs graphiques des courriels."""
+    cleaned = (text or "").replace("•", "- ")
+    cleaned = _STICKER_RE.sub("", cleaned)
+    return re.sub(r"[ \t]+\n", "\n", cleaned)
+
+
 def fill_tokens(text: str, ctx: dict[str, str]) -> str:
     out = text or ""
     for key, value in ctx.items():
         out = out.replace("{{" + key + "}}", str(value))
-    return out
+    return strip_stickers(out)
+
+
+def is_legacy_first_contact(subject: str, body: str) -> bool:
+    blob = f"{subject or ''}\n{body or ''}".lower()
+    return any(marker in blob for marker in _LEGACY_FIRST_CONTACT)
 
 
 def catalog(side: str | None = None) -> list[dict]:
@@ -1178,8 +1209,15 @@ def send_to_prospect(db: Session, actor: User, row: Prospect, req: SendRequest, 
         tpl = get_template(key)
         if tpl["side"] != row.side:
             raise AppError(400, "Ce modèle ne correspond pas à ce côté.", "VALIDATION_ERROR")
-        subject = fill_tokens(subject or tpl["subject"], ctx)
-        body = fill_tokens(body or tpl["body"], ctx)
+        if key == "emp_first_contact":
+            subject = fill_tokens(tpl["subject"], ctx)
+            if not body or is_legacy_first_contact("", body):
+                body = fill_tokens(tpl["body"], ctx)
+            else:
+                body = fill_tokens(body, ctx)
+        else:
+            subject = fill_tokens(subject or tpl["subject"], ctx)
+            body = fill_tokens(body or tpl["body"], ctx)
     else:
         if not subject or not body:
             raise AppError(400, "Sujet et message sont requis pour un courriel libre.", "VALIDATION_ERROR")
