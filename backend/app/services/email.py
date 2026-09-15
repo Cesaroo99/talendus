@@ -136,10 +136,15 @@ def runtime_email_config(db: Session | None = None) -> SmtpRuntime:
         or (env.email_from or "").strip()
         or "Talendus <info@talendus.ca>"
     )
-    if enabled_ov is None:
-        enabled = bool(env.email_enabled)
+    ready = _smtp_ready(host, username, password)
+    if enabled_ov is False:
+        enabled = False
+    elif enabled_ov is True:
+        enabled = True
     else:
-        enabled = enabled_ov
+        # Vide = envoyer dès que le serveur SMTP est configuré.
+        # EMAIL_ENABLED=false dans Render ne doit plus bloquer une campagne.
+        enabled = bool(env.email_enabled) or ready
     return SmtpRuntime(
         enabled=enabled,
         host=host,
@@ -498,6 +503,64 @@ def send_composed_email(
     return log
 
 
+def _failed_is_retryable(log: EmailLog, *, smtp_on: bool) -> bool:
+    if email_actually_sent(log):
+        return False
+    if log.status == EmailStatus.QUEUED:
+        return True
+    if log.status != EmailStatus.FAILED or not smtp_on:
+        return False
+    err = (log.error or "").lower()
+    if "smtp désactivé" in err or "jamais remis" in err or "n’a pas quitté" in err or "n'a pas quitté" in err:
+        return True
+    return (log.attempts or 0) < 8
+
+
+def retry_undelivered_emails(db: Session, *, deliver: bool = False, limit: int = 20000) -> dict:
+    """Remet en file tout courriel qui n’a jamais vraiment quitté le serveur."""
+    fake_logs = mark_fake_sent_logs(db)
+    db.flush()
+    blocked = smtp_send_block_reason(db)
+    if blocked:
+        logger.warning("email retry blocked: %s", blocked)
+        return {"fake_logs": fake_logs, "sent": 0, "queued": 0, "failed": 0, "retried": 0, "blocked": blocked}
+    cfg = runtime_email_config(db)
+    rows = list(
+        db.scalars(
+            select(EmailLog)
+            .where(EmailLog.status.in_((EmailStatus.QUEUED, EmailStatus.FAILED)))
+            .order_by(EmailLog.created_at.asc())
+            .limit(limit)
+        ).all()
+    )
+    sent = queued = failed = retried = 0
+    for log in rows:
+        if email_actually_sent(log):
+            continue
+        retried += 1
+        log.status = EmailStatus.QUEUED
+        log.attempts = 0
+        log.error = None
+        if deliver:
+            _record_smtp_result(log, cfg, fail_fast=False)
+            if email_actually_sent(log):
+                from app.services.prospects import finalize_prospect_delivery, relink_prospect_send
+
+                relink_prospect_send(db, log)
+                finalize_prospect_delivery(db, log)
+                sent += 1
+            elif log.status == EmailStatus.QUEUED:
+                queued += 1
+                enqueue_email(log.id)
+            else:
+                failed += 1
+        else:
+            queued += 1
+            enqueue_email(log.id)
+    logger.info("email retry undelivered retried=%s sent=%s queued=%s failed=%s", retried, sent, queued, failed)
+    return {"fake_logs": fake_logs, "sent": sent, "queued": queued, "failed": failed, "retried": retried, "blocked": None}
+
+
 def start_worker() -> None:
     global _worker_started
     if get_settings().app_env == "test":
@@ -514,6 +577,18 @@ def start_worker() -> None:
 def _loop() -> None:
     from app.database import SessionLocal
 
+    try:
+        db = SessionLocal()
+        try:
+            retry_undelivered_emails(db, deliver=False)
+            db.commit()
+        except Exception:
+            db.rollback()
+            logger.exception("email retry undelivered")
+        finally:
+            db.close()
+    except Exception:
+        logger.exception("email retry boot")
     while True:
         log_id = None
         try:
@@ -535,11 +610,23 @@ def _loop() -> None:
 def _reap(session_factory) -> None:
     db = session_factory()
     try:
+        cfg = runtime_email_config(db)
         ids = list(
             db.scalars(
                 select(EmailLog.id).where(EmailLog.status == EmailStatus.QUEUED).order_by(EmailLog.created_at.asc()).limit(40)
             ).all()
         )
+        if cfg.enabled:
+            failed_rows = list(
+                db.scalars(
+                    select(EmailLog).where(EmailLog.status == EmailStatus.FAILED).order_by(EmailLog.created_at.asc()).limit(80)
+                ).all()
+            )
+            for log in failed_rows:
+                if _failed_is_retryable(log, smtp_on=True) and log.id not in ids:
+                    ids.append(log.id)
+                if len(ids) >= 80:
+                    break
     finally:
         db.close()
     for log_id in ids:
@@ -563,8 +650,9 @@ def _deliver(session_factory, log_id: str) -> None:
                 return
             _record_smtp_result(log, cfg, fail_fast=False)
             if email_actually_sent(log):
-                from app.services.prospects import finalize_prospect_delivery
+                from app.services.prospects import finalize_prospect_delivery, relink_prospect_send
 
+                relink_prospect_send(db, log)
                 finalize_prospect_delivery(db, log)
             db.commit()
             return

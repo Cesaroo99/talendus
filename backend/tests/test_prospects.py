@@ -609,7 +609,9 @@ def test_admin_ui_has_prospects_module():
     assert "Et si vos prochains recrutements étaient déjà en cours ?" in js
     assert "Un poste encore ouvert" not in js
     html = (Path(__file__).resolve().parents[2] / "admin" / "index.html").read_text(encoding="utf-8")
-    assert "app.js?v=20260915-mail-cesar" in html
+    assert "app.js?v=20260915-mail-retry" in html
+    assert "retry-undelivered" in js
+    assert "Renvoyer les non partis" in js
     assert "gatewayTimeoutMsg" in api_js
     assert "plus petits lots" in api_js
     assert "Chaque fiche reçoit son propre courriel" in js
@@ -770,7 +772,7 @@ def test_reconcile_resets_old_fake_sends(client, monkeypatch):
     stats = reconcile_undelivered_prospect_mails(db)
     db.commit()
     assert stats["fake_logs"] == 2
-    assert stats["removed_sends"] == 3
+    assert stats["removed_sends"] == 0
     assert stats["reset_stages"] == 2
     db.refresh(fake_old)
     db.refresh(fake_new)
@@ -848,7 +850,7 @@ def test_smtp_send_block_reason_is_explicit(client):
     assert "Oui — envoyer vraiment" in reason
 
 
-def test_smtp_does_not_auto_enable_from_credentials(client):
+def test_smtp_auto_enables_when_server_is_configured(client):
     from app.database import SessionLocal
     from app.models import SystemSetting
     from app.services.email import runtime_email_config
@@ -859,7 +861,7 @@ def test_smtp_does_not_auto_enable_from_credentials(client):
     db.add(SystemSetting(key="smtp.password", value="abcdefghijklmnop"))
     db.commit()
     cfg = runtime_email_config(db)
-    assert cfg.enabled is False
+    assert cfg.enabled is True
     flag = SystemSetting(key="smtp.enabled", value="oui")
     db.add(flag)
     db.commit()
@@ -870,3 +872,44 @@ def test_smtp_does_not_auto_enable_from_credentials(client):
     off = runtime_email_config(db)
     assert off.enabled is False
     db.close()
+
+
+def test_retry_undelivered_resends_failed_prospect_mail(client, monkeypatch):
+    from app.database import SessionLocal
+    from app.models import EmailLog
+    from app.models.enums import EmailStatus, EmailType
+    from app.services.email import retry_undelivered_emails
+
+    stub_smtp_delivery(monkeypatch)
+    admin = promote_admin(client, "retry-undelivered@example.com")
+    admin_h = auth_header(admin)
+    emp = client.post(
+        "/api/admin/prospects",
+        headers=admin_h,
+        json={"side": "employer", "email": "rh@nonparti.example.com", "company_name": "Non Parti", "stage": "a-contacter"},
+    ).json()["data"]
+    db = SessionLocal()
+    log = EmailLog(
+        to_email="rh@nonparti.example.com",
+        type=EmailType.ADMIN,
+        subject="Et si vos prochains recrutements étaient déjà en cours ?",
+        body="Bonjour,\n\nCette partie que nous prenons en charge.",
+        status=EmailStatus.FAILED,
+        error="SMTP désactivé — le courriel n’a pas quitté le serveur.",
+        attempts=0,
+    )
+    db.add(log)
+    db.commit()
+    stats = retry_undelivered_emails(db, deliver=True)
+    db.commit()
+    db.refresh(log)
+    assert stats["retried"] >= 1
+    assert stats["sent"] >= 1
+    assert log.status == EmailStatus.SENT
+    assert (log.attempts or 0) >= 1
+    db.close()
+    via_api = client.post("/api/admin/prospects/retry-undelivered", headers=admin_h)
+    assert via_api.status_code == 200, via_api.text
+    detail = client.get(f"/api/admin/prospects/p/{emp['id']}", headers=admin_h).json()["data"]
+    assert detail["stage"] == "contacte"
+    assert detail["sends"]

@@ -1892,6 +1892,7 @@
           <p id="prospect-lead">${employer ? "Ouverture sur « À contacter ». « Tous les statuts » montre toute la base. Filtre « Logistique GMA » = Nationex, Gariépy, Stox… Les entreprises sans courriel sont dans Clients." : "Base candidats uniquement. Les entreprises avec courriel sont dans Recruteurs / employeurs."}</p>
         </div>
         <div class="actions">
+          ${employer ? '<button type="button" class="btn btn-ghost" id="prospect-retry-undelivered">Renvoyer les non partis</button>' : ""}
           ${employer ? '<button type="button" class="btn btn-ghost" id="prospect-refresh-catalog">Charger le catalogue (1200+)</button>' : ""}
           ${employer ? '<button type="button" class="btn btn-ghost" id="prospect-indeed-watch">Veille Indeed</button>' : ""}
           <button type="button" class="btn btn-ghost" id="prospect-select-all">Tout sélectionner</button>
@@ -2165,6 +2166,21 @@
         U.toast((err && err.message) || "Veille Indeed indisponible.", "err");
       }
       indeedBtn.disabled = false;
+    };
+    var retryUndelivered = document.getElementById("prospect-retry-undelivered");
+    if (retryUndelivered) retryUndelivered.onclick = async function () {
+      if (!api()) return;
+      retryUndelivered.disabled = true;
+      retryUndelivered.textContent = "Renvoi…";
+      try {
+        var res = await api().request("/admin/prospects/retry-undelivered", { method: "POST" });
+        U.toast((res && res.message) || "Renvoi lancé.", "ok");
+        hydrateProspects();
+      } catch (err) {
+        U.toast((err && err.message) || "Impossible de renvoyer les non partis.", "err");
+      }
+      retryUndelivered.disabled = false;
+      retryUndelivered.textContent = "Renvoyer les non partis";
     };
     var catalogBtn = document.getElementById("prospect-refresh-catalog");
     if (catalogBtn) catalogBtn.onclick = async function () {
@@ -4153,7 +4169,7 @@
         smtpBox.innerHTML =
           '<form id="adm-smtp-form">' +
           '<label>Activer l’envoi</label><select name="smtp.enabled">' +
-          '<option value="">Suivre EMAIL_ENABLED (Render)</option>' +
+          '<option value="">Envoyer si le serveur SMTP est configuré</option>' +
           '<option value="oui"' + (val("smtp.enabled") === "oui" ? " selected" : "") + ">Oui — envoyer vraiment</option>" +
           '<option value="non"' + (val("smtp.enabled") === "non" ? " selected" : "") + ">Non — journaliser seulement</option>" +
           "</select>" +
@@ -4167,11 +4183,12 @@
           '<option value="non"' + (val("smtp.use_tls") === "non" ? " selected" : "") + ">non</option>" +
           "</select>" +
           '<label>Envoyer le test à une vraie boîte</label><input id="adm-smtp-test-to" type="email" value="' + U.esc((function () { var me = TLStore.me() || {}; var mail = (me.email || "").trim(); return /@talendus\.ca$/i.test(mail) ? "" : mail; })()) + '" placeholder="vous@votreboite.com">' +
-          '<p class="sub">« Suivre EMAIL_ENABLED » n’envoie rien si la variable Render est off, même avec un serveur et un mot de passe. Choisissez une fois « Oui — envoyer vraiment » : le réglage reste après une pause, pas besoin de le refaire à chaque campagne. Les envois de masse partent en file, sans limite quotidienne : toute la base peut partir le même jour.</p>' +
+          '<p class="sub">Dès que le serveur, l’identifiant et le mot de passe sont remplis, les courriels partent — même si EMAIL_ENABLED est false dans Render. « Non » journalise seulement. Après un déploiement, les messages qui n’avaient pas quitté le serveur sont renvoyés tout seuls. Vous pouvez aussi cliquer « Renvoyer les non partis » dans Prospects employeurs.</p>' +
           '<p class="sub">Le test part vers cette adresse (la vôtre par défaut). Les comptes de démo @talendus.ca sont ignorés.</p>' +
           '<p style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">' +
           '<button class="btn btn-orange" type="submit">Enregistrer le courriel</button>' +
           '<button class="btn btn-ghost" type="button" id="adm-smtp-test">Envoyer un test</button>' +
+          '<button class="btn btn-ghost" type="button" id="adm-smtp-retry">Renvoyer les non partis</button>' +
           "</p></form>";
         var sf = document.getElementById("adm-smtp-form");
         if (sf) sf.onsubmit = function (e) {
@@ -4182,6 +4199,16 @@
           });
           Promise.all(tasks).then(function () { U.toast("Réglages courriel enregistrés.", "ok"); })
             .catch(function (err) { U.toast((err && err.message) || "Impossible d’enregistrer.", "err"); });
+        };
+        var retryBtn = document.getElementById("adm-smtp-retry");
+        if (retryBtn) retryBtn.onclick = function () {
+          retryBtn.disabled = true;
+          api().request("/admin/prospects/retry-undelivered", { method: "POST" }).then(function (res) {
+            U.toast((res && res.message) || "Renvoi lancé.", "ok");
+            loadEmailLog();
+          }).catch(function (err) {
+            U.toast((err && err.message) || "Impossible de renvoyer les non partis.", "err");
+          }).then(function () { retryBtn.disabled = false; });
         };
         var testBtn = document.getElementById("adm-smtp-test");
         if (testBtn) testBtn.onclick = function () {
