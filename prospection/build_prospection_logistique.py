@@ -16,10 +16,6 @@ import unicodedata
 from pathlib import Path
 from urllib.parse import urlparse
 
-from openpyxl import Workbook
-from openpyxl.styles import Alignment, Font, PatternFill
-from openpyxl.utils import get_column_letter
-
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
@@ -1288,6 +1284,10 @@ def write_csv(rows: list[dict], path: Path) -> None:
 
 
 def write_xlsx(rows: list[dict], path: Path) -> None:
+    from openpyxl import Workbook
+    from openpyxl.styles import Alignment, Font, PatternFill
+    from openpyxl.utils import get_column_letter
+
     wb = Workbook()
     ws = wb.active
     ws.title = "Prospection"

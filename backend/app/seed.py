@@ -11,7 +11,10 @@ from sqlalchemy.orm import Session
 from app.config import get_settings
 from app.database import SessionLocal, init_db
 from app.site_jobs import ensure_site_catalog
-from app.services.employer_leads import ensure_quebec_employer_leads
+from app.services.employer_leads import (
+    ensure_quebec_employer_leads,
+    promote_uncontacted_employer_prospects,
+)
 from app.services.prospects import reconcile_undelivered_prospect_mails
 from app.models import (
     Application,
@@ -235,7 +238,9 @@ def seed_if_empty() -> None:
             seed_blog_defaults(db)
             bootstrap_production_admin(db)
             ensure_site_catalog(db)
-            ensure_quebec_employer_leads(db, commit_every=20)
+            # Incrémental : l’ensure complet des 1200+ expire le boot Render.
+            ensure_quebec_employer_leads(db, commit_every=20, only_missing=True)
+            promote_uncontacted_employer_prospects(db)
             stats = reconcile_undelivered_prospect_mails(db)
             db.commit()
             logger.info("Réconciliation courriels prospects %s", stats)
@@ -244,7 +249,8 @@ def seed_if_empty() -> None:
             seed_rbac(db)
             seed_blog_defaults(db)
             ensure_site_catalog(db)
-            ensure_quebec_employer_leads(db, commit_every=20)
+            ensure_quebec_employer_leads(db, commit_every=20, only_missing=True)
+            promote_uncontacted_employer_prospects(db)
             stats = reconcile_undelivered_prospect_mails(db)
             db.commit()
             logger.info("Réconciliation courriels prospects %s", stats)
