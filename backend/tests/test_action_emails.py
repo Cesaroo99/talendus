@@ -329,5 +329,7 @@ def test_admin_ui_explains_smtp_steps():
     assert "adm-smtp-test-to" in js
     assert "cesarmemoli1@gmail.com" not in js
     assert "EMAIL_ENABLED" in js
+    assert "adm-smtp-retry" in js
+    assert "Renvoyer les non partis" in js
     assert "535" in js
     assert "16 lettres" in js

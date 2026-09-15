@@ -72,7 +72,7 @@ EMPLOYEUR = "https://talendus.ca/espace-employeur.html"
 INFO = "info@talendus.ca"
 PHONE = "263 558 5225"
 ATTACHMENT_HOOK = "Vous trouverez ceci en pièce jointe"
-MAIL_REV = "20260915-mail-cesar"
+MAIL_REV = "20260915-mail-retry"
 EMP_FIRST_CONTACT_SUBJECT = "Et si vos prochains recrutements étaient déjà en cours ?"
 _STICKER_RE = re.compile(
     "["
@@ -965,7 +965,7 @@ def _send_was_delivered(db: Session, row: ProspectSend | None) -> bool:
 CONTACT_STAGES = frozenset({"contacte"})
 
 
-RESERVED_PATHS = frozenset({"catalog", "templates", "broadcast", "send-bulk", "sync", "p"})
+RESERVED_PATHS = frozenset({"catalog", "templates", "broadcast", "send-bulk", "sync", "p", "retry-undelivered"})
 
 
 def get_prospect(db: Session, prospect_id: str) -> Prospect:
@@ -1352,6 +1352,44 @@ def finalize_prospect_delivery(db: Session, log: EmailLog) -> None:
         row.stage = "contacte"
 
 
+def relink_prospect_send(db: Session, log: EmailLog) -> ProspectSend | None:
+    """Recrée le lien prospect ↔ courriel si le reconcile l’avait cassé."""
+    if log is None or not log.id:
+        return None
+    existing = db.scalar(select(ProspectSend).where(ProspectSend.email_log_id == log.id))
+    if existing:
+        return existing
+    email = (log.to_email or "").strip().lower()
+    if not email:
+        return None
+    rows = list(db.scalars(select(Prospect).where(func.lower(Prospect.email) == email)).all())
+    if not rows:
+        return None
+    employers = [row for row in rows if row.side == "employer"]
+    row = employers[0] if employers else rows[0]
+    key = "emp_first_contact" if row.side == "employer" else "cand_first_contact"
+    send = db.scalar(
+        select(ProspectSend).where(ProspectSend.prospect_id == row.id, ProspectSend.template_key == key)
+    )
+    if send:
+        send.email_log_id = log.id
+        send.subject = (log.subject or send.subject or "")[:180]
+        send.body = log.body or send.body or ""
+        send.to_email = log.to_email
+        return send
+    send = ProspectSend(
+        prospect_id=row.id,
+        template_key=key,
+        subject=(log.subject or "")[:180],
+        body=log.body or "",
+        to_email=log.to_email or email,
+        email_log_id=log.id,
+    )
+    db.add(send)
+    db.flush()
+    return send
+
+
 def send_bulk(db: Session, actor: User, ids: list[str], req: SendRequest) -> dict:
     from app.services.email import smtp_send_block_reason
 
@@ -1399,16 +1437,12 @@ def reconcile_undelivered_prospect_mails(db: Session) -> dict[str, int]:
     fake_logs = mark_fake_sent_logs(db)
     sends = list(db.scalars(select(ProspectSend)).all())
     delivered_logs = _delivered_send_logs(db, sends)
-    log_ids = [row.email_log_id for row in sends if row.email_log_id]
-    queued_ids = {
-        log.id
-        for log in db.scalars(select(EmailLog).where(EmailLog.id.in_(log_ids), EmailLog.status == EmailStatus.QUEUED)).all()
-    } if log_ids else set()
     removed = 0
     for send in sends:
         if send.email_log_id and send.email_log_id in delivered_logs:
             continue
-        if send.email_log_id and send.email_log_id in queued_ids:
+        if send.email_log_id:
+            # Échec, file ou faux SENT : on garde le lien pour renvoyer le même message.
             continue
         db.delete(send)
         removed += 1

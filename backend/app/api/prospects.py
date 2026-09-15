@@ -116,6 +116,26 @@ def templates(side: str | None = None, _staff_user: User = Depends(_staff)):
     return ok(svc.catalog(side) if side else svc.catalog())
 
 
+@router.post("/retry-undelivered")
+def retry_undelivered(db: Session = Depends(get_db), staff: User = Depends(_staff)):
+    from app.config import get_settings
+    from app.services.email import retry_undelivered_emails
+
+    deliver = get_settings().app_env == "test"
+    stats = retry_undelivered_emails(db, deliver=deliver)
+    db.commit()
+    if stats.get("blocked"):
+        raise AppError(502, str(stats["blocked"]), "SMTP_DISABLED")
+    retried = int(stats.get("retried") or 0)
+    sent = int(stats.get("sent") or 0)
+    queued = int(stats.get("queued") or 0)
+    if retried:
+        message = f"{retried} courriel(s) repris. {sent} parti(s) tout de suite, {queued} remis en file."
+    else:
+        message = "Aucun courriel en attente : tout ce qui était parti l’est resté."
+    return ok(stats, message=message)
+
+
 @router.post("/broadcast")
 @router.post("/send-bulk")
 def broadcast(payload: ProspectBulkSendIn, db: Session = Depends(get_db), staff: User = Depends(_staff)):
