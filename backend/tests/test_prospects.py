@@ -383,8 +383,7 @@ def test_greeting_without_person_name_and_attachment_note(client):
         "emp_reactivate",
     ]
     first = next(row for row in proposals if row["key"] == "emp_first_contact")
-    assert first["subject"].startswith("Usine Nord")
-    assert "Un poste encore ouvert" in first["subject"]
+    assert first["subject"] == "Et si vos prochains recrutements étaient déjà en cours ?"
     assert first["body"].startswith("Bonjour,")
     assert "Bonjour Usine Nord" not in first["body"]
     assert "16 %" not in first["body"]
@@ -393,9 +392,9 @@ def test_greeting_without_person_name_and_attachment_note(client):
     assert "payé" not in first["body"].lower()
     assert "étapes" not in first["body"].lower()
     assert "profils qui tiennent" not in first["body"]
-    assert "2 ou 3 profils déjà filtrés" in first["body"]
-    assert "répondez-moi avec le métier" in first["body"]
-    assert "tous secteurs" in first["body"]
+    assert "cette partie que nous prenons en charge" in first["body"]
+    assert "15 minutes suffisent" in first["body"]
+    assert "nouvelle plateforme" in first["body"]
     assert "espace-employeur" not in first["body"]
     assert "industriel" not in first["body"].lower()
     assert "263 558 5225" in first["body"]
