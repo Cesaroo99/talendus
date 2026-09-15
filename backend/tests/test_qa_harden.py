@@ -405,3 +405,5 @@ def test_lifespan_keeps_workers_if_seed_fails():
     worker_idx = text.index("start_worker()")
     assert worker_idx > seed_idx
     assert text.index("Workers email/ops en échec") > worker_idx
+    assert 'name="talendus-seed"' in text
+    assert "threading.Thread" in text

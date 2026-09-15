@@ -9,6 +9,9 @@ def test_health(client):
     body = res.json()
     assert body["success"] is True
     assert body["data"]["status"] == "ok"
+    from app.services.prospects import MAIL_REV
+
+    assert body["data"]["mail_rev"] == MAIL_REV
 
 
 def test_ready(client):

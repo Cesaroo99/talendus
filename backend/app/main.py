@@ -1,4 +1,5 @@
 import logging
+import threading
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -52,10 +53,18 @@ async def lifespan(_app: FastAPI):
     except Exception:
         logger.exception("Démarrage base en échec — le site public reste servi")
     if db_ok and settings.app_env != "test":
-        try:
-            seed_if_empty()
-        except Exception:
-            logger.exception("Seed en échec — l'API et les workers continuent")
+        def _boot_seed() -> None:
+            try:
+                seed_if_empty()
+            except Exception:
+                logger.exception("Seed en échec — l'API et les workers continuent")
+
+        # En production le catalogue 1200+ ne doit pas bloquer /api/health :
+        # Render annule le déploiement si le boot dépasse le délai.
+        if settings.app_env == "production":
+            threading.Thread(target=_boot_seed, daemon=True, name="talendus-seed").start()
+        else:
+            _boot_seed()
         try:
             start_worker()
             start_ops_worker()

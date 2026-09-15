@@ -398,6 +398,8 @@ def test_greeting_without_person_name_and_attachment_note(client):
     assert "espace-employeur" not in first["body"]
     assert "industriel" not in first["body"].lower()
     assert "263 558 5225" in first["body"]
+    assert "•" not in first["subject"] + first["body"]
+    assert "poste encore ouvert" not in first["subject"].lower()
     assert emp["login_link"].startswith("https://talendus.ca/espace-employeur.html#/login")
     assert "info.usine%40example.com" in emp["login_link"]
     assert emp["register_link"].startswith("https://talendus.ca/espace-employeur.html#/register")
@@ -479,6 +481,71 @@ def test_greeting_without_person_name_and_attachment_note(client):
     assert "cid:talendus-signature@talendus.ca" in html
 
 
+def test_templates_have_no_stickers_or_legacy_first_contact():
+    from app.services.prospects import EMP_FIRST_CONTACT_SUBJECT, TEMPLATES, get_template, strip_stickers
+
+    assert EMP_FIRST_CONTACT_SUBJECT == "Et si vos prochains recrutements étaient déjà en cours ?"
+    first = get_template("emp_first_contact")
+    assert first["subject"] == EMP_FIRST_CONTACT_SUBJECT
+    assert "{{company_lead}}" not in first["subject"]
+    assert "poste encore ouvert" not in first["subject"].lower()
+    for item in TEMPLATES:
+        blob = f"{item['subject']}\n{item['body']}"
+        assert "•" not in blob, item["key"]
+        assert blob == strip_stickers(blob), item["key"]
+
+
+def test_emp_first_contact_replaces_stale_fastfrate_subject(client, monkeypatch):
+    stub_smtp_delivery(monkeypatch)
+    admin = promote_admin(client, "cesar-mail@example.com")
+    admin_h = auth_header(admin)
+    emp = client.post(
+        "/api/admin/prospects",
+        headers=admin_h,
+        json={
+            "side": "employer",
+            "email": "rh@fastfrate.example.com",
+            "company_name": "Groupe Fastfrate",
+            "city": "Lachine",
+        },
+    ).json()["data"]
+    proposals = client.get(f"/api/admin/prospects/p/{emp['id']}/proposals", headers=admin_h).json()["data"]
+    first = next(row for row in proposals if row["key"] == "emp_first_contact")
+    assert first["label"].startswith("1.")
+    assert first["subject"] == "Et si vos prochains recrutements étaient déjà en cours ?"
+    assert "Lachine" not in first["subject"]
+    assert "Fastfrate" not in first["subject"]
+    sent = client.post(
+        f"/api/admin/prospects/p/{emp['id']}/send",
+        headers=admin_h,
+        json={
+            "template_key": "emp_first_contact",
+            "subject": "Groupe Fastfrate — Un poste encore ouvert à Lachine ?",
+            "body": "Bonjour,\n\nJe vous écris au sujet de Groupe Fastfrate. Si un poste à Lachine bloque encore, répondez-moi avec le métier. Je reviens avec 2 ou 3 profils déjà filtrés.",
+        },
+    )
+    assert sent.status_code == 200, sent.text
+    assert sent.json()["data"]["subject"] == "Et si vos prochains recrutements étaient déjà en cours ?"
+    detail = client.get(f"/api/admin/prospects/p/{emp['id']}", headers=admin_h).json()["data"]
+    send = detail["sends"][0]
+    assert send["subject"] == "Et si vos prochains recrutements étaient déjà en cours ?"
+    assert "poste encore ouvert" not in send["subject"].lower()
+    from sqlalchemy import select
+
+    from app.database import SessionLocal
+    from app.models.prospect import ProspectSend
+
+    db = SessionLocal()
+    try:
+        stored = db.scalar(select(ProspectSend).where(ProspectSend.prospect_id == emp["id"]))
+        assert stored is not None
+        assert "cette partie que nous prenons en charge" in stored.body
+        assert "•" not in stored.body
+        assert "2 ou 3 profils" not in stored.body
+    finally:
+        db.close()
+
+
 def test_attachment_stays_on_one_message():
     cfg = runtime_email_config()
     msg = build_email_message(
@@ -537,6 +604,12 @@ def test_admin_ui_has_prospects_module():
     assert "?force=1" in js
     assert "forceEnsure" in js
     assert "Oui — envoyer vraiment" in js
+    assert "EMP_FIRST_SUBJECT" in js
+    assert "fillEmpFirstBody" in js
+    assert "Et si vos prochains recrutements étaient déjà en cours ?" in js
+    assert "Un poste encore ouvert" not in js
+    html = (Path(__file__).resolve().parents[2] / "admin" / "index.html").read_text(encoding="utf-8")
+    assert "app.js?v=20260915-mail-cesar" in html
     assert "gatewayTimeoutMsg" in api_js
     assert "plus petits lots" in api_js
     assert "Chaque fiche reçoit son propre courriel" in js
