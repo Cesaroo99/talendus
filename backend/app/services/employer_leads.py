@@ -277,7 +277,17 @@ def _ensure_prospect(db: Session, company: Company, lead: dict[str, Any], recrui
     first, last = person_name_parts(lead.get("contact_name") or "")
     hiring = (lead.get("hiring") or "")[:5000]
     detail = (lead.get("hiring") or lead.get("careers_url") or "")[:240]
-    existing = db.scalar(select(Prospect.id).where(Prospect.side == "employer", Prospect.email == email.lower()))
+    existing = db.scalar(select(Prospect).where(Prospect.side == "employer", Prospect.email == email.lower()))
+    if existing is None:
+        stage: str | None = "a-contacter"
+    elif (
+        existing.stage == "nouveau"
+        and existing.last_contacted_at is None
+        and (existing.source or "") == "prospection"
+    ):
+        stage = "a-contacter"
+    else:
+        stage = None
     row = upsert_prospect(
         db,
         side="employer",
@@ -294,7 +304,7 @@ def _ensure_prospect(db: Session, company: Company, lead: dict[str, Any], recrui
         message=hiring,
         company_id=company.id,
         assigned_recruiter_id=recruiter.id if recruiter else None,
-        stage="a-contacter" if existing is None else None,
+        stage=stage,
     )
     if row is not None:
         sanitize_generic_person(row)
@@ -344,26 +354,63 @@ def catalog_stats(db: Session) -> dict[str, int]:
     }
 
 
+def promote_uncontacted_employer_prospects(db: Session) -> int:
+    """Les fiches catalogue jamais écrites doivent apparaître en « À contacter », pas « Nouveau »."""
+    rows = list(
+        db.scalars(
+            select(Prospect).where(
+                Prospect.side == "employer",
+                Prospect.stage == "nouveau",
+                Prospect.source == "prospection",
+                Prospect.last_contacted_at.is_(None),
+            )
+        ).all()
+    )
+    for row in rows:
+        row.stage = "a-contacter"
+    if rows:
+        logger.info("%s prospects employeurs passés en à contacter.", len(rows))
+    return len(rows)
+
+
+def hydrate_employer_prospects(
+    db: Session,
+    *,
+    force: bool = False,
+    commit_every: int = 20,
+) -> dict[str, int | bool]:
+    """Recopie les courriels, ajoute seulement les fiches manquantes, passe le pipeline à « à contacter ».
+
+    L’ensure complet (1200+ updates) expire le proxy en prod. Ici on ne crée
+    que ce qui manque. `force` lance aussi cet import incrémental (bouton admin).
+    Un listing HTTP n’importe que si le catalogue est déjà en base (≥ 200 fiches)
+    pour ne pas créer 1200 entreprises dans les tests / une base vide.
+    """
+    filled = sync_catalog_emails_to_crm(db)
+    stats = catalog_stats(db)
+    missing = stats["missing_companies"]
+    started = stats["companies"] >= 200
+    need = force or (missing > 0 and started)
+    created = 0
+    if need:
+        created = ensure_quebec_employer_leads(db, commit_every=commit_every, only_missing=True)
+    promoted = promote_uncontacted_employer_prospects(db)
+    out: dict[str, int | bool] = dict(catalog_stats(db))
+    out["imported"] = need
+    out["emails_filled"] = filled
+    out["created"] = created
+    out["promoted"] = promoted
+    return out
+
+
 def refresh_employer_directory(
     db: Session,
     *,
     force: bool = False,
     commit_every: int = 20,
 ) -> dict[str, int | bool]:
-    """Recopie d’abord les courriels publics, puis importe seulement si besoin.
-
-    Le bootstrap HTTP ne doit jamais lancer l’ensure complet (timeout prod).
-    L’ensure tourne si `force` ou s’il manque des fiches catalogue.
-    """
-    filled = sync_catalog_emails_to_crm(db)
-    stats = catalog_stats(db)
-    need = force or stats["missing_companies"] > 0
-    if need:
-        ensure_quebec_employer_leads(db, commit_every=commit_every)
-    out: dict[str, int | bool] = dict(catalog_stats(db))
-    out["imported"] = need
-    out["emails_filled"] = filled
-    return out
+    """Recopie d’abord les courriels publics, puis importe seulement les fiches manquantes."""
+    return hydrate_employer_prospects(db, force=force, commit_every=commit_every)
 
 
 def sync_catalog_emails_to_crm(db: Session) -> int:
@@ -425,10 +472,11 @@ def _sanitize_employer_prospects(db: Session) -> set[str]:
     return known
 
 
-def ensure_quebec_employer_leads(db: Session, *, commit_every: int = 0) -> int:
+def ensure_quebec_employer_leads(db: Session, *, commit_every: int = 0, only_missing: bool = False) -> int:
     """Crée ou complète les fiches de veille. Idempotent. Aucun compte employeur.
 
     `commit_every` persiste le progrès par lots (boot Render tué = pas de rollback total).
+    `only_missing` ne crée que les entreprises / prospects absents — sûr pour un GET HTTP.
     """
     _forget_session_prospects(db)
     db.expire_all()
@@ -477,6 +525,13 @@ def ensure_quebec_employer_leads(db: Session, *, commit_every: int = 0) -> int:
             _index_company(names, company)
             created += 1
         else:
+            if only_missing:
+                email = (lead.get("email") or "").strip().lower()
+                if email and email not in known_emails:
+                    _ensure_note(db, company, staff, lead, notes)
+                    _ensure_prospect(db, company, lead, recruiter)
+                    known_emails.add(email)
+                continue
             _fill_empty(
                 company,
                 legal_name=lead.get("legal_name"),

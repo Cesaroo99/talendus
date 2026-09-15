@@ -104,7 +104,7 @@ def test_list_does_not_mark_active_company_as_client(client):
     assert listed.status_code == 200, listed.text
     row = next(item for item in listed.json()["data"] if item["email"] == "rh@usine-veille.example")
     assert row["stage"] != "client"
-    assert row["stage"] in {"nouveau", "a-contacter"}
+    assert row["stage"] == "a-contacter"
 
 
 def test_prospect_email_and_ready_filters(client):
@@ -520,12 +520,18 @@ def test_admin_ui_has_prospects_module():
     assert "var tplOptions = proposals.map" in js
     assert "chunkProspectIds(uniqueProspectIds(ids), 250)" in js
     assert "employer-leads/refresh" in js
-    assert "Charger le catalogue (1100+)" in js
+    assert "Charger le catalogue (1200+)" in js
+    assert "Logistique GMA (nouvelle passe)" in js
+    assert 'stage: employer ? "a-contacter"' in js
+    assert "stage_counts" in js
+    assert "à contacter ·" in js
+    assert "isLogistiqueGmaProspect" in js
+    assert "Les entreprises sans courriel sont dans Clients" in js
     assert "prospect-indeed-watch" in js
     assert "employer-leads/indeed-watch" in js
     assert "Veille Indeed" in js
     assert "withEmail >= 400" not in js
-    assert "catalog_with_email" in js
+    assert "missing_companies" in js
     assert "?force=1" in js
     assert "forceEnsure" in js
     assert "Oui — envoyer vraiment" in js

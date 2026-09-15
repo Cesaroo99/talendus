@@ -88,6 +88,7 @@ def list_prospects(
         meta={
             "side": side,
             "stages": [{"key": k, "label": l} for k, l in svc.stages_for(side)],
+            "stage_counts": svc.stage_counts(db, side),
             "catalog": svc.catalog(side),
             "sources": [{"key": k, "label": l} for k, l in svc.SOURCE_LABELS],
             "cities": options["cities"],

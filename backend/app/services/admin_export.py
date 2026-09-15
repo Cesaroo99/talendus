@@ -221,11 +221,11 @@ def bootstrap(db: Session, user: User | None = None) -> dict:
         return _editor_bootstrap(db, user)
     if user and user.role == UserRole.FINANCE:
         return _finance_bootstrap(db, user)
-    from app.services.employer_leads import catalog_stats, sync_catalog_emails_to_crm
+    from app.services.employer_leads import catalog_stats, hydrate_employer_prospects
 
     try:
-        # Sync seul : l’ensure complet (924 fiches) expire le proxy en prod.
-        sync_catalog_emails_to_crm(db)
+        # Import incrémental des fiches manquantes + pipeline « à contacter ».
+        hydrate_employer_prospects(db)
         db.commit()
     except Exception:
         logger.exception("bootstrap: recopie des courriels employeurs impossible")

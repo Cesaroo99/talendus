@@ -5,7 +5,7 @@
   const $ = TLUI.$;
   const app = document.getElementById("app");
   let page = 1, sortKey = "lastActivity", sortDir = "desc", selected = new Set();
-  let filters = { email: "with" };
+  let filters = { email: "", wave: "logistique-gma" };
   let period = "mois";
   let analyticsRecruiter = "";
   let analyticsSector = "";
@@ -776,6 +776,10 @@
       if (filters.email === "found" && !(hasEmail && verified && foundAt)) return false;
       if (filters.email === "high" && !(hasEmail && (confidence === "VERIFIED_HIGH" || confidence === "HIGH"))) return false;
       if (filters.ready === "ready" && !(c.readyToContact || hasEmail)) return false;
+      if (filters.wave === "logistique-gma") {
+        var blob = ((c.description || "") + " " + (c.sector || "")).toLowerCase();
+        if (blob.indexOf("vague 10") === -1 && blob.indexOf("prospection logistique gma") === -1) return false;
+      }
       return true;
     });
     list.sort(function (a, b) {
@@ -796,7 +800,7 @@
       if (af !== bf) return bf - af;
       return String(a.name || "").localeCompare(String(b.name || ""), "fr");
     });
-    var pg = U.paginate(list, page, 100);
+    var pg = U.paginate(list, page, 300);
     var rows = pg.items.map(function (c) {
       var missions = S().missions.filter(function (m) { return m.clientId === c.id; }).length;
       var placed = S().candidates.filter(function (x) { return x.clientId === c.id && x.status === "place"; }).length;
@@ -814,10 +818,14 @@
       return '<button class="btn btn-ghost btn-sm' + (pg.page === i + 1 ? " btn-orange" : "") + '" data-page="' + (i + 1) + '">' + (i + 1) + "</button>";
     }).join("");
     return `
-      <div class="page-head"><div><h1>Clients</h1><p>${withEmailTotal} avec courriel public · ${readyTotal} prêts à contacter · ${all.length} fiches catalogue. Écrire ouvre le message Talendus ; Courriel ouvre votre boîte.</p></div>
-        <div class="actions"><button type="button" class="btn btn-ghost" data-refresh-employers>Charger le catalogue (1100+)</button><a class="btn btn-ghost" href="#/prospects/employers">Recruteurs / employeurs</a><button class="btn btn-ghost" data-export-cli>Exporter</button><button class="btn btn-orange" data-create="client">Nouveau client</button></div></div>
+      <div class="page-head"><div><h1>Clients</h1><p>${withEmailTotal} avec courriel public · ${readyTotal} prêts à contacter · ${all.length} fiches catalogue. Filtre « Logistique GMA » = nouvelle passe (Nationex, Gariépy, Stox…). Choisissez « Tout le catalogue » pour tout voir. Écrire ouvre le message Talendus.</p></div>
+        <div class="actions"><button type="button" class="btn btn-ghost" data-refresh-employers>Charger le catalogue (1200+)</button><a class="btn btn-ghost" href="#/prospects/employers">Recruteurs / employeurs</a><button class="btn btn-ghost" data-export-cli>Exporter</button><button class="btn btn-orange" data-create="client">Nouveau client</button></div></div>
       <div class="filters">
         <input data-f="q" placeholder="Nom, ville ou courriel" value="${U.esc(filters.q || "")}">
+        <select data-f="wave">
+          <option value="">Tout le catalogue</option>
+          <option value="logistique-gma"${filters.wave === "logistique-gma" ? " selected" : ""}>Logistique GMA (nouvelle passe)</option>
+        </select>
         <select data-f="sector"><option value="">Secteur</option>${unique(S().clients, "sector").map(function (s) { return "<option" + (filters.sector === s ? " selected" : "") + ">" + s + "</option>"; }).join("")}</select>
         <select data-f="status"><option value="">Statut</option><option${filters.status === "Actif" ? " selected" : ""}>Actif</option><option${filters.status === "Prospect" ? " selected" : ""}>Prospect</option></select>
         <select data-f="email">
@@ -1846,7 +1854,7 @@
     }
   }
 
-  var prospectFilters = { q: "", stage: "", source: "", city: "", sector: "", email: "", ready: "" };
+  var prospectFilters = { q: "", stage: "", source: "", city: "", sector: "", email: "", ready: "", wave: "" };
   var prospectMeta = { stages: [], catalog: [], sources: [], cities: [], sectors: [] };
   var prospectCache = [];
 
@@ -1875,16 +1883,16 @@
     var employer = side === "employer";
     if (viewProspects._side !== side) {
       viewProspects._side = side;
-      prospectFilters = { q: "", stage: "", source: "", city: "", sector: "", email: employer ? "with" : "", ready: "" };
+      prospectFilters = { q: "", stage: employer ? "a-contacter" : "", source: "", city: "", sector: "", email: "", ready: "", wave: "" };
     }
     return `
       <div class="page-head">
         <div>
           <h1>${employer ? "Prospects employeurs" : "Prospects candidats"}</h1>
-          <p id="prospect-lead">${employer ? "Entreprises avec courriel public à démarcher. Les candidats sont dans l’autre onglet." : "Base candidats uniquement. Les entreprises avec courriel sont dans Recruteurs / employeurs."}</p>
+          <p id="prospect-lead">${employer ? "Ouverture sur « À contacter ». « Tous les statuts » montre toute la base. Filtre « Logistique GMA » = Nationex, Gariépy, Stox… Les entreprises sans courriel sont dans Clients." : "Base candidats uniquement. Les entreprises avec courriel sont dans Recruteurs / employeurs."}</p>
         </div>
         <div class="actions">
-          ${employer ? '<button type="button" class="btn btn-ghost" id="prospect-refresh-catalog">Charger le catalogue (1100+)</button>' : ""}
+          ${employer ? '<button type="button" class="btn btn-ghost" id="prospect-refresh-catalog">Charger le catalogue (1200+)</button>' : ""}
           ${employer ? '<button type="button" class="btn btn-ghost" id="prospect-indeed-watch">Veille Indeed</button>' : ""}
           <button type="button" class="btn btn-ghost" id="prospect-select-all">Tout sélectionner</button>
           <button type="button" class="btn btn-ghost" id="prospect-bulk">Écrire aux sélectionnés</button>
@@ -1944,6 +1952,11 @@
       '<select id="pf-source"><option value="">Toutes les sources</option>' + sources.map(function (s) {
         return '<option value="' + U.esc(s.key) + '"' + (prospectFilters.source === s.key ? " selected" : "") + ">" + U.esc(s.label) + "</option>";
       }).join("") + "</select>" +
+      (prospectSide() === "employer"
+        ? '<select id="pf-wave"><option value="">Tout le catalogue</option><option value="logistique-gma"' +
+          (prospectFilters.wave === "logistique-gma" ? " selected" : "") +
+          ">Logistique GMA (nouvelle passe)</option></select>"
+        : "") +
       '<select id="pf-city"><option value="">Toutes les villes</option>' + cities.map(function (c) {
         return '<option value="' + U.esc(c) + '"' + (prospectFilters.city === c ? " selected" : "") + ">" + U.esc(c) + "</option>";
       }).join("") + "</select>" +
@@ -1957,7 +1970,7 @@
         return '<option value="' + U.esc(s.key) + '"' + (prospectFilters.ready === s.key ? " selected" : "") + ">" + U.esc(s.label) + "</option>";
       }).join("") + "</select>" +
       '<button type="button" class="btn btn-ghost" id="pf-clear">Effacer</button>';
-    ["pf-q", "pf-stage", "pf-source", "pf-city", "pf-sector", "pf-email", "pf-ready"].forEach(function (id) {
+    ["pf-q", "pf-stage", "pf-source", "pf-wave", "pf-city", "pf-sector", "pf-email", "pf-ready"].forEach(function (id) {
       var el = document.getElementById(id);
       if (!el) return;
       el.onchange = function () { applyProspectFilters(); };
@@ -1965,7 +1978,7 @@
     });
     var clear = document.getElementById("pf-clear");
     if (clear) clear.onclick = function () {
-      prospectFilters = { q: "", stage: "", source: "", city: "", sector: "", email: prospectSide() === "employer" ? "with" : "", ready: "" };
+      prospectFilters = { q: "", stage: "", source: "", city: "", sector: "", email: "", ready: "", wave: "" };
       hydrateProspects();
     };
   }
@@ -1974,6 +1987,7 @@
     prospectFilters.q = (document.getElementById("pf-q") || {}).value || "";
     prospectFilters.stage = (document.getElementById("pf-stage") || {}).value || "";
     prospectFilters.source = (document.getElementById("pf-source") || {}).value || "";
+    prospectFilters.wave = (document.getElementById("pf-wave") || {}).value || "";
     prospectFilters.city = (document.getElementById("pf-city") || {}).value || "";
     prospectFilters.sector = (document.getElementById("pf-sector") || {}).value || "";
     prospectFilters.email = (document.getElementById("pf-email") || {}).value || "";
@@ -1981,16 +1995,24 @@
     hydrateProspects();
   }
 
+  function isLogistiqueGmaProspect(row) {
+    var blob = ((row.message || "") + " " + (row.source_detail || "") + " " + (row.company_name || "")).toLowerCase();
+    return blob.indexOf("vague 10") !== -1 || blob.indexOf("prospection logistique gma") !== -1;
+  }
+
   var employerCatalogTried = false;
 
   async function hydrateEmployerClients() {
     if (!api() || !live()) return;
-    var withEmail = (S().clients || []).filter(function (c) { return !!(c.email || "").trim(); }).length;
-    var target = Number((S().employerCatalog || {}).catalog_with_email) || 750;
-    if (withEmail >= target || employerCatalogTried) return;
+    var stats = S().employerCatalog || {};
+    var catalog = Number(stats.catalog) || 1205;
+    var missing = Number(stats.missing_companies) || 0;
+    var clients = (S().clients || []).length;
+    if (employerCatalogTried) return;
+    if (clients >= catalog && missing === 0) return;
     employerCatalogTried = true;
-    var stats = await refreshEmployerDirectory(true, false);
-    if (stats && (stats.companies_with_catalog_email || 0) > withEmail) render();
+    var next = await refreshEmployerDirectory(true, true);
+    if (next) render();
   }
 
   async function refreshEmployerDirectory(forceReload, forceEnsure) {
@@ -2015,7 +2037,15 @@
     }
     try {
       if (prospectSide() === "employer") {
-        root.innerHTML = "<p class='sub'>Chargement du catalogue employeurs (1100+ fiches, dont la veille Indeed)…</p>";
+        root.innerHTML = "<p class='sub'>Chargement du catalogue employeurs (1200+ fiches, dont la logistique GMA)…</p>";
+        var stats = S().employerCatalog || {};
+        var catalog = Number(stats.catalog) || 1205;
+        var missing = Number(stats.missing_companies) || 0;
+        var clients = (S().clients || []).length;
+        if (!employerCatalogTried && (clients < catalog || missing > 0)) {
+          employerCatalogTried = true;
+          await refreshEmployerDirectory(true, true);
+        }
       }
       var json = await api().request("/admin/prospects?" + prospectQuery());
       var rows = (json && json.data) || [];
@@ -2027,10 +2057,18 @@
       }
       renderProspectFilters();
       var employer = prospectSide() === "employer";
+      if (employer && prospectFilters.wave === "logistique-gma") {
+        rows = rows.filter(isLogistiqueGmaProspect);
+      }
       var lead = document.getElementById("prospect-lead");
       if (lead) {
-        lead.textContent = rows.length + " fiche" + (rows.length > 1 ? "s" : "") + " dans cette base" +
-          (employer ? " employeur." : " candidat.") +
+        var counts = prospectMeta.stage_counts || {};
+        var toContact = Number(counts["a-contacter"] || 0);
+        var totalAll = 0;
+        Object.keys(counts).forEach(function (k) { totalAll += Number(counts[k] || 0); });
+        if (!totalAll) totalAll = rows.length;
+        lead.textContent = toContact + " à contacter · " + rows.length + " affichée" + (rows.length > 1 ? "s" : "") +
+          (employer ? " · " + totalAll + " fiches employeur au total." : " dans cette base candidat.") +
           " Tout sélectionner coche uniquement les fiches affichées après filtre.";
       }
       var stages = prospectMeta.stages || [];
@@ -2134,7 +2172,7 @@
       catalogBtn.textContent = "Chargement…";
       var stats = await refreshEmployerDirectory(true, true);
       catalogBtn.disabled = false;
-      catalogBtn.textContent = "Charger le catalogue (1100+)";
+      catalogBtn.textContent = "Charger le catalogue (1200+)";
       if (stats) {
         U.toast((stats.prospects_with_catalog_email || 0) + " employeurs avec courriel public.", "ok");
         hydrateProspects();

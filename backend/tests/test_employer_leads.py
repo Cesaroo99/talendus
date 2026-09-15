@@ -29,11 +29,11 @@ DEMO_FAKES = {
 
 
 def test_lead_catalog_is_fifty_real_and_unique():
-    assert len(QUEBEC_EMPLOYER_LEADS) == 1180
+    assert len(QUEBEC_EMPLOYER_LEADS) == 1205
     names = [row["name"].casefold() for row in QUEBEC_EMPLOYER_LEADS]
-    assert len(set(names)) == 1180
+    assert len(set(names)) == 1205
     websites = [row["website"] for row in QUEBEC_EMPLOYER_LEADS]
-    assert len(set(websites)) == 1180
+    assert len(set(websites)) == 1205
     emails = [row["email"].casefold() for row in QUEBEC_EMPLOYER_LEADS if row.get("email")]
     assert len(set(emails)) == len(emails)
     assert emails, "Au moins un courriel public RH/info doit être présent."
@@ -113,7 +113,7 @@ def test_lead_catalog_is_fifty_real_and_unique():
         if "FIELD_WORK" in (row.get("lead_categories") or "")
         or "CERTIFICATION_REQUIRED" in (row.get("lead_categories") or "")
     ) >= 80
-    wave9 = QUEBEC_EMPLOYER_LEADS[924:]
+    wave9 = QUEBEC_EMPLOYER_LEADS[924:1180]
     assert len(wave9) == 256
     assert all(row.get("lead_score") for row in wave9)
     assert all(row.get("lead_priority") in {"A+", "A", "B", "C", "D"} for row in wave9)
@@ -131,6 +131,15 @@ def test_lead_catalog_is_fifty_real_and_unique():
     assert sum(1 for row in wave9 if "INTERNAL_TA_HIRE" in (row.get("lead_categories") or "")) >= 40
     assert sum(1 for row in wave9 if int(row.get("total_active_jobs") or 0) >= 10) >= 40
     assert {row["city"] for row in wave9} >= {"Montréal", "Québec", "Laval", "Lévis", "Mont-Royal"}
+    wave10 = QUEBEC_EMPLOYER_LEADS[1180:]
+    assert len(wave10) == 25
+    assert all(row.get("researched_at") == "2026-09-14" for row in wave10)
+    assert all(row.get("source", "").startswith("vague 10") for row in wave10)
+    assert all("Vague 10 — prospection logistique GMA" in (row.get("hiring") or "") for row in wave10)
+    assert any(row["name"] == "Nationex" for row in wave10)
+    assert any(row["name"] == "Transport Gariépy" for row in wave10)
+    nationex = next(row for row in wave10 if row["name"] == "Nationex")
+    assert nationex.get("email") == "carrieres@nationex.com"
     for row in QUEBEC_EMPLOYER_LEADS:
         assert row["name"] not in DEMO_FAKES
         assert row["city"]
@@ -171,12 +180,13 @@ def test_ensure_creates_prospect_clients_without_employer_accounts(client, db):
     promote_admin(client, "leads-admin@talendus.ca")
     created = ensure_quebec_employer_leads(db)
     db.commit()
-    assert created == 1180
+    assert created == 1205
     assert ensure_quebec_employer_leads(db) == 0
     db.commit()
 
     leads = list(db.scalars(select(Company).where(Company.name.in_([r["name"] for r in QUEBEC_EMPLOYER_LEADS]))))
-    assert len(leads) == 1180
+    assert len(leads) == 1205
+    assert {c.name for c in leads} >= {"Nationex", "Transport Gariépy", "Distribution Stox (Unimax)"}
     assert all(c.status == CompanyStatus.PROSPECT for c in leads)
     assert all(c.province == "Québec" for c in leads)
     assert all(not c.owner_user_id for c in leads)
@@ -197,6 +207,105 @@ def test_ensure_creates_prospect_clients_without_employer_accounts(client, db):
     assert not (casc.first_name or "").strip()
     assert not (casc.last_name or "").strip()
     assert all(not (p.first_name or "").casefold().startswith("ressource") for p in prospects)
+
+
+def test_admin_bootstrap_lists_all_wave10_companies_even_without_email(client, db):
+    from tests.conftest import auth_header
+
+    admin = promote_admin(client, "leads-wave10-admin@talendus.ca")
+    ensure_quebec_employer_leads(db)
+    db.commit()
+    headers = auth_header(admin)
+    boot = client.get("/api/admin/bootstrap", headers=headers)
+    assert boot.status_code == 200, boot.text
+    clients = boot.json()["data"]["clients"]
+    wave10 = QUEBEC_EMPLOYER_LEADS[1180:]
+    names = {row["name"] for row in wave10}
+    listed = {row["name"]: row for row in clients if row["name"] in names}
+    assert set(listed) == names
+    visible = []
+    hidden_if_email_with = []
+    for row in listed.values():
+        blob = ((row.get("description") or "") + " " + (row.get("sector") or "")).lower()
+        assert "vague 10" in blob or "prospection logistique gma" in blob
+        visible.append(row["name"])
+        if not (row.get("email") or "").strip():
+            hidden_if_email_with.append(row["name"])
+    assert len(visible) == 25
+    assert hidden_if_email_with, "Le filtre « Avec courriel » masquait encore des fiches à contacter."
+    assert "Distribution Stox (Unimax)" in hidden_if_email_with
+    assert (listed["Nationex"].get("email") or "") == "carrieres@nationex.com"
+    assert (listed["Transport Gariépy"].get("email") or "") == "cv@transportgariepy.com"
+    prospects = client.get("/api/admin/prospects?side=employer", headers=headers)
+    assert prospects.status_code == 200, prospects.text
+    messages = [
+        ((row.get("message") or "") + " " + (row.get("source_detail") or "")).lower()
+        for row in prospects.json()["data"]
+    ]
+    gma = [blob for blob in messages if "vague 10" in blob or "prospection logistique gma" in blob]
+    assert len(gma) >= 10
+    assert catalog_stats_missing_zero(db)
+
+
+def test_list_promotes_nouveau_prospection_to_a_contacter(client, db):
+    from tests.conftest import auth_header
+
+    admin = promote_admin(client, "leads-nouveau-stage@talendus.ca")
+    db.add(
+        Prospect(
+            side="employer",
+            email="rh@jamais-ecrit.example",
+            company_name="Jamais Écrit",
+            source="prospection",
+            stage="nouveau",
+        )
+    )
+    db.commit()
+    listed = client.get("/api/admin/prospects?side=employer", headers=auth_header(admin))
+    assert listed.status_code == 200, listed.text
+    row = next(item for item in listed.json()["data"] if item["email"] == "rh@jamais-ecrit.example")
+    assert row["stage"] == "a-contacter"
+    counts = listed.json()["meta"]["stage_counts"]
+    assert counts.get("a-contacter", 0) >= 1
+
+
+def test_list_imports_missing_wave10_as_a_contacter(client, db):
+    from app.models import InternalNote
+    from tests.conftest import auth_header
+
+    admin = promote_admin(client, "leads-reimport-wave10@talendus.ca")
+    ensure_quebec_employer_leads(db)
+    db.commit()
+    wave10 = QUEBEC_EMPLOYER_LEADS[1180:]
+    names = [row["name"] for row in wave10]
+    emails = [row["email"].lower() for row in wave10 if row.get("email")]
+    companies = list(db.scalars(select(Company).where(Company.name.in_(names))))
+    ids = [row.id for row in companies]
+    for note in db.scalars(select(InternalNote).where(InternalNote.entity_type == "company", InternalNote.entity_id.in_(ids))):
+        db.delete(note)
+    for prospect in db.scalars(select(Prospect).where(Prospect.side == "employer", Prospect.email.in_(emails))):
+        db.delete(prospect)
+    for company in companies:
+        db.delete(company)
+    db.commit()
+    assert db.scalar(select(Company).where(Company.name == "Nationex")) is None
+    listed = client.get("/api/admin/prospects?side=employer", headers=auth_header(admin))
+    assert listed.status_code == 200, listed.text
+    by_email = {row["email"]: row for row in listed.json()["data"]}
+    assert by_email["carrieres@nationex.com"]["stage"] == "a-contacter"
+    assert by_email["cv@transportgariepy.com"]["stage"] == "a-contacter"
+    counts = listed.json()["meta"]["stage_counts"]
+    assert counts.get("a-contacter", 0) >= 14
+    assert db.scalar(select(Company).where(Company.name == "Nationex")) is not None
+
+
+def catalog_stats_missing_zero(db):
+    from app.services.employer_leads import catalog_stats
+
+    stats = catalog_stats(db)
+    assert stats["catalog"] == 1205
+    assert stats["missing_companies"] == 0
+    return True
 
 
 def test_ensure_clears_generic_contact_names(client, db):
@@ -307,7 +416,7 @@ def test_ensure_survives_stale_prospect_left_in_caller_session(client, db):
     row.city = "Montréal"
     created = ensure_quebec_employer_leads(db)
     db.commit()
-    assert created == 1180
+    assert created == 1205
 
 
 def test_ensure_dedupes_normalized_name_and_keeps_empty_email(client, db):
@@ -326,7 +435,7 @@ def test_ensure_dedupes_normalized_name_and_keeps_empty_email(client, db):
     created = ensure_quebec_employer_leads(db)
     db.expire_all()
     db.commit()
-    assert created == 1179
+    assert created == 1204
     velans = list(db.scalars(select(Company).where(Company.name.ilike("%velan%"))))
     assert len(velans) == 1
     assert velans[0].name == "Velan Inc."
