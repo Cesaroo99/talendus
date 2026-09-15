@@ -160,9 +160,9 @@ TEMPLATES: tuple[dict, ...] = (
         "side": "employer",
         "stage": "nouveau",
         "label": "1. Premier contact",
-        "intent": "Premier contact employeur — se présenter, une question sur le besoin. Ni slogan, ni honoraires, ni paiement.",
-        "subject": "{{company_lead}}Recrutement",
-        "body": "{{hello}}\n\nJe vous contacte{{about_company}}. Je travaille chez Talendus : nous aidons les entreprises du Québec, tous secteurs, à pourvoir tous les types de postes.\n\nSi un poste{{title_bit}} reste ouvert, j’aimerais en comprendre le contexte. Un mot sur le métier et le besoin suffit pour commencer.\n\nVous pouvez aussi m’écrire le besoin ici :\n{{employer_link}}\n\n{{recruiter_name}}",
+        "intent": "Premier contact employeur — une raison concrète d’écrire et une réponse d’une ligne. Pas de portail, pas d’honoraires.",
+        "subject": "{{company_lead}}Un poste encore ouvert{{city_bit}} ?",
+        "body": "{{hello}}\n\nJe vous écris{{about_company}}. Talendus est un cabinet de recrutement au Québec : tous secteurs, y compris les postes qui restent ouverts trop longtemps.\n\nSi un poste{{title_bit}}{{city_bit}} bloque encore — quarts, volume ou délais — répondez-moi avec le métier. Je reviens avec 2 ou 3 profils déjà filtrés, pas une pile de CV.\n\nUne ligne suffit. Vous pouvez aussi me joindre au {{phone}}.\n\n{{recruiter_name}}",
     },
     {
         "key": "emp_followup",
